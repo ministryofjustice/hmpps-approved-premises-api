@@ -1,18 +1,16 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed
 
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateInboxEventStatusCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.UpdateInboxEventStatusCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.ProcessedStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import java.util.UUID
-import kotlin.collections.forEach
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
+class UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
 
   @Test
   fun `Throws exception if event id does not exist, rolls back transaction and logs error`() {
@@ -21,14 +19,14 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
     val randomUUID = UUID.randomUUID()
 
     seed(
-      SeedFileType.approvedPremisesUpdateInboxEventStatus,
+      SeedFileType.updateInboxEventStatus,
       rowsToCsv(
         listOf(
-          Cas1UpdateInboxEventStatusCsvRow(
+          UpdateInboxEventStatusCsvRow(
             inboxEventId = inboxEvent.id,
             processedStatus = ProcessedStatus.PENDING.name,
           ),
-          Cas1UpdateInboxEventStatusCsvRow(
+          UpdateInboxEventStatusCsvRow(
             inboxEventId = randomUUID,
             processedStatus = ProcessedStatus.PENDING.name,
           ),
@@ -36,7 +34,7 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
       ),
     )
 
-    assertThat(logEntries)
+    Assertions.assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
           it.message == "Unable to complete Seed Job" &&
@@ -45,7 +43,7 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
       }
 
     val event1 = inboxEventRepository.findById(inboxEvent.id).get()
-    assertThat(event1.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
+    Assertions.assertThat(event1.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
   }
 
   @Test
@@ -53,14 +51,14 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
     val inboxEvent = inboxEventEntityFactory.produceAndPersistMultiple(2) { withProcessedStatus(ProcessedStatus.PROCESSED) }
 
     seed(
-      SeedFileType.approvedPremisesUpdateInboxEventStatus,
+      SeedFileType.updateInboxEventStatus,
       rowsToCsv(
         listOf(
-          Cas1UpdateInboxEventStatusCsvRow(
+          UpdateInboxEventStatusCsvRow(
             inboxEventId = inboxEvent[0].id,
             processedStatus = ProcessedStatus.PENDING.name,
           ),
-          Cas1UpdateInboxEventStatusCsvRow(
+          UpdateInboxEventStatusCsvRow(
             inboxEventId = inboxEvent[1].id,
             processedStatus = "invalid_status",
           ),
@@ -68,7 +66,7 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
       ),
     )
 
-    assertThat(logEntries)
+    Assertions.assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
           it.message == "Unable to complete Seed Job" &&
@@ -77,7 +75,7 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
       }
 
     val event1 = inboxEventRepository.findById(inboxEvent[0].id).get()
-    assertThat(event1.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
+    Assertions.assertThat(event1.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
   }
 
   @Test
@@ -85,14 +83,14 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
     val inboxEvent = inboxEventEntityFactory.produceAndPersistMultiple(5) { withProcessedStatus(ProcessedStatus.PROCESSED) }
 
     seed(
-      SeedFileType.approvedPremisesUpdateInboxEventStatus,
+      SeedFileType.updateInboxEventStatus,
       rowsToCsv(
         listOf(
-          Cas1UpdateInboxEventStatusCsvRow(
+          UpdateInboxEventStatusCsvRow(
             inboxEventId = inboxEvent[2].id,
             processedStatus = "pending",
           ),
-          Cas1UpdateInboxEventStatusCsvRow(
+          UpdateInboxEventStatusCsvRow(
             inboxEventId = inboxEvent[4].id,
             processedStatus = "failed_reviewed",
           ),
@@ -104,11 +102,11 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
       .findAllById(listOf(inboxEvent[0].id, inboxEvent[1].id, inboxEvent[2].id, inboxEvent[3].id, inboxEvent[4].id))
       .associateBy { it.id }
 
-    assertThat(eventsById[inboxEvent[0].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
-    assertThat(eventsById[inboxEvent[1].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
-    assertThat(eventsById[inboxEvent[2].id]?.processedStatus).isEqualTo(ProcessedStatus.PENDING)
-    assertThat(eventsById[inboxEvent[3].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
-    assertThat(eventsById[inboxEvent[4].id]?.processedStatus).isEqualTo(ProcessedStatus.FAILED_REVIEWED)
+    Assertions.assertThat(eventsById[inboxEvent[0].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
+    Assertions.assertThat(eventsById[inboxEvent[1].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
+    Assertions.assertThat(eventsById[inboxEvent[2].id]?.processedStatus).isEqualTo(ProcessedStatus.PENDING)
+    Assertions.assertThat(eventsById[inboxEvent[3].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
+    Assertions.assertThat(eventsById[inboxEvent[4].id]?.processedStatus).isEqualTo(ProcessedStatus.FAILED_REVIEWED)
   }
 
   @Test
@@ -116,14 +114,14 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
     val inboxEvent = inboxEventEntityFactory.produceAndPersistMultiple(5) { withProcessedStatus(ProcessedStatus.PROCESSED) }
 
     seed(
-      SeedFileType.approvedPremisesUpdateInboxEventStatus,
+      SeedFileType.updateInboxEventStatus,
       rowsToCsv(
         listOf(
-          Cas1UpdateInboxEventStatusCsvRow(
+          UpdateInboxEventStatusCsvRow(
             inboxEventId = inboxEvent[2].id,
             processedStatus = "PENDING",
           ),
-          Cas1UpdateInboxEventStatusCsvRow(
+          UpdateInboxEventStatusCsvRow(
             inboxEventId = inboxEvent[4].id,
             processedStatus = "FAILED_REVIEWED",
           ),
@@ -135,14 +133,14 @@ class Cas1UpdateInboxEventStatusSeedJobTest : SeedTestBase() {
       .findAllById(listOf(inboxEvent[0].id, inboxEvent[1].id, inboxEvent[2].id, inboxEvent[3].id, inboxEvent[4].id))
       .associateBy { it.id }
 
-    assertThat(eventsById[inboxEvent[0].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
-    assertThat(eventsById[inboxEvent[1].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
-    assertThat(eventsById[inboxEvent[2].id]?.processedStatus).isEqualTo(ProcessedStatus.PENDING)
-    assertThat(eventsById[inboxEvent[3].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
-    assertThat(eventsById[inboxEvent[4].id]?.processedStatus).isEqualTo(ProcessedStatus.FAILED_REVIEWED)
+    Assertions.assertThat(eventsById[inboxEvent[0].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
+    Assertions.assertThat(eventsById[inboxEvent[1].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
+    Assertions.assertThat(eventsById[inboxEvent[2].id]?.processedStatus).isEqualTo(ProcessedStatus.PENDING)
+    Assertions.assertThat(eventsById[inboxEvent[3].id]?.processedStatus).isEqualTo(ProcessedStatus.PROCESSED)
+    Assertions.assertThat(eventsById[inboxEvent[4].id]?.processedStatus).isEqualTo(ProcessedStatus.FAILED_REVIEWED)
   }
 
-  private fun rowsToCsv(rows: List<Cas1UpdateInboxEventStatusCsvRow>): String {
+  private fun rowsToCsv(rows: List<UpdateInboxEventStatusCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "inbox_event_id",

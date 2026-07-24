@@ -1,18 +1,16 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.InboxEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.ProcessedStatus
 import java.util.UUID
 
 @Component
 @SuppressWarnings("TooGenericExceptionThrown")
-class Cas1UpdateInboxEventStatusSeedJob(
+class UpdateInboxEventStatusSeedJob(
   private val inboxEventRepository: InboxEventRepository,
-) : SeedJob<Cas1UpdateInboxEventStatusCsvRow>(
+) : SeedJob<UpdateInboxEventStatusCsvRow>(
   requiredHeaders = setOf(
     "inbox_event_id",
     "processed_status",
@@ -21,15 +19,15 @@ class Cas1UpdateInboxEventStatusSeedJob(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>): Cas1UpdateInboxEventStatusCsvRow {
+  override fun deserializeRow(columns: Map<String, String>): UpdateInboxEventStatusCsvRow {
     val seedColumns = SeedColumns(columns)
-    return Cas1UpdateInboxEventStatusCsvRow(
+    return UpdateInboxEventStatusCsvRow(
       inboxEventId = seedColumns.getUuidOrNull("inbox_event_id")!!,
       processedStatus = seedColumns.getStringOrNull("processed_status")!!,
     )
   }
 
-  override fun processRow(row: Cas1UpdateInboxEventStatusCsvRow) {
+  override fun processRow(row: UpdateInboxEventStatusCsvRow) {
     val inboxEventId = row.inboxEventId
     val processedStatus = ProcessedStatus.forValue(row.processedStatus)
 
@@ -44,7 +42,7 @@ class Cas1UpdateInboxEventStatusSeedJob(
   }
 }
 
-data class Cas1UpdateInboxEventStatusCsvRow(
+data class UpdateInboxEventStatusCsvRow(
   val inboxEventId: UUID,
   val processedStatus: String,
 )

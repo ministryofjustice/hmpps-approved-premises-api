@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
@@ -40,6 +41,7 @@ data class Cas1ApplicationSummary(
 
   val risks: PersonRisks? = null,
 
+  @Schema(description = "The tier value from when the application was created. For the person's live tier use person.tier")
   val tier: String? = null,
 
   val releaseType: ReleaseTypeOption? = null,
