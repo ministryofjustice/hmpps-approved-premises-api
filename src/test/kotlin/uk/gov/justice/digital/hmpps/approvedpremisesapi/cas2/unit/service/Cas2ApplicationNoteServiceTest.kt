@@ -176,7 +176,7 @@ class Cas2ApplicationNoteServiceTest {
   @Nested
   inner class SendEmail {
     @Test
-    fun `sends email via Cas2ApplicationNoteEmailService when flag is enabled and user is external`() {
+    fun `sends assessor note added email via Cas2ApplicationNoteEmailService when flag is enabled and user is external`() {
       val externalUser = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
       every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns true
       every { mockCas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.BAIL) } returns assessment
@@ -187,11 +187,11 @@ class Cas2ApplicationNoteServiceTest {
 
       service.createAssessmentNote(assessment.id, NewCas2ApplicationNote(note = "some note"))
 
-      verify(exactly = 1) { mockCas2ApplicationNoteEmailService.refererNoteAdded(application, any()) }
+      verify(exactly = 1) { mockCas2ApplicationNoteEmailService.assessorNoteAdded(application, any()) }
     }
 
     @Test
-    fun `sends email via Cas2ApplicationNoteEmailService when flag is enabled and user is internal`() {
+    fun `sends referrer note added email via Cas2ApplicationNoteEmailService when flag is enabled and user is internal`() {
       val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
       every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns true
       every { mockCas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.BAIL) } returns assessment
@@ -202,7 +202,7 @@ class Cas2ApplicationNoteServiceTest {
 
       service.createAssessmentNote(assessment.id, NewCas2ApplicationNote(note = "some note"))
 
-      verify(exactly = 1) { mockCas2ApplicationNoteEmailService.assessorNoteAdded(application, any()) }
+      verify(exactly = 1) { mockCas2ApplicationNoteEmailService.refererNoteAdded(application, any()) }
     }
 
     @Test
