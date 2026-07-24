@@ -75,10 +75,10 @@ class Cas2ApplicationNoteService(
 
     when {
       emailChangesEnabled && isExternalUser ->
-        cas2ApplicationNoteEmailService.refererNoteAdded(application, savedNote)
+        cas2ApplicationNoteEmailService.assessorNoteAdded(application, savedNote)
 
       emailChangesEnabled ->
-        cas2ApplicationNoteEmailService.assessorNoteAdded(application, savedNote)
+        cas2ApplicationNoteEmailService.refererNoteAdded(application, savedNote)
 
       isExternalUser ->
         sendEmailToReferrer(application, savedNote)

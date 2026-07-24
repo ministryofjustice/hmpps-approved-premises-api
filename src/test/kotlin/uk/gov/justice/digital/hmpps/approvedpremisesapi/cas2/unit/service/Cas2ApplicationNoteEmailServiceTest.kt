@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationNoteEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2NoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
@@ -44,6 +45,10 @@ class Cas2ApplicationNoteEmailServiceTest {
     .withCohort(Cas2Cohort.PRISON_BAIL)
     .produce()
 
+  private val assessment = Cas2AssessmentEntityFactory()
+    .withNacroReferralId("NACROREF1")
+    .produce()
+
   private val note = Cas2NoteEntityFactory()
     .withApplication(application)
     .withCreatedByUser(user)
@@ -55,17 +60,19 @@ class Cas2ApplicationNoteEmailServiceTest {
     val emailConfig = EmailAddressConfig()
     emailConfig.cas2Assessors = "assessors@example.com"
     every { mockNotifyConfig.emailAddresses } returns emailConfig
+
+    application.assessment = assessment
   }
 
   @Nested
   inner class Assessor {
     @Test
-    fun `when assessor note is added then assessors are notified`() {
+    fun `when assessor note is added then referrer is notified`() {
       service.assessorNoteAdded(application, note)
 
       verify(exactly = 1) {
         mockCas2EmailService.sendEmail(
-          recipientEmailAddress = "assessors@example.com",
+          recipientEmailAddress = user.email!!,
           templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_ASSESSOR_NOTE_ADDED,
           personalisation = mapOf(
             "dateNoteAdded" to "25 June 2024",
@@ -74,33 +81,8 @@ class Cas2ApplicationNoteEmailServiceTest {
             "crn" to "CRN123",
             "timeApplicationReceived" to "16:07",
             "dateApplicationReceived" to "24/06/2024",
-            "nacroReferenceId" to application.id.toString(),
-            "viewSubmittedApplicationUrl" to "http://frontend/assessments/${application.id}",
-          ),
-          cas2Application = application,
-        )
-      }
-    }
-  }
-
-  @Nested
-  inner class Referrer {
-    @Test
-    fun `when referer note is added then application creator is notified`() {
-      service.refererNoteAdded(application, note)
-
-      verify(exactly = 1) {
-        mockCas2EmailService.sendEmail(
-          recipientEmailAddress = user.email!!,
-          templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_REFERRER_NOTE_ADDED,
-          personalisation = mapOf(
-            "dateNoteAdded" to "25 June 2024",
-            "timeNoteAdded" to "10:30am",
-            "cohort" to "Prison Bail",
-            "crn" to "CRN123",
-            "timeApplicationReceived" to "16:07",
-            "dateApplicationReceived" to "24/06/2024",
-            "nacroReferenceId" to application.id.toString(),
+            "nacroReferenceId" to "NACROREF1",
+            "nacroReferenceIdInSubject" to "(NACROREF1)",
             "viewSubmittedApplicationUrl" to "http://frontend/applications/${application.id}",
           ),
           cas2Application = application,
@@ -109,10 +91,37 @@ class Cas2ApplicationNoteEmailServiceTest {
     }
 
     @Test
-    fun `when referer note is added but creator has no email then no email is sent`() {
+    fun `when assessor note is added then referrer is notified, no nacro reference`() {
+      assessment.nacroReferralId = null
+
+      service.assessorNoteAdded(application, note)
+
+      verify(exactly = 1) {
+        mockCas2EmailService.sendEmail(
+          recipientEmailAddress = user.email!!,
+          templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_ASSESSOR_NOTE_ADDED,
+          personalisation = mapOf(
+            "dateNoteAdded" to "25 June 2024",
+            "timeNoteAdded" to "10:30am",
+            "cohort" to "Prison Bail",
+            "crn" to "CRN123",
+            "timeApplicationReceived" to "16:07",
+            "dateApplicationReceived" to "24/06/2024",
+            "nacroReferenceId" to "Unknown. The Nacro CAS-2 reference number has not been added to the application yet.",
+            "nacroReferenceIdInSubject" to "",
+            "viewSubmittedApplicationUrl" to "http://frontend/applications/${application.id}",
+          ),
+          cas2Application = application,
+        )
+      }
+    }
+
+    @Test
+    fun `when assessor note is added but referrer has no email then no email is sent`() {
       val userNoEmail = Cas2UserEntityFactory()
         .withEmail(null)
         .produce()
+
       val applicationNoEmail = Cas2ApplicationEntityFactory()
         .withId(UUID.randomUUID())
         .withCreatedByUser(userNoEmail)
@@ -120,10 +129,63 @@ class Cas2ApplicationNoteEmailServiceTest {
         .withCohort(Cas2Cohort.PRISON_BAIL)
         .produce()
 
-      service.refererNoteAdded(applicationNoEmail, note)
+      service.assessorNoteAdded(applicationNoEmail, note)
 
       verify(exactly = 0) {
         mockCas2EmailService.sendEmail(any(), any(), any(), any())
+      }
+    }
+  }
+
+  @Nested
+  inner class Referrer {
+    @Test
+    fun `when referer note is added then assessors are notified`() {
+      service.refererNoteAdded(application, note)
+
+      verify(exactly = 1) {
+        mockCas2EmailService.sendEmail(
+          recipientEmailAddress = "assessors@example.com",
+          templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_REFERRER_NOTE_ADDED,
+          personalisation = mapOf(
+            "dateNoteAdded" to "25 June 2024",
+            "timeNoteAdded" to "10:30am",
+            "cohort" to "Prison Bail",
+            "crn" to "CRN123",
+            "timeApplicationReceived" to "16:07",
+            "dateApplicationReceived" to "24/06/2024",
+            "nacroReferenceId" to "NACROREF1",
+            "nacroReferenceIdInSubject" to "(NACROREF1)",
+            "viewSubmittedApplicationUrl" to "http://frontend/assessments/${application.id}",
+          ),
+          cas2Application = application,
+        )
+      }
+    }
+
+    @Test
+    fun `when referer note is added then assessors are notified, no nacro reference`() {
+      assessment.nacroReferralId = null
+
+      service.refererNoteAdded(application, note)
+
+      verify(exactly = 1) {
+        mockCas2EmailService.sendEmail(
+          recipientEmailAddress = "assessors@example.com",
+          templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_REFERRER_NOTE_ADDED,
+          personalisation = mapOf(
+            "dateNoteAdded" to "25 June 2024",
+            "timeNoteAdded" to "10:30am",
+            "cohort" to "Prison Bail",
+            "crn" to "CRN123",
+            "timeApplicationReceived" to "16:07",
+            "dateApplicationReceived" to "24/06/2024",
+            "nacroReferenceId" to "Unknown. The Nacro CAS-2 reference number has not been added to the application yet.",
+            "nacroReferenceIdInSubject" to "",
+            "viewSubmittedApplicationUrl" to "http://frontend/assessments/${application.id}",
+          ),
+          cas2Application = application,
+        )
       }
     }
   }

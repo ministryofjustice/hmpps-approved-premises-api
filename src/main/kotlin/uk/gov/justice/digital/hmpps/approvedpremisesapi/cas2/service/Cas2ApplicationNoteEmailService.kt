@@ -4,12 +4,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.format.DateTimeFormatter
+import kotlin.io.resolve
 
 @Service
 class Cas2ApplicationNoteEmailService(
@@ -30,11 +32,13 @@ class Cas2ApplicationNoteEmailService(
     cas2Application: Cas2ApplicationEntity,
     applicationNote: Cas2ApplicationNoteEntity,
   ) {
+    val recipientEmail = cas2Application.createdByUser.email ?: return
+
     sendNoteAddedEmail(
       cas2Application = cas2Application,
       applicationNote = applicationNote,
-      recipientEmail = notifyConfig.emailAddresses.cas2Assessors,
-      resolvedUrl = assessmentUrlTemplate.resolve(mapOf("applicationId" to cas2Application.id.toString())),
+      recipientEmail = recipientEmail,
+      resolvedUrl = applicationUrlTemplate.resolve(mapOf("id" to cas2Application.id.toString())),
       templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_ASSESSOR_NOTE_ADDED,
     )
   }
@@ -43,13 +47,11 @@ class Cas2ApplicationNoteEmailService(
     cas2Application: Cas2ApplicationEntity,
     applicationNote: Cas2ApplicationNoteEntity,
   ) {
-    val recipientEmail = cas2Application.createdByUser.email ?: return
-
     sendNoteAddedEmail(
       cas2Application = cas2Application,
       applicationNote = applicationNote,
-      recipientEmail = recipientEmail,
-      resolvedUrl = applicationUrlTemplate.resolve(mapOf("id" to cas2Application.id.toString())),
+      recipientEmail = notifyConfig.emailAddresses.cas2Assessors,
+      resolvedUrl = assessmentUrlTemplate.resolve(mapOf("applicationId" to cas2Application.id.toString())),
       templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_REFERRER_NOTE_ADDED,
     )
   }
@@ -71,7 +73,8 @@ class Cas2ApplicationNoteEmailService(
       "crn" to cas2Application.crn,
       "timeApplicationReceived" to submittedAt.format(TIME_FORMAT),
       "dateApplicationReceived" to submittedAt.format(DATE_FORMAT),
-      "nacroReferenceId" to cas2Application.id.toString(),
+      "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(cas2Application.assessment!!),
+      "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(cas2Application.assessment!!),
       "viewSubmittedApplicationUrl" to resolvedUrl,
     )
 
@@ -81,5 +84,19 @@ class Cas2ApplicationNoteEmailService(
       personalisation = personalisation,
       cas2Application = cas2Application,
     )
+  }
+
+  private fun getSubjectLineReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String {
+    if (assessment.nacroReferralId != null) {
+      return "(${assessment.nacroReferralId!!})"
+    }
+    return ""
+  }
+
+  private fun getNacroReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String {
+    if (assessment.nacroReferralId != null) {
+      return assessment.nacroReferralId!!
+    }
+    return "Unknown. The Nacro CAS-2 reference number has not been added to the application yet."
   }
 }

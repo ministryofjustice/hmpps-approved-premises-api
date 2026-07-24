@@ -74,6 +74,7 @@ class Cas2AssessmentNotesTest(
 
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
+            withNacroReferralId("OH789")
             withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
@@ -89,15 +90,15 @@ class Cas2AssessmentNotesTest(
             .responseBody
             .blockFirst()
 
-          val responseBody = jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
           emailAsserter.assertEmailRequested(
             toEmailAddress = referrer.email!!,
-            templateId = "71fd8007-87a0-49b8-9099-7919b6ca4716", // CAS2_BAIL_APPLICATION_REFERRER_NOTE_ADDED
+            templateId = "0919a001-7b83-44c0-b0d0-a617d84012bb", // CAS2_BAIL_APPLICATION_ASSESSOR_NOTE_ADDED
             personalisation = mapOf(
               "cohort" to "Prison Bail",
               "crn" to "CRN123",
-              "nacroReferenceId" to application.id.toString(),
+              "nacroReferenceId" to "OH789",
               "viewSubmittedApplicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
             ),
           )
@@ -170,6 +171,7 @@ class Cas2AssessmentNotesTest(
 
         val assessment = cas2AssessmentEntityFactory.produceAndPersist {
           withApplication(application)
+          withNacroReferralId("OH789")
           withServiceOrigin(Cas2ServiceOrigin.BAIL)
         }
 
@@ -185,15 +187,16 @@ class Cas2AssessmentNotesTest(
           .responseBody
           .blockFirst()
 
-        val responseBody = jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
         emailAsserter.assertEmailRequested(
           toEmailAddress = "assessors@example.com",
-          templateId = "0919a001-7b83-44c0-b0d0-a617d84012bb", // CAS2_BAIL_APPLICATION_ASSESSOR_NOTE_ADDED
+          templateId = "71fd8007-87a0-49b8-9099-7919b6ca4716", // CAS2_BAIL_APPLICATION_REFERRER_NOTE_ADDED
           personalisation = mapOf(
             "cohort" to "Prison Bail",
             "crn" to "CRN123",
-            "nacroReferenceId" to application.id.toString(),
+            "nacroReferenceId" to "OH789",
+            "nacroReferenceIdInSubject" to "(OH789)",
             "viewSubmittedApplicationUrl" to assessmentUrlTemplate.resolve("applicationId", application.id.toString()),
           ),
         )
