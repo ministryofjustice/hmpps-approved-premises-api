@@ -40,6 +40,16 @@ interface InboxEventRepository : JpaRepository<InboxEventEntity, UUID> {
   @Modifying
   fun setFailedAsPending(): Int
 
+  @Modifying
+  @Query(
+    value = """
+    DELETE FROM inbox_events
+    WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '90 days'
+  """,
+    nativeQuery = true,
+  )
+  fun deleteInboxEventsOlderThan90Days(): Int
+
   interface ProcessedStatusCount {
     fun getCount(): Long
     fun getProcessedStatus(): ProcessedStatus
