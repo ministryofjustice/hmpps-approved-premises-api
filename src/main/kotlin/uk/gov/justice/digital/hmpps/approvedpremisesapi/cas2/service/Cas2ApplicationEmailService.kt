@@ -4,12 +4,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.format.DateTimeFormatter
 
 @Service
 class Cas2ApplicationEmailService(
   private val cas2EmailService: Cas2EmailService,
+  private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: UrlTemplate,
 ) {
 
@@ -38,7 +40,7 @@ class Cas2ApplicationEmailService(
     )
 
     cas2EmailService.sendEmail(
-      recipientEmailAddress = recipientEmailAddress,
+      recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_TO_ASSESS,
       personalisation = commonPersonalisation + mapOf(
         "sla" to cohort.assessmentSla,
