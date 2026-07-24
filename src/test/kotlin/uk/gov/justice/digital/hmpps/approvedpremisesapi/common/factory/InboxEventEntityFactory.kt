@@ -15,7 +15,8 @@ class InboxEventEntityFactory : Factory<InboxEventEntity> {
   private var eventType: Yielded<String> = { randomStringUpperCase(12) }
   private var eventDetailUrl: Yielded<String> = { randomStringUpperCase(12) }
   private var eventOccurredAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(5) }
-  private var createdAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(14) }
+  private var createdAt: Yielded<Instant> = { Instant.now() }
+
   private var processedStatus: Yielded<ProcessedStatus> = { ProcessedStatus.entries.random() }
   private var processedAt: Yielded<Instant?> = { Instant.now().randomDateTimeBefore(14) }
   private var payload: Yielded<String> = { "{}" }
@@ -38,6 +39,10 @@ class InboxEventEntityFactory : Factory<InboxEventEntity> {
 
   fun withProcessedAt(processedAt: Instant?) = apply {
     this.processedAt = { processedAt }
+  }
+
+  fun withCreatedAt(createdAt: Instant) = apply {
+    this.createdAt = { createdAt }
   }
 
   override fun produce(): InboxEventEntity = InboxEventEntity(
