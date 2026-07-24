@@ -16,12 +16,12 @@ class ClientCachingOAuth2AuthorizedClientService(
 ) : OAuth2AuthorizedClientService {
   private val authorizedClients: MutableMap<OAuth2AuthorizedClientId, OAuth2AuthorizedClient> = ConcurrentHashMap()
 
-  override fun <T : OAuth2AuthorizedClient?> loadAuthorizedClient(
+  override fun <T : OAuth2AuthorizedClient> loadAuthorizedClient(
     clientRegistrationId: String,
     principalName: String,
   ): T? = clientRegistrationRepository.findByRegistrationId(clientRegistrationId)?.let {
     @Suppress("UNCHECKED_CAST")
-    authorizedClients[OAuth2AuthorizedClientId(clientRegistrationId, SYSTEM_USERNAME)] as T
+    authorizedClients[OAuth2AuthorizedClientId(clientRegistrationId, SYSTEM_USERNAME)] as? T
   }
 
   override fun saveAuthorizedClient(authorizedClient: OAuth2AuthorizedClient, principal: Authentication) {

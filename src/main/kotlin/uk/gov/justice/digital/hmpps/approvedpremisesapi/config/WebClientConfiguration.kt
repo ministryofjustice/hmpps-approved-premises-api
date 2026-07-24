@@ -11,11 +11,11 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
+import uk.gov.justice.hmpps.kotlin.auth.ServletRequestResponseNonNullFilterFunction
 import java.time.Duration
 
 data class WebClientConfig(
@@ -56,6 +56,7 @@ class WebClientConfiguration(
     return WebClientConfig(
       WebClient.builder()
         .baseUrl(cas1UiBaseUrl)
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -87,6 +88,7 @@ class WebClientConfiguration(
     return WebClientConfig(
       WebClient.builder()
         .baseUrl(apDeliusContextApiBaseUrl)
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -127,6 +129,7 @@ class WebClientConfiguration(
               .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(tierApiUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .build(),
       retryOnReadTimeout = true,
@@ -161,6 +164,7 @@ class WebClientConfiguration(
             it.defaultCodecs().maxInMemorySize(prisonApiMaxResponseInMemorySizeBytes)
           }.build(),
         )
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .build(),
       retryOnReadTimeout = true,
@@ -196,6 +200,7 @@ class WebClientConfiguration(
             it.defaultCodecs().maxInMemorySize(prisonerAlertsApiMaxResponseInMemorySizeBytes)
           }.build(),
         )
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .build(),
       retryOnReadTimeout = true,
@@ -204,12 +209,11 @@ class WebClientConfiguration(
 
   @Bean(name = ["caseNotesWebClient"])
   fun caseNotesWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
+    authorizedClients: OAuth2AuthorizedClientManager,
     @Value("\${services.case-notes.base-url}") caseNotesBaseUrl: String,
     @Value("\${services.case-notes.timeout-ms}") caseNotesServiceUpstreamTimeoutMs: Long,
   ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClients)
 
     oauth2Client.setDefaultClientRegistrationId("case-notes")
 
@@ -224,6 +228,7 @@ class WebClientConfiguration(
               .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(caseNotesServiceUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .build(),
       retryOnReadTimeout = true,
@@ -251,6 +256,7 @@ class WebClientConfiguration(
               .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(apAndOasysUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .build(),
       retryOnReadTimeout = true,
@@ -305,6 +311,7 @@ class WebClientConfiguration(
     return WebClientConfig(
       WebClient.builder()
         .baseUrl(nomisUserRolesBaseUrl)
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -353,6 +360,7 @@ class WebClientConfiguration(
 
     return WebClientConfig(
       WebClient.builder()
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -384,6 +392,7 @@ class WebClientConfiguration(
 
     return WebClientConfig(
       WebClient.builder()
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -417,6 +426,7 @@ class WebClientConfiguration(
     return WebClientConfig(
       WebClient.builder()
         .baseUrl(prisonSearchBaseUrl)
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -450,6 +460,7 @@ class WebClientConfiguration(
     return WebClientConfig(
       WebClient.builder()
         .baseUrl(licenceApiBaseUrl)
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -483,6 +494,7 @@ class WebClientConfiguration(
     return WebClientConfig(
       WebClient.builder()
         .baseUrl(healthAndMedicationApiBaseUrl)
+        .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(

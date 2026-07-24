@@ -373,7 +373,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
     @Test
     fun success() {
-      departureReasonRepository.deleteAll()
+      departureReasonRepository.deleteAllRecursively()
 
       val compareByDepartureReasonNameAsc = compareBy(String.CASE_INSENSITIVE_ORDER, DepartureReasonEntity::name)
       val compareByDepartureReasonNameDesc = compareByDescending(String.CASE_INSENSITIVE_ORDER, DepartureReasonEntity::name)
