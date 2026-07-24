@@ -14,6 +14,24 @@ data:
     chmod 0600 ~/.pgpass
 
     set -x
+    
+    # Only run script if the number of migrations is the same in both environments
+    SCHEMA_VERSIONS_SQL="select count(version) from public.flyway_schema_history"
+    psql_preprod() { psql -h "$DB_HOST_PREPROD" -U "$DB_USER_PREPROD" -d "$DB_NAME_PREPROD" -At -c "$@"; }
+    psql_prod() { psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -At -c "$@"; }
+    
+    PREPROD_SCHEMA_VERSION=$(psql_preprod "$SCHEMA_VERSIONS_SQL")
+    PROD_SCHEMA_VERSION=$(psql_prod "$SCHEMA_VERSIONS_SQL")
+
+    if [[ "$PREPROD_SCHEMA_VERSION" != "$PROD_SCHEMA_VERSION" ]]; then
+      echo -e "\nFound different number of schema versions"
+      echo "Preprod has $PREPROD_SCHEMA_VERSION different versions"
+      echo "Prod has $PROD_SCHEMA_VERSION different versions"
+      exit 1
+    else
+      echo -e "\nFlyway migrations check passed, both schemas have $PROD_SCHEMA_VERSION versions installed"
+    fi
+    
     # Dump production data
     pg_dump --host="$DB_HOST" \
       --username="$DB_USER" \
