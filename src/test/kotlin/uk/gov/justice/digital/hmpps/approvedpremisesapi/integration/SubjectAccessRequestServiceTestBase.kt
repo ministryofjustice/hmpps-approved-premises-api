@@ -2,37 +2,24 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -40,19 +27,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests.SubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelper
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
+
   @Autowired
   lateinit var sarService: SubjectAccessRequestService
-  lateinit var premises: ApprovedPremisesEntity
-  companion object {
 
+  @Autowired
+  lateinit var sarIntegrationTestHelper: SarIntegrationTestHelper
+
+  companion object {
     const val CREATED_AT = "2021-09-18T16:00:00+00:00"
     const val SUBMITTED_AT = "2021-10-19T16:00:00+00:00"
     const val SUBMITTED_AT_NO_TZ = "2021-10-19T16:00:00"
@@ -69,6 +59,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     const val DECISION_MADE_AT_NO_TZ = "2021-10-25T16:01:00"
     const val DATA_JSON_SIMPLE = """{ "key": "value" }"""
     const val DOCUMENT_JSON_SIMPLE = """{ "key2": "value2" }"""
+
     const val EVENT_NUMBER = "1"
     const val OFFENCE_ID = "BEING_BAD"
     const val CONVICTION_ID = 2L
@@ -77,18 +68,10 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     const val OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE = "NOT APPLICABLE"
     const val SENTENCE_TYPE_CUSTODIAL = "CUSTODIAL"
     const val NAME = "Jeffity Jeff"
-    const val LICENCE_EXPIRY_DATE = "2021-07-17"
-    const val EXPIRED_REASON = "Expired reason"
-    const val REASON_COMMENTS = "agree with short notice reason comments"
-    const val LATE_APPLICATION_REASON = "late application reason"
-    const val REQUESTED_DURATION = 8
-    const val AUTHORISED_DURATION = 9
-    const val ADDITIONAL_INFORMATION = "some additional information"
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
-    val TRANSFER_TYPE = TransferType.PLANNED
-    val TRANSFER_REASON = TransferReason.movingPersonCloserToResettlementArea
+
     var arrivedAtDateOnly = ARRIVED_AT.substring(0..9)
     var submittedAtDateOnly = SUBMITTED_AT.substring(0..9)
     var departedAtDateOnly = DEPARTED_AT.substring(0..9)
@@ -97,13 +80,16 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     var cancellationDateOnly = CANCELLATION_DATE.substring(0..9)
     var arrivedAtTime = ARRIVED_AT.substring(11..18)
     var departedAtTime = DEPARTED_AT.substring(11..18)
+
+    @JvmStatic
+    protected fun readResource(path: String) = SubjectAccessRequestServiceTestBase::class.java.classLoader.getResource(path)!!.readText()
   }
 
   protected fun OffsetDateTime.toStandardisedFormat(): String = this.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
   protected fun cancellationJson(cancellation: Cas3CancellationEntity): String =
     """
-      {   
+      {
           "crn": "${cancellation.booking.crn}",
           "noms_number": "${cancellation.booking.nomsNumber}",
           "notes": "${cancellation.notes}",
@@ -126,46 +112,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       }
     """.trimIndent()
 
-  @SuppressWarnings("CyclomaticComplexMethod")
-  protected fun spaceBookingsJson(booking: Cas1SpaceBookingEntity): String =
-    """
-      {
-         "crn": "${booking.crn}",
-         "noms_number":  ${if (booking.application != null) "\"${booking.application!!.nomsNumber}\"" else "null"},
-         "canonical_arrival_date": ${if (booking.canonicalArrivalDate != null) "\"${booking.canonicalArrivalDate}\"" else null},
-         "canonical_departure_date": ${if (booking.canonicalDepartureDate != null) "\"${booking.canonicalDepartureDate}\"" else null},
-         "expected_arrival_date": ${if (booking.expectedArrivalDate != null) "\"${booking.expectedArrivalDate}\"" else null},
-         "expected_departure_date": ${if (booking.expectedDepartureDate != null) "\"${booking.expectedDepartureDate}\"" else null},
-         "actual_arrival_date": ${if (booking.actualArrivalDate != null) "\"${booking.actualArrivalDate}\"" else null},
-         "actual_arrival_time": ${if (booking.actualArrivalTime != null) "\"${booking.actualArrivalTime}:00\"" else null},
-         "actual_departure_date": ${if (booking.actualDepartureDate != null) "\"${booking.actualDepartureDate}\"" else null},
-         "actual_departure_time": ${if (booking.actualDepartureTime != null) "\"${booking.actualDepartureTime}:00\"" else null},
-         "non_arrival_confirmed_at": ${if (booking.nonArrivalConfirmedAt != null) "\"$CREATED_AT\"" else null},
-         "non_arrival_notes": ${if (booking.nonArrivalNotes != null) "\"${booking.nonArrivalNotes}\"" else null},
-         "non_arrival_reason_id": ${if (booking.nonArrivalReason != null) "\"${booking.nonArrivalReason!!.id}\"" else null},
-         "tier": ${if (booking.application?.riskRatings?.tier?.value?.level != null) "\"${booking.application?.riskRatings?.tier?.value?.level}\"" else null},
-         "created_at": "$CREATED_AT",
-         "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
-         "key_worker_assigned_at": "$CREATED_AT",
-         "key_worker_name": "${booking.keyWorkerName}",
-         "premises_name": "${booking.premises.name}",
-         "person_name": ${if (booking.application != null) "\"${booking.application!!.name}\"" else "\"${booking.offlineApplication!!.name}\""},
-         "delius_event_number": "${booking.deliusEventNumber}",
-         "created_by_user_name":  ${booking.createdBy?.let { "\"${it.name}\"" }},
-         "departure_reason": ${booking.departureReason?.let { "\"${it.name}\"" }},
-         "departure_notes": ${if (booking.departureNotes != null) "\"${booking.departureNotes}\"" else null},
-         "move_on_category": ${booking.departureMoveOnCategory?.let { "\"${it.name}\"" }},
-         "cancellation_reason_notes": ${if (booking.cancellationReasonNotes != null) "\"${booking.cancellationReasonNotes}\"" else null},
-         "cancellation_reason": ${booking.cancellationReason?.let { "\"${it.name}\"" }},
-         "cancellation_occurred_at": ${if (booking.cancellationOccurredAt != null) "\"${booking.cancellationOccurredAt}\"" else null},
-         "cancellation_recorded_at": "$CANCELLATION_DATE",
-         "characteristics_property_names": "${booking.criteria?.let{ it.map { criteria -> criteria.propertyName}.sortedBy{ propertyName -> propertyName }.joinToString(",")}}",
-         "transfer_type": ${booking.transferType?.let { "\"${booking.transferType}\"" }},
-         "additional_information": ${booking.additionalInformation?.let { "\"${it}\"" }},
-         "transfer_reason": ${booking.transferReason?.let { "\"${it.name}\"" }}
-      }
-    """.trimIndent()
-
   protected fun bookingsJson(booking: Cas3BookingEntity): String =
     """
       {
@@ -179,55 +125,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
          "status": "${booking.status}",
          "premises_name": "${booking.premises.name}",
          "offender_name": ${booking.offenderName?.let { "\"${it}\"" }},
-      }
-    """.trimIndent()
-
-  protected fun risksJson(): String =
-    """
-      {
-          "roshRisks" : {
-            "status" : "NotFound",
-            "value" : null
-          },
-          "mappa" : {
-            "status" : "NotFound",
-            "value" : null
-          },
-          "tier" : {
-            "status" : "Retrieved",
-            "value" : {
-              "level" : "M1",
-              "lastUpdated" : [ 2023, 6, 26 ],
-              "version": "V2"
-            }
-          },
-          "flags" : {
-            "status" : "NotFound",
-            "value" : null
-          }
-      }
-    """.trimIndent()
-
-  protected fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String = """ 
-      {
-        "crn": "${domainEvent.crn}",
-        "type": "${domainEvent.type}",
-        "occurred_at": "$ALLOCATED_AT",
-        "created_at": "$CREATED_AT",
-        "data": ${domainEvent.data},
-        "triggered_by_user": ${user?.let {"\"${it.name}\""} ?: "null"},
-        "noms_number": "${domainEvent.nomsNumber}",
-      }
-  """.trimIndent()
-
-  protected fun domainEventsMetadataJson(domainEvent: DomainEventEntity): String =
-    """
-      {
-        "crn": "${domainEvent.crn}",
-        "noms_number": "${domainEvent.nomsNumber}",
-        "created_at": "$CREATED_AT",
-        "name": "${MetaDataName.CAS1_REQUESTED_AP_TYPE}",
-        "value": "${ApprovedPremisesType.NORMAL}"
       }
     """.trimIndent()
 
@@ -254,74 +151,22 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withNewDepartureDate(LocalDate.parse(newDepartureDateOnly))
   }
 
-  @SuppressWarnings("LongParameterList")
-  protected fun spaceBookingEntity(
-    offenderDetails: OffenderDetailSummary,
-    application: ApprovedPremisesApplicationEntity? = null,
-    nonArrivalReason: NonArrivalReasonEntity? = null,
-    departureReason: DepartureReasonEntity? = null,
-    moveOnCategory: MoveOnCategoryEntity? = null,
-    cancellationReason: CancellationReasonEntity? = null,
-    offlineApplication: OfflineApplicationEntity? = null,
-    transferType: TransferType? = null,
-    additionalInformation: String? = null,
-    transferReason: TransferReason? = null,
-  ): Cas1SpaceBookingEntity {
-    val (user, _) = givenAUser()
-    val (placementRequest) = givenAPlacementRequest(
-      assessmentAllocatedTo = user,
-      createdByUser = user,
-    )
-    val bed = bedEntity()
-    val spaceBooking =
-      cas1SpaceBookingEntityFactory.produceAndPersist {
-        withPlacementRequest(placementRequest)
-        withCrn(offenderDetails.otherIds.crn)
-        withPremises(premises)
-        withApplication(application)
-        withCanonicalArrivalDate(LocalDate.parse(arrivedAtDateOnly))
-        withCanonicalDepartureDate(LocalDate.parse(departedAtDateOnly))
-        withExpectedArrivalDate(LocalDate.parse(arrivedAtDateOnly))
-        withExpectedDepartureDate(LocalDate.parse(departedAtDateOnly))
-        withActualArrivalDate(LocalDate.parse(arrivedAtDateOnly))
-        withActualArrivalTime(LocalTime.parse(arrivedAtTime))
-        withActualDepartureDate(LocalDate.parse(departedAtDateOnly))
-        withActualDepartureTime(LocalTime.parse(departedAtTime))
-        withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-        withKeyworkerStaffCode("KEYWORKERSTAFFCODE")
-        withKeyworkerName("KEYWORKERNAME")
-        withKeyworkerAssignedAt(OffsetDateTime.parse(CREATED_AT).toInstant())
-        withCreatedBy(user)
-        withDeliusEventNumber("DELIUSEVENTNUMBER")
-        withNonArrivalConfirmedAt(OffsetDateTime.parse(CREATED_AT).toInstant())
-        withNonArrivalNotes("NONARRIVALNOTES")
-        withNonArrivalReason(nonArrivalReason)
-        withDepartureNotes("DEPARTURENOTES")
-        withDepartureReason(departureReason)
-        withMoveOnCategory(moveOnCategory)
-        withCancellationOccurredAt(LocalDate.parse(cancellationDateOnly))
-        withCancellationRecordedAt(OffsetDateTime.parse(CANCELLATION_DATE).toInstant())
-        withCancellationReason(cancellationReason)
-        withCancellationReasonNotes("CANCELLATIONREASONNOTES")
-        withCriteria(
-          mutableListOf(
-            characteristicEntityFactory.produceAndPersist(),
-          ),
-        )
-        withOfflineApplication(offlineApplication)
-        withTransferType(transferType)
-        withAdditionalInformation(additionalInformation)
-        withTransferReason(transferReason)
-      }
-    return spaceBooking
-  }
-
   protected fun bookingEntity(
     offenderDetails: OffenderDetailSummary,
     application: ApplicationEntity,
   ): Cas3BookingEntity {
     val user = userEntity()
-    val (cas3Premises, cas3Bedspace) = givenCas3PremisesAndBedspace(user = user)
+    val (cas3Premises, cas3Bedspace) = givenCas3PremisesAndBedspace(
+      user = user,
+      premises = givenACas3Premises(
+        name = "SAR-TEST-PREMISES",
+        probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        },
+        status = Cas3PremisesStatus.online,
+      ),
+
+    )
 
     return cas3BookingEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
@@ -339,43 +184,33 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     }
   }
 
-  protected fun bedEntity(premisesEntity: ApprovedPremisesEntity? = null) = bedEntityFactory.produceAndPersist {
-    withName("a bed ${randomStringMultiCaseWithNumbers(5)}")
-    withCode("a code ${randomStringMultiCaseWithNumbers(5)}")
+  fun risksJson(): String =
+    """
+      {
+          "roshRisks" : {
+            "status" : "NotFound",
+            "value" : null
+          },
+          "mappa" : {
+            "status" : "NotFound",
+            "value" : null
+          },
+          "tier" : {
+            "status" : "Retrieved",
+            "value" : {
+              "level" : "M1",
+              "lastUpdated" : [ 2023, 6, 26 ],
+              "version" : "V2"
+            }
+          },
+          "flags" : {
+            "status" : "NotFound",
+            "value" : null
+          }
+      }
+    """.trimIndent()
 
-    premises = givenAnApprovedPremises(
-      name = "a premises ${randomStringMultiCaseWithNumbers(5)}",
-      apCode = "AP Code ${randomStringMultiCaseWithNumbers(5)}",
-      localAuthorityArea = localAuthorityEntityFactory.produceAndPersist {
-        withName("An LAA ${randomStringMultiCaseWithNumbers(5)}")
-        withIdentifier("LAA ID ${randomStringMultiCaseWithNumbers(5)}")
-      },
-      region = probationRegionEntity(),
-    )
-
-    withRoom(
-      roomEntityFactory.produceAndPersist {
-        withCode("room code ${randomStringMultiCaseWithNumbers(5)}")
-        withName("room name ${randomStringMultiCaseWithNumbers(5)}")
-        withPremises(premises)
-      },
-    )
-  }
-
-  protected fun probationRegionEntity() = probationRegionEntityFactory.produceAndPersist {
-    withName("Probation Region ${randomStringMultiCaseWithNumbers(5)}")
-    withApArea(givenAnApArea(name = "Probation Area ${randomStringMultiCaseWithNumbers(5)}"))
-  }
-
-  protected fun userEntity(): UserEntity = userEntityFactory.produceAndPersist {
-    withProbationRegion(givenAProbationRegion())
-  }
-
-  protected fun probationDeliveryUnitEntity(user: UserEntity): ProbationDeliveryUnitEntity = probationDeliveryUnitFactory.produceAndPersist {
-    withProbationRegion(user.probationRegion)
-  }
-
-  protected fun personRisks() = PersonRisksFactory()
+  fun personRisks() = PersonRisksFactory()
     .withTier(
       RiskWithStatus(
         status = RiskStatus.Retrieved,
@@ -392,40 +227,72 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       RiskWithStatus(status = RiskStatus.NotFound),
     ).produce()
 
-  protected fun approvedPremisesAssessmentClarificationNoteEntity(assessment: ApprovedPremisesAssessmentEntity): AssessmentClarificationNoteEntity = assessmentClarificationNoteEntityFactory.produceAndPersist {
-    withAssessment(assessment)
-    withCreatedBy(assessment.allocatedToUser!!)
-    withQuery("some query")
-    withResponse("a useful response")
-    withResponseReceivedOn(LocalDate.parse(RESPONSE_RECEIVED_AT))
-    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-  }
+  fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String =
+    """
+      {
+        "crn": "${domainEvent.crn}",
+        "type": "${domainEvent.type}",
+        "occurred_at": "$ALLOCATED_AT",
+        "created_at": "$CREATED_AT",
+        "data": ${domainEvent.data},
+        "triggered_by_user": ${user?.let {"\"${it.name}\""} ?: "null"},
+        "noms_number": "${domainEvent.nomsNumber}",
+      }
+    """.trimIndent()
 
-  protected fun domainEventEntity(
+  fun domainEventsMetadataJson(domainEvent: DomainEventEntity): String =
+    """
+      {
+        "crn": "${domainEvent.crn}",
+        "noms_number": "${domainEvent.nomsNumber}",
+        "created_at": "$CREATED_AT",
+        "name": "${MetaDataName.CAS1_REQUESTED_AP_TYPE}",
+        "value": "${ApprovedPremisesType.NORMAL}"
+      }
+    """.trimIndent()
+
+  fun domainEventEntity(
     offender: OffenderDetailSummary,
     applicationId: UUID,
     assessmentId: UUID,
     userId: UUID?,
+    type: DomainEventType,
     serviceName: ServiceName = ServiceName.approvedPremises,
-  ): DomainEventEntity {
-    val domainEvent = domainEventFactory.produceAndPersist {
-      withId(UUID.randomUUID())
-      withService(serviceName)
-      withCrn(offender.otherIds.crn)
-      withNomsNumber(offender.otherIds.nomsNumber)
-      withApplicationId(applicationId)
-      withAssessmentId(assessmentId)
-      withType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withOccurredAt(OffsetDateTime.parse(ALLOCATED_AT))
-      withData("{ }")
-      withTriggeredByUserId(userId)
-      withMetadata(
-        mapOf(
-          MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),
-        ),
-      )
-    }
-    return domainEvent
+  ): DomainEventEntity = domainEventFactory.produceAndPersist {
+    withId(UUID.randomUUID())
+    withService(serviceName)
+    withCrn(offender.otherIds.crn)
+    withNomsNumber(offender.otherIds.nomsNumber)
+    withApplicationId(applicationId)
+    withAssessmentId(assessmentId)
+    withType(type)
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withOccurredAt(OffsetDateTime.parse(ALLOCATED_AT))
+    withData("{ }")
+    withTriggeredByUserId(userId)
+    withMetadata(
+      mapOf(
+        MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),
+      ),
+    )
+  }
+
+  fun probationRegionEntity(
+    name: String = "Probation Region ${randomStringMultiCaseWithNumbers(5)}",
+  ) = probationRegionEntityFactory.produceAndPersist {
+    withName(name)
+    withApArea(givenAnApArea(name = "Probation Area ${randomStringMultiCaseWithNumbers(5)}"))
+  }
+
+  fun userEntity(): UserEntity = userEntityFactory.produceAndPersist {
+    withProbationRegion(givenAProbationRegion())
+  }
+
+  fun probationDeliveryUnitEntity(
+    user: UserEntity,
+    name: String = randomStringMultiCaseWithNumbers(8),
+  ): ProbationDeliveryUnitEntity = probationDeliveryUnitFactory.produceAndPersist {
+    withProbationRegion(user.probationRegion)
+    withName(name)
   }
 }

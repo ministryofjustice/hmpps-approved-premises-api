@@ -230,6 +230,10 @@ services:
 hmpps:
   auth:
     url: http://localhost:9091/auth
+  sar:
+    template:
+      path: /sar/template_hmpps-approved-premises-api.mustache
+      enabled: true
 
 log-client-credentials-jwt-info: false
 log-request-response: false
