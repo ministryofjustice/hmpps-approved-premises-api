@@ -94,9 +94,7 @@ class CaseService(
   )
 
   private fun CaseEntity.updateFrom(caseSummary: CaseSummary, tiers: CaseTiers): CaseEntity = apply {
-    name = "${caseSummary.name.forename} ${caseSummary.name.surname}"
-      .uppercase()
-      .trim()
+    name = caseSummary.buildName()
     nomsNumber = caseSummary.nomsId
     lastUpdatedAt = OffsetDateTime.now()
     if (tiers.v2 != null) {
@@ -112,13 +110,13 @@ class CaseService(
     crn = caseSummary.crn,
     createdAt = OffsetDateTime.now(),
     lastUpdatedAt = OffsetDateTime.now(),
-    name = "${caseSummary.name.forename} ${caseSummary.name.surname}"
-      .uppercase()
-      .trim(),
+    name = caseSummary.buildName(),
     nomsNumber = caseSummary.nomsId,
     tierV2 = tiers.v2,
     tierV3 = tiers.v3,
   )
+
+  private fun CaseSummary.buildName() = "${name.forename} ${name.surname}".uppercase().trim()
 
   private fun CaseEntity.toDto() = CaseDto(
     crn = crn,
