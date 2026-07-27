@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -47,8 +49,11 @@ class CaseServiceTest {
   @MockK
   private lateinit var mockApDeliusContextApiClient: ApDeliusContextApiClient
 
-  @MockK
+  @RelaxedMockK
   private lateinit var mockFeatureFlagService: FeatureFlagService
+
+  @RelaxedMockK
+  private lateinit var mockSentryService: SentryService
 
   @InjectMockKs
   private lateinit var service: CaseService
@@ -423,6 +428,21 @@ class CaseServiceTest {
   inner class GetCase {
 
     @Test
+    fun `if case is missing, raise an alert`() {
+      val crn = "CRN123"
+      every { mockCaseRepository.findByCrn(crn) } returns null
+
+      val result = service.getCase(crn)
+
+      assertThat(result).isNull()
+
+      val thrownExceptionSlot = slot<CaseService.CaseNotFound>()
+      verify { mockSentryService.captureException(capture(thrownExceptionSlot)) }
+
+      assertThat(thrownExceptionSlot.captured.message).isEqualTo("Case with CRN CRN123 not found")
+    }
+
+    @Test
     fun `if feature flag 'use-tier-v3' is false, should return tierV2`() {
       val crn = "CRN123"
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
@@ -464,6 +484,31 @@ class CaseServiceTest {
 
       assertThat(result).isNotNull
       assertThat(result!!.tier?.tierScore).isEqualTo("V3")
+    }
+  }
+
+  @Nested
+  inner class GetCases {
+    @Test
+    fun `should return all cases for given CRNs, raising alerts for missing cases`() {
+      val crn1 = "CRN123"
+      val crn2 = "CRN456"
+      val crn3 = "CRN789"
+
+      val caseEntity1 = CaseEntityFactory().withCrn(crn1).produce()
+      val caseEntity3 = CaseEntityFactory().withCrn(crn3).produce()
+
+      every { mockCaseRepository.findByCrnIn(listOf(crn1, crn2, crn3)) } returns listOf(caseEntity1, caseEntity3)
+
+      val result = service.getCases(listOf(crn1, crn2, crn3))
+
+      assertThat(result).hasSize(2)
+      assertThat(result.map { it.crn }).containsExactlyInAnyOrder(crn1, crn3)
+
+      val thrownExceptionSlot = slot<CaseService.CaseNotFound>()
+      verify { mockSentryService.captureException(capture(thrownExceptionSlot)) }
+
+      assertThat(thrownExceptionSlot.captured.message).isEqualTo("Case with CRN CRN456 not found")
     }
   }
 }

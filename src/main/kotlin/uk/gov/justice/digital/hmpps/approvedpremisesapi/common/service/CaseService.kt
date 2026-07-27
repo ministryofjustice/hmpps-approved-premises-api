@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_INCLUDE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
@@ -42,6 +43,7 @@ class CaseService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val featureFlagService: FeatureFlagService,
+  private val sentryService: SentryService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -76,12 +78,29 @@ class CaseService(
     return true
   }
 
-  fun getCase(crn: String): CaseDto? = caseRepository.findByCrn(crn)?.toDto()
+  /**
+   * Get a case by CRN. Note that a case must have been previously registered via
+   * a call to [ensureCaseExists] to be returned here. If a case isn't found an
+   * alert will be raised so we can investigate this, as it should never happen
+   */
+  fun getCase(crn: String): CaseDto? {
+    val case = caseRepository.findByCrn(crn)?.toDto()
+    if (case == null) {
+      alertCaseNotFound(crn)
+    }
+    return case
+  }
 
   /**
    * If a case can't be found for a given CRN there will be no corresponding entry in the result
    */
-  fun getCases(crns: List<String>): List<CaseDto> = caseRepository.findByCrnIn(crns).map { it.toDto() }
+  fun getCases(crns: List<String>): List<CaseDto> {
+    val result = caseRepository.findByCrnIn(crns).map { it.toDto() }
+
+    crns.subtract(result.map { it.crn }.toSet()).forEach { alertCaseNotFound(it) }
+
+    return result
+  }
 
   private data class CaseTiers(
     val v2: Tier?,
@@ -158,4 +177,10 @@ class CaseService(
 
     is ClientResult.Failure -> caseSummariesResponse.throwException()
   }
+
+  private fun alertCaseNotFound(crn: String) {
+    sentryService.captureException(CaseNotFound("Case with CRN $crn not found"))
+  }
+
+  class CaseNotFound(message: String) : Exception(message)
 }
