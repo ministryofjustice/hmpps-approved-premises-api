@@ -46,6 +46,7 @@ generic-service:
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
     PREEMPTIVE-CACHE-LOGGING-ENABLED: true
     PREEMPTIVE-CACHE-DELAY-MS: 60000
+    DOMAIN-EVENTS_INBOX_DISPATCHER_CRON: "-"
 
     SEED_ON-STARTUP_ENABLED: true
     SEED_ON-STARTUP_FILE-PREFIXES: classpath:db/seed/dev+test
