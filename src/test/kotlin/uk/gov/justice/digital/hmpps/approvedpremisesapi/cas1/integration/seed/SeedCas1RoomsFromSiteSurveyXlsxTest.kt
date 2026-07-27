@@ -416,7 +416,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withPremises(premises)
       withCode(roomCode)
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI01")
       withName("1 - 1")
@@ -518,7 +518,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withPremises(premises)
       withCode(roomCode)
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI02")
       withName("1")
@@ -567,12 +567,12 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withPremises(premises)
       withCode(roomCode)
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room1)
       withCode("SWABI01")
       withName("1")
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room1)
       withCode("SWABI02")
       withName("2")
@@ -740,17 +740,17 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withPremises(premises)
       withCode(roomCode)
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI01")
       withName("1")
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI02")
       withName("2")
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI03")
       withName("3")
@@ -799,12 +799,12 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withPremises(premises)
       withCode(roomCode)
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI01")
       withName("1")
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI02")
       withName("2")
@@ -848,12 +848,12 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withPremises(premises)
       withCode(roomCode)
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI01")
       withName("1")
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI02")
       withName("2")
@@ -900,12 +900,12 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withPremises(premises)
       withCode(roomCode)
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI01")
       withName("1")
     }
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI02")
       withName("2")

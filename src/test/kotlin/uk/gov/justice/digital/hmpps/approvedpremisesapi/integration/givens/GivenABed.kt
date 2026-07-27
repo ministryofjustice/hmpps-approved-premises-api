@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 
@@ -12,8 +12,8 @@ fun IntegrationTestBase.givenAnApprovedPremisesBed(
   bedCode: String = randomStringMultiCaseWithNumbers(6),
   characteristics: List<CharacteristicEntity> = emptyList(),
   endDate: LocalDate? = null,
-  block: ((bed: BedEntity) -> Unit)? = null,
-): BedEntity {
+  block: ((bed: Cas1BedEntity) -> Unit)? = null,
+): Cas1BedEntity {
   val resolvedPremises = premises ?: givenAnApprovedPremises()
 
   val room = roomEntityFactory.produceAndPersist {
@@ -21,7 +21,7 @@ fun IntegrationTestBase.givenAnApprovedPremisesBed(
     withCharacteristics(characteristics.toMutableList())
   }
 
-  val bed = bedEntityFactory.produceAndPersist {
+  val bed = cas1BedEntityFactory.produceAndPersist {
     withRoom(room)
     withCode(bedCode)
     withEndDate(endDate)

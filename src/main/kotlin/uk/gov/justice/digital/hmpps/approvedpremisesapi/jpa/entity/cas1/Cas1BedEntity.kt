@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
 import jakarta.persistence.ColumnResult
 import jakarta.persistence.ConstructorResult
@@ -10,100 +10,34 @@ import jakarta.persistence.NamedNativeQuery
 import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUUID
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
-interface BedRepository : JpaRepository<BedEntity, UUID> {
-  fun findByCode(bedCode: String): BedEntity?
+interface Cas1BedRepository : JpaRepository<Cas1BedEntity, UUID> {
+  fun findByCode(bedCode: String): Cas1BedEntity?
 
-  fun findByCodeAndRoomId(bedCode: String, roomId: UUID): BedEntity?
+  fun findByCodeAndRoomId(bedCode: String, roomId: UUID): Cas1BedEntity?
 
-  fun findByRoomPremisesId(premisesId: UUID): List<BedEntity>
+  fun findByRoomPremisesId(premisesId: UUID): List<Cas1BedEntity>
 
-  fun findByRoomPremisesIdAndEndDateIsNull(premisesId: UUID): List<BedEntity>
-
-  @Query(
-    """
-    SELECT
-      b.*
-    FROM beds b
-    JOIN rooms r on b.room_id = r.id
-    WHERE r.premises_Id = :premisesId AND b.id = :bedspaceId
-  """,
-    nativeQuery = true,
-  )
-  fun findCas3Bedspace(premisesId: UUID, bedspaceId: UUID): BedEntity?
-
-  @Query(
-    """
-      select b.*
-      from beds b
-      inner join (
-      select bk.bed_id,min(bk.arrival_date) earliest_arrival
-      from cas3_bookings bk
-      inner join beds b on bk.bed_id = b.id
-      group by bk.bed_id) earliest_bookings on b.id = earliest_bookings.bed_id
-      where b.start_date > earliest_bookings.earliest_arrival
-    """,
-    nativeQuery = true,
-  )
-  fun findCas3BedspacesWithStartDateAfterBookingArrivalDate(): List<BedEntity>
+  fun findByRoomPremisesIdAndEndDateIsNull(premisesId: UUID): List<Cas1BedEntity>
 
   @Query(nativeQuery = true)
-  fun getDetailById(id: UUID): DomainBedSummary?
-
-  @Query(
-    """
-    SELECT b 
-    FROM BedEntity b 
-    WHERE b.id = :bedId AND 
-    b.endDate IS NOT NULL AND b.endDate < :endDate
-  """,
-  )
-  fun findArchivedBedByBedIdAndDate(bedId: UUID, endDate: LocalDate): BedEntity?
-
-  @Query(
-    """
-        SELECT b.*
-        FROM beds b
-        INNER JOIN rooms r ON b.room_id = r.id
-        INNER JOIN premises p ON r.premises_id = p.id
-        WHERE p.service = :service
-        ORDER BY b.id
-    """,
-    nativeQuery = true,
-  )
-  fun findAllByService(service: String, pageable: Pageable): Slice<BedEntity>
+  fun getDetailById(id: UUID): Cas1DomainBedSummary?
 
   @Modifying
-  @Query("UPDATE BedEntity b SET b.code = :code WHERE b.id = :id")
+  @Query("UPDATE Cas1BedEntity b SET b.code = :code WHERE b.id = :id")
   fun updateCode(id: UUID, code: String)
-
-  @Query(
-    """
-      SELECT b.*
-      FROM beds b
-      INNER JOIN rooms r ON b.room_id = r.id
-      INNER JOIN premises p ON r.premises_id = p.id
-      WHERE p.service = :service and b.created_date IS NULL
-    """,
-    nativeQuery = true,
-  )
-  fun <T : BedEntity> findAllCas3BedspacesWithNotCreateDate(
-    service: String,
-    type: Class<T>,
-    pageable: Pageable?,
-  ): Slice<BedEntity>
 }
 
 @Repository
@@ -130,7 +64,7 @@ class Cas1BedsRepository(
         ARRAY_REMOVE(ARRAY_AGG(c.property_name),null) AS characteristics,
         r.premises_id AS premises_id
       FROM rooms r
-      INNER JOIN beds b ON b.room_id = r.id
+      INNER JOIN cas1_beds b ON b.room_id = r.id
       LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = r.id 
       LEFT OUTER JOIN "characteristics" c ON c.id = room_chars.characteristic_id 
       WHERE 
@@ -153,7 +87,9 @@ class Cas1BedsRepository(
   }
 }
 
-const val BED_SUMMARY_QUERY =
+@NamedNativeQuery(
+  name = "Cas1BedEntity.getDetailById",
+  query =
   """
       select b.id as id,
       cast(b.name as text) as name,
@@ -172,33 +108,10 @@ const val BED_SUMMARY_QUERY =
           and cancellation IS NULL
           and non_arrival IS NULL
       ) > 0 as bedBooked,
-      (
-        select count(void_bedspace.id)
-        from cas3_void_bedspaces void_bedspace
-        where void_bedspace.bed_id = b.id
-          and void_bedspace.start_date <= CURRENT_DATE
-          and void_bedspace.end_date >= CURRENT_DATE
-          and void_bedspace.cancellation_date IS NULL
-      ) > 0 as bedOutOfService
-      from beds b
+      false as bedOutOfService
+      from cas1_beds b
            join rooms r on b.room_id = r.id
-  """
-
-@NamedNativeQuery(
-  name = "BedEntity.findAllBedsForPremises",
-  query =
-  """
-    $BED_SUMMARY_QUERY
-    where r.premises_id = cast(?1 as UUID) and (b.end_date is null or b.end_date > CURRENT_DATE)
-  """,
-  resultSetMapping = "DomainBedSummaryMapping",
-)
-@NamedNativeQuery(
-  name = "BedEntity.getDetailById",
-  query =
-  """
-    $BED_SUMMARY_QUERY
-    where b.id = cast(?1 as UUID)
+      where b.id = cast(?1 as UUID)
   """,
   resultSetMapping = "DomainBedSummaryMapping",
 )
@@ -206,7 +119,7 @@ const val BED_SUMMARY_QUERY =
   name = "DomainBedSummaryMapping",
   classes = [
     ConstructorResult(
-      targetClass = DomainBedSummary::class,
+      targetClass = Cas1DomainBedSummary::class,
       columns = [
         ColumnResult(name = "id", type = UUID::class),
         ColumnResult(name = "name"),
@@ -219,8 +132,8 @@ const val BED_SUMMARY_QUERY =
   ],
 )
 @Entity
-@Table(name = "beds")
-data class BedEntity(
+@Table(name = "cas1_beds")
+data class Cas1BedEntity(
   @Id
   val id: UUID,
   var name: String,
@@ -238,14 +151,14 @@ data class BedEntity(
   var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
   fun isActive(now: LocalDate) = isActive(now, endDate)
-  override fun toString() = "BedEntity: $id"
+  override fun toString() = "Cas1BedEntity: $id"
 
   companion object {
     fun isActive(now: LocalDate, bedEndDate: LocalDate?): Boolean = bedEndDate == null || bedEndDate.isAfter(now)
   }
 }
 
-open class DomainBedSummary(
+open class Cas1DomainBedSummary(
   val id: UUID,
   val name: String,
   val roomId: UUID,

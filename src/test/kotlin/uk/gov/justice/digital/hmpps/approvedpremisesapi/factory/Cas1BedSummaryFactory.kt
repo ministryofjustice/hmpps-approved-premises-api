@@ -2,11 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainBedSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DomainBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
-class BedSummaryFactory : Factory<DomainBedSummary> {
+class Cas1BedSummaryFactory : Factory<Cas1DomainBedSummary> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringUpperCase(6) }
   private var roomName: Yielded<String> = { randomStringUpperCase(6) }
@@ -30,7 +30,7 @@ class BedSummaryFactory : Factory<DomainBedSummary> {
     this.bedOutOfService = bedOutOfService
   }
 
-  override fun produce(): DomainBedSummary = DomainBedSummary(
+  override fun produce(): Cas1DomainBedSummary = Cas1DomainBedSummary(
     id = this.id(),
     name = this.name(),
     roomId = this.roomId(),

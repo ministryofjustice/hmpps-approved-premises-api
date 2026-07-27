@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -18,7 +18,7 @@ class RoomEntityFactory : Factory<RoomEntity> {
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var premises: Yielded<Cas1PremisesBaseEntity>? = null
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
-  private var beds: Yielded<MutableList<BedEntity>> = { mutableListOf() }
+  private var beds: Yielded<MutableList<Cas1BedEntity>> = { mutableListOf() }
 
   fun withDefaults() = apply {
     withPremises(ApprovedPremisesEntityFactory().withDefaults().produce())
@@ -58,11 +58,11 @@ class RoomEntityFactory : Factory<RoomEntity> {
 
   fun withCharacteristicsList(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
 
-  fun withBeds(beds: MutableList<BedEntity>) = apply {
+  fun withBeds(beds: MutableList<Cas1BedEntity>) = apply {
     this.beds = { beds }
   }
 
-  fun withBeds(vararg beds: BedEntity) = apply {
+  fun withBeds(vararg beds: Cas1BedEntity) = apply {
     this.beds = { beds.toMutableList() }
   }
 
@@ -77,7 +77,7 @@ class RoomEntityFactory : Factory<RoomEntity> {
   )
 }
 
-class BedEntityFactory : Factory<BedEntity> {
+class Cas1BedEntityFactory : Factory<Cas1BedEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var code: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
@@ -135,7 +135,7 @@ class BedEntityFactory : Factory<BedEntity> {
     this.createdAt = createdAt
   }
 
-  override fun produce() = BedEntity(
+  override fun produce() = Cas1BedEntity(
     id = this.id(),
     name = this.name(),
     code = this.code(),

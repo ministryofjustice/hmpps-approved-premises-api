@@ -56,7 +56,7 @@ class Cas1BedDetailTest : InitialiseDatabasePerClassTestBase() {
   fun `Getting a bed for a premises returns the bed`() {
     givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
 
-      val bed = bedEntityFactory.produceAndPersist {
+      val bed = cas1BedEntityFactory.produceAndPersist {
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }

@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
@@ -150,7 +150,7 @@ class Cas1OutOfServiceBedServiceTest {
         .withPremises(premisesEntity)
         .produce()
 
-      val bed = BedEntityFactory()
+      val bed = Cas1BedEntityFactory()
         .withYieldedRoom { room }
         .produce()
 
@@ -189,7 +189,7 @@ class Cas1OutOfServiceBedServiceTest {
         .withPremises(premisesEntity)
         .produce()
 
-      val bed = BedEntityFactory()
+      val bed = Cas1BedEntityFactory()
         .withYieldedRoom { room }
         .produce()
 
@@ -238,7 +238,7 @@ class Cas1OutOfServiceBedServiceTest {
         .withPremises(premisesEntity)
         .produce()
 
-      val bed = BedEntityFactory()
+      val bed = Cas1BedEntityFactory()
         .withYieldedRoom { room }
         .produce()
 
@@ -288,7 +288,7 @@ class Cas1OutOfServiceBedServiceTest {
         .withPremises(premisesEntity)
         .produce()
 
-      val bed = BedEntityFactory()
+      val bed = Cas1BedEntityFactory()
         .withYieldedRoom { room }
         .produce()
 
@@ -342,7 +342,7 @@ class Cas1OutOfServiceBedServiceTest {
         .withPremises(premisesEntity)
         .produce()
 
-      val bed = BedEntityFactory()
+      val bed = Cas1BedEntityFactory()
         .withYieldedRoom { room }
         .produce()
 

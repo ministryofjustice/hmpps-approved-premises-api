@@ -339,7 +339,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     }
   }
 
-  protected fun bedEntity(premisesEntity: ApprovedPremisesEntity? = null) = bedEntityFactory.produceAndPersist {
+  protected fun bedEntity(premisesEntity: ApprovedPremisesEntity? = null) = cas1BedEntityFactory.produceAndPersist {
     withName("a bed ${randomStringMultiCaseWithNumbers(5)}")
     withCode("a code ${randomStringMultiCaseWithNumbers(5)}")
 
