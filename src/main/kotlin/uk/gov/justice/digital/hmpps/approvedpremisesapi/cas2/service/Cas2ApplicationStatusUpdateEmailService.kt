@@ -33,7 +33,7 @@ class Cas2ApplicationStatusUpdateEmailService(
       "dateApplicationReceived" to dateReceived,
       "nacroReferenceId" to cas2Application.id.toString(),
       "viewSubmittedApplicationUrl" to applicationOverviewUrlTemplate
-        .resolve("applicationId", cas2Application.id.toString()),
+        .resolve("id", cas2Application.id.toString()),
     )
 
     cas2EmailService.sendEmail(
