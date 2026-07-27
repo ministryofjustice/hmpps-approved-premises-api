@@ -8,6 +8,7 @@ import java.time.Instant
  * @param hasApplicableAssessment
  * @param dateStarted
  * @param dateCompleted
+ * @param lastUpdatedDate
  */
 data class Cas3OASysAssessmentMetadata(
 
@@ -16,4 +17,6 @@ data class Cas3OASysAssessmentMetadata(
   @get:JsonProperty("dateStarted") val dateStarted: Instant? = null,
 
   @get:JsonProperty("dateCompleted") val dateCompleted: Instant? = null,
+
+  @get:JsonProperty("lastUpdatedDate") val lastUpdatedDate: Instant? = null,
 )
