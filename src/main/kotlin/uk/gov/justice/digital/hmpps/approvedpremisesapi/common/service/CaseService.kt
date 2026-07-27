@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.BackfillCasesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -21,12 +22,19 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
 /**
- * An entry in the `cases` table should exist for every CRN for which an application exists,
- * regardless of the CAS it originated from
+ * CAS maintains a local copy of NDelius Case data, allowing us to perform queries
+ * across sets of that data and minimise upstream calls (e.g. sorting and searching
+ * on tier and name)
  *
- * The tier value for a case will always be up-to date
+ * CAS only tracks cases that have been explicitly registered as 'of interest'. This
+ * typically happens when an application is created via a call to
+ * [ensureCaseExists]
  *
- * Currently the names and noms number are not updated after the entry has been created
+ * The tier values for a case are kept up-to-date by listening for tier update events
+ *
+ * The [BackfillCasesJob] migration job was used to seed this table originally, and can be
+ * used if for some reason there are entries missing from this table (e.g. new CRNs were
+ * introduced without a call to [ensureCaseExists])
  */
 @Service
 class CaseService(
