@@ -53,13 +53,16 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
     val siteSurveyBedsInfo = Cas1SiteSurveyBedFactory().load(file)
 
+    // Returns room info retrieved from each column. Because columns reflect beds and not rooms,
+    // the same room may appear multiple times in this list. In the following check we ensure
+    // that these repeating rooms have identical characteristics and fail if they don't
     val rooms = resolveRooms(qCode, siteSurveyBedsInfo)
-    checkRoomCharacteristics(rooms)
+    checkForMismatchedRoomCharacteristics(rooms)
 
     val beds = resolveBeds(qCode, siteSurveyBedsInfo)
     checkBedNamesUnique(beds)
 
-    rooms.forEach {
+    rooms.distinctBy { it.roomCode }.forEach {
       val existingRoom = roomRepository.findByCode(it.roomCode)
       if (existingRoom == null) {
         createRoom(premises, it)
@@ -103,8 +106,8 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     )
   }
 
-  private fun checkRoomCharacteristics(rooms: List<RoomInfo>) {
-    rooms.groupBy { room -> room.roomCode }.forEach { (_, rooms) ->
+  private fun checkForMismatchedRoomCharacteristics(roomColumns: List<RoomInfo>) {
+    roomColumns.groupBy { room -> room.roomCode }.forEach { (_, rooms) ->
       rooms.all { it.characteristics == rooms.first().characteristics } || error("1 or more beds in room '${rooms.first().roomName}' have different characteristics.")
     }
   }
