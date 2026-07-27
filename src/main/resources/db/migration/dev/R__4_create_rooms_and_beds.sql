@@ -16,7 +16,7 @@ values
     ) ON CONFLICT (id) DO NOTHING;
 
 insert into
-    beds ("id", "name", "room_id", "start_date")
+    cas1_beds ("id", "name", "room_id", "start_date")
 values
     (
         'e8887df9-b31b-4e9c-931a-e063d778ab0d',
@@ -35,7 +35,7 @@ values
         'd6447105-4bfe-4f1e-add7-4668e1ca28b0'
     ) ON CONFLICT (id) DO NOTHING;
 insert into
-    beds ("id", "name", "room_id", "start_date")
+    cas1_beds ("id", "name", "room_id", "start_date")
 values
     (
         '135812b4-e6c0-4ccf-9502-4bfea66f3bd3',
@@ -55,7 +55,7 @@ values
         'e2543d2f-33a9-454b-ae15-03ca0475faa3'
     ) ON CONFLICT (id) DO NOTHING;
 insert into
-    beds ("id", "name", "room_id", "start_date")
+    cas1_beds ("id", "name", "room_id", "start_date")
 values
     (
         '6d6d4c56-9989-4fb5-a486-d32f525748e6',
@@ -75,7 +75,7 @@ values
         '0ad5999f-a07c-4605-b875-81d7a17e9f70'
     ) ON CONFLICT (id) DO NOTHING;
 insert into
-    beds ("id", "name", "room_id", "start_date")
+    cas1_beds ("id", "name", "room_id", "start_date")
 values
     (
         '8be1ed0e-dae7-42d2-97e0-95c95fdb4c50',
@@ -98,7 +98,7 @@ values
     ) ON CONFLICT (id) DO NOTHING;
 
 insert into
-    beds ("id", "name", "room_id", "start_date")
+    cas1_beds ("id", "name", "room_id", "start_date")
 values
     (
         '38e6b775-88c5-4571-8b6e-da3711aeaca6',
@@ -118,7 +118,7 @@ values
     ) ON CONFLICT (id) DO NOTHING;
 
 insert into
-    beds ("id", "name", "room_id", "start_date")
+    cas1_beds ("id", "name", "room_id", "start_date")
 values
     (
         'fd1c7078-43c8-41f5-8e57-a4d59f3c831a',
@@ -138,7 +138,7 @@ values
         '6aa177cb-617f-4abb-be46-056ea7e4a59d'
     ) ON CONFLICT (id) DO NOTHING;
 insert into
-    beds ("id", "name", "room_id", "start_date")
+    cas1_beds ("id", "name", "room_id", "start_date")
 values
     (
         '64fd8f3d-1fb6-4346-a190-65588b998301',
@@ -158,7 +158,7 @@ values
         '773431cd-f560-4be8-9e6f-b582a4ebf204'
     ) ON CONFLICT (id) DO NOTHING;
 insert into
-    beds ("id", "name", "room_id", "start_date")
+    cas1_beds ("id", "name", "room_id", "start_date")
 values
     (
         '8ecef9a5-268c-4595-9fd0-042fed3d4882',
