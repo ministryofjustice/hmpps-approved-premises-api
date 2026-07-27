@@ -11,22 +11,31 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.BackfillCasesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_INCLUDE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
 /**
- * An entry in the `cases` table should exist for every CRN for which an application exists,
- * regardless of the CAS it originated from
+ * CAS maintains a local copy of NDelius Case data, allowing us to perform queries
+ * across sets of that data and minimise upstream calls (e.g. sorting and searching
+ * on tier and name)
  *
- * The tier value for a case will always be up-to date
+ * CAS only tracks cases that have been explicitly registered as 'of interest'. This
+ * typically happens when an application is created via a call to
+ * [ensureCaseExists]
  *
- * Currently the names and noms number are not updated after the entry has been created
+ * The tier values for a case are kept up-to-date by listening for tier update events
+ *
+ * The [BackfillCasesJob] migration job was used to seed this table originally, and can be
+ * used if for some reason there are entries missing from this table (e.g. new CRNs were
+ * introduced without a call to [ensureCaseExists])
  */
 @Service
 class CaseService(
@@ -34,6 +43,7 @@ class CaseService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val featureFlagService: FeatureFlagService,
+  private val sentryService: SentryService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -68,12 +78,29 @@ class CaseService(
     return true
   }
 
-  fun getCase(crn: String): CaseDto? = caseRepository.findByCrn(crn)?.toDto()
+  /**
+   * Get a case by CRN. Note that a case must have been previously registered via
+   * a call to [ensureCaseExists] to be returned here. If a case isn't found an
+   * alert will be raised so we can investigate this, as it should never happen
+   */
+  fun getCase(crn: String): CaseDto? {
+    val case = caseRepository.findByCrn(crn)?.toDto()
+    if (case == null) {
+      alertCaseNotFound(crn)
+    }
+    return case
+  }
 
   /**
    * If a case can't be found for a given CRN there will be no corresponding entry in the result
    */
-  fun getCases(crns: List<String>): List<CaseDto> = caseRepository.findByCrnIn(crns).map { it.toDto() }
+  fun getCases(crns: List<String>): List<CaseDto> {
+    val result = caseRepository.findByCrnIn(crns).map { it.toDto() }
+
+    crns.subtract(result.map { it.crn }.toSet()).forEach { alertCaseNotFound(it) }
+
+    return result
+  }
 
   private data class CaseTiers(
     val v2: Tier?,
@@ -86,9 +113,7 @@ class CaseService(
   )
 
   private fun CaseEntity.updateFrom(caseSummary: CaseSummary, tiers: CaseTiers): CaseEntity = apply {
-    name = "${caseSummary.name.forename} ${caseSummary.name.surname}"
-      .uppercase()
-      .trim()
+    name = caseSummary.buildName()
     nomsNumber = caseSummary.nomsId
     lastUpdatedAt = OffsetDateTime.now()
     if (tiers.v2 != null) {
@@ -104,13 +129,13 @@ class CaseService(
     crn = caseSummary.crn,
     createdAt = OffsetDateTime.now(),
     lastUpdatedAt = OffsetDateTime.now(),
-    name = "${caseSummary.name.forename} ${caseSummary.name.surname}"
-      .uppercase()
-      .trim(),
+    name = caseSummary.buildName(),
     nomsNumber = caseSummary.nomsId,
     tierV2 = tiers.v2,
     tierV3 = tiers.v3,
   )
+
+  private fun CaseSummary.buildName() = "${name.forename} ${name.surname}".uppercase().trim()
 
   private fun CaseEntity.toDto() = CaseDto(
     crn = crn,
@@ -152,4 +177,10 @@ class CaseService(
 
     is ClientResult.Failure -> caseSummariesResponse.throwException()
   }
+
+  private fun alertCaseNotFound(crn: String) {
+    sentryService.captureException(CaseNotFound("Case with CRN $crn not found"))
+  }
+
+  class CaseNotFound(message: String) : Exception(message)
 }
