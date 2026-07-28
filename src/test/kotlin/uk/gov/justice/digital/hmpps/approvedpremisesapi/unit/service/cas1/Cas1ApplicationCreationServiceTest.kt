@@ -11,6 +11,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
@@ -229,7 +230,7 @@ class Cas1ApplicationCreationServiceTest {
   inner class CreateApprovedPremisesEligibleApplication {
 
     @Test
-    fun `Returns tier not eligible and no application created if tier is null`() {
+    fun `Does not create application when tier is null`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
       val user = userWithUsername(username)
@@ -249,12 +250,7 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
-      val result = applicationService.createApplication(crn, user, 123, "1", "A12HI")
-
-      assertThatCasResult(result).isSuccess().with {
-        val outcome = it
-        assertThat(outcome.tier).isNull()
-      }
+      assertThrows<RuntimeException> { applicationService.createApplication(crn, user, 123, "1", "A12HI") }
 
       verify { mockApplicationRepository wasNot Called }
     }
@@ -319,8 +315,8 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         val outcome = it
-        assertThat(outcome.tier?.version).isEqualTo(TierVersionDto.V2)
-        assertThat(outcome.tier?.tierScore).isEqualTo("A0")
+        assertThat(outcome.tier.version).isEqualTo(TierVersionDto.V2)
+        assertThat(outcome.tier.tierScore).isEqualTo("A0")
       }
 
       val createdApplication = savedApplication.captured as ApprovedPremisesApplicationEntity
@@ -388,8 +384,8 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         val outcome = it
-        assertThat(outcome.tier?.version).isEqualTo(TierVersionDto.V2)
-        assertThat(outcome.tier?.tierScore).isEqualTo("A0")
+        assertThat(outcome.tier.version).isEqualTo(TierVersionDto.V2)
+        assertThat(outcome.tier.tierScore).isEqualTo("A0")
       }
 
       val createdApplication = savedApplication.captured as ApprovedPremisesApplicationEntity
@@ -458,8 +454,8 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         val outcome = it
-        assertThat(outcome.tier?.version).isEqualTo(TierVersionDto.V2)
-        assertThat(outcome.tier?.tierScore).isEqualTo(tierScore)
+        assertThat(outcome.tier.version).isEqualTo(TierVersionDto.V2)
+        assertThat(outcome.tier.tierScore).isEqualTo(tierScore)
       }
 
       val createdApplication = savedApplication.captured as ApprovedPremisesApplicationEntity
