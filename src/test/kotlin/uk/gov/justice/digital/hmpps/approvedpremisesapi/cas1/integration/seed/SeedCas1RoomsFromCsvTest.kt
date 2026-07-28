@@ -253,7 +253,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
     // create a room with one bed
 
-    val preExistingRoom = roomEntityFactory.produceAndPersist {
+    val preExistingRoom = cas1RoomEntityFactory.produceAndPersist {
       withCode("NEABC-4")
       withPremises(premises)
       withNotes("This is small")

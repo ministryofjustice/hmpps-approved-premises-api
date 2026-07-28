@@ -168,7 +168,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       val beds = cas1BedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
-          roomEntityFactory.produceAndPersist {
+          cas1RoomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
           }
         }
@@ -1033,7 +1033,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       cas1BedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
-          roomEntityFactory.produceAndPersist {
+          cas1RoomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
           }
         }

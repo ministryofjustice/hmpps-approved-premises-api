@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.ExcelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomRepository
 import java.io.File
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -33,7 +33,7 @@ import kotlin.Boolean
 @Suppress("LongParameterList")
 class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
-  private val roomRepository: RoomRepository,
+  private val roomRepository: Cas1RoomRepository,
   private val bedRepository: Cas1BedRepository,
   private val characteristicRepository: CharacteristicRepository,
 ) : ExcelSeedJob {
@@ -164,7 +164,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
   private fun createRoom(premises: ApprovedPremisesEntity, room: RoomInfo) {
     roomRepository.save(
-      RoomEntity(
+      Cas1RoomEntity(
         id = UUID.randomUUID(),
         name = room.roomName,
         code = room.roomCode,
@@ -184,7 +184,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     val characteristicNames: List<String>,
   ) {
     companion object {
-      fun fromEntity(entity: RoomEntity): ApprovedPremisesRoomForComparison = ApprovedPremisesRoomForComparison(
+      fun fromEntity(entity: Cas1RoomEntity): ApprovedPremisesRoomForComparison = ApprovedPremisesRoomForComparison(
         id = entity.id,
         name = entity.name,
         code = entity.code,
@@ -203,7 +203,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     }
   }
 
-  private fun updateRoom(existingRoom: RoomEntity, newRoom: RoomInfo) {
+  private fun updateRoom(existingRoom: Cas1RoomEntity, newRoom: RoomInfo) {
     val beforeChange = ApprovedPremisesRoomForComparison.fromEntity(existingRoom)
 
     existingRoom.characteristics.clear()

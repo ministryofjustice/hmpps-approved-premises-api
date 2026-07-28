@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity.Companion.resolveFullAddress
 import java.time.OffsetDateTime
@@ -46,10 +45,10 @@ class ApprovedPremisesJdbcRepository(private val jdbcTemplate: NamedParameterJdb
         ARRAY_REMOVE(ARRAY_AGG (DISTINCT premises_chars_resolved.property_name), null) as premises_characteristics,
         ARRAY_REMOVE(ARRAY_AGG (DISTINCT room_chars_resolved.property_name), null) as room_characteristics
       FROM approved_premises ap
-      LEFT OUTER JOIN rooms ON rooms.premises_id = ap.premises_id
+      LEFT OUTER JOIN cas1_rooms ON cas1_rooms.premises_id = ap.premises_id
       LEFT OUTER JOIN premises_characteristics premises_chars ON premises_chars.premises_id = ap.premises_id
       LEFT OUTER JOIN characteristics premises_chars_resolved ON premises_chars_resolved.id = premises_chars.characteristic_id
-      LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = rooms.id
+      LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = cas1_rooms.id
       LEFT OUTER JOIN characteristics room_chars_resolved ON room_chars_resolved.id = room_chars.characteristic_id
       WHERE 
       ap.premises_id = :premisesId
@@ -146,7 +145,7 @@ abstract class Cas1PremisesBaseEntity(
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity?,
   @OneToMany(mappedBy = "premises")
-  val rooms: MutableList<RoomEntity>,
+  val rooms: MutableList<Cas1RoomEntity>,
   @ManyToMany
   @JoinTable(
     name = "premises_characteristics",
@@ -180,7 +179,7 @@ class ApprovedPremisesEntity(
   localAuthorityArea: LocalAuthorityAreaEntity,
   var apCode: String,
   var qCode: String,
-  rooms: MutableList<RoomEntity>,
+  rooms: MutableList<Cas1RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
   // TODO: Make not-null once Premises have had point added in all environments

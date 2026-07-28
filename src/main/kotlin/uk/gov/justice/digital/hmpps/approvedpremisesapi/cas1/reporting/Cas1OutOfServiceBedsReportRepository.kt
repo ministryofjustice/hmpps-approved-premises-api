@@ -26,7 +26,7 @@ class Cas1OutOfServiceBedsReportRepository(
           ORDER BY out_of_service_bed_id, cas1_out_of_service_bed_revisions.created_at DESC
       )
       SELECT
-          rooms.name AS "roomName",
+          cas1_rooms.name AS "roomName",
           beds.name AS "bedName",
           oos_bed.id AS id,
           left(latest_revisions.reference_number, 32) AS "workOrderId",
@@ -55,8 +55,8 @@ class Cas1OutOfServiceBedsReportRepository(
           ) AS notes
         FROM cas1_out_of_service_beds AS oos_bed
             JOIN cas1_beds beds ON oos_bed.bed_id = beds.id
-            JOIN rooms ON beds.room_id = rooms.id
-            JOIN premises ON rooms.premises_id = premises.id
+            JOIN cas1_rooms ON beds.room_id = cas1_rooms.id
+            JOIN premises ON cas1_rooms.premises_id = premises.id
             JOIN approved_premises ap ON premises.id = ap.premises_id
             JOIN probation_regions ON premises.probation_region_id = probation_regions.id
             LEFT JOIN latest_revisions
@@ -73,7 +73,7 @@ class Cas1OutOfServiceBedsReportRepository(
             AND latest_revisions.reason_id != :bedOnHoldReasonId
         GROUP BY
             oos_bed.id,
-            rooms.name,
+            cas1_rooms.name,
             beds.name,
             premises.name,
             ap.q_code,

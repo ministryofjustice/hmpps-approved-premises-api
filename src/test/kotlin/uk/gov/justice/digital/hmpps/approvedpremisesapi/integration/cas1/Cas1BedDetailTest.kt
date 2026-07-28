@@ -58,7 +58,7 @@ class Cas1BedDetailTest : InitialiseDatabasePerClassTestBase() {
 
       val bed = cas1BedEntityFactory.produceAndPersist {
         withYieldedRoom {
-          roomEntityFactory.produceAndPersist {
+          cas1RoomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
             withCharacteristics(*(listOf("hasEnSuite", "isGroundFloor").map { characteristicRepository.findByPropertyNameAndScopes(it, ServiceName.approvedPremises.value, "room")!! }).toTypedArray())
           }

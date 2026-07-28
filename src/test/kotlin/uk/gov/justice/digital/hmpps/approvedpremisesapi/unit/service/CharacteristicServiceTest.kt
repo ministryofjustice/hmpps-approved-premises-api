@@ -11,9 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 
 class CharacteristicServiceTest {
@@ -25,7 +25,7 @@ class CharacteristicServiceTest {
   @Test
   fun `serviceScopeMatches returns false if the characteristic has the wrong service scope`() {
     val characteristicEntityFactory = CharacteristicEntityFactory()
-    val roomEntityFactory = RoomEntityFactory()
+    val roomEntityFactory = Cas1RoomEntityFactory()
 
     val characteristic = characteristicEntityFactory
       .withModelScope("*")
@@ -38,7 +38,7 @@ class CharacteristicServiceTest {
 
     val localAuthorityArea = LocalAuthorityEntityFactory().produce()
 
-    val room: RoomEntity = roomEntityFactory
+    val room: Cas1RoomEntity = roomEntityFactory
       .withYieldedPremises {
         ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion { probationRegion }
@@ -75,7 +75,7 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val room = RoomEntityFactory()
+    val room = Cas1RoomEntityFactory()
       .withYieldedPremises { premises }
       .produce()
 
@@ -86,7 +86,7 @@ class CharacteristicServiceTest {
   @Test
   fun `serviceScopeMatches returns true if the service scope is correct`() {
     val characteristicEntityFactory = CharacteristicEntityFactory()
-    val roomEntityFactory = RoomEntityFactory()
+    val roomEntityFactory = Cas1RoomEntityFactory()
 
     val characteristic1 = characteristicEntityFactory
       .withModelScope("*")
@@ -104,7 +104,7 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val room1: RoomEntity = roomEntityFactory
+    val room1: Cas1RoomEntity = roomEntityFactory
       .withYieldedPremises { premises1 }
       .produce()
 
@@ -115,7 +115,7 @@ class CharacteristicServiceTest {
   @Test
   fun `modelScopeMatches returns true if the model scope is correct`() {
     val characteristicEntityFactory = CharacteristicEntityFactory()
-    val roomEntityFactory = RoomEntityFactory()
+    val roomEntityFactory = Cas1RoomEntityFactory()
 
     val characteristic1 = characteristicEntityFactory
       .withModelScope("room")
@@ -138,7 +138,7 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val room: RoomEntity = roomEntityFactory
+    val room: Cas1RoomEntity = roomEntityFactory
       .withYieldedPremises { premises1 }
       .produce()
 
@@ -164,7 +164,7 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val room: RoomEntity = RoomEntityFactory()
+    val room: Cas1RoomEntity = Cas1RoomEntityFactory()
       .withYieldedPremises { premises1 }
       .produce()
 
@@ -190,7 +190,7 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val room: RoomEntity = RoomEntityFactory()
+    val room: Cas1RoomEntity = Cas1RoomEntityFactory()
       .withYieldedPremises { premises1 }
       .produce()
 

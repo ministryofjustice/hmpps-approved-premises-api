@@ -16,7 +16,7 @@ fun IntegrationTestBase.givenAnApprovedPremisesBed(
 ): Cas1BedEntity {
   val resolvedPremises = premises ?: givenAnApprovedPremises()
 
-  val room = roomEntityFactory.produceAndPersist {
+  val room = cas1RoomEntityFactory.produceAndPersist {
     withPremises(resolvedPremises)
     withCharacteristics(characteristics.toMutableList())
   }

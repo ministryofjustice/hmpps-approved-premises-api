@@ -8,9 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Beds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
 import java.util.UUID
 
 @Service
@@ -39,13 +39,13 @@ class CharacteristicService(
 
   fun modelScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean = when (characteristic.modelScope) {
     "*" -> true
-    "room" -> target is RoomEntity
+    "room" -> target is Cas1RoomEntity
     "premises" -> target is Cas1PremisesBaseEntity
     else -> false
   }
 
   private fun getServiceForTarget(target: Any): String? = when (target) {
-    is RoomEntity -> getServiceForTarget(target.premises)
+    is Cas1RoomEntity -> getServiceForTarget(target.premises)
     is ApprovedPremisesEntity -> ServiceName.approvedPremises.value
     else -> null
   }

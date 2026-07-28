@@ -9,9 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
@@ -41,7 +41,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.entries) }
   private var point: Yielded<Point?> = { null }
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
-  private var rooms: Yielded<MutableList<RoomEntity>> = { mutableListOf() }
+  private var rooms: Yielded<MutableList<Cas1RoomEntity>> = { mutableListOf() }
   private var supportsSpaceBookings: Yielded<Boolean> = { false }
   private var managerDetails: Yielded<String> = { randomStringUpperCase(10) }
   private var cruManagementArea = { Cas1CruManagementAreaEntityFactory().produce() }
@@ -168,11 +168,11 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.gender = { gender }
   }
 
-  fun withRooms(rooms: MutableList<RoomEntity>) = apply {
+  fun withRooms(rooms: MutableList<Cas1RoomEntity>) = apply {
     this.rooms = { rooms }
   }
 
-  fun withRooms(vararg rooms: RoomEntity) = apply {
+  fun withRooms(vararg rooms: Cas1RoomEntity) = apply {
     this.rooms = { rooms.toMutableList() }
   }
 

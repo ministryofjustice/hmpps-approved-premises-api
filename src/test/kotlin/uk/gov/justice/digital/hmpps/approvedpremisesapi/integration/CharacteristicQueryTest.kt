@@ -26,7 +26,7 @@ class CharacteristicQueryTest : IntegrationTestBase() {
       characteristicEntityFactory.produceAndPersist(),
     )
 
-    val room = roomEntityFactory.produceAndPersist {
+    val room = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCharacteristics(roomCharacteristics)
     }

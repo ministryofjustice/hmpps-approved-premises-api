@@ -14,7 +14,7 @@ class BedDetailQueryTest : IntegrationTestBase() {
   fun `summary works as expected`() {
     val premises = givenAnApprovedPremises()
 
-    val room = roomEntityFactory.produceAndPersist {
+    val room = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
 
