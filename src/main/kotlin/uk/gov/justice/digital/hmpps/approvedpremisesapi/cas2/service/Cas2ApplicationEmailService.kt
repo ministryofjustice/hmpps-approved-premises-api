@@ -12,7 +12,8 @@ import java.time.format.DateTimeFormatter
 class Cas2ApplicationEmailService(
   private val cas2EmailService: Cas2EmailService,
   private val notifyConfig: NotifyConfig,
-  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.cas2v2.application-overview}") private val submittedApplicationReferrerUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationAssessorUrlTemplate: UrlTemplate,
 ) {
 
   fun applicationSubmitted(cas2Application: Cas2ApplicationEntity) {
@@ -28,14 +29,14 @@ class Cas2ApplicationEmailService(
       "timeApplicationReceived" to timeReceived,
       "dateApplicationReceived" to dateReceived,
       "nacroReferenceId" to cas2Application.id.toString(),
-      "viewSubmittedApplicationUrl" to submittedApplicationUrlTemplate
-        .resolve("applicationId", cas2Application.id.toString()),
     )
 
     cas2EmailService.sendEmail(
       recipientEmailAddress = recipientEmailAddress,
       templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_SUBMITTED,
-      personalisation = commonPersonalisation,
+      personalisation = commonPersonalisation + mapOf(
+        "viewSubmittedApplicationUrl" to submittedApplicationReferrerUrlTemplate.resolve("id", cas2Application.id.toString()),
+      ),
       cas2Application = cas2Application,
     )
 
@@ -47,6 +48,7 @@ class Cas2ApplicationEmailService(
         "referrerName" to cas2Application.createdByUser.name,
         "referrerEmail" to cas2Application.createdByUser.email,
         "referrerTelephoneNumber" to cas2Application.telephoneNumber,
+        "viewSubmittedApplicationUrl" to submittedApplicationAssessorUrlTemplate.resolve("applicationId", cas2Application.id.toString()),
       ),
       cas2Application = cas2Application,
     )

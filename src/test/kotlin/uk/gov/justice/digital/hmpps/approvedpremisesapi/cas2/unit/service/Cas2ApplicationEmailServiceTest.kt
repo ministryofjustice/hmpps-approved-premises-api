@@ -19,12 +19,14 @@ import java.util.UUID
 class Cas2ApplicationEmailServiceTest {
   private val mockCas2EmailService = mockk<Cas2EmailService>(relaxed = true)
   private val mockNotifyConfig = mockk<NotifyConfig>()
-  private val submittedApplicationUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId")
+  private val submittedApplicationUrlTemplate = UrlTemplate("http://frontend/applications/#id")
+  private val submittedApplicationAssessorUrlTemplate = UrlTemplate("http://frontend/applications/assess/#applicationId")
 
   private val service = Cas2ApplicationEmailService(
     cas2EmailService = mockCas2EmailService,
     notifyConfig = mockNotifyConfig,
-    submittedApplicationUrlTemplate = submittedApplicationUrlTemplate,
+    submittedApplicationReferrerUrlTemplate = submittedApplicationUrlTemplate,
+    submittedApplicationAssessorUrlTemplate = submittedApplicationAssessorUrlTemplate,
   )
 
   private val user = Cas2UserEntityFactory()
@@ -75,7 +77,7 @@ class Cas2ApplicationEmailServiceTest {
           "timeApplicationReceived" to "16:07",
           "dateApplicationReceived" to "24/06/2024",
           "nacroReferenceId" to applicationId.toString(),
-          "viewSubmittedApplicationUrl" to "http://frontend/applications/$applicationId",
+          "viewSubmittedApplicationUrl" to "http://frontend/applications/assess/$applicationId",
           "sla" to "3 working days",
           "referrerName" to application.createdByUser.name,
           "referrerEmail" to application.createdByUser.email,
