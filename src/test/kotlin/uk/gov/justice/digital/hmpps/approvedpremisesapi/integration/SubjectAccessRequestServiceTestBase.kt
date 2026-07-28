@@ -354,7 +354,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     )
 
     withRoom(
-      roomEntityFactory.produceAndPersist {
+      cas1RoomEntityFactory.produceAndPersist {
         withCode("room code ${randomStringMultiCaseWithNumbers(5)}")
         withName("room name ${randomStringMultiCaseWithNumbers(5)}")
         withPremises(premises)

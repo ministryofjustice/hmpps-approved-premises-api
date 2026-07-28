@@ -14,10 +14,10 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1ClosePremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
@@ -73,7 +73,7 @@ class Cas1ClosePremisesSeedJobTest {
         .withAllowNewSpaceBookings(true)
         .produce()
 
-      val room = RoomEntityFactory()
+      val room = Cas1RoomEntityFactory()
         .withDefaults()
         .withPremises(premises)
         .produce()

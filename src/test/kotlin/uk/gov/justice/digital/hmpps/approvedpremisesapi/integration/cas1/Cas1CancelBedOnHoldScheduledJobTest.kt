@@ -28,13 +28,13 @@ class Cas1CancelBedOnHoldScheduledJobTest : IntegrationTestBase() {
 
       val premises1 = givenAnApprovedPremises(supportsSpaceBookings = true)
       val bed1 = cas1BedEntityFactory.produceAndPersist {
-        withRoom(roomEntityFactory.produceAndPersist { withPremises(premises1) })
+        withRoom(cas1RoomEntityFactory.produceAndPersist { withPremises(premises1) })
       }
       val boh1 = createBedOnHold(bed1, user, LocalDate.now().minusDays(2), LocalDate.now().plusDays(10), reason)
 
       val premises2 = givenAnApprovedPremises(supportsSpaceBookings = true)
       val bed2 = cas1BedEntityFactory.produceAndPersist {
-        withRoom(roomEntityFactory.produceAndPersist { withPremises(premises2) })
+        withRoom(cas1RoomEntityFactory.produceAndPersist { withPremises(premises2) })
       }
       val boh2 = createBedOnHold(bed2, user, LocalDate.now().minusDays(3), LocalDate.now().plusDays(10), reason)
 

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -12,22 +12,21 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import java.util.UUID
 
 @Repository
-interface RoomRepository : JpaRepository<RoomEntity, UUID> {
-  fun findByCode(roomCode: String): RoomEntity?
+interface Cas1RoomRepository : JpaRepository<Cas1RoomEntity, UUID> {
+  fun findByCode(roomCode: String): Cas1RoomEntity?
 
   @Modifying
-  @Query("UPDATE RoomEntity r SET r.code = :code WHERE r.id = :id")
+  @Query("UPDATE Cas1RoomEntity r SET r.code = :code WHERE r.id = :id")
   fun updateCode(id: UUID, code: String)
 }
 
 @Entity
-@Table(name = "rooms")
-data class RoomEntity(
+@Table(name = "cas1_rooms")
+data class Cas1RoomEntity(
   @Id
   val id: UUID,
   var name: String,
@@ -47,5 +46,5 @@ data class RoomEntity(
   var characteristics: MutableList<CharacteristicEntity>,
 ) {
 
-  override fun toString() = "RoomEntity: $id"
+  override fun toString() = "Cas1RoomEntity: $id"
 }

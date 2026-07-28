@@ -334,7 +334,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       withCruManagementArea(givenACas1CruManagementArea())
     }
 
-    roomEntityFactory.produceAndPersist {
+    cas1RoomEntityFactory.produceAndPersist {
       withPremises(existingPremises)
       withCode("rc1")
     }

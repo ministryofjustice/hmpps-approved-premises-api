@@ -130,7 +130,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -174,7 +174,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -239,7 +239,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -249,7 +249,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherBed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { otherPremises }
             }
           }
@@ -308,7 +308,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -318,7 +318,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherBed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { otherPremises }
             }
           }
@@ -381,12 +381,12 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         val premises = givenAnApprovedPremises()
 
         cas1BedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
+          withYieldedRoom { cas1RoomEntityFactory.produceAndPersist { withPremises(premises) } }
         }
 
         bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -551,7 +551,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -561,7 +561,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val otherBed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { otherPremises }
             }
           }
@@ -630,7 +630,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -732,7 +732,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -794,7 +794,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           withBed(
             cas1BedEntityFactory.produceAndPersist {
               withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
+                cas1RoomEntityFactory.produceAndPersist {
                   withYieldedPremises { premises }
                 }
               }
@@ -860,7 +860,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           withBed(
             cas1BedEntityFactory.produceAndPersist {
               withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
+                cas1RoomEntityFactory.produceAndPersist {
                   withYieldedPremises { premises }
                 }
               }
@@ -916,7 +916,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       val premises = givenAnApprovedPremises()
 
       val bed = cas1BedEntityFactory.produceAndPersist {
-        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
+        withYieldedRoom { cas1RoomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       webTestClient.post()
@@ -1002,14 +1002,14 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         val premises = givenAnApprovedPremises()
 
         cas1BedEntityFactory.produceAndPersistMultiple(3) {
-          withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
+          withYieldedRoom { cas1RoomEntityFactory.produceAndPersist { withPremises(premises) } }
         }
 
         val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -1076,14 +1076,14 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         val premises = givenAnApprovedPremises()
 
         cas1BedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
+          withYieldedRoom { cas1RoomEntityFactory.produceAndPersist { withPremises(premises) } }
         }
 
         val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -1152,7 +1152,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
           val bed = cas1BedEntityFactory.produceAndPersist {
             withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
+              cas1RoomEntityFactory.produceAndPersist {
                 withYieldedPremises { premises }
               }
             }
@@ -1206,7 +1206,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
           val bed = cas1BedEntityFactory.produceAndPersist {
             withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
+              cas1RoomEntityFactory.produceAndPersist {
                 withYieldedPremises { premises }
               }
             }
@@ -1328,7 +1328,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           withBed(
             cas1BedEntityFactory.produceAndPersist {
               withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
+                cas1RoomEntityFactory.produceAndPersist {
                   withYieldedPremises { premises }
                 }
               }
@@ -1347,7 +1347,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -1451,12 +1451,12 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         val premises = givenAnApprovedPremises()
 
         cas1BedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
+          withYieldedRoom { cas1RoomEntityFactory.produceAndPersist { withPremises(premises) } }
         }
 
         val bed = cas1BedEntityFactory.produceAndPersist {
           withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
             }
           }
@@ -1562,7 +1562,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
           val bed = cas1BedEntityFactory.produceAndPersist {
             withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
+              cas1RoomEntityFactory.produceAndPersist {
                 withYieldedPremises { premises }
               }
             }
@@ -1628,7 +1628,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
           val bed = cas1BedEntityFactory.produceAndPersist {
             withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
+              cas1RoomEntityFactory.produceAndPersist {
                 withYieldedPremises { premises }
               }
             }
@@ -1785,7 +1785,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           withBed(
             cas1BedEntityFactory.produceAndPersist {
               withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
+                cas1RoomEntityFactory.produceAndPersist {
                   withYieldedPremises { premises }
                 }
               }
@@ -1884,14 +1884,14 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         val premises = givenAnApprovedPremises()
 
         cas1BedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
+          withYieldedRoom { cas1RoomEntityFactory.produceAndPersist { withPremises(premises) } }
         }
 
         val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withBed(
             cas1BedEntityFactory.produceAndPersist {
               withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
+                cas1RoomEntityFactory.produceAndPersist {
                   withYieldedPremises { premises }
                 }
               }

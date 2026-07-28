@@ -86,7 +86,7 @@ class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
 
       cas1BedEntityFactory.produceAndPersist {
         withYieldedRoom {
-          roomEntityFactory.produceAndPersist {
+          cas1RoomEntityFactory.produceAndPersist {
             withYieldedPremises { otherPremises }
           }
         }

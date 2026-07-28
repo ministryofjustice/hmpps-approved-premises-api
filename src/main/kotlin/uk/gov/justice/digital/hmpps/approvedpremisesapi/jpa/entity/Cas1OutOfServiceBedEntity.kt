@@ -45,7 +45,7 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     ON pr.ap_area_id = apa.id
     LEFT JOIN cas1_beds b
     ON oosb.bed_id = b.id
-    LEFT JOIN rooms r
+    LEFT JOIN cas1_rooms r
     ON b.room_id = r.id
     LEFT JOIN cas1_out_of_service_bed_reasons oosr
     ON d.out_of_service_bed_reason_id = oosr.id

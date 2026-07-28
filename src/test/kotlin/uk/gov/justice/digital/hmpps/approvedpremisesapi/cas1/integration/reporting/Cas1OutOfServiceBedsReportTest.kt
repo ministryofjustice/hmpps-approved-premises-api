@@ -44,7 +44,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         val bed1 = cas1BedEntityFactory.produceAndPersist {
           withName("bed1")
           withRoom(
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withName("room1")
               withPremises(premises)
             },
@@ -54,7 +54,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         val bed2 = cas1BedEntityFactory.produceAndPersist {
           withName("bed2")
           withRoom(
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withName("room2")
               withPremises(premises)
             },
@@ -64,7 +64,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         val bed3 = cas1BedEntityFactory.produceAndPersist {
           withName("bed3")
           withRoom(
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withName("room3")
               withPremises(premises)
             },
@@ -74,7 +74,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         val bed4 = cas1BedEntityFactory.produceAndPersist {
           withName("bed4")
           withRoom(
-            roomEntityFactory.produceAndPersist {
+            cas1RoomEntityFactory.produceAndPersist {
               withName("room4")
               withPremises(premises)
             },

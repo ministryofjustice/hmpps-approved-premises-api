@@ -4,15 +4,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1SeedRoomsFromSiteSurveyXlsxJob.Companion.buildRoomCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomRepository
 
 @Component
 class Cas1UpdateRoomCodesJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
-  private val roomRepository: RoomRepository,
+  private val roomRepository: Cas1RoomRepository,
   override val shouldRunInTransaction: Boolean = true,
 ) : MigrationJob() {
 
@@ -27,7 +27,7 @@ class Cas1UpdateRoomCodesJob(
     }
   }
 
-  private fun updateRoomIfRequired(premises: ApprovedPremisesEntity, room: RoomEntity) {
+  private fun updateRoomIfRequired(premises: ApprovedPremisesEntity, room: Cas1RoomEntity) {
     val actualRoomCode = room.code
     val expectedRoomCode = buildRoomCode(
       qCode = premises.qCode,

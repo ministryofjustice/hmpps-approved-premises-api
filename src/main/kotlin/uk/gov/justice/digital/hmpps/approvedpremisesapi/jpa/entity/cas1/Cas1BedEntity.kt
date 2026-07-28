@@ -15,7 +15,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUUID
 import java.time.LocalDate
@@ -63,7 +62,7 @@ class Cas1BedsRepository(
         r.name AS room_name,
         ARRAY_REMOVE(ARRAY_AGG(c.property_name),null) AS characteristics,
         r.premises_id AS premises_id
-      FROM rooms r
+      FROM cas1_rooms r
       INNER JOIN cas1_beds b ON b.room_id = r.id
       LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = r.id 
       LEFT OUTER JOIN "characteristics" c ON c.id = room_chars.characteristic_id 
@@ -110,7 +109,7 @@ class Cas1BedsRepository(
       ) > 0 as bedBooked,
       false as bedOutOfService
       from cas1_beds b
-           join rooms r on b.room_id = r.id
+           join cas1_rooms r on b.room_id = r.id
       where b.id = cast(?1 as UUID)
   """,
   resultSetMapping = "DomainBedSummaryMapping",
@@ -140,7 +139,7 @@ data class Cas1BedEntity(
   val code: String?,
   @ManyToOne
   @JoinColumn(name = "room_id")
-  val room: RoomEntity,
+  val room: Cas1RoomEntity,
   var createdDate: LocalDate?,
   val startDate: LocalDate?,
   /**

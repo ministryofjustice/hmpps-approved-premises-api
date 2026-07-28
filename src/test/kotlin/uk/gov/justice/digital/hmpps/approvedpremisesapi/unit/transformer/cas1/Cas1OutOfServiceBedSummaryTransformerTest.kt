@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedReasonReferenceType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedSummaryTransformer
@@ -38,7 +38,7 @@ class Cas1OutOfServiceBedSummaryTransformerTest {
       modelScope = "room",
       isActive = true,
     )
-    val room = RoomEntityFactory()
+    val room = Cas1RoomEntityFactory()
       .withName("BedRoom 1")
       .withCharacteristics(mutableListOf(roomCharacteristic))
       .withDefaults()

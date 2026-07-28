@@ -5,12 +5,12 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomRepository
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -22,7 +22,7 @@ import java.util.UUID
 @Component
 class ApprovedPremisesRoomsSeedJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
-  private val roomRepository: RoomRepository,
+  private val roomRepository: Cas1RoomRepository,
   private val bedRepository: Cas1BedRepository,
   private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<ApprovedPremisesRoomsSeedCsvRow>(
@@ -98,7 +98,7 @@ class ApprovedPremisesRoomsSeedJob(
     createOrUpdateBed(room, row)
   }
 
-  private fun createOrUpdateRoom(row: ApprovedPremisesRoomsSeedCsvRow, characteristics: List<CharacteristicEntity>, premises: Cas1PremisesBaseEntity): RoomEntity {
+  private fun createOrUpdateRoom(row: ApprovedPremisesRoomsSeedCsvRow, characteristics: List<CharacteristicEntity>, premises: Cas1PremisesBaseEntity): Cas1RoomEntity {
     val roomCode = "${row.apCode}-${row.roomNumber}"
 
     val room = when (val existingRoom = roomRepository.findByCode(roomCode)) {
@@ -114,11 +114,11 @@ class ApprovedPremisesRoomsSeedJob(
     return room
   }
 
-  private fun updateExistingRoom(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): RoomEntity = room.apply { this!!.notes = row.notes }
+  private fun updateExistingRoom(room: Cas1RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): Cas1RoomEntity = room.apply { notes = row.notes }
 
-  private fun createRoom(row: ApprovedPremisesRoomsSeedCsvRow, premises: Cas1PremisesBaseEntity, roomCode: String): RoomEntity {
+  private fun createRoom(row: ApprovedPremisesRoomsSeedCsvRow, premises: Cas1PremisesBaseEntity, roomCode: String): Cas1RoomEntity {
     val room = roomRepository.save(
-      RoomEntity(
+      Cas1RoomEntity(
         id = UUID.randomUUID(),
         name = row.roomNumber,
         code = roomCode,
@@ -133,7 +133,7 @@ class ApprovedPremisesRoomsSeedJob(
     return room
   }
 
-  private fun createOrUpdateBed(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): Cas1BedEntity {
+  private fun createOrUpdateBed(room: Cas1RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): Cas1BedEntity {
     val bed = when (val existingBed = bedRepository.findByCode(row.bedCode)) {
       null -> createBed(room, row)
       else -> updateExistingBed(existingBed, row)
@@ -142,7 +142,7 @@ class ApprovedPremisesRoomsSeedJob(
     return bed
   }
 
-  private fun createBed(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): Cas1BedEntity {
+  private fun createBed(room: Cas1RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): Cas1BedEntity {
     val bed = bedRepository.save(
       Cas1BedEntity(
         id = UUID.randomUUID(),

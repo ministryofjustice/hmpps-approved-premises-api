@@ -361,7 +361,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
-    roomEntityFactory.produceAndPersist {
+    cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
@@ -412,7 +412,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
-    val room = roomEntityFactory.produceAndPersist {
+    val room = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
@@ -468,7 +468,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-2"
-    roomEntityFactory.produceAndPersist {
+    cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
@@ -514,7 +514,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
-    val room = roomEntityFactory.produceAndPersist {
+    val room = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
@@ -563,7 +563,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
-    val room1 = roomEntityFactory.produceAndPersist {
+    val room1 = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
@@ -736,7 +736,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
-    val room = roomEntityFactory.produceAndPersist {
+    val room = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
@@ -795,7 +795,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
-    val room = roomEntityFactory.produceAndPersist {
+    val room = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
@@ -844,7 +844,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
-    val room = roomEntityFactory.produceAndPersist {
+    val room = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
@@ -896,7 +896,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
-    val room = roomEntityFactory.produceAndPersist {
+    val room = cas1RoomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }

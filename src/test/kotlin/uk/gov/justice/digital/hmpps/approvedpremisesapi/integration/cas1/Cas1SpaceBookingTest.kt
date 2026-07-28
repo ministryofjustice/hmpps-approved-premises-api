@@ -456,7 +456,7 @@ class Cas1SpaceBookingTest {
           val bed1 = cas1BedEntityFactory.produceAndPersist {
             withName("bed1")
             withRoom(
-              roomEntityFactory.produceAndPersist {
+              cas1RoomEntityFactory.produceAndPersist {
                 withName("room1")
                 withPremises(premises)
               },
@@ -578,7 +578,7 @@ class Cas1SpaceBookingTest {
           val bed1 = cas1BedEntityFactory.produceAndPersist {
             withName("bed1")
             withRoom(
-              roomEntityFactory.produceAndPersist {
+              cas1RoomEntityFactory.produceAndPersist {
                 withName("room1")
                 withPremises(premises)
               },

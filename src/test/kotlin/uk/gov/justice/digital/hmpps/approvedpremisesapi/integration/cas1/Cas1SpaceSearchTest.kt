@@ -104,7 +104,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
           characteristicRepository.findCas1ByPropertyName("hasLift")!!,
         ),
       ).also {
-        roomEntityFactory.produceAndPersist {
+        cas1RoomEntityFactory.produceAndPersist {
           withPremises(it)
           withCharacteristics(
             characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
@@ -411,7 +411,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       expectedPremises.forEach {
-        roomEntityFactory.produceAndPersistMultiple(amount = 5) {
+        cas1RoomEntityFactory.produceAndPersistMultiple(amount = 5) {
           withPremises(it)
           withCharacteristicsList(listOf(characteristic.asCharacteristicEntity()))
         }
@@ -429,7 +429,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       unexpectedPremises.forEach {
-        roomEntityFactory.produceAndPersist {
+        cas1RoomEntityFactory.produceAndPersist {
           withPremises(it)
           withCharacteristicsList(
             listOf(
@@ -489,7 +489,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       expectedPremises.forEach {
-        roomEntityFactory.produceAndPersistMultiple(randomInt(1, 10)) {
+        cas1RoomEntityFactory.produceAndPersistMultiple(randomInt(1, 10)) {
           withPremises(it)
           withCharacteristicsList(Cas1SpaceCharacteristic.entries.slice(1..3).map { it.asCharacteristicEntity() })
         }
@@ -507,7 +507,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       unexpectedPremises.forEach {
-        roomEntityFactory.produceAndPersist {
+        cas1RoomEntityFactory.produceAndPersist {
           withPremises(it)
           withCharacteristicsList(
             it.characteristics,

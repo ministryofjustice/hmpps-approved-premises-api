@@ -18,13 +18,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedCancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
@@ -146,7 +146,7 @@ class Cas1OutOfServiceBedServiceTest {
     fun `Returns FieldValidationError if user can't create on hold record`() {
       val premisesEntity = approvedPremisesFactory.produce()
 
-      val room = RoomEntityFactory()
+      val room = Cas1RoomEntityFactory()
         .withPremises(premisesEntity)
         .produce()
 
@@ -185,7 +185,7 @@ class Cas1OutOfServiceBedServiceTest {
     fun `Returns Success with correct result when validation passed`() {
       val premisesEntity = approvedPremisesFactory.produce()
 
-      val room = RoomEntityFactory()
+      val room = Cas1RoomEntityFactory()
         .withPremises(premisesEntity)
         .produce()
 
@@ -234,7 +234,7 @@ class Cas1OutOfServiceBedServiceTest {
     fun `Returns Success with correct result when createdBy is null`() {
       val premisesEntity = approvedPremisesFactory.produce()
 
-      val room = RoomEntityFactory()
+      val room = Cas1RoomEntityFactory()
         .withPremises(premisesEntity)
         .produce()
 
@@ -284,7 +284,7 @@ class Cas1OutOfServiceBedServiceTest {
     fun `Returns Success with correct result when createdBy is specified`() {
       val premisesEntity = approvedPremisesFactory.produce()
 
-      val room = RoomEntityFactory()
+      val room = Cas1RoomEntityFactory()
         .withPremises(premisesEntity)
         .produce()
 
@@ -338,7 +338,7 @@ class Cas1OutOfServiceBedServiceTest {
     fun `Returns Success with correct result when creating on hold bed reason and has correct role`() {
       val premisesEntity = approvedPremisesFactory.produce()
 
-      val room = RoomEntityFactory()
+      val room = Cas1RoomEntityFactory()
         .withPremises(premisesEntity)
         .produce()
 

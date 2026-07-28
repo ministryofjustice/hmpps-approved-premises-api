@@ -91,7 +91,7 @@
     <ID>TooGenericExceptionThrown:ProbationAreaProbationRegionMappingEntityFactory.kt:ProbationAreaProbationRegionMappingEntityFactory$throw RuntimeException("Must provide a Probation Region")</ID>
     <ID>TooGenericExceptionThrown:RedisConfiguration.kt:ClientResultRedisSerializer$throw RuntimeException("Preemptively cached requests should not be annotated with @Cacheable")</ID>
     <ID>TooGenericExceptionThrown:RedisConfiguration.kt:ClientResultRedisSerializer$throw RuntimeException("Unhandled discriminator type: ${deserializedWrapper.discriminator}")</ID>
-    <ID>TooGenericExceptionThrown:RoomEntityFactory.kt:RoomEntityFactory$throw RuntimeException("Must provide a premises")</ID>
+    <ID>TooGenericExceptionThrown:Cas1RoomEntityFactory.kt:Cas1RoomEntityFactory$throw RuntimeException("Must provide a premises")</ID>
     <ID>TooGenericExceptionThrown:RoshRatings.kt:RoshRatingsInner$throw RuntimeException("No RiskLevels found")</ID>
     <ID>TooGenericExceptionThrown:SeedJob.kt:SeedJob$throw RuntimeException("required headers: $missingHeaders")</ID>
     <ID>TooGenericExceptionThrown:SeedService.kt:SeedService$throw RuntimeException("The headers provided: $headerRow did not include ${exception.message}")</ID>

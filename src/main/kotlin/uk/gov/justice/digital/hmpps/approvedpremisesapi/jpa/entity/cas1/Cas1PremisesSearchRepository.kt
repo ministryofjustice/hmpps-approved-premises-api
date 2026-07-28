@@ -58,12 +58,12 @@ FROM
   ) premises_chars ON premises_chars.premises_id = p.id
   
   LEFT JOIN (
-    SELECT rooms.premises_id,
+    SELECT cas1_rooms.premises_id,
            ARRAY_REMOVE(ARRAY_AGG(DISTINCT c.property_name), null) AS property_name_array
     FROM room_characteristics rc
-    inner join rooms on rooms.id = rc.room_id
+    inner join cas1_rooms on cas1_rooms.id = rc.room_id
     inner JOIN characteristics c ON c.id = rc.characteristic_id
-    GROUP BY rooms.premises_id
+    GROUP BY cas1_rooms.premises_id
   ) room_chars ON room_chars.premises_id = p.id
   
   LEFT OUTER JOIN cas1_premises_local_restrictions restrictions ON restrictions.archived = false AND restrictions.approved_premises_id = p.id
@@ -90,7 +90,7 @@ AND
   :roomCharacteristicsCount = (
     SELECT COUNT(distinct rc.characteristic_id)
     FROM room_characteristics rc
-    JOIN rooms r ON rc.room_id = r.id
+    JOIN cas1_rooms r ON rc.room_id = r.id
     WHERE r.premises_id = result.premises_id AND rc.characteristic_id IN (:roomCharacteristics)
   )
 )
