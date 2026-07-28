@@ -77,6 +77,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMock404TierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMock404V3TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulV3TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -103,6 +105,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.DomainEventSummaryImpl
@@ -2049,9 +2052,15 @@ class Cas1ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create new application without risks returns 201 with correct body and Location header`() {
+    fun `Create new application throw error when tier v3 is not available`() {
+      mockFeatureFlagService.setFlag(FEATURE_FLAG_USE_TIER_V3, true)
       givenAUser { _, jwt ->
         givenAnOffender { offenderDetails, _ ->
+
+          apAndOASysMockSuccessfulNeedsDetailsCall(
+            offenderDetails.otherIds.crn,
+            NeedsDetailsFactory().produce(),
+          )
 
           apAndOASysMockSuccessfulRoshRatingsCall(
             offenderDetails.otherIds.crn,
@@ -2065,18 +2074,10 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             tier,
           )
 
-          hmppsTierMockSuccessfulV3TierCall(
-            offenderDetails.otherIds.crn,
-            tier,
-          )
+          hmppsTierMock404V3TierCall(offenderDetails.otherIds.crn)
 
-          apAndOASysMockSuccessfulNeedsDetailsCall(
-            offenderDetails.otherIds.crn,
-            NeedsDetailsFactory().produce(),
-          )
-
-          val result = webTestClient.post()
-            .uri("/cas1/applications/create?createWithRisks=false")
+          webTestClient.post()
+            .uri("/cas1/applications/create")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewApplication(
@@ -2088,16 +2089,43 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             )
             .exchange()
             .expectStatus()
-            .isCreated
-            .returnResult(Cas1CreateApplicationOutcome::class.java)
-            .responseBody
-            .blockFirst()
+            .is5xxServerError
+        }
+      }
+    }
 
-          assertThat(result!!.applicationId).isNotNull
-          assertThat(result.tier!!.tierScore).isEqualTo(tier.tierScore)
-          assertThat(result.tier.calculationDate).isEqualTo(tier.calculationDate)
-          assertThat(result.tier.provisional).isNull()
-          assertThat(result.tier.version.name).isEqualTo(TierVersion.V2.name)
+    @Test
+    fun `Create new application throw error when tier v2 is not available`() {
+      mockFeatureFlagService.setFlag(FEATURE_FLAG_USE_TIER_V3, false)
+      givenAUser { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          apAndOASysMockSuccessfulNeedsDetailsCall(
+            offenderDetails.otherIds.crn,
+            NeedsDetailsFactory().produce(),
+          )
+
+          apAndOASysMockSuccessfulRoshRatingsCall(
+            offenderDetails.otherIds.crn,
+            RoshRatingsFactory().produce(),
+          )
+
+          hmppsTierMock404TierCall(offenderDetails.otherIds.crn)
+
+          webTestClient.post()
+            .uri("/cas1/applications/create")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .is5xxServerError
         }
       }
     }

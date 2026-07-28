@@ -136,36 +136,29 @@ class Cas1ApplicationCreationService(
     offenceId: String,
   ): CasResult<Cas1CreateApplicationOutcome> {
     val case = caseService.ensureCaseExists(crn)
+    case.tier ?: throw InternalServerErrorProblem("Could not find risk tier for offender with CRN $crn")
 
-    if (case.tier == null) {
-      return CasResult.Success(
-        Cas1CreateApplicationOutcome(
-          tier = null,
-        ),
-      )
-    } else {
-      val riskRatings = offenderRisksService.getPersonRisks(crn)
+    val riskRatings = offenderRisksService.getPersonRisks(crn)
 
-      val createdApplicationId = applicationRepository.saveAndFlush(
-        createApprovedPremisesApplicationEntity(
-          crn,
-          user,
-          convictionId,
-          deliusEventNumber,
-          offenceId,
-          riskRatings,
-          case.nomsNumber,
-          case.name?.uppercase() ?: error("name is null"),
-        ),
-      ).id
+    val createdApplicationId = applicationRepository.saveAndFlush(
+      createApprovedPremisesApplicationEntity(
+        crn,
+        user,
+        convictionId,
+        deliusEventNumber,
+        offenceId,
+        riskRatings,
+        case.nomsNumber,
+        case.name?.uppercase() ?: error("name is null"),
+      ),
+    ).id
 
-      return CasResult.Success(
-        Cas1CreateApplicationOutcome(
-          applicationId = createdApplicationId,
-          tier = case.tier,
-        ),
-      )
-    }
+    return CasResult.Success(
+      Cas1CreateApplicationOutcome(
+        applicationId = createdApplicationId,
+        tier = case.tier!!,
+      ),
+    )
   }
 
   fun createApprovedPremisesApplicationEntity(
