@@ -74,7 +74,7 @@ class Cas1PlacementRequestsController(
   fun search(
     @RequestParam status: PlacementRequestStatus?,
     @RequestParam crnOrName: String?,
-    @Schema(description = "Filter on the tier captured when the application was created")
+    @Schema(deprecated = true, description = "Deprecated, use tierOnApplicationCreation instead")
     @RequestParam tier: RiskTierLevel?,
     @Schema(description = "Filter on the person's live tier")
     @RequestParam personTier: String?,
@@ -86,6 +86,8 @@ class Cas1PlacementRequestsController(
     @Schema(description = PlacementRequestSortFieldConstants.DESCRIPTION)
     @RequestParam sortBy: PlacementRequestSortField?,
     @RequestParam sortDirection: SortDirection?,
+    @Schema(description = "Filter on the tier captured when the application was created")
+    @RequestParam tierOnApplicationCreation: String?,
   ): ResponseEntity<List<Cas1PlacementRequestSummary>> {
     val user = getUserForRequest()
 
@@ -97,7 +99,7 @@ class Cas1PlacementRequestsController(
       Cas1PlacementRequestService.AllActiveSearchCriteria(
         status = status,
         crnOrName = crnOrName,
-        tierOnApplicationCreation = tier?.value,
+        tierOnApplicationCreation = tierOnApplicationCreation ?: tier?.value,
         personTier = personTier,
         arrivalDateStart = arrivalDateStart,
         arrivalDateEnd = arrivalDateEnd,

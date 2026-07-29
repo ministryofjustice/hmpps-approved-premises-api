@@ -629,6 +629,78 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `It searches by tierOnApplicationCreation where user is manager`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      val (offender1Details, _) = givenAnOffender()
+      val (offender2Details, inmate2Details) = givenAnOffender()
+      val (offender3Details, _) = givenAnOffender()
+
+      createPlacementRequest(offender1Details, user, tierOnApplicationCreation = RiskTierLevel.a0)
+      val placementRequestA1 = createPlacementRequest(offender2Details, user, tierOnApplicationCreation = RiskTierLevel.a1)
+      createPlacementRequest(offender3Details, user, tierOnApplicationCreation = RiskTierLevel.a2)
+
+      webTestClient.get()
+        .uri("/cas1/placement-requests?tierOnApplicationCreation=A1")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          jackson3JsonMapper.writeValueAsString(
+            listOf(
+              transformNotMatchedPlacementRequestJpaToApiSummary(
+                placementRequestA1,
+                PersonInfoResult.Success.Full(offender2Details.otherIds.crn, offender2Details, inmate2Details, tier = null),
+              ),
+            ),
+          ),
+        )
+    }
+
+    @Test
+    fun `tierOnApplicationCreation takes precedence over deprecated tier`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      val (offender1Details, inmate1Details) = givenAnOffender()
+      val (offender2Details, _) = givenAnOffender()
+
+      val placementRequestA0 = createPlacementRequest(
+        offender1Details,
+        user,
+        tierOnApplicationCreation = RiskTierLevel.a0,
+      )
+
+      createPlacementRequest(
+        offender2Details,
+        user,
+        tierOnApplicationCreation = RiskTierLevel.a1,
+      )
+
+      webTestClient.get()
+        .uri("/cas1/placement-requests?tier=A1&tierOnApplicationCreation=A0")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          jackson3JsonMapper.writeValueAsString(
+            listOf(
+              transformNotMatchedPlacementRequestJpaToApiSummary(
+                placementRequestA0,
+                PersonInfoResult.Success.Full(
+                  offender1Details.otherIds.crn,
+                  offender1Details,
+                  inmate1Details,
+                  tier = null,
+                ),
+              ),
+            ),
+          ),
+        )
+    }
+
+    @Test
     fun `It searches by person tier v2 where user is manager`() {
       mockFeatureFlagService.setFlag("use-tier-v3", false)
 
