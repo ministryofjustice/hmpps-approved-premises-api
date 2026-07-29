@@ -325,6 +325,39 @@ class CaseServiceTest {
         .hasMessageContaining(crn)
         .hasMessageContaining("Offender")
     }
+
+    @Test
+    fun `should uppercase CRN when ensuring case exists`() {
+      val crn = "crn123"
+      val uppercasedCrn = "CRN123"
+
+      val caseSummary = CaseSummaryFactory()
+        .withCrn(uppercasedCrn)
+        .withName(NameFactory().withForename("John").withSurname("Smith").produce())
+        .withNomsId("NOMS123")
+        .produce()
+
+      every { mockCaseRepository.findByCrn(uppercasedCrn) } returns null
+      val createdCase = slot<CaseEntity>()
+      every { mockCaseRepository.saveAndFlush(capture(createdCase)) } returnsArgument 0
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(uppercasedCrn)) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(listOf(caseSummary)),
+      )
+
+      every { mockHMPPSTierApiClient.getTier(uppercasedCrn, any()) } returns ClientResult.Failure.Other(
+        HttpMethod.GET,
+        "/tier",
+        RuntimeException("Fail"),
+      )
+
+      service.ensureCaseExists(crn)
+
+      assertThat(createdCase.captured.crn).isEqualTo(uppercasedCrn)
+      verify { mockCaseRepository.findByCrn(uppercasedCrn) }
+      verify { mockApDeliusContextApiClient.getCaseSummaries(listOf(uppercasedCrn)) }
+      verify { mockHMPPSTierApiClient.getTier(uppercasedCrn, TierVersion.V2) }
+    }
   }
 
   @Nested
@@ -422,6 +455,29 @@ class CaseServiceTest {
         service.reviseTier(crn)
       }.isInstanceOf(RuntimeException::class.java)
     }
+
+    @Test
+    fun `should uppercase CRN when revising tier`() {
+      val crn = "crn123"
+      val uppercasedCrn = "CRN123"
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
+      val caseEntity = CaseEntityFactory().withCrn(uppercasedCrn).produce()
+
+      every { mockCaseRepository.findByCrn(uppercasedCrn) } returns caseEntity
+      every { mockHMPPSTierApiClient.getTier(uppercasedCrn, any()) } returns ClientResult.Failure.StatusCode(
+        status = HttpStatus.INTERNAL_SERVER_ERROR,
+        method = HttpMethod.GET,
+        path = "/crn/$uppercasedCrn/tier",
+        body = null,
+      )
+
+      assertThatThrownBy {
+        service.reviseTier(crn)
+      }.isInstanceOf(RuntimeException::class.java)
+
+      verify { mockCaseRepository.findByCrn(uppercasedCrn) }
+      verify { mockHMPPSTierApiClient.getTier(uppercasedCrn, TierVersion.V2) }
+    }
   }
 
   @Nested
@@ -485,6 +541,19 @@ class CaseServiceTest {
       assertThat(result).isNotNull
       assertThat(result!!.tier?.tierScore).isEqualTo("V3")
     }
+
+    @Test
+    fun `should uppercase CRN when getting case`() {
+      val crn = "crn123"
+      val uppercasedCrn = "CRN123"
+
+      every { mockCaseRepository.findByCrn(uppercasedCrn) } returns null
+
+      service.getCase(crn)
+
+      verify { mockCaseRepository.findByCrn(uppercasedCrn) }
+      verify { mockSentryService.captureException(any<CaseService.CaseNotFound>()) }
+    }
   }
 
   @Nested
@@ -509,6 +578,26 @@ class CaseServiceTest {
       verify { mockSentryService.captureException(capture(thrownExceptionSlot)) }
 
       assertThat(thrownExceptionSlot.captured.message).isEqualTo("Case with CRN CRN456 not found")
+    }
+
+    @Test
+    fun `should uppercase CRNs when getting multiple cases`() {
+      val crn1 = "crn123"
+      val crn2 = "crn456"
+      val uppercasedCrn1 = "CRN123"
+      val uppercasedCrn2 = "CRN456"
+
+      val caseEntity1 = CaseEntityFactory().withCrn(uppercasedCrn1).produce()
+
+      every { mockCaseRepository.findByCrnIn(listOf(uppercasedCrn1, uppercasedCrn2)) } returns listOf(caseEntity1)
+
+      val result = service.getCases(listOf(crn1, crn2))
+
+      assertThat(result).hasSize(1)
+      assertThat(result[0].crn).isEqualTo(uppercasedCrn1)
+
+      verify { mockCaseRepository.findByCrnIn(listOf(uppercasedCrn1, uppercasedCrn2)) }
+      verify { mockSentryService.captureException(any<CaseService.CaseNotFound>()) }
     }
   }
 }

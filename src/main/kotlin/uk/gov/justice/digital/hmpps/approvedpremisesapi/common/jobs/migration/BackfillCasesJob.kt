@@ -40,7 +40,7 @@ class BackfillCasesJob(
       batch.forEach { dto ->
         runCatching {
           transactionTemplate.executeWithoutResult {
-            processCase(dto, missingCasesSummary[dto.crn])
+            processCase(dto, missingCasesSummary[dto.crn.uppercase()])
           }
         }.onFailure {
           migrationLogger.error("Unable to process case for CRN ${dto.crn}", it)
@@ -70,7 +70,7 @@ class BackfillCasesJob(
   private fun fetchSummariesForMissingCases(
     newCaseDtos: List<BackfillCaseSummaryMigrationDto>,
   ): Map<String, PersonSummaryInfoResult> {
-    val crns = newCaseDtos.map { it.crn }.toSet()
+    val crns = newCaseDtos.map { it.crn.uppercase() }.toSet()
 
     if (crns.isEmpty()) return emptyMap()
 
@@ -78,7 +78,7 @@ class BackfillCasesJob(
       offenderService.getPersonSummaryInfoResultsInBatches(
         crns,
         LaoStrategy.NeverRestricted,
-      ).associateBy { it.crn }
+      ).associateBy { it.crn.uppercase() }
     } catch (exception: Exception) {
       migrationLogger.error("Unable to retrieve person summaries for batch, continuing with DTO values", exception)
       emptyMap()
@@ -101,13 +101,14 @@ class BackfillCasesJob(
       return
     }
 
-    migrationLogger.info("Updating missing tiers for CRN ${dto.crn}")
+    val normalizedCrn = dto.crn.uppercase()
+    migrationLogger.info("Updating missing tiers for CRN $normalizedCrn")
 
-    val existingCase = caseRepository.findByCrn(dto.crn)!!
+    val existingCase = caseRepository.findByCrn(normalizedCrn)!!
 
     existingCase.apply {
-      if (!dto.hasTierV2) tierV2 = fetchTierOrNull(dto.crn, TierVersion.V2)
-      if (!dto.hasTierV3) tierV3 = fetchTierOrNull(dto.crn, TierVersion.V3)
+      if (!dto.hasTierV2) tierV2 = fetchTierOrNull(normalizedCrn, TierVersion.V2)
+      if (!dto.hasTierV3) tierV3 = fetchTierOrNull(normalizedCrn, TierVersion.V3)
       lastUpdatedAt = OffsetDateTime.now()
     }
 
@@ -118,7 +119,8 @@ class BackfillCasesJob(
     dto: BackfillCaseSummaryMigrationDto,
     summaryResult: PersonSummaryInfoResult?,
   ) {
-    migrationLogger.info("Creating case for CRN ${dto.crn}")
+    val normalizedCrn = dto.crn.uppercase()
+    migrationLogger.info("Creating case for CRN $normalizedCrn")
 
     val personDetails = resolvePersonDetails(dto, summaryResult)
 
@@ -127,11 +129,11 @@ class BackfillCasesJob(
     caseRepository.save(
       CaseEntity(
         id = UUID.randomUUID(),
-        crn = dto.crn,
+        crn = normalizedCrn,
         name = personDetails.name,
         nomsNumber = personDetails.nomsNumber,
-        tierV2 = fetchTierOrNull(dto.crn, TierVersion.V2),
-        tierV3 = fetchTierOrNull(dto.crn, TierVersion.V3),
+        tierV2 = fetchTierOrNull(normalizedCrn, TierVersion.V2),
+        tierV3 = fetchTierOrNull(normalizedCrn, TierVersion.V3),
         createdAt = now,
         lastUpdatedAt = now,
       ),
