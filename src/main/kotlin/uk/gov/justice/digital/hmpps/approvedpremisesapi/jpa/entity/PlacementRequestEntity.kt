@@ -67,7 +67,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         ORDER BY b.canonical_arrival_date ASC
         LIMIT 1
       ) spaceBooking ON TRUE
-      LEFT JOIN premises spaceBookingPremises ON spaceBooking.premises_id = spaceBookingPremises.id
+      LEFT JOIN cas1_premises_base spaceBookingPremises ON spaceBooking.premises_id = spaceBookingPremises.id
       LEFT JOIN booking_not_mades bnm ON bnm.placement_request_id = pq.id
       LEFT JOIN cases ON cases.crn = application.crn
       WHERE

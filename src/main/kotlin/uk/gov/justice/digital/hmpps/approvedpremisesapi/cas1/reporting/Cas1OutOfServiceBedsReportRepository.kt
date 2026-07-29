@@ -56,7 +56,7 @@ class Cas1OutOfServiceBedsReportRepository(
         FROM cas1_out_of_service_beds AS oos_bed
             JOIN cas1_beds beds ON oos_bed.bed_id = beds.id
             JOIN cas1_rooms ON beds.room_id = cas1_rooms.id
-            JOIN premises ON cas1_rooms.premises_id = premises.id
+            JOIN cas1_premises_base premises ON cas1_rooms.premises_id = premises.id
             JOIN approved_premises ap ON premises.id = ap.premises_id
             JOIN probation_regions ON premises.probation_region_id = probation_regions.id
             LEFT JOIN latest_revisions

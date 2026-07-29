@@ -1,0 +1,1 @@
+ALTER TABLE premises RENAME TO cas1_premises_base;

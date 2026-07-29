@@ -1,0 +1,1 @@
+ALTER TABLE archived_temporary_accommodation_premises DROP CONSTRAINT temporary_accommodation_premises_premises_id_fkey;

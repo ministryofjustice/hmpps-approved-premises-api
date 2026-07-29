@@ -37,7 +37,7 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     LEFT JOIN cas1_out_of_service_bed_revisions d
     ON dd.out_of_service_bed_id = d.out_of_service_bed_id
     AND dd.max_created_at = d.created_at
-    LEFT JOIN premises p
+    LEFT JOIN cas1_premises_base p
     ON oosb.premises_id = p.id
     LEFT JOIN probation_regions pr
     ON p.probation_region_id = pr.id
