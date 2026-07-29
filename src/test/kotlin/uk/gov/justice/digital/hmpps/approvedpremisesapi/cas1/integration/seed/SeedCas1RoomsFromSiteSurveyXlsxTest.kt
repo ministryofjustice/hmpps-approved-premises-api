@@ -464,6 +464,72 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
+  fun `Updating an existing room with multiple existing beds and a characteristic succeeds`() {
+    val qCode = "Q999"
+    val premises = givenAnApprovedPremises(qCode = qCode)
+    val roomCode = "$qCode-1"
+    val room = cas1RoomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCode(roomCode)
+    }
+    cas1BedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI01")
+      withName("1 - 1")
+    }
+    cas1BedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI02")
+      withName("1 - 2")
+    }
+
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01", "SWABI02"),
+      listOf(
+        "Room Number / Name",
+        "1",
+        "1",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+        "2",
+      ),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "Yes", "Yes"))
+
+    val roomsSheet = dataFrameForHeadersAndRows(values)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedFile(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    val updatedRoom = roomRepository.findByCode(roomCode)
+    assertThat(updatedRoom!!.characteristics).anyMatch {
+      it.name == "Is this room located on the ground floor?" &&
+        it.propertyName == "isGroundFloor"
+    }
+
+    val existingBed1 = bedRepository.findByCode("SWABI01")
+    assertThat(existingBed1!!.name).isEqualTo("1 - 1")
+    assertThat(existingBed1.room.id).isEqualTo(updatedRoom.id)
+    assertThat(existingBed1.room.code).isEqualTo("Q999-1")
+
+    val existingBed2 = bedRepository.findByCode("SWABI02")
+    assertThat(existingBed2!!.name).isEqualTo("1 - 2")
+    assertThat(existingBed2.room.id).isEqualTo(updatedRoom.id)
+    assertThat(existingBed2.room.code).isEqualTo("Q999-1")
+  }
+
+  @Test
   fun `Creating a new room with two beds with the same name fails`() {
     val qCode = "Q999"
     val premises = givenAnApprovedPremises(qCode = qCode)
