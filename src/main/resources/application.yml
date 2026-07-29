@@ -148,6 +148,8 @@ spring:
 springdoc:
   swagger-ui:
     urls-primary-name: "All CAS"
+    # workaround advised for hmpps gradle plugin 11.0.2. See https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/release-notes/11.x.md
+    version: 5.32.11
   remove-broken-reference-definitions: false
   writer-with-order-by-keys: true
   pre-loading-enabled: true
