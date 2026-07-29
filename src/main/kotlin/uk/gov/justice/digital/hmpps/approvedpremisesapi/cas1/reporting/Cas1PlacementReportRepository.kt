@@ -45,7 +45,7 @@ class Cas1PlacementReportRepository(
             matching.*
         FROM cas1_space_bookings csb
         INNER JOIN placement_matching_outcomes matching ON matching.placement_request_id = csb.placement_request_id
-        LEFT JOIN premises p ON p.id = csb.premises_id
+        LEFT JOIN cas1_premises_base p ON p.id = csb.premises_id
         LEFT JOIN probation_regions pr ON pr.id = p.probation_region_id
         LEFT JOIN departure_reasons dr ON dr.id = csb.departure_reason_id
         LEFT JOIN departure_reasons dr_parent ON dr_parent.id = dr.parent_reason_id

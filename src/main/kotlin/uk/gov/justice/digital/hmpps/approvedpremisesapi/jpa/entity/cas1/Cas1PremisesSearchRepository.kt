@@ -45,7 +45,7 @@ FROM
     room_chars.property_name_array as room_characteristics,
     ARRAY_REMOVE(ARRAY_AGG (DISTINCT restrictions.description), null) as local_restrictions
   FROM approved_premises ap
-  INNER JOIN premises p ON ap.premises_id = p.id
+  INNER JOIN cas1_premises_base p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
   INNER JOIN ap_areas aa ON pr.ap_area_id = aa.id
 

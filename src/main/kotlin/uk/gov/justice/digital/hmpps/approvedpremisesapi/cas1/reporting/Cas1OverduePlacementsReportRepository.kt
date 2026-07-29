@@ -62,7 +62,7 @@ class Cas1OverduePlacementsReportRepository(
       FROM
           active_overdue__bookings aob
               INNER JOIN approved_premises ap ON aob.premises_id = ap.premises_id
-              INNER JOIN premises p on ap.premises_id = p.id
+              INNER JOIN cas1_premises_base p on ap.premises_id = p.id
               INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
               INNER JOIN ap_areas aa on pr.ap_area_id = aa.id
         """

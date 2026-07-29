@@ -83,7 +83,7 @@ class Cas1OccupancyReportRepository(
     				(sb.canonical_arrival_date <= premises_and_days.day AND sb.canonical_departure_date > premises_and_days.day)
     			) as bookings_count
     		from premises_and_days
-    		inner join premises p on p.id = premises_and_days.premises_id
+    		inner join cas1_premises_base p on p.id = premises_and_days.premises_id
         inner join probation_regions region ON region.id = p.probation_region_id
         inner join approved_premises ap ON ap.premises_id = p.id
         inner join cas1_cru_management_areas cma on cma.id = ap.cas1_cru_management_area_id   

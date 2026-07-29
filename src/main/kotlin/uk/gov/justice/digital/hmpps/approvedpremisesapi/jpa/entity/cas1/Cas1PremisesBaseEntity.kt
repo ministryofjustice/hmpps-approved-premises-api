@@ -114,7 +114,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
 
 @SuppressWarnings("LongParameterList")
 @Entity
-@Table(name = "premises")
+@Table(name = "cas1_premises_base")
 @DiscriminatorColumn(name = "service")
 @Inheritance(strategy = InheritanceType.JOINED)
 abstract class Cas1PremisesBaseEntity(

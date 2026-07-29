@@ -107,7 +107,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             END as person_name
             FROM 
               cas1_space_bookings b
-            LEFT JOIN premises p ON
+            LEFT JOIN cas1_premises_base p ON
               b.premises_id = p.id            
             LEFT OUTER JOIN approved_premises_applications apa ON 
               b.approved_premises_application_id = apa.id
