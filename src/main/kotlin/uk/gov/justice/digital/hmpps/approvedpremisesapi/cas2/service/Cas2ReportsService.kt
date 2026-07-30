@@ -81,7 +81,6 @@ class Cas2ReportsService(
     Cas2Cohort.HCRD -> "Homeless at conditional release date"
     Cas2Cohort.HEFR -> "Homeless at end of fixed-term recall"
     Cas2Cohort.ISC -> "Intensive supervision courts"
-    Cas2Cohort.RARR -> "Risk Assessed Recall Review"
     Cas2Cohort.FROM_AP -> "Referral from Approved Premises"
   }
 
