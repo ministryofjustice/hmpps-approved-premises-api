@@ -2,64 +2,25 @@
 <!-- This is in addition to the baseline ignore file provided by hmpps-gradle-spring-boot
      see https://github.com/ministryofjustice/hmpps-gradle-spring-boot#owasp-dependency-check-and-suppression-files -->
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <suppress>
+    <suppress until="2026-10-01Z">
         <notes><![CDATA[
-        As we trust the XLSX files we import, we are safe to ignore this vulnerability
+    Suppressed until 2.4.20 is released (due September 2026). Note that this is being pulled in from detekt,
+    hence this suppression rule which is in addition to the suppression provided by hmpps-gradle-plugin
 
-        note that there isn't currently a version of dataframe-excel that use a version
-        of POI that resolves this issue. Once there is, we should upgrade to it and
-        remove this suppression
-        ]]></notes>
-        <packageUrl regex="true">^.*org.apache.poi.*$</packageUrl>
-        <vulnerabilityName>CVE-2025-31672</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        file name: applicationinsights-core-2.6.4.jar
-        Suppressed as this is an Azure SDK dependency, not application insights.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.microsoft\.azure/applicationinsights-core@.*$</packageUrl>
-        <cve>CVE-2026-33117</cve>
-    </suppress>
-    <!-- DOM Purify -->
-    <suppress>
-        <notes><![CDATA[
-    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
-    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
+    This only affects the kotlin build cache, and we use the gradle build cache that has built in encryption anyway.
+    Bundled with detekt which is only used for static code analysis
+    file name: kotlinx-coroutines-core-jvm-1.10.2-intellij-1.jar
     ]]></notes>
-        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
-        <vulnerabilityName>CVE-2026-0540</vulnerabilityName>
+        <packageUrl regex="true">^pkg:maven/org\.jetbrains\.intellij\.deps\.kotlinx/kotlinx-coroutines-core-jvm@.*$</packageUrl>
+        <vulnerabilityName>CVE-2026-53914</vulnerabilityName>
     </suppress>
     <suppress>
         <notes><![CDATA[
-    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
-    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
+    this appears to be a false positive due to broad matching rules in the CVE which matches _all_ kotlin libraries.
+    the library version we use is quite new (April 2026) whilst the CVE is from 2020. Note that this is being pulled in from detekt
+    file name: kotlinx-coroutines-core-jvm-1.10.2-intellij-1.jar
     ]]></notes>
-        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
-        <vulnerabilityName>CVE-2025-15599</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
-    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
-    ]]></notes>
-        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
-        <vulnerabilityName>GHSA-cj63-jhhr-wcxv</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
-    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
-    ]]></notes>
-        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
-        <vulnerabilityName>GHSA-cjmm-f4jc-qw8r</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
-    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
-    ]]></notes>
-        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
-        <vulnerabilityName>GHSA-h8r8-wccr-v5f2</vulnerabilityName>
+        <packageUrl regex="true">^pkg:maven/org\.jetbrains\.intellij\.deps\.kotlinx/kotlinx-coroutines-core-jvm@.*$</packageUrl>
+        <vulnerabilityName>CVE-2020-29582</vulnerabilityName>
     </suppress>
 </suppressions>
