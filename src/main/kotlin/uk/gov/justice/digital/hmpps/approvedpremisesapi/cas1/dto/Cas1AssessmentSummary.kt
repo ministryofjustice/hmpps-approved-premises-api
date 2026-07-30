@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
@@ -27,5 +28,6 @@ data class Cas1AssessmentSummary(
 
   @get:JsonProperty("decision") val decision: AssessmentDecision? = null,
 
+  @Schema(description = "Contains ROSH Risks, Tier, Risk Flags and MAPPA captured when the application was created")
   @get:JsonProperty("risks") val risks: PersonRisks? = null,
 )
