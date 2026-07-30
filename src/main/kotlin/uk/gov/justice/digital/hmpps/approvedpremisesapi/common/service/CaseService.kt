@@ -115,7 +115,6 @@ class CaseService(
   private fun CaseEntity.updateFrom(caseSummary: CaseSummary, tiers: CaseTiers): CaseEntity = apply {
     name = caseSummary.buildName()
     nomsNumber = caseSummary.nomsId
-    lastUpdatedAt = OffsetDateTime.now()
     if (tiers.v2 != null) {
       tierV2 = tiers.v2
     }
