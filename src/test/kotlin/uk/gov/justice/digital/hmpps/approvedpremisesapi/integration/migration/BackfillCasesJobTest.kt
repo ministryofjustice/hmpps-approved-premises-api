@@ -258,4 +258,36 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
     assertThat(c.tierV2!!.tierScore).isEqualTo("A1")
     assertThat(c.tierV3!!.tierScore).isEqualTo("A1")
   }
+
+  @Test
+  fun `backfill job uppercases CRN when creating new case`() {
+    val crn = "lowercrn"
+    val uppercasedCrn = "LOWERCRN"
+
+    val probationRegion = givenAProbationRegion()
+    userEntityFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
+    offlineApplicationEntityFactory.produceAndPersist {
+      withCrn(crn)
+    }
+
+    val caseSummary = CaseSummaryFactory()
+      .withCrn(uppercasedCrn)
+      .withName(NameFactory().withForename("John").withSurname("Smith").produce())
+      .withNomsId("NOMS123")
+      .produce()
+
+    apDeliusContextCaseSummariesMultipleCases(listOf(caseSummary))
+
+    hmppsTierMockSuccessfulTierCall(uppercasedCrn, UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+    hmppsTierMockSuccessfulV3TierCall(uppercasedCrn, UpstreamTier("C1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+
+    migrationJobService.runMigrationJob(MigrationJobType.backfillCases, 10)
+
+    val c = caseRepository.findByCrn(uppercasedCrn)!!
+    assertThat(c.crn).isEqualTo(uppercasedCrn)
+    assertThat(c.name).isEqualTo("JOHN SMITH")
+  }
 }

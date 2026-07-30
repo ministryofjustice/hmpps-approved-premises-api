@@ -54,10 +54,11 @@ class CaseService(
     get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
 
   fun ensureCaseExists(crn: String): CaseDto {
-    val caseSummary = getCaseSummary(crn)
-    val tiers = fetchAvailableTiers(crn)
+    val normalizedCrn = crn.uppercase()
+    val caseSummary = getCaseSummary(normalizedCrn)
+    val tiers = fetchAvailableTiers(normalizedCrn)
 
-    val caseEntity = caseRepository.findByCrn(caseSummary.crn)
+    val caseEntity = caseRepository.findByCrn(caseSummary.crn.uppercase())
       ?.updateFrom(caseSummary, tiers)
       ?: newCaseEntity(caseSummary, tiers)
 
@@ -65,14 +66,15 @@ class CaseService(
   }
 
   fun reviseTier(crn: String): Boolean {
-    val case = caseRepository.findByCrn(crn) ?: return false
+    val normalizedCrn = crn.uppercase()
+    val case = caseRepository.findByCrn(normalizedCrn) ?: return false
 
-    case.tierV2 = fetchTierOrError(crn, TierVersion.V2)
-    log.info("Have updated tierV2 for $crn to $case.tierV2")
+    case.tierV2 = fetchTierOrError(normalizedCrn, TierVersion.V2)
+    log.info("Have updated tierV2 for $normalizedCrn to $case.tierV2")
 
     if (includeTierV3) {
-      case.tierV3 = fetchTierOrError(crn, TierVersion.V3)
-      log.info("Have updated tierV3 for $crn to $case.tierV3")
+      case.tierV3 = fetchTierOrError(normalizedCrn, TierVersion.V3)
+      log.info("Have updated tierV3 for $normalizedCrn to $case.tierV3")
     }
     caseRepository.save(case)
     return true
@@ -84,9 +86,10 @@ class CaseService(
    * alert will be raised so we can investigate this, as it should never happen
    */
   fun getCase(crn: String): CaseDto? {
-    val case = caseRepository.findByCrn(crn)?.toDto()
+    val normalizedCrn = crn.uppercase()
+    val case = caseRepository.findByCrn(normalizedCrn)?.toDto()
     if (case == null) {
-      alertCaseNotFound(crn)
+      alertCaseNotFound(normalizedCrn)
     }
     return case
   }
@@ -95,11 +98,16 @@ class CaseService(
    * If a case can't be found for a given CRN there will be no corresponding entry in the result
    */
   fun getCases(crns: List<String>): List<CaseDto> {
-    val result = caseRepository.findByCrnIn(crns).map { it.toDto() }
+    val normalizedCrn = crns.map(String::uppercase)
+    val cases = caseRepository.findByCrnIn(normalizedCrn).map { it.toDto() }
 
-    crns.subtract(result.map { it.crn }.toSet()).forEach { alertCaseNotFound(it) }
+    val foundCrns = cases.map(CaseDto::crn).toSet()
 
-    return result
+    normalizedCrn
+      .subtract(foundCrns)
+      .forEach(::alertCaseNotFound)
+
+    return cases
   }
 
   private data class CaseTiers(
@@ -125,7 +133,7 @@ class CaseService(
 
   private fun newCaseEntity(caseSummary: CaseSummary, tiers: CaseTiers) = CaseEntity(
     id = UUID.randomUUID(),
-    crn = caseSummary.crn,
+    crn = caseSummary.crn.uppercase(),
     createdAt = OffsetDateTime.now(),
     lastUpdatedAt = OffsetDateTime.now(),
     name = caseSummary.buildName(),

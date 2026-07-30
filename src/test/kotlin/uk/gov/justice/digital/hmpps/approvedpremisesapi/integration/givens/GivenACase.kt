@@ -11,7 +11,7 @@ fun IntegrationTestBase.givenACase(
   tierV3: Tier? = TierFactory().produce(),
 ): CaseEntity {
   val case = caseEntityFactory.produceAndPersist {
-    withCrn(crn)
+    withCrn(crn.uppercase())
     withTierV2(tierV2)
     withTierV3(tierV3)
   }
