@@ -12,10 +12,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedAssessedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
@@ -24,10 +23,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -44,21 +46,24 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEventWithPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocated as AssessmentAllocatedModel
 
 class Cas1AssessmentDomainEventServiceTest {
 
   private val domainEventService = mockk<Cas1DomainEventService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
+  private val caseService = mockk<CaseService>()
 
   val service = Cas1AssessmentDomainEventService(
     domainEventService,
     apDeliusContextApiClient,
+    caseService,
     Clock.systemDefaultZone(),
     UrlTemplate("http://frontend/applications/#id"),
     UrlTemplate("http://frontend/assessments/#id"),
@@ -111,17 +116,15 @@ class Cas1AssessmentDomainEventServiceTest {
         allocatingUserStaffDetails,
       )
 
-      every { domainEventService.saveAssessmentAllocatedEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       service.assessmentAllocated(assessment, assigneeUser, allocatingUser)
 
       verify(exactly = 1) {
-        domainEventService.saveAssessmentAllocatedEvent(
+        domainEventService.save(
           match {
-            val envelope = it.data
+            val eventDetails = it.data as AssessmentAllocatedModel
             val triggerSourceMatches = it.triggerSource == TriggerSourceType.USER
-
-            val eventDetails = envelope.eventDetails
 
             val rootDomainEventDataMatches = (
               it.assessmentId == assessment.id &&
@@ -129,8 +132,6 @@ class Cas1AssessmentDomainEventServiceTest {
                 it.crn == assessment.application.crn &&
                 it.nomsNumber == assessment.application.nomsNumber
               )
-
-            val envelopeMatches = envelope.eventType == EventType.assessmentAllocated
 
             val allocatedToUserDetailsMatch =
               assertStaffMemberDetailsMatch(eventDetails.allocatedTo, assigneeUserStaffDetails)
@@ -146,7 +147,7 @@ class Cas1AssessmentDomainEventServiceTest {
                 allocatedByUserDetailsMatch
               )
 
-            triggerSourceMatches && rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch
+            triggerSourceMatches && rootDomainEventDataMatches && eventDetailsMatch
           },
         )
       }
@@ -160,14 +161,14 @@ class Cas1AssessmentDomainEventServiceTest {
         assigneeUserStaffDetails,
       )
 
-      every { domainEventService.saveAssessmentAllocatedEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       service.assessmentAllocated(assessment, assigneeUser, allocatingUser = null)
 
       verify(exactly = 1) {
-        domainEventService.saveAssessmentAllocatedEvent(
+        domainEventService.save(
           withArg {
-            assertThat(it.data.eventDetails.allocatedBy).isNull()
+            assertThat((it.data as AssessmentAllocatedModel).allocatedBy).isNull()
             assertThat(it.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
           },
         )
@@ -211,6 +212,7 @@ class Cas1AssessmentDomainEventServiceTest {
 
       val application = assessment.application as ApprovedPremisesApplicationEntity
       val offenderDetails = OffenderDetailsSummaryFactory().produce()
+      val caseDto = CaseDtoFactory().withCrn(application.crn).produce()
       val staffUserDetails = StaffDetailFactory.staffDetail(
         probationArea = uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea(
           code = "N26",
@@ -228,7 +230,9 @@ class Cas1AssessmentDomainEventServiceTest {
         HttpStatus.OK,
         staffUserDetails,
       )
-      every { domainEventService.saveApplicationAssessedDomainEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
+
+      every { caseService.getCase(application.crn) } returns caseDto
 
       service.assessmentAccepted(application, assessment, offenderDetails, placementDates, apType, user)
 
@@ -236,10 +240,10 @@ class Cas1AssessmentDomainEventServiceTest {
         apDeliusContextApiClient.getStaffDetail(user.deliusUsername)
       }
 
-      val domainEventArgument = slot<SaveCas1DomainEvent<ApplicationAssessedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<ApplicationAssessed>>()
 
       verify(exactly = 1) {
-        domainEventService.saveApplicationAssessedDomainEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
@@ -250,7 +254,7 @@ class Cas1AssessmentDomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo(assessment.application.crn)
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
 
-      val eventDetails = domainEvent.data.eventDetails
+      val eventDetails = domainEvent.data
       assertThat(eventDetails.applicationId).isEqualTo(assessment.application.id)
       assertThat(eventDetails.applicationUrl).isEqualTo("http://frontend/applications/${assessment.application.id}")
       assertThat(eventDetails.assessmentId).isEqualTo(assessment.id)
@@ -270,6 +274,7 @@ class Cas1AssessmentDomainEventServiceTest {
       assertThat(eventDetails.assessedBy).isEqualTo(expectedAssessor)
       assertThat(eventDetails.decision).isEqualTo("ACCEPTED")
       assertThat(eventDetails.decisionRationale).isNull()
+      assertThat(eventDetails.personTier).isEqualTo(caseDto.tier!!.toEventTier())
       assertThat(domainEvent.metadata).containsEntry(MetaDataName.CAS1_REQUESTED_AP_TYPE, "NORMAL")
     }
   }
@@ -313,6 +318,9 @@ class Cas1AssessmentDomainEventServiceTest {
         .withCrn(assessment.application.crn)
         .produce()
 
+      val caseDto = CaseDtoFactory().withCrn(application.crn).produce()
+      every { caseService.getCase(application.crn) } returns caseDto
+
       val staffUserDetails = StaffDetailFactory.staffDetail(code = "N26")
 
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
@@ -320,7 +328,7 @@ class Cas1AssessmentDomainEventServiceTest {
         staffUserDetails,
       )
 
-      every { domainEventService.saveApplicationAssessedDomainEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       service.assessmentRejected(
         application,
@@ -329,10 +337,10 @@ class Cas1AssessmentDomainEventServiceTest {
         user,
       )
 
-      val domainEventArgument = slot<SaveCas1DomainEvent<ApplicationAssessedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<ApplicationAssessed>>()
 
       verify(exactly = 1) {
-        domainEventService.saveApplicationAssessedDomainEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
@@ -345,7 +353,7 @@ class Cas1AssessmentDomainEventServiceTest {
       assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
 
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
       assertThat(data.applicationId).isEqualTo(assessment.application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${assessment.application.id}")
       assertThat(data.assessmentId).isEqualTo(assessment.id)
@@ -374,6 +382,7 @@ class Cas1AssessmentDomainEventServiceTest {
       )
       assertThat(data.decision).isEqualTo("REJECTED")
       assertThat(data.decisionRationale).isEqualTo("reasoning")
+      assertThat(data.personTier).isEqualTo(caseDto.tier!!.toEventTier())
     }
   }
 
@@ -408,14 +417,13 @@ class Cas1AssessmentDomainEventServiceTest {
         recipientStaffDetails,
       )
 
-      every { domainEventService.saveFurtherInformationRequestedEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
       service.furtherInformationRequested(assessment, clarificationNoteEntity)
 
       verify(exactly = 1) {
-        domainEventService.saveFurtherInformationRequestedEvent(
+        domainEventService.save(
           match {
-            val envelope = it.data
-            val eventDetails = envelope.eventDetails
+            val eventDetails = it.data as uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequested
 
             val rootDomainEventDataMatches = (
               it.assessmentId == assessment.id &&
@@ -423,8 +431,6 @@ class Cas1AssessmentDomainEventServiceTest {
                 it.crn == assessment.application.crn &&
                 it.nomsNumber == assessment.application.nomsNumber
               )
-
-            val envelopeMatches = envelope.eventType == EventType.informationRequestMade
 
             val requesterUserDetailsMatch =
               assertStaffMemberDetailsMatch(eventDetails.requester, requesterStaffDetails)
@@ -440,7 +446,7 @@ class Cas1AssessmentDomainEventServiceTest {
                 eventDetails.requestId == clarificationNoteEntity.id
               )
 
-            rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch && requesterUserDetailsMatch && recipientUserDetailsMatch
+            rootDomainEventDataMatches && eventDetailsMatch && requesterUserDetailsMatch && recipientUserDetailsMatch
           },
         )
       }

@@ -4,11 +4,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredManually
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawn
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Region
@@ -19,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
@@ -44,6 +43,7 @@ class Cas1ApplicationDomainEventService(
   private val offenderRisksService: OffenderRisksService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val domainEventTransformer: DomainEventTransformer,
+  private val caseService: CaseService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   private val clock: Clock,
 ) {
@@ -79,25 +79,21 @@ class Cas1ApplicationDomainEventService(
 
     val mappaLevel = offenderRisksService.run { caseDetail.toMappa() }.value ?.level
 
-    domainEventService.saveApplicationSubmittedDomainEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = personSummary.nomsId,
         occurredAt = eventOccurredAt.toInstant(),
-        data = ApplicationSubmittedEnvelope(
-          id = domainEventId,
-          timestamp = eventOccurredAt.toInstant(),
-          eventType = EventType.applicationSubmitted,
-          eventDetails = getApplicationSubmittedForDomainEvent(
-            application,
-            personSummary,
-            mappaLevel,
-            submitApplication,
-            staffDetails,
-            caseDetail,
-          ),
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+        data = getApplicationSubmittedForDomainEvent(
+          application,
+          personSummary,
+          mappaLevel,
+          submitApplication,
+          staffDetails,
+          caseDetail,
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE to submitApplication.reasonForShortNotice,
@@ -115,19 +111,15 @@ class Cas1ApplicationDomainEventService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = Instant.now(clock)
 
-    domainEventService.saveApplicationWithdrawnEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt,
-        data = ApplicationWithdrawnEnvelope(
-          id = domainEventId,
-          timestamp = eventOccurredAt,
-          eventType = EventType.applicationWithdrawn,
-          eventDetails = getApplicationWithdrawn(application, withdrawingUser, eventOccurredAt),
-        ),
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
+        data = getApplicationWithdrawn(application, withdrawingUser, eventOccurredAt),
         emit = application.isSubmitted(),
       ),
     )
@@ -210,6 +202,7 @@ class Cas1ApplicationDomainEventService(
     submittedAt = Instant.now(clock),
     submittedBy = getApplicationSubmittedSubmittedBy(staffDetails, caseDetail),
     sentenceLengthInMonths = null,
+    personTier = caseService.getCase(application.crn)?.tier?.toEventTier(),
   )
 
   private fun getApplicationSubmittedSubmittedBy(

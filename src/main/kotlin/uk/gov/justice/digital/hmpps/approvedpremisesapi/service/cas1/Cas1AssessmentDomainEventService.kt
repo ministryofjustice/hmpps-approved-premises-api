@@ -4,13 +4,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedAssessedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequested
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -18,9 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -36,6 +35,7 @@ import java.util.UUID
 class Cas1AssessmentDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val caseService: CaseService,
   private val clock: Clock,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
@@ -63,8 +63,8 @@ class Cas1AssessmentDomainEventService(
     val id = UUID.randomUUID()
     val occurredAt = Instant.now()
 
-    domainEventService.saveAssessmentAllocatedEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = id,
         applicationId = assessment.application.id,
         assessmentId = assessment.id,
@@ -72,25 +72,21 @@ class Cas1AssessmentDomainEventService(
         nomsNumber = assessment.application.nomsNumber,
         occurredAt = occurredAt,
         triggerSource = triggerSource,
-        data = AssessmentAllocatedEnvelope(
-          id = id,
-          timestamp = occurredAt,
-          eventType = EventType.assessmentAllocated,
-          eventDetails = AssessmentAllocated(
-            assessmentId = assessment.id,
-            assessmentUrl = assessmentUrlTemplate.resolve("id", assessment.id.toString()),
-            applicationId = assessment.application.id,
-            applicationUrl = applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
-            allocatedAt = Instant.now(),
-            personReference = PersonReference(
-              crn = assessment.application.crn,
-              noms = assessment.application.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            allocatedTo = allocatedToStaffDetails.toStaffMember(),
-            allocatedBy = allocatingUserStaffDetails?.let {
-              allocatingUserStaffDetails.toStaffMember()
-            },
+        type = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+        data = AssessmentAllocated(
+          assessmentId = assessment.id,
+          assessmentUrl = assessmentUrlTemplate.resolve("id", assessment.id.toString()),
+          applicationId = assessment.application.id,
+          applicationUrl = applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
+          allocatedAt = Instant.now(),
+          personReference = PersonReference(
+            crn = assessment.application.crn,
+            noms = assessment.application.nomsNumber ?: "Unknown NOMS Number",
           ),
+          allocatedTo = allocatedToStaffDetails.toStaffMember(),
+          allocatedBy = allocatingUserStaffDetails?.let {
+            allocatingUserStaffDetails.toStaffMember()
+          },
         ),
       ),
     )
@@ -110,37 +106,33 @@ class Cas1AssessmentDomainEventService(
     val id = UUID.randomUUID()
     val occurredAt = clarificationNoteEntity.createdAt.toInstant()
 
-    val data = FurtherInformationRequestedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = EventType.informationRequestMade,
-      eventDetails = FurtherInformationRequested(
-        assessmentId = assessment.id,
-        assessmentUrl = assessmentUrlTemplate.resolve("id", assessment.id.toString()),
-        applicationId = assessment.application.id,
-        applicationUrl = applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
-        personReference = PersonReference(
-          crn = assessment.application.crn,
-          noms = assessment.application.nomsNumber ?: "Unknown NOMS Number",
-        ),
-        requestedAt = Instant.now(),
-        requester = requesterStaffDetails.toStaffMember(),
-        recipient = recipientStaffDetails.toStaffMember(),
-        requestId = clarificationNoteEntity.id,
+    val data = FurtherInformationRequested(
+      assessmentId = assessment.id,
+      assessmentUrl = assessmentUrlTemplate.resolve("id", assessment.id.toString()),
+      applicationId = assessment.application.id,
+      applicationUrl = applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
+      personReference = PersonReference(
+        crn = assessment.application.crn,
+        noms = assessment.application.nomsNumber ?: "Unknown NOMS Number",
       ),
+      requestedAt = Instant.now(),
+      requester = requesterStaffDetails.toStaffMember(),
+      recipient = recipientStaffDetails.toStaffMember(),
+      requestId = clarificationNoteEntity.id,
     )
 
-    val domainEvent = SaveCas1DomainEvent(
+    val domainEvent = SaveCas1DomainEventWithPayload(
       id = id,
       applicationId = assessment.application.id,
       assessmentId = assessment.id,
       crn = assessment.application.crn,
       nomsNumber = assessment.application.nomsNumber,
       occurredAt = occurredAt,
+      type = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
       data = data,
     )
 
-    domainEventService.saveFurtherInformationRequestedEvent(domainEvent)
+    domainEventService.save(domainEvent)
   }
 
   fun assessmentAccepted(
@@ -159,43 +151,40 @@ class Cas1AssessmentDomainEventService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    domainEventService.saveApplicationAssessedDomainEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
         applicationId = application.id,
         assessmentId = assessment.id,
         crn = application.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         occurredAt = acceptedAt.toInstant(),
-        data = ApplicationAssessedEnvelope(
-          id = domainEventId,
-          timestamp = acceptedAt.toInstant(),
-          eventType = EventType.applicationAssessed,
-          eventDetails = ApplicationAssessed(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate
-              .resolve("id", application.id.toString()),
-            assessmentId = assessment.id,
-            personReference = PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = application.eventNumber,
-            assessedAt = acceptedAt.toInstant(),
-            assessedBy = ApplicationAssessedAssessedBy(
-              staffMember = staffDetails.toStaffMember(),
-              probationArea = ProbationArea(
-                code = staffDetails.probationArea.code,
-                name = staffDetails.probationArea.description,
-              ),
-              cru = Cru(
-                name = acceptingUser.apArea?.name ?: "Unknown CRU",
-              ),
-            ),
-            decision = assessment.decision.toString(),
-            decisionRationale = assessment.rejectionRationale,
-            arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
+        data = ApplicationAssessed(
+          applicationId = application.id,
+          applicationUrl = applicationUrlTemplate
+            .resolve("id", application.id.toString()),
+          assessmentId = assessment.id,
+          personReference = PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
           ),
+          deliusEventNumber = application.eventNumber,
+          assessedAt = acceptedAt.toInstant(),
+          assessedBy = ApplicationAssessedAssessedBy(
+            staffMember = staffDetails.toStaffMember(),
+            probationArea = ProbationArea(
+              code = staffDetails.probationArea.code,
+              name = staffDetails.probationArea.description,
+            ),
+            cru = Cru(
+              name = acceptingUser.apArea?.name ?: "Unknown CRU",
+            ),
+          ),
+          decision = assessment.decision.toString(),
+          decisionRationale = assessment.rejectionRationale,
+          arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
+          personTier = caseService.getCase(application.crn)?.tier?.toEventTier(),
         ),
         metadata = mapOf(
           MetaDataName.CAS1_REQUESTED_AP_TYPE to apType.asApprovedPremisesType().name,
@@ -219,43 +208,40 @@ class Cas1AssessmentDomainEventService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    domainEventService.saveApplicationAssessedDomainEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
         applicationId = application.id,
         assessmentId = assessment.id,
         crn = application.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         occurredAt = rejectedAt.toInstant(),
-        data = ApplicationAssessedEnvelope(
-          id = domainEventId,
-          timestamp = rejectedAt.toInstant(),
-          eventType = EventType.applicationAssessed,
-          eventDetails = ApplicationAssessed(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate
-              .resolve("id", application.id.toString()),
-            assessmentId = assessment.id,
-            personReference = PersonReference(
-              crn = assessment.application.crn,
-              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = application.eventNumber,
-            assessedAt = rejectedAt.toInstant(),
-            assessedBy = ApplicationAssessedAssessedBy(
-              staffMember = staffDetails.toStaffMember(),
-              probationArea = ProbationArea(
-                code = staffDetails.probationArea.code,
-                name = staffDetails.probationArea.description,
-              ),
-              cru = Cru(
-                name = rejectingUser.apArea?.name ?: "Unknown CRU",
-              ),
-            ),
-            decision = assessment.decision.toString(),
-            decisionRationale = assessment.rejectionRationale,
-            arrivalDate = null,
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
+        data = ApplicationAssessed(
+          applicationId = application.id,
+          applicationUrl = applicationUrlTemplate
+            .resolve("id", application.id.toString()),
+          assessmentId = assessment.id,
+          personReference = PersonReference(
+            crn = assessment.application.crn,
+            noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
           ),
+          deliusEventNumber = application.eventNumber,
+          assessedAt = rejectedAt.toInstant(),
+          assessedBy = ApplicationAssessedAssessedBy(
+            staffMember = staffDetails.toStaffMember(),
+            probationArea = ProbationArea(
+              code = staffDetails.probationArea.code,
+              name = staffDetails.probationArea.description,
+            ),
+            cru = Cru(
+              name = rejectingUser.apArea?.name ?: "Unknown CRU",
+            ),
+          ),
+          decision = assessment.decision.toString(),
+          decisionRationale = assessment.rejectionRationale,
+          arrivalDate = null,
+          personTier = caseService.getCase(application.crn)?.tier?.toEventTier(),
         ),
         schemaVersion = 2,
       ),

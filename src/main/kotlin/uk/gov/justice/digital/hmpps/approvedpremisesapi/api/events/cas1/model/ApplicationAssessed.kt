@@ -30,4 +30,6 @@ data class ApplicationAssessed(
   @get:JsonProperty("decisionRationale") val decisionRationale: String? = null,
 
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.Instant? = null,
+
+  val personTier: EventTier? = null,
 ) : Cas1DomainEventPayload

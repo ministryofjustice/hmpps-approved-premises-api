@@ -7,31 +7,23 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredManually
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawn
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssigned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequested
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
@@ -150,18 +142,6 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveApplicationAssessedDomainEvent(domainEvent: SaveCas1DomainEvent<ApplicationAssessedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
-  )
-
-  @Transactional
-  fun saveBookingMadeDomainEvent(domainEvent: SaveCas1DomainEvent<BookingMadeEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-  )
-
-  @Transactional
   fun savePersonArrivedEvent(domainEvent: SaveCas1DomainEvent<PersonArrivedEnvelope>) = saveAndEmitForEnvelope(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
@@ -177,30 +157,6 @@ class Cas1DomainEventService(
   fun savePersonDepartedEvent(domainEvent: SaveCas1DomainEvent<PersonDepartedEnvelope>) = saveAndEmitForEnvelope(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
-  )
-
-  @Transactional
-  fun saveBookingNotMadeEvent(domainEvent: SaveCas1DomainEvent<BookingNotMadeEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
-  )
-
-  @Transactional
-  fun saveBookingCancelledEvent(domainEvent: SaveCas1DomainEvent<BookingCancelledEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
-  )
-
-  @Transactional
-  fun saveBookingChangedEvent(domainEvent: SaveCas1DomainEvent<BookingChangedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
-  )
-
-  @Transactional
-  fun saveApplicationWithdrawnEvent(domainEvent: SaveCas1DomainEvent<ApplicationWithdrawnEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
   )
 
   @Transactional
@@ -237,18 +193,6 @@ class Cas1DomainEventService(
   fun saveRequestForPlacementAssessedEvent(domainEvent: SaveCas1DomainEvent<RequestForPlacementAssessedEnvelope>) = saveAndEmitForEnvelope(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
-  )
-
-  @Transactional
-  fun saveAssessmentAllocatedEvent(domainEvent: SaveCas1DomainEvent<AssessmentAllocatedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-  )
-
-  @Transactional
-  fun saveFurtherInformationRequestedEvent(domainEvent: SaveCas1DomainEvent<FurtherInformationRequestedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
   )
 
   @Transactional

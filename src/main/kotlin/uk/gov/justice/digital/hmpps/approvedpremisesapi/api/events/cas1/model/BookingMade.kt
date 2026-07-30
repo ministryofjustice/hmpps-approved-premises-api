@@ -42,6 +42,8 @@ data class BookingMade(
   val transferredFrom: EventTransferInfo? = null,
 
   val additionalInformation: String? = null,
+
+  val personTier: EventTier? = null,
 ) : Cas1DomainEventPayload
 
 data class EventTransferInfo(

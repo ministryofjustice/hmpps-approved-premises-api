@@ -11,21 +11,20 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
@@ -41,7 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEventWithPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
@@ -52,17 +51,22 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade as BookingMadeModel
 
 class Cas1BookingDomainEventServiceTest {
 
   private val domainEventService = mockk<Cas1DomainEventService>()
   private val offenderService = mockk<OffenderService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
+  private val caseService = mockk<CaseService>()
+
+  private val personTierDto = TierDtoFactory().produce()
 
   val service = Cas1BookingDomainEventService(
     domainEventService,
     offenderService,
     apDeliusContextApiClient,
+    caseService,
     UrlTemplate("http://frontend/applications/#id"),
   )
 
@@ -117,7 +121,7 @@ class Cas1BookingDomainEventServiceTest {
 
     @BeforeEach
     fun before() {
-      every { domainEventService.saveBookingMadeDomainEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       val assigneeUserStaffDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
@@ -142,10 +146,10 @@ class Cas1BookingDomainEventServiceTest {
         ),
       )
 
-      val domainEventArgument = slot<SaveCas1DomainEvent<BookingMadeEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<BookingMadeModel>>()
 
       verify(exactly = 1) {
-        domainEventService.saveBookingMadeDomainEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
@@ -156,17 +160,16 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
-      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
-      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
 
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
       assertThat(data.createdAt).isEqualTo(createdAt.toInstant())
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(spaceBooking.id)
       assertThat(data.personReference.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(data.personReference.noms).isEqualTo("THENOMS")
+      assertThat(data.personTier).isEqualTo(personTierDto.toEventTier())
       assertThat(data.deliusEventNumber).isEqualTo("online app event number")
       assertThat(data.premises.id).isEqualTo(premises.id)
       assertThat(data.premises.name).isEqualTo("the premises name")
@@ -214,7 +217,7 @@ class Cas1BookingDomainEventServiceTest {
 
       val notMadeAt = OffsetDateTime.now()
 
-      every { domainEventService.saveBookingNotMadeEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       val assigneeUserStaffDetails = StaffDetailFactory.staffDetail(code = "the staff code")
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
@@ -236,10 +239,10 @@ class Cas1BookingDomainEventServiceTest {
         notes = "the notes",
       )
 
-      val domainEventArgument = slot<SaveCas1DomainEvent<BookingNotMadeEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade>>()
 
       verify(exactly = 1) {
-        domainEventService.saveBookingNotMadeEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
@@ -248,9 +251,8 @@ class Cas1BookingDomainEventServiceTest {
 
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("Application CRN")
-      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingNotMade)
 
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.personReference.crn).isEqualTo("Application CRN")
@@ -294,7 +296,7 @@ class Cas1BookingDomainEventServiceTest {
         .withCancellationOccurredAt(LocalDate.parse("2025-11-15"))
         .produce()
 
-      every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       setupOffenderServiceMockForNomsNumber(spaceBooking.crn, "THENOMS")
 
@@ -317,9 +319,9 @@ class Cas1BookingDomainEventServiceTest {
         ),
       )
 
-      val domainEventArgument = slot<SaveCas1DomainEvent<BookingCancelledEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled>>()
       verify(exactly = 1) {
-        domainEventService.saveBookingCancelledEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
@@ -333,7 +335,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
 
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(spaceBooking.id)
@@ -381,7 +383,7 @@ class Cas1BookingDomainEventServiceTest {
         .withCancellationOccurredAt(LocalDate.parse("2025-11-15"))
         .produce()
 
-      every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       setupOffenderServiceMockForNomsNumber(spaceBooking.crn, "THENOMS")
 
@@ -401,9 +403,9 @@ class Cas1BookingDomainEventServiceTest {
         ),
       )
 
-      val domainEventArgument = slot<SaveCas1DomainEvent<BookingCancelledEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled>>()
       verify(exactly = 1) {
-        domainEventService.saveBookingCancelledEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
@@ -417,7 +419,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
 
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
       assertThat(data.applicationId).isEqualTo(offlineApplication.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
       assertThat(data.bookingId).isEqualTo(spaceBooking.id)
@@ -463,7 +465,7 @@ class Cas1BookingDomainEventServiceTest {
 
     val staffUserDetails = StaffDetailFactory.staffDetail()
 
-    val domainEventArgument = slot<SaveCas1DomainEvent<BookingChangedEnvelope>>()
+    val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged>>()
 
     val createdAt = OffsetDateTime.now()
 
@@ -481,7 +483,7 @@ class Cas1BookingDomainEventServiceTest {
         .withExpectedDepartureDate(LocalDate.of(2025, 4, 11))
         .produce()
 
-      every { domainEventService.saveBookingChangedEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       setupOffenderServiceMockForNomsNumber("THEBOOKINGCRN", "THENOMS")
 
@@ -507,7 +509,7 @@ class Cas1BookingDomainEventServiceTest {
       )
 
       verify(exactly = 1) {
-        domainEventService.saveBookingChangedEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
@@ -518,11 +520,9 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(booking.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
-      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingChanged)
-      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
 
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(domainEvent.cas1SpaceBookingId)
@@ -568,7 +568,7 @@ class Cas1BookingDomainEventServiceTest {
         .withExpectedDepartureDate(LocalDate.of(2025, 5, 11))
         .produce()
 
-      every { domainEventService.saveBookingChangedEvent(any()) } just Runs
+      every { domainEventService.save(any()) } just Runs
 
       setupOffenderServiceMockForNomsNumber("THEBOOKINGCRN", "THENOMS")
 
@@ -589,7 +589,7 @@ class Cas1BookingDomainEventServiceTest {
       )
 
       verify(exactly = 1) {
-        domainEventService.saveBookingChangedEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
@@ -600,11 +600,9 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(booking.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
-      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingChanged)
-      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
 
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(domainEvent.cas1SpaceBookingId)
@@ -641,5 +639,8 @@ class Cas1BookingDomainEventServiceTest {
       summary = CaseSummaryFactory().withNomsId(nomsNumber).produce(),
       tier = null,
     )
+    every {
+      caseService.getCase(crn)
+    } returns CaseDtoFactory().withCrn(crn).withTier(personTierDto).produce()
   }
 }

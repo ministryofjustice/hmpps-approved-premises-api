@@ -38,9 +38,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEventWithPayload
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -88,41 +90,37 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
 
     val staffUserDetails = StaffDetailFactory.staffDetail()
 
-    domainEventService.saveApplicationAssessedDomainEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = UUID.randomUUID(),
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
         applicationId = application.id,
         assessmentId = UUID.randomUUID(),
         crn = application.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         occurredAt = Instant.now(),
-        data = ApplicationAssessedEnvelope(
-          id = UUID.randomUUID(),
-          timestamp = Instant.now(),
-          eventType = EventType.applicationAssessed,
-          eventDetails = ApplicationAssessed(
-            applicationId = application.id,
-            applicationUrl = "theUrl",
-            personReference = PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = application.eventNumber,
-            assessedAt = Instant.now(),
-            assessedBy = ApplicationAssessedAssessedBy(
-              staffMember = staffUserDetails.toStaffMember(),
-              probationArea = ProbationArea(
-                code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description,
-              ),
-              cru = Cru(
-                name = "the CRU name",
-              ),
-            ),
-            decision = "theDecision",
-            decisionRationale = "theDecisionRationale",
-            arrivalDate = Instant.now(),
+        data = ApplicationAssessed(
+          applicationId = application.id,
+          applicationUrl = "theUrl",
+          personReference = PersonReference(
+            crn = offenderDetails.otherIds.crn,
+            noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
           ),
+          deliusEventNumber = application.eventNumber,
+          assessedAt = Instant.now(),
+          assessedBy = ApplicationAssessedAssessedBy(
+            staffMember = staffUserDetails.toStaffMember(),
+            probationArea = ProbationArea(
+              code = staffUserDetails.probationArea.code,
+              name = staffUserDetails.probationArea.description,
+            ),
+            cru = Cru(
+              name = "the CRU name",
+            ),
+          ),
+          decision = "theDecision",
+          decisionRationale = "theDecisionRationale",
+          arrivalDate = Instant.now(),
         ),
       ),
     )
@@ -203,49 +201,45 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
 
     val staffUserDetails = StaffDetailFactory.staffDetail()
 
-    domainEventService.saveBookingMadeDomainEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = UUID.randomUUID(),
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         occurredAt = Instant.now(),
-        data = BookingMadeEnvelope(
-          id = UUID.randomUUID(),
-          timestamp = Instant.now(),
-          eventType = EventType.bookingMade,
-          eventDetails = BookingMade(
-            applicationId = application.id,
-            applicationUrl = "theUrl",
-            bookingId = UUID.randomUUID(),
-            personReference = PersonReference(
-              crn = application.crn,
-              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = application.eventNumber,
-            createdAt = Instant.now(),
-            bookedBy = BookingMadeBookedBy(
-              staffMember = staffUserDetails.toStaffMember(),
-              cru = Cru(
-                name = "theCruName",
-              ),
-            ),
-            premises = Premises(
-              id = UUID.randomUUID(),
-              name = "premisesName",
-              apCode = "premisesApCode",
-              legacyApCode = "premisesQCode",
-              localAuthorityAreaName = "laAreaName",
-            ),
-            arrivalOn = LocalDate.now(),
-            departureOn = LocalDate.now(),
-            applicationSubmittedOn = Instant.now(),
-            releaseType = "releaseType",
-            sentenceType = "sentenceType",
-            situation = "situation",
-            transferReason = null,
-            additionalInformation = null,
+        data = BookingMade(
+          applicationId = application.id,
+          applicationUrl = "theUrl",
+          bookingId = UUID.randomUUID(),
+          personReference = PersonReference(
+            crn = application.crn,
+            noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
           ),
+          deliusEventNumber = application.eventNumber,
+          createdAt = Instant.now(),
+          bookedBy = BookingMadeBookedBy(
+            staffMember = staffUserDetails.toStaffMember(),
+            cru = Cru(
+              name = "theCruName",
+            ),
+          ),
+          premises = Premises(
+            id = UUID.randomUUID(),
+            name = "premisesName",
+            apCode = "premisesApCode",
+            legacyApCode = "premisesQCode",
+            localAuthorityAreaName = "laAreaName",
+          ),
+          arrivalOn = LocalDate.now(),
+          departureOn = LocalDate.now(),
+          applicationSubmittedOn = Instant.now(),
+          releaseType = "releaseType",
+          sentenceType = "sentenceType",
+          situation = "situation",
+          transferReason = null,
+          additionalInformation = null,
         ),
       ),
     )

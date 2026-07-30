@@ -3,27 +3,25 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeBookedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
@@ -50,6 +48,7 @@ class Cas1BookingDomainEventService(
   val domainEventService: Cas1DomainEventService,
   val offenderService: OffenderService,
   val apDeliusContextApiClient: ApDeliusContextApiClient,
+  val caseService: CaseService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
@@ -86,34 +85,30 @@ class Cas1BookingDomainEventService(
 
     val staffDetails = getStaffDetails(user.deliusUsername)
 
-    domainEventService.saveBookingNotMadeEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = nomsNumber,
         occurredAt = bookingNotCreatedAt.toInstant(),
-        data = BookingNotMadeEnvelope(
-          id = domainEventId,
-          timestamp = bookingNotCreatedAt.toInstant(),
-          eventType = EventType.bookingNotMade,
-          eventDetails = BookingNotMade(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
-            personReference = PersonReference(
-              crn = application.crn,
-              noms = nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = application.eventNumber,
-            attemptedAt = bookingNotCreatedAt.toInstant(),
-            attemptedBy = BookingMadeBookedBy(
-              staffMember = staffDetails.toStaffMember(),
-              cru = Cru(
-                name = user.apArea?.name ?: "Unknown CRU",
-              ),
-            ),
-            failureDescription = notes,
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
+        data = BookingNotMade(
+          applicationId = application.id,
+          applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+          personReference = PersonReference(
+            crn = application.crn,
+            noms = nomsNumber ?: "Unknown NOMS Number",
           ),
+          deliusEventNumber = application.eventNumber,
+          attemptedAt = bookingNotCreatedAt.toInstant(),
+          attemptedBy = BookingMadeBookedBy(
+            staffMember = staffDetails.toStaffMember(),
+            cru = Cru(
+              name = user.apArea?.name ?: "Unknown CRU",
+            ),
+          ),
+          failureDescription = notes,
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString(),
@@ -163,8 +158,8 @@ class Cas1BookingDomainEventService(
 
     val approvedPremises = bookingChangedInfo.approvedPremises
 
-    domainEventService.saveBookingChangedEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
@@ -172,36 +167,32 @@ class Cas1BookingDomainEventService(
         occurredAt = changedAt.toInstant(),
         schemaVersion = 2,
         cas1SpaceBookingId = bookingId,
-        data = BookingChangedEnvelope(
-          id = domainEventId,
-          timestamp = changedAt.toInstant(),
-          eventType = EventType.bookingChanged,
-          eventDetails = BookingChanged(
-            applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
-            bookingId = bookingId,
-            personReference = PersonReference(
-              crn = crn,
-              noms = nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = eventNumber,
-            changedAt = changedAt.toInstant(),
-            changedBy = staffDetails.toStaffMember(),
-            premises = Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ),
-            arrivalOn = bookingChangedInfo.arrivalDate,
-            departureOn = bookingChangedInfo.departureDate,
-            characteristics = bookingChangedInfo.characteristics,
-            previousArrivalOn = bookingChangedInfo.previousArrivalDateIfChanged,
-            previousDepartureOn = bookingChangedInfo.previousDepartureDateIfChanged,
-            previousCharacteristics = bookingChangedInfo.previousCharacteristics,
-            transferredTo = bookingChangedInfo.transferredTo?.toEventTransferInfo(),
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+        data = BookingChanged(
+          applicationId = applicationId,
+          applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+          bookingId = bookingId,
+          personReference = PersonReference(
+            crn = crn,
+            noms = nomsNumber ?: "Unknown NOMS Number",
           ),
+          deliusEventNumber = eventNumber,
+          changedAt = changedAt.toInstant(),
+          changedBy = staffDetails.toStaffMember(),
+          premises = Premises(
+            id = approvedPremises.id,
+            name = approvedPremises.name,
+            apCode = approvedPremises.apCode,
+            legacyApCode = approvedPremises.qCode,
+            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+          ),
+          arrivalOn = bookingChangedInfo.arrivalDate,
+          departureOn = bookingChangedInfo.departureDate,
+          characteristics = bookingChangedInfo.characteristics,
+          previousArrivalOn = bookingChangedInfo.previousArrivalDateIfChanged,
+          previousDepartureOn = bookingChangedInfo.previousDepartureDateIfChanged,
+          previousCharacteristics = bookingChangedInfo.previousCharacteristics,
+          transferredTo = bookingChangedInfo.transferredTo?.toEventTransferInfo(),
         ),
       ),
     )
@@ -243,8 +234,8 @@ class Cas1BookingDomainEventService(
     val approvedPremises = bookingInfo.premises
     val bookingCreatedAt = bookingInfo.createdAt
 
-    domainEventService.saveBookingMadeDomainEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
@@ -252,44 +243,41 @@ class Cas1BookingDomainEventService(
         occurredAt = bookingCreatedAt.toInstant(),
         cas1SpaceBookingId = bookingInfo.id,
         schemaVersion = 2,
-        data = BookingMadeEnvelope(
-          id = domainEventId,
-          timestamp = bookingCreatedAt.toInstant(),
-          eventType = EventType.bookingMade,
-          eventDetails = BookingMade(
-            applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
-            bookingId = bookingInfo.id,
-            personReference = PersonReference(
-              crn = crn,
-              noms = nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = eventNumber,
-            createdAt = bookingCreatedAt.toInstant(),
-            bookedBy = BookingMadeBookedBy(
-              staffMember = staffDetails.toStaffMember(),
-              cru = Cru(
-                name = user.apArea?.name ?: "Unknown CRU",
-              ),
-            ),
-            premises = Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ),
-            arrivalOn = bookingInfo.arrivalDate,
-            departureOn = bookingInfo.departureDate,
-            applicationSubmittedOn = applicationSubmittedOn?.toInstant(),
-            releaseType = releaseType,
-            sentenceType = sentenceType,
-            situation = situation,
-            characteristics = bookingInfo.characteristics,
-            transferredFrom = transferredFrom?.toEventTransferInfo(),
-            transferReason = bookingInfo.transferReason,
-            additionalInformation = bookingInfo.additionalInformation,
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+        data = BookingMade(
+          applicationId = applicationId,
+          applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+          bookingId = bookingInfo.id,
+          personReference = PersonReference(
+            crn = crn,
+            noms = nomsNumber ?: "Unknown NOMS Number",
           ),
+          deliusEventNumber = eventNumber,
+          createdAt = bookingCreatedAt.toInstant(),
+          bookedBy = BookingMadeBookedBy(
+            staffMember = staffDetails.toStaffMember(),
+            cru = Cru(
+              name = user.apArea?.name ?: "Unknown CRU",
+            ),
+          ),
+          premises = Premises(
+            id = approvedPremises.id,
+            name = approvedPremises.name,
+            apCode = approvedPremises.apCode,
+            legacyApCode = approvedPremises.qCode,
+            localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+          ),
+          arrivalOn = bookingInfo.arrivalDate,
+          departureOn = bookingInfo.departureDate,
+          applicationSubmittedOn = applicationSubmittedOn?.toInstant(),
+          releaseType = releaseType,
+          sentenceType = sentenceType,
+          situation = situation,
+          characteristics = bookingInfo.characteristics,
+          transferredFrom = transferredFrom?.toEventTransferInfo(),
+          transferReason = bookingInfo.transferReason,
+          additionalInformation = bookingInfo.additionalInformation,
+          personTier = caseService.getCase(crn)?.tier?.toEventTier(),
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),
@@ -325,8 +313,8 @@ class Cas1BookingDomainEventService(
     val applicationId = cancellationInfo.applicationFacade.id
     val eventNumber = cancellationInfo.applicationFacade.eventNumber!!
 
-    domainEventService.saveBookingCancelledEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
@@ -334,33 +322,29 @@ class Cas1BookingDomainEventService(
         occurredAt = now.toInstant(),
         cas1SpaceBookingId = bookingId,
         schemaVersion = 2,
-        data = BookingCancelledEnvelope(
-          id = domainEventId,
-          timestamp = now.toInstant(),
-          eventType = EventType.bookingCancelled,
-          eventDetails = BookingCancelled(
-            applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
-            bookingId = bookingId,
-            personReference = PersonReference(
-              crn = crn,
-              noms = nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = eventNumber,
-            premises = Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ),
-            cancelledBy = staffDetails.toStaffMember(),
-            cancelledAt = cancellationInfo.cancelledAt.atTime(0, 0).toInstant(ZoneOffset.UTC),
-            cancelledAtDate = cancellationInfo.cancelledAt,
-            cancellationReason = cancellationInfo.reason.name,
-            cancellationRecordedAt = now.toInstant(),
-            appealChangeRequestId = cancellationInfo.appealChangeRequestId,
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
+        data = BookingCancelled(
+          applicationId = applicationId,
+          applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+          bookingId = bookingId,
+          personReference = PersonReference(
+            crn = crn,
+            noms = nomsNumber ?: "Unknown NOMS Number",
           ),
+          deliusEventNumber = eventNumber,
+          premises = Premises(
+            id = premises.id,
+            name = premises.name,
+            apCode = premises.apCode,
+            legacyApCode = premises.qCode,
+            localAuthorityAreaName = premises.localAuthorityArea!!.name,
+          ),
+          cancelledBy = staffDetails.toStaffMember(),
+          cancelledAt = cancellationInfo.cancelledAt.atTime(0, 0).toInstant(ZoneOffset.UTC),
+          cancelledAtDate = cancellationInfo.cancelledAt,
+          cancellationReason = cancellationInfo.reason.name,
+          cancellationRecordedAt = now.toInstant(),
+          appealChangeRequestId = cancellationInfo.appealChangeRequestId,
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_CANCELLATION_ID to cancellationInfo.cancellationId?.toString(),

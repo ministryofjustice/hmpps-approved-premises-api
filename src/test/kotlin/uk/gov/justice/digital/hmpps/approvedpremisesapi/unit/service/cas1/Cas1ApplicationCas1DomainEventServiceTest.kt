@@ -23,9 +23,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -56,6 +59,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
   private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
+  private val mockCaseService = mockk<CaseService>()
 
   private val offenderRisksService = OffenderRisksService(
     apDeliusContextApiClient = mockApDeliusContextApiClient,
@@ -71,6 +75,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
     offenderRisksService,
     mockApDeliusContextApiClient,
     mockDomainEventTransformer,
+    mockCaseService,
     UrlTemplate("http://frontend/applications/#id"),
     Clock.systemDefaultZone(),
   )
@@ -102,6 +107,8 @@ class Cas1ApplicationCas1DomainEventServiceTest {
 
     private val staffUserDetails = StaffDetailFactory.staffDetail()
 
+    private val caseDto = CaseDtoFactory().withCrn("THECRN").produce()
+
     @BeforeEach
     fun setup() {
       application = ApprovedPremisesApplicationEntityFactory()
@@ -110,6 +117,8 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .produce()
+
+      every { mockCaseService.getCase(application.crn) } returns caseDto
 
       every {
         mockOffenderService.getPersonSummaryInfoResult(
@@ -135,7 +144,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
 
       every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
 
-      every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
+      every { mockDomainEventService.save(any()) } just Runs
 
       every { mockApDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -169,9 +178,9 @@ class Cas1ApplicationCas1DomainEventServiceTest {
       )
 
       verify(exactly = 1) {
-        mockDomainEventService.saveApplicationSubmittedDomainEvent(
+        mockDomainEventService.save(
           match {
-            val data = it.data.eventDetails
+            val data = it.data as uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
@@ -205,6 +214,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
               data.mappa == "CAT C1/LEVEL L1" &&
               data.sentenceLengthInMonths == null &&
               data.offenceId == application.offenceId &&
+              data.personTier == caseDto.tier!!.toEventTier() &&
               it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE].equals("reason for short notice") &&
               it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER].equals("reason for short notice other") &&
               enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType()
@@ -239,7 +249,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
       )
 
       verify(exactly = 1) {
-        mockDomainEventService.saveApplicationSubmittedDomainEvent(
+        mockDomainEventService.save(
           this.withArg {
             assertThat(it.metadata).containsOnlyKeys(MetaDataName.CAS1_REQUESTED_AP_TYPE)
           },
@@ -285,14 +295,14 @@ class Cas1ApplicationCas1DomainEventServiceTest {
     ) {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
-      every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+      every { mockDomainEventService.save(any()) } just Runs
 
       service.applicationWithdrawn(application, user)
 
       verify(exactly = 1) {
-        mockDomainEventService.saveApplicationWithdrawnEvent(
+        mockDomainEventService.save(
           match {
-            val data = it.data.eventDetails
+            val data = it.data as uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawn
 
             it.emit == emitted &&
               it.applicationId == application.id &&

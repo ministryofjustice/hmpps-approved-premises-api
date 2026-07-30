@@ -39,6 +39,8 @@ data class ApplicationSubmitted(
 
   @Schema(example = "AB43782")
   @get:JsonProperty("offenceId") val offenceId: String? = null,
+
+  @get:JsonProperty("personTier") val personTier: EventTier? = null,
 ) : Cas1DomainEventPayload {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
