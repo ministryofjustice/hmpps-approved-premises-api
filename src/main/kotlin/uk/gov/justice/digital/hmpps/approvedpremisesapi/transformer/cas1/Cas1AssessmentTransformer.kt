@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -19,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService.Cas1PlacementHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -82,7 +82,7 @@ class Cas1AssessmentTransformer(
     dueAt = ase.dueAt!!,
   )
 
-  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity, placementHistories: List<Cas1PlacementHistory>): List<Cas1ReferralHistory> {
+  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity, placementHistory: List<Cas1PlacementPairDto>): List<Cas1ReferralHistory> {
     val application = entity.cas1Application()
 
     val referralHistory = Cas1ReferralHistory(
@@ -102,13 +102,13 @@ class Cas1AssessmentTransformer(
       withdrawalReason = null,
     )
 
-    return placementHistories.map {
+    return placementHistory.map {
       referralHistory.copy(
         date = it.dateApplied,
-        placementAddress = toPlacementAddress(it.premises),
-        placementStatus = it.placementStatus,
-        requestForPlacementStatus = it.requestForPlacementStatus,
-        withdrawalReason = it.withdrawalReason,
+        placementAddress = toPlacementAddress(it.placement?.premises),
+        placementStatus = it.placement?.status,
+        requestForPlacementStatus = it.requestForPlacement?.status,
+        withdrawalReason = it.requestForPlacement?.withdrawalReason,
       )
     }.ifEmpty { listOf(referralHistory) }
   }
@@ -155,5 +155,5 @@ class Cas1AssessmentTransformer(
     else -> null
   }
 
-  private fun transformToStaffDto(user: UserEntity) = Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
+  fun transformToStaffDto(user: UserEntity) = Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 }

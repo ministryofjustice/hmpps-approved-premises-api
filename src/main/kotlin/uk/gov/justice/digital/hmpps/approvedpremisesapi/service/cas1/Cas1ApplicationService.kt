@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.LocalDate
 import java.util.UUID
 
 @SuppressWarnings("TooGenericExceptionThrown")
@@ -43,6 +45,12 @@ class Cas1ApplicationService(
   private val offenderService: OffenderService,
   private val featureFlagService: FeatureFlagService,
 ) {
+  fun getApplicationExpiresAt(application: ApprovedPremisesApplicationEntity): LocalDate? {
+    val latestAssessment = application.getLatestAssessment()
+    val possibleExpiryDate = latestAssessment?.submittedAt?.toLocalDate()?.plusDays(ApplicationRepository.APPLICATION_EXPIRY_DAYS.toLong())
+    return if (latestAssessment?.decision == AssessmentDecision.ACCEPTED) possibleExpiryDate else null
+  }
+
   fun getApplication(applicationId: UUID) = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
   fun getApplicationForUsername(

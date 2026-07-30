@@ -47,6 +47,10 @@ import kotlin.time.toKotlinDuration
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
 
+  companion object {
+    const val APPLICATION_EXPIRY_DAYS = 365
+  }
+
   @Modifying
   @Query("UPDATE ApprovedPremisesApplicationEntity ap set ap.status = :status where ap.id = :applicationId")
   fun updateStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus)
@@ -248,11 +252,11 @@ WHERE a.created_by_user_id = :userId and a.deleted_at IS NULL
         de.type = 'APPROVED_PREMISES_APPLICATION_ASSESSED'
         AND de.data -> 'eventDetails' ->> 'decision' = 'ACCEPTED'
         AND apa.status <> 'EXPIRED'
-        AND de.occurred_at < current_date - 365
+        AND de.occurred_at < current_date - :expiryDays
     """,
     nativeQuery = true,
   )
-  fun findAllExpiredApplications(): List<UUID>
+  fun findAllExpiredApplications(expiryDays: Int): List<UUID>
 }
 
 @Repository

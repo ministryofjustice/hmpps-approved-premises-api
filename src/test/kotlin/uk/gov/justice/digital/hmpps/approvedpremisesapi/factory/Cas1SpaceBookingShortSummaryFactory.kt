@@ -70,6 +70,10 @@ class Cas1SpaceBookingShortSummaryFactory : Factory<Cas1SpaceBookingShortSummary
     this.actualDepartureDate = { actualDepartureDate }
   }
 
+  fun withCancellation(cancellation: Cas1SpaceBookingCancellation?) = apply {
+    this.cancellation = { cancellation }
+  }
+
   fun withPremises(premises: NamedId) = apply {
     this.premises = { premises }
   }

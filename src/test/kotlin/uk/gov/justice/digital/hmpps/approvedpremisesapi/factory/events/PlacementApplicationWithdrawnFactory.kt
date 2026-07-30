@@ -30,6 +30,10 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
     this.applicationId = { applicationId }
   }
 
+  fun withPlacementApplicationId(placementApplicationId: UUID) = apply {
+    this.placementApplicationId = { placementApplicationId }
+  }
+
   fun withApplicationUrl(applicationUrl: String) = apply {
     this.applicationUrl = { applicationUrl }
   }

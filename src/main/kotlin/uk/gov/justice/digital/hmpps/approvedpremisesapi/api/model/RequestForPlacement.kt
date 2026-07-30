@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import java.time.LocalDate
 
 data class RequestForPlacement(
@@ -16,11 +18,13 @@ data class RequestForPlacement(
   val type: RequestForPlacementType,
   @Schema(description = "Deprecated. Requests for placements only have one set of placement dates, use 'requestedPlacementPeriod' or 'authorisedPlacementPeriod' instead", deprecated = true)
   val placementDates: List<PlacementDates>,
+  val canonicalPlacementPeriod: Cas1RequestedPlacementPeriod,
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod,
   val authorisedPlacementPeriod: Cas1RequestedPlacementPeriod?,
   val status: RequestForPlacementStatus,
   val statusSetDate: LocalDate,
   val submittedAt: java.time.Instant? = null,
+  val submittedBy: Cas1StaffDto? = null,
   @Schema(description = "If `type` is `\"manual\"`, provides the value of `PlacementApplication.decisionMadeAt`. If `type` is `\"automatic\"` this field provides the value of `PlacementRequest.assessmentCompletedAt`. ")
   val requestReviewedAt: java.time.Instant? = null,
   val document: Any? = null,
@@ -29,4 +33,5 @@ data class RequestForPlacement(
   val releaseType: ReleaseTypeOption? = null,
   val situation: SituationOption? = null,
   var placements: List<Cas1SpaceBookingShortSummary> = emptyList(),
+  val decision: PlacementApplicationDecision?,
 )

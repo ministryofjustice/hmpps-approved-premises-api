@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
@@ -18,18 +20,24 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacementFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventEnvelopeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
@@ -55,6 +63,8 @@ class Cas1RequestForPlacementServiceTest {
   private val cas1SpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val cas1SpaceBookingTransformer = mockk<Cas1SpaceBookingTransformer>()
   private val caseService = mockk<CaseService>()
+  private val domainEventRepository = mockk<DomainEventRepository>()
+  private val jsonMapper = JsonMapper()
 
   private val cas1RequestForPlacementService = Cas1RequestForPlacementService(
     applicationService,
@@ -64,7 +74,9 @@ class Cas1RequestForPlacementServiceTest {
     cas1WithdrawableService,
     cas1SpaceBookingRepository,
     cas1SpaceBookingTransformer,
+    domainEventRepository,
     caseService,
+    jsonMapper,
   )
 
   @BeforeEach
@@ -75,6 +87,11 @@ class Cas1RequestForPlacementServiceTest {
 
   private fun mockRfp(): RequestForPlacement {
     val now = Instant.now()
+    val requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = LocalDate.now(),
+      arrivalFlexible = null,
+      duration = 14,
+    )
     return RequestForPlacement(
       id = UUID.randomUUID(),
       createdByUserId = user.id,
@@ -83,15 +100,18 @@ class Cas1RequestForPlacementServiceTest {
       isWithdrawn = false,
       type = RequestForPlacementType.manual,
       placementDates = listOf(PlacementDates(LocalDate.now(), 14)),
-      requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-        arrival = LocalDate.now(),
-        arrivalFlexible = null,
-        duration = 14,
-      ),
+      requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = null,
       status = RequestForPlacementStatus.requestSubmitted,
       submittedAt = now,
       statusSetDate = now.toLocalDate(),
+      submittedBy = Cas1StaffDto(
+        name = user.name,
+        staffCode = user.deliusStaffCode,
+        username = user.deliusUsername,
+      ),
+      decision = null,
+      canonicalPlacementPeriod = requestedPlacementPeriod,
     )
   }
 
@@ -99,6 +119,74 @@ class Cas1RequestForPlacementServiceTest {
     private val user = UserEntityFactory()
       .withDefaults()
       .produce()
+  }
+
+  @Nested
+  inner class GetRequestForPlacementRejectionReason {
+    @Test
+    fun `getRequestForPlacementRejectionReason returns null if request for placement event has no rejection reason`() {
+      val requestForPlacement = RequestForPlacementFactory().produce()
+
+      every { domainEventRepository.findAssessedRequestForPlacement(requestForPlacement.id) } returns null
+
+      val result = cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement)
+
+      assertThat(result).isNull()
+    }
+
+    @Test
+    fun `getRequestForPlacementRejectionReason returns rejectionReason if request for placement event has rejection reason`() {
+      val requestForPlacement = RequestForPlacementFactory().produce()
+
+      val details = RequestForPlacementAssessed(
+        applicationId = UUID.randomUUID(),
+        applicationUrl = "url",
+        placementApplicationId = requestForPlacement.id,
+        assessedBy = StaffMemberFactory().produce(),
+        decision = RequestForPlacementAssessed.Decision.rejected,
+        expectedArrival = LocalDate.now(),
+        duration = 12,
+        decisionSummary = "No space",
+      )
+      val envelopedData = Cas1DomainEventEnvelopeFactory<RequestForPlacementAssessed>()
+        .withDetails(details)
+        .produce()
+
+      every { domainEventRepository.findAssessedRequestForPlacement(requestForPlacement.id) } returns DomainEventEntityFactory()
+        .withData(jsonMapper.writeValueAsString(envelopedData))
+        .produce()
+
+      val result = cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement)
+
+      assertThat(result).isEqualTo("No space")
+    }
+  }
+
+  @Nested
+  inner class GetRequestForPlacementWithdrawalDate {
+    @Test
+    fun `getRequestForPlacementWithdrawalDate returns null if request for placement event has not been withdrawn`() {
+      val requestForPlacement = RequestForPlacementFactory().produce()
+
+      every { domainEventRepository.findWithdrawnRequestForPlacement(requestForPlacement.id) } returns null
+
+      val result = cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement)
+
+      assertThat(result).isNull()
+    }
+
+    @Test
+    fun `getRequestForPlacementWithdrawalDate returns withdrawalDate if request for placement event has been withdrawn`() {
+      val requestForPlacement = RequestForPlacementFactory().produce()
+
+      every { domainEventRepository.findWithdrawnRequestForPlacement(requestForPlacement.id) } returns DomainEventEntityFactory()
+        .withOccurredAt(OffsetDateTime.now().minusDays(1))
+        .produce()
+
+      val result = cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement)
+
+      assertThat(result).isEqualTo(LocalDate.now().minusDays(1))
+    }
   }
 
   @Nested

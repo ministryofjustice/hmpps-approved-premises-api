@@ -8,7 +8,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredManually
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawn
@@ -86,7 +85,6 @@ class Cas1DomainEventService(
   fun getBookingKeyWorkerAssignedEvent(id: UUID) = get(id, BookingKeyWorkerAssigned::class)
   fun getApplicationWithdrawnEvent(id: UUID) = get(id, ApplicationWithdrawn::class)
   fun getApplicationExpiredEvent(id: UUID) = get(id, ApplicationExpired::class)
-  fun getApplicationExpiredManuallyEvent(id: UUID) = get(id, ApplicationExpiredManually::class)
   fun getPlacementApplicationWithdrawnEvent(id: UUID) = get(id, PlacementApplicationWithdrawn::class)
   fun getPlacementApplicationAllocatedEvent(id: UUID) = get(id, PlacementApplicationAllocated::class)
   fun getMatchRequestWithdrawnEvent(id: UUID) = get(id, MatchRequestWithdrawn::class)
@@ -281,7 +279,7 @@ class Cas1DomainEventService(
     if (emittable && domainEvent.emit) {
       emit(domainEventEntity)
     } else {
-      log.debug("Not emitting domain event of type $eventType. Type emittable? $emittable. Emit? ${domainEvent.emit}")
+      log.debug("Not emitting domain event of type {}. Type emittable? {}. Emit? {}", eventType, emittable, domainEvent.emit)
     }
   }
 
