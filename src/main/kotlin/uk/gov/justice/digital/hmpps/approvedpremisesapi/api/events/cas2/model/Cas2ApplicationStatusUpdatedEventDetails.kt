@@ -19,4 +19,6 @@ data class Cas2ApplicationStatusUpdatedEventDetails(
   @get:JsonProperty("updatedAt", required = true) val updatedAt: java.time.Instant,
 
   @get:JsonProperty("applicationOrigin", required = true) val applicationOrigin: String = "homeDetentionCurfew",
+
+  val cohort: Cas2EventCohort? = null,
 )

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2EventCohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
@@ -19,6 +20,7 @@ class Cas2ApplicationStatusUpdatedEventDetailsFactory : Factory<Cas2ApplicationS
   private var newStatus: Yielded<Cas2Status> = { Cas2StatusFactory().produce() }
   private var updatedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var updatedBy: Yielded<ExternalUser> = { ExternalUserFactory().produce() }
+  private var cohort: Yielded<Cas2EventCohort?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -44,6 +46,10 @@ class Cas2ApplicationStatusUpdatedEventDetailsFactory : Factory<Cas2ApplicationS
     this.updatedBy = { externalUser }
   }
 
+  fun withCohort(cohort: Cas2EventCohort?) = apply {
+    this.cohort = { cohort }
+  }
+
   override fun produce(): Cas2ApplicationStatusUpdatedEventDetails = Cas2ApplicationStatusUpdatedEventDetails(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -51,5 +57,6 @@ class Cas2ApplicationStatusUpdatedEventDetailsFactory : Factory<Cas2ApplicationS
     newStatus = this.newStatus(),
     updatedAt = this.updatedAt(),
     updatedBy = this.updatedBy(),
+    cohort = this.cohort(),
   )
 }

@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetailsSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2EventCohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -23,6 +24,7 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
   private var conditionalReleaseDate: Yielded<LocalDate?> = { LocalDate.parse("2023-04-29") }
   private var submittedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var submittedByStaffMember: Yielded<Cas2StaffMember> = { StaffMemberFactory().produce() }
+  private var cohort: Yielded<Cas2EventCohort?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -60,6 +62,10 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
     this.submittedByStaffMember = { staffMember }
   }
 
+  fun withCohort(cohort: Cas2EventCohort?) = apply {
+    this.cohort = { cohort }
+  }
+
   override fun produce() = Cas2ApplicationSubmittedEventDetails(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -72,5 +78,6 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
     submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
       staffMember = this.submittedByStaffMember(),
     ),
+    cohort = this.cohort(),
   )
 }

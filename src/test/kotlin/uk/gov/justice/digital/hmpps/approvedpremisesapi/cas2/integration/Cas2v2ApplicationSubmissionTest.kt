@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -953,6 +954,16 @@ class Cas2v2ApplicationSubmissionTest : IntegrationTestBase() {
             .isOk
 
           Assertions.assertThat(domainEventRepository.count()).isEqualTo(1)
+
+          val domainEventFromJson = jsonMapper.readValue(
+            domainEventRepository.findFirstByOrderByCreatedAtDesc()!!.data,
+            Cas2ApplicationSubmittedEvent::class.java,
+          )
+          Assertions.assertThat(domainEventFromJson.eventDetails.cohort?.code)
+            .isEqualTo(Cas2Cohort.COURT_BAIL.name)
+          Assertions.assertThat(domainEventFromJson.eventDetails.cohort?.longDisplayName)
+            .isEqualTo(Cas2Cohort.COURT_BAIL.longDisplayName)
+
           Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(1)
           Assertions.assertThat(cas2RealApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!.submittedAt).isNotNull()
           Assertions.assertThat(emailAsserter.assertEmailsRequestedCount(2))
