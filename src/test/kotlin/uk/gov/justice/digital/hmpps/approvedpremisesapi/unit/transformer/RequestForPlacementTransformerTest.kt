@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -35,8 +37,8 @@ import java.time.temporal.ChronoUnit
 
 class RequestForPlacementTransformerTest {
   private val jsonMapper = mockk<JsonMapper>()
-
-  private val requestForPlacementTransformer = RequestForPlacementTransformer(jsonMapper)
+  private val cas1AssessmentTransformer = mockk<Cas1AssessmentTransformer>()
+  private val requestForPlacementTransformer = RequestForPlacementTransformer(jsonMapper, cas1AssessmentTransformer)
 
   @BeforeEach
   fun setupObjectMapperMock() {
@@ -67,12 +69,17 @@ class RequestForPlacementTransformerTest {
         .withExpectedArrivalFlexible(false)
         .withRequestedDuration(47)
         .withRequestedDuration(48)
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
         .withAuthorisedDuration(49)
         .withSentenceType(SentenceTypeOption.bailPlacement.name)
         .withReleaseType(Cas1ReleaseType.licence)
         .withSituation(SituationOption.bailSentence.name)
         .produce()
-
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.id).isEqualTo(placementApplication.id)
@@ -96,6 +103,9 @@ class RequestForPlacementTransformerTest {
       assertThat(result.placementDates).hasSize(1)
       assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
       assertThat(result.placementDates[0].duration).isEqualTo(49)
+      assertThat(result.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
+      assertThat(result.submittedBy?.name).isEqualTo(placementApplication.createdByUser.name)
+
       verify(exactly = 1) { jsonMapper.readTree(placementApplication.document) }
     }
 
@@ -119,7 +129,11 @@ class RequestForPlacementTransformerTest {
         .withAuthorisedDuration(7)
         .withAutomatic(false)
         .produce()
-
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
@@ -172,7 +186,11 @@ class RequestForPlacementTransformerTest {
         .apply {
           placementRequest.spaceBookings = mutableListOf(this)
         }
-
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
@@ -200,6 +218,12 @@ class RequestForPlacementTransformerTest {
         .withAutomatic(false)
         .produce()
 
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
+
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestRejected)
@@ -226,7 +250,11 @@ class RequestForPlacementTransformerTest {
         .withAuthorisedDuration(7)
         .withAutomatic(false)
         .produce()
-
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
@@ -252,6 +280,12 @@ class RequestForPlacementTransformerTest {
         .withAutomatic(false)
         .produce()
 
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
+
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
@@ -272,7 +306,11 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(47)
         .withAutomatic(true)
         .produce()
-
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.type).isEqualTo(RequestForPlacementType.automatic)
@@ -295,6 +333,12 @@ class RequestForPlacementTransformerTest {
         .withAuthorisedDuration(7)
         .withAutomatic(false)
         .produce()
+
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
         placementApplication,
@@ -332,7 +376,11 @@ class RequestForPlacementTransformerTest {
         .withPlacementRequirements(placementRequirements)
         .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
         .produce()
-
+      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
+        name = application.createdByUser.name,
+        username = application.createdByUser.deliusUsername,
+        staffCode = application.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.id).isEqualTo(placementRequest.id)
@@ -356,6 +404,8 @@ class RequestForPlacementTransformerTest {
       assertThat(result.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
       assertThat(result.releaseType).isEqualTo(ReleaseTypeOption.rotl)
       assertThat(result.situation).isEqualTo(SituationOption.bailAssessment)
+      assertThat(result.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
+      assertThat(result.submittedBy?.name).isEqualTo(application.createdByUser.name)
     }
 
     @Test
@@ -384,7 +434,11 @@ class RequestForPlacementTransformerTest {
         .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
         .withCreatedAt(statusSetDate.toLocalDateTime().truncatedTo(ChronoUnit.SECONDS))
         .produce()
-
+      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
+        name = application.createdByUser.name,
+        username = application.createdByUser.deliusUsername,
+        staffCode = application.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
@@ -421,7 +475,11 @@ class RequestForPlacementTransformerTest {
         .apply {
           placementRequest.spaceBookings = mutableListOf(this)
         }
-
+      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
+        name = application.createdByUser.name,
+        username = application.createdByUser.deliusUsername,
+        staffCode = application.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
@@ -453,7 +511,11 @@ class RequestForPlacementTransformerTest {
         .withIsWithdrawn(false)
         .withCreatedAt(statusSetDate.toLocalDateTime().truncatedTo(ChronoUnit.SECONDS))
         .produce()
-
+      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
+        name = application.createdByUser.name,
+        username = application.createdByUser.deliusUsername,
+        staffCode = application.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
@@ -482,7 +544,11 @@ class RequestForPlacementTransformerTest {
         .withAssessment(assessment)
         .withPlacementRequirements(placementRequirements)
         .produce()
-
+      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
+        name = application.createdByUser.name,
+        username = application.createdByUser.deliusUsername,
+        staffCode = application.createdByUser.deliusStaffCode,
+      )
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(
         placementRequest,
         canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,

@@ -47,6 +47,10 @@ class MatchRequestWithdrawnFactory : Factory<MatchRequestWithdrawn> {
     this.submittedAt = { submittedAt }
   }
 
+  fun withMatchRequestId(matchRequestId: UUID) = apply {
+    this.matchRequestId = { matchRequestId }
+  }
+
   fun withWithdrawnByStaffMember(staffMember: StaffMember) = apply {
     this.withdrawnByStaffMember = { staffMember }
   }

@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
@@ -10,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -27,7 +30,9 @@ class Cas1RequestForPlacementService(
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceBookingTransformer: Cas1SpaceBookingTransformer,
+  private val domainEventRepository: DomainEventRepository,
   private val caseService: CaseService,
+  private val jsonMapper: JsonMapper,
 ) {
   fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity?): CasResult<List<RequestForPlacement>> {
     val application = applicationService.getApplication(applicationId)
@@ -120,6 +125,12 @@ class Cas1RequestForPlacementService(
       }
     }
   }
+
+  fun getRequestForPlacementWithdrawalDate(rfp: RequestForPlacement) = domainEventRepository.findWithdrawnRequestForPlacement(rfp.id)?.occurredAt?.toLocalDate()
+
+  fun getRequestForPlacementRejectionReason(rfp: RequestForPlacement) = domainEventRepository.findAssessedRequestForPlacement(rfp.id)?.let {
+    jsonMapper.readValue(it.data, RequestForPlacementAssessedEnvelope::class.java)
+  }?.eventDetails?.decisionSummary
 
   @SuppressWarnings("MaxLineLength")
   private fun createDurationCalculation(period: Period, maxDurationDays: Int?): CasResult.Success<Cas1RequestsForPlacementDurationsCalculationResponseDto> = CasResult.Success(Cas1RequestsForPlacementDurationsCalculationResponseDto(period.days, maxDurationDays))
