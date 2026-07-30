@@ -98,7 +98,6 @@ enum class Cas2Cohort(val apiType: Cas2CohortDto, val displayName: String, val l
   HCRD(Cas2CohortDto.HOMELESS_AT_CONDITIONAL_RELEASE_DATE, "HCRD", "Homeless at Conditional Release Date (HCRD)", "3 working days"),
   HEFR(Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL, "HEFR", "Homeless at End of Fixed-term Recall", "3 working days"),
   ISC(Cas2CohortDto.INTENSIVE_SUPERVISION_COURTS, "ISC", "Intensive Supervision Courts (ISC)", "3 working days"),
-  RARR(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW, "RARR", "Risk Assessed Recall Review (RARR)", "3 working days"),
   FROM_AP(Cas2CohortDto.REFERRAL_FROM_APPROVED_PREMISES, "From AP", "Referral from Approved Premises", "3 working days"),
   ;
 

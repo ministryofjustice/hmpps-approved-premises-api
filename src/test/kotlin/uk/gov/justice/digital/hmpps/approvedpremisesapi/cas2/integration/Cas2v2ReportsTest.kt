@@ -216,7 +216,6 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.HCRD)
       createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.HEFR)
       createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.ISC)
-      createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.RARR)
       createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.FROM_AP)
 
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
@@ -463,7 +462,6 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.HCRD)
       createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.HEFR)
       createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.ISC)
-      createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.RARR)
       createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.FROM_AP)
 
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
@@ -598,7 +596,6 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.HCRD)
       createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.HEFR)
       createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.ISC)
-      createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.RARR)
       createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.FROM_AP)
 
       val jwt = jwtAuthHelper.createClientCredentialsJwt(

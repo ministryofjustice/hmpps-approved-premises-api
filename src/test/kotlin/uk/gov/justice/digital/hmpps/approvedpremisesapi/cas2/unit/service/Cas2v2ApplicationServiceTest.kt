@@ -602,7 +602,6 @@ class Cas2v2ApplicationServiceTest {
 
       assertThat(cas2v2Application.data).isEqualTo(updatedData)
       assertThat(cas2v2Application.bailHearingDate).isEqualTo(bailHearingDate)
-      assertThat(cas2v2Application.cohort).isEqualTo(Cas2Cohort.RARR)
     }
   }
 
