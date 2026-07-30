@@ -1,18 +1,32 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
@@ -34,7 +48,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonerAler
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @SuppressWarnings("ThrowsCount")
-@Service
+@RestController
+@Tag(name = "People")
 class PeopleController(
   private val offenderService: OffenderService,
   private val personTransformer: PersonTransformer,
@@ -47,9 +62,24 @@ class PeopleController(
   private val oasysService: OASysService,
   private val offenderDetailService: OffenderDetailService,
   private val caseNotesService: CaseNotesService,
-) : PeopleApiDelegate {
+) {
 
-  override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
+  @Operation(
+    summary = "Searches for a Person by their CRN",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Person::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/search"],
+    produces = ["application/json", "application/problem+json"],
+  )
+  fun peopleSearchGet(
+    @RequestParam crn: String,
+  ): ResponseEntity<Person> {
     val user = userService.getUserForRequest()
 
     val personInfo = offenderDetailService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
@@ -63,8 +93,28 @@ class PeopleController(
     }
   }
 
-  override fun peopleCrnPrisonCaseNotesGet(
+  @Operation(
+    summary = "Returns the prison case notes for a Person",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = PrisonCaseNote::class)))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/{crn}/prison-case-notes"],
+    produces = ["application/json"],
+  )
+  fun peopleCrnPrisonCaseNotesGet(
+    @Parameter(description = "CRN of the Person to fetch prison case notes for")
+    @PathVariable
     crn: String,
+    @Parameter(
+      description = "CAS1 requests may limit returned case note types",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader("X-Service-Name")
     xServiceName: ServiceName,
   ): ResponseEntity<List<PrisonCaseNote>> {
     val nomsNumber = getNomsNumber(crn)
@@ -77,7 +127,30 @@ class PeopleController(
     return ResponseEntity.ok(extractEntityFromCasResult(prisonCaseNotesResult).map(prisonCaseNoteTransformer::transformModelToApi))
   }
 
-  override fun peopleCrnAdjudicationsGet(crn: String, xServiceName: ServiceName): ResponseEntity<List<Adjudication>> {
+  @Operation(
+    summary = "Returns the adjudications for a Person",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Adjudication::class)))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/{crn}/adjudications"],
+    produces = ["application/json"],
+  )
+  fun peopleCrnAdjudicationsGet(
+    @Parameter(description = "CRN of the Person to fetch adjudications for")
+    @PathVariable
+    crn: String,
+    @Parameter(
+      description = "CAS1 requests may be limited to adjudications for last 12 months only",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader("X-Service-Name")
+    xServiceName: ServiceName,
+  ): ResponseEntity<List<Adjudication>> {
     val nomsNumber = getNomsNumber(crn)
 
     val adjudications = when (val adjudicationsResult = offenderService.getAdjudicationsByNomsNumber(nomsNumber)) {
@@ -94,7 +167,23 @@ class PeopleController(
     )
   }
 
-  override fun peopleCrnAcctAlertsGet(crn: String): ResponseEntity<List<PersonAcctAlert>> {
+  @Operation(
+    summary = "Returns the ACCT alerts for a Person",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = PersonAcctAlert::class)))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/{crn}/acct-alerts"],
+    produces = ["application/json"],
+  )
+  fun peopleCrnAcctAlertsGet(
+    @Parameter(description = "CRN of the Person to fetch ACCT alerts for")
+    @PathVariable
+    crn: String,
+  ): ResponseEntity<List<PersonAcctAlert>> {
     val nomsNumber = getNomsNumber(crn)
 
     val acctAlertsResult = offenderService.getAcctPrisonerAlertsByNomsNumber(nomsNumber)
@@ -102,7 +191,28 @@ class PeopleController(
     return ResponseEntity.ok(extractEntityFromCasResult(acctAlertsResult).map(prisonerAlertTransformer::transformToApi))
   }
 
-  override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
+  @Operation(
+    summary = "Returns OASys sections to support an Application. " +
+      " The Supporting Information sections are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter." +
+      " CAS1 should use /cas1/people/CRN/oasys/answers. " +
+      "CAS3 should use /cas3/people/CRN/oasys/riskManagement",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = OASysSections::class))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/{crn}/oasys/sections"],
+    produces = ["application/json"],
+  )
+  fun peopleCrnOasysSectionsGet(
+    @Parameter(description = "CRN of the Person to fetch latest OASys selection")
+    @PathVariable
+    crn: String,
+    @RequestParam("selected-sections")
+    selectedSections: List<Int>?,
+  ): ResponseEntity<OASysSections> {
     ensureUserCanAccessOffenderInfo(crn)
 
     val needs = extractEntityFromCasResult(oasysService.getNeedsDetails(crn))
@@ -139,7 +249,23 @@ class PeopleController(
     }
   }
 
-  override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
+  @Operation(
+    summary = "Returns all active offences for a Person.",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = ActiveOffence::class)))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/{crn}/offences"],
+    produces = ["application/json"],
+  )
+  fun peopleCrnOffencesGet(
+    @Parameter(description = "CRN of the Person to fetch active offences for")
+    @PathVariable
+    crn: String,
+  ): ResponseEntity<List<ActiveOffence>> {
     ensureUserCanAccessOffenderInfo(crn)
 
     val caseDetail = offenderService.getCaseDetail(crn)
