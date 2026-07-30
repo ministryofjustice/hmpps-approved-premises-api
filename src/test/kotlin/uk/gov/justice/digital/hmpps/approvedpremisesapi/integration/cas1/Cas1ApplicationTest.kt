@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
@@ -116,6 +117,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
@@ -2126,6 +2128,98 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .is5xxServerError
+        }
+      }
+    }
+
+    @Test
+    fun `Create application does not update the existing case when no value changed`() {
+      val initialLastUpdatedAt = OffsetDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS)
+      val calculationDate = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+      val tierV2 = TierFactory()
+        .withTierScore("A")
+        .withCalculationDate(calculationDate)
+        .produce()
+      val tierV3 = TierFactory()
+        .withVersion(TierVersion.V3)
+        .withTierScore("B")
+        .withCalculationDate(calculationDate)
+        .produce()
+
+      mockFeatureFlagService.setFlag(FEATURE_FLAG_USE_TIER_V3, true)
+
+      givenAUser { _, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withFirstName("Forename")
+            withLastName("Surname")
+          },
+          inmateDetailsConfigBlock = {
+            withOffenderNo("NOMS123")
+          },
+        ) { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+
+          caseEntityFactory.produceAndPersist {
+            withCrn(crn)
+            withTierV2(tierV2)
+            withTierV3(tierV3)
+            withName("FORENAME SURNAME")
+            withNomsNumber("NOMS123")
+            withLastUpdatedAt(initialLastUpdatedAt)
+          }
+
+          apAndOASysMockSuccessfulNeedsDetailsCall(
+            crn,
+            NeedsDetailsFactory().produce(),
+          )
+
+          apAndOASysMockSuccessfulRoshRatingsCall(
+            crn,
+            RoshRatingsFactory().produce(),
+          )
+
+          hmppsTierMockSuccessfulTierCall(
+            crn,
+            Tier(
+              tierScore = "A",
+              calculationId = tierV2.calculationId,
+              calculationDate = calculationDate,
+              changeReason = tierV2.changeReason,
+            ),
+          )
+
+          hmppsTierMockSuccessfulV3TierCall(
+            crn,
+            Tier(
+              tierScore = "B",
+              calculationId = tierV3.calculationId,
+              calculationDate = calculationDate,
+              changeReason = tierV3.changeReason,
+            ),
+          )
+
+          val caseBeforeUpdate = caseRepository.findByCrn(crn)!!
+          val lastUpdatedAtBeforeUpdate = caseBeforeUpdate.lastUpdatedAt.truncatedTo(ChronoUnit.SECONDS)
+
+          webTestClient.post()
+            .uri("/cas1/applications/create")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewApplication(
+                crn = crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+
+          val caseEntityAfter = caseRepository.findByCrn(crn)
+          val lastUpdatedAtAfterUpdate = caseEntityAfter!!.lastUpdatedAt.truncatedTo(ChronoUnit.SECONDS)
+          assertThat(lastUpdatedAtAfterUpdate).isEqualTo(lastUpdatedAtBeforeUpdate)
         }
       }
     }

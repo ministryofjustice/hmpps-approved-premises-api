@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
-import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.type.SqlTypes
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -113,6 +113,7 @@ data class CaseEntity(
    */
   var name: String?,
   val createdAt: OffsetDateTime,
+  @UpdateTimestamp
   var lastUpdatedAt: OffsetDateTime,
   @Column(name = "tier_v2", columnDefinition = "jsonb")
   @JdbcTypeCode(SqlTypes.JSON)
@@ -123,11 +124,6 @@ data class CaseEntity(
   @Version
   var version: Long = 1,
 ) {
-
-  @PreUpdate
-  fun preUpdate() {
-    lastUpdatedAt = OffsetDateTime.now()
-  }
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
