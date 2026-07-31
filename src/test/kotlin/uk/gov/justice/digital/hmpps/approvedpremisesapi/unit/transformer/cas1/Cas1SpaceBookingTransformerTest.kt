@@ -27,13 +27,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
@@ -126,8 +126,8 @@ class Cas1SpaceBookingTransformerTest {
       val nonArrivalReason = NonArrivalReasonEntityFactory().produce()
 
       val criteria = listOf(
-        CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
-        CharacteristicEntityFactory().withPropertyName("isCatered").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("isCatered").produce(),
       )
 
       val departureReason = DepartureReasonEntity(
@@ -394,8 +394,8 @@ class Cas1SpaceBookingTransformerTest {
           .withActualArrivalDate(LocalDate.parse("2024-12-13"))
           .withActualDepartureDate(LocalDate.parse("2024-01-02"))
           .withCriteria(
-            CharacteristicEntityFactory().withPropertyName("hasTurningSpace").produce(),
-            CharacteristicEntityFactory().withPropertyName("isCatered").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("hasTurningSpace").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("isCatered").produce(),
           )
           .withNonArrivalConfirmedAt(Instant.now())
           .withTransferReason(TransferReason.riskToResident)

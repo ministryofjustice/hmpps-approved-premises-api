@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1PlanningBedSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.OutOfServiceBedSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedDayState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
 import java.time.Instant
@@ -182,10 +182,10 @@ class SpacePlanningModelsFactoryTest {
 
     @Test
     fun `all booking properties are correctly mapped`() {
-      val characteristic1 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED).withIsActive(true).withModelScope("room").produce()
-      val characteristic2 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ARSON_SUITABLE).withIsActive(true).withModelScope("room").produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withModelScope("room").withIsActive(true).produce()
-      val characteristicNotAllowed = CharacteristicEntityFactory().withPropertyName("not in allow list").withIsActive(true).withModelScope("room").produce()
+      val characteristic1 = Cas1CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED).withIsActive(true).withModelScope("room").produce()
+      val characteristic2 = Cas1CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ARSON_SUITABLE).withIsActive(true).withModelScope("room").produce()
+      val characteristicSingleRoom = Cas1CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withModelScope("room").withIsActive(true).produce()
+      val characteristicNotAllowed = Cas1CharacteristicEntityFactory().withPropertyName("not in allow list").withIsActive(true).withModelScope("room").produce()
 
       val booking1 = Cas1SpaceBookingEntityFactory()
         .withCrn("booking1")

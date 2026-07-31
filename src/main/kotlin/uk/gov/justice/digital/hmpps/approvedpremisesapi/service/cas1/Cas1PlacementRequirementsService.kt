@@ -3,21 +3,20 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
 class Cas1PlacementRequirementsService(
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
-  private val characteristicRepository: CharacteristicRepository,
+  private val cas1CharacteristicRepository: Cas1CharacteristicRepository,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
 ) {
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -49,8 +48,7 @@ class Cas1PlacementRequirementsService(
     return placementRequirementsEntity
   }
 
-  private fun toCharacteristics(criteria: List<PlacementCriteria>) = characteristicRepository.findAllWherePropertyNameIn(
+  private fun toCharacteristics(criteria: List<PlacementCriteria>) = cas1CharacteristicRepository.findAllWherePropertyNameIn(
     names = criteria.map { it.toString() },
-    serviceName = ServiceName.approvedPremises.value,
   )
 }

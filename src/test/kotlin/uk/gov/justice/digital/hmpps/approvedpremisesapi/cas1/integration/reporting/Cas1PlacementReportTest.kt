@@ -52,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
@@ -60,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import java.io.StringReader
 import java.time.LocalDate
@@ -78,7 +78,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   lateinit var assessor: UserEntity
   lateinit var assessorJwt: String
   lateinit var user: UserEntity
-  lateinit var criteria: MutableList<CharacteristicEntity>
+  lateinit var criteria: MutableList<Cas1CharacteristicEntity>
   lateinit var premises: ApprovedPremisesEntity
 
   val bookingWithCanonicalArrivalDateWithinRange = BookingWithCanonicalArrivalDateWithinRange()
@@ -95,7 +95,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   @BeforeAll
   fun setup() {
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-    characteristicRepository.deleteAll()
+    cas1CharacteristicRepository.deleteAll()
 
     val assessorDetails = givenAUser(
       roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -110,16 +110,14 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
     ).first
 
     criteria = mutableListOf(
-      characteristicEntityFactory.produceAndPersist {
+      cas1CharacteristicEntityFactory.produceAndPersist {
         withName("Step Free Designated")
         withPropertyName("isStepFreeDesignated")
-        withServiceScope("approved-premises")
         withModelScope("room")
       },
-      characteristicEntityFactory.produceAndPersist {
+      cas1CharacteristicEntityFactory.produceAndPersist {
         withName("Catered")
         withPropertyName("isCatered")
-        withServiceScope("approved-premises")
         withModelScope("premises")
       },
     )

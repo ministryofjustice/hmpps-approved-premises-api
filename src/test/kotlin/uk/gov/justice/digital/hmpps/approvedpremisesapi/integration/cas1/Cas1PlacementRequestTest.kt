@@ -1420,10 +1420,10 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
         withAssessment(assessment)
         withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
         withDesirableCriteria(
-          characteristicEntityFactory.produceAndPersistMultiple(5),
+          cas1CharacteristicEntityFactory.produceAndPersistMultiple(5),
         )
         withEssentialCriteria(
-          characteristicEntityFactory.produceAndPersistMultiple(3),
+          cas1CharacteristicEntityFactory.produceAndPersistMultiple(3),
         )
       }
 

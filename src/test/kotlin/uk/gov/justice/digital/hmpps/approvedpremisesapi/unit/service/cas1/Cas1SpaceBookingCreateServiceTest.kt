@@ -10,10 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -241,8 +241,8 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = departureDate,
           createdBy = user,
           characteristics = listOf(
-            CharacteristicEntityFactory().withName("c1").produce(),
-            CharacteristicEntityFactory().withName("c2").produce(),
+            Cas1CharacteristicEntityFactory().withName("c1").produce(),
+            Cas1CharacteristicEntityFactory().withName("c2").produce(),
           ),
           transferredFrom = transferInfo,
           additionalInformation = "Some reason",

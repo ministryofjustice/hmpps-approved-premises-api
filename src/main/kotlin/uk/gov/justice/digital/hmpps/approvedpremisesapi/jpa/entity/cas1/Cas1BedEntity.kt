@@ -65,7 +65,7 @@ class Cas1BedsRepository(
       FROM cas1_rooms r
       INNER JOIN cas1_beds b ON b.room_id = r.id
       LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = r.id 
-      LEFT OUTER JOIN "characteristics" c ON c.id = room_chars.characteristic_id 
+      LEFT OUTER JOIN cas1_characteristics c ON c.id = room_chars.characteristic_id
       WHERE 
       r.premises_id IN (:premisesIds) AND 
       (:excludeEndedBeds = false OR b.end_date is null OR b.end_date >= NOW())

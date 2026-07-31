@@ -2,12 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -19,8 +20,8 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
   private var assessment: Yielded<ApprovedPremisesAssessmentEntity>? = null
   private var radius: Yielded<Int> = { 50 }
-  private var essentialCriteria: Yielded<List<CharacteristicEntity>> = { listOf(CharacteristicEntityFactory().produce()) }
-  private var desirableCriteria: Yielded<List<CharacteristicEntity>> = { listOf(CharacteristicEntityFactory().produce(), CharacteristicEntityFactory().produce()) }
+  private var essentialCriteria: Yielded<List<Cas1CharacteristicEntity>> = { listOf(Cas1CharacteristicEntityFactory().produce()) }
+  private var desirableCriteria: Yielded<List<Cas1CharacteristicEntity>> = { listOf(Cas1CharacteristicEntityFactory().produce(), Cas1CharacteristicEntityFactory().produce()) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
 
   fun withDefaults() = apply {
@@ -52,11 +53,11 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
     this.postcodeDistrict = postcodeDistrict
   }
 
-  fun withEssentialCriteria(essentialCriteria: List<CharacteristicEntity>) = apply {
+  fun withEssentialCriteria(essentialCriteria: List<Cas1CharacteristicEntity>) = apply {
     this.essentialCriteria = { essentialCriteria }
   }
 
-  fun withDesirableCriteria(desirableCriteria: List<CharacteristicEntity>) = apply {
+  fun withDesirableCriteria(desirableCriteria: List<Cas1CharacteristicEntity>) = apply {
     this.desirableCriteria = { desirableCriteria }
   }
 

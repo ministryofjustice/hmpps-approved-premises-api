@@ -11,6 +11,7 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -53,7 +54,7 @@ data class PlacementRequirementsEntity(
     joinColumns = [JoinColumn(name = "placement_requirement_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  val essentialCriteria: List<CharacteristicEntity>,
+  val essentialCriteria: List<Cas1CharacteristicEntity>,
 
   @ManyToMany
   @JoinTable(
@@ -61,7 +62,7 @@ data class PlacementRequirementsEntity(
     joinColumns = [JoinColumn(name = "placement_requirement_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  val desirableCriteria: List<CharacteristicEntity>,
+  val desirableCriteria: List<Cas1CharacteristicEntity>,
 
   val createdAt: OffsetDateTime,
 )

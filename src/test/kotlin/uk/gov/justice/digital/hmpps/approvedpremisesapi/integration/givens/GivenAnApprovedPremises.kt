@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
@@ -28,7 +28,7 @@ fun IntegrationTestBase.givenAnApprovedPremises(
   managerDetails: String = randomStringUpperCase(10),
   latitude: Double = randomDouble(53.50, 54.99),
   longitude: Double = randomDouble(-1.56, 1.10),
-  characteristics: List<CharacteristicEntity> = emptyList(),
+  characteristics: List<Cas1CharacteristicEntity> = emptyList(),
   gender: ApprovedPremisesGender = ApprovedPremisesGender.MAN,
   id: UUID = UUID.randomUUID(),
   cruManagementArea: Cas1CruManagementAreaEntity? = null,

@@ -4,7 +4,6 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection.asc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection.desc
@@ -38,13 +37,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableCas1SpaceBookingEntityRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
@@ -92,7 +91,7 @@ class Cas1SpaceBookingService(
     placementRequestId: UUID,
     newSpaceBooking: Cas1NewSpaceBooking,
     createdBy: UserEntity,
-    characteristics: List<CharacteristicEntity>,
+    characteristics: List<Cas1CharacteristicEntity>,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
     lockablePlacementRequestRepository.acquirePessimisticLock(placementRequestId)
 
@@ -483,7 +482,7 @@ class Cas1SpaceBookingService(
 
   private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) = bookingsCriteriaFilter?.let { bookingCriteria ->
     val characteristics = bookingCriteria.map { it.value }
-    characteristicService.getCharacteristicsByPropertyNames(characteristics, ServiceName.approvedPremises)
+    characteristicService.getCas1CharacteristicsByPropertyNames(characteristics)
       .map { characteristic -> characteristic.id }
   }
 
@@ -513,9 +512,8 @@ class Cas1SpaceBookingService(
     }
   }
 
-  private fun getCharacteristicsEntity(cas1SpaceCharacteristics: List<Cas1SpaceCharacteristic>?): List<CharacteristicEntity> = characteristicService.getCharacteristicsByPropertyNames(
+  private fun getCharacteristicsEntity(cas1SpaceCharacteristics: List<Cas1SpaceCharacteristic>?): List<Cas1CharacteristicEntity> = characteristicService.getCas1CharacteristicsByPropertyNames(
     cas1SpaceCharacteristics.orEmpty().toSet().map { it.value },
-    ServiceName.approvedPremises,
   )
 
   private fun toCas1CancellationReason(

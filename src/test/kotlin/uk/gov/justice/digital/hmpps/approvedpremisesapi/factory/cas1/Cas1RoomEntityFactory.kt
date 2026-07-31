@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -18,7 +18,7 @@ class Cas1RoomEntityFactory : Factory<Cas1RoomEntity> {
   private var code: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var premises: Yielded<Cas1PremisesBaseEntity>? = null
-  private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
+  private var characteristics: Yielded<MutableList<Cas1CharacteristicEntity>> = { mutableListOf() }
   private var beds: Yielded<MutableList<Cas1BedEntity>> = { mutableListOf() }
 
   fun withDefaults() = apply {
@@ -49,15 +49,15 @@ class Cas1RoomEntityFactory : Factory<Cas1RoomEntity> {
     this.premises = premises
   }
 
-  fun withCharacteristics(characteristics: List<CharacteristicEntity>) = apply {
+  fun withCharacteristics(characteristics: List<Cas1CharacteristicEntity>) = apply {
     this.characteristics = { characteristics.toMutableList() }
   }
 
-  fun withCharacteristics(vararg characteristics: CharacteristicEntity) = apply {
+  fun withCharacteristics(vararg characteristics: Cas1CharacteristicEntity) = apply {
     this.characteristics = { characteristics.toMutableList() }
   }
 
-  fun withCharacteristicsList(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
+  fun withCharacteristicsList(characteristics: List<Cas1CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
 
   fun withBeds(beds: MutableList<Cas1BedEntity>) = apply {
     this.beds = { beds }

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
@@ -35,7 +34,7 @@ class Cas1PremisesSearchService(
 
   private fun getGroupedCharacteristics(parameters: Cas1PremisesSearchCriteria): GroupedCharacteristics {
     val propertyNames = parameters.spaceCharacteristics.map { it.value }.toSet()
-    val characteristics = characteristicService.getCharacteristicsByPropertyNames(propertyNames.toList(), ServiceName.approvedPremises)
+    val characteristics = characteristicService.getCas1CharacteristicsByPropertyNames(propertyNames.toList())
 
     return GroupedCharacteristics(
       characteristics.filter { it.isModelScopePremises() }.map { it.id },

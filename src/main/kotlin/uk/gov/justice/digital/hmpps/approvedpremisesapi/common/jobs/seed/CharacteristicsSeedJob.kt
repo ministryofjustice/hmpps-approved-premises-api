@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import java.util.UUID
 
 @Component
 class CharacteristicsSeedJob(
-  private val characteristicRepository: CharacteristicRepository,
+  private val cas1CharacteristicRepository: Cas1CharacteristicRepository,
 ) : SeedJob<CharacteristicsSeedCsvRow>(
   requiredHeaders = setOf(
     "characteristic_name",
@@ -33,9 +33,15 @@ class CharacteristicsSeedJob(
       return log.info("Skipping due to blank name")
     }
 
-    val existingCharacteristic = characteristicRepository.findByPropertyNameAndScopes(
+    if (row.serviceScope != Characteristic.ServiceScope.approvedMinusPremises.value) {
+      throw IllegalStateException(
+        "Characteristic '${row.propertyName}' has service_scope '${row.serviceScope}' " +
+          "but only '${Characteristic.ServiceScope.approvedMinusPremises.value}' characteristics can be seeded into the CAS1 characteristics table",
+      )
+    }
+
+    val existingCharacteristic = cas1CharacteristicRepository.findByPropertyNameAndModelScope(
       propertyName = row.propertyName,
-      serviceName = row.serviceScope,
       modelName = row.modelScope,
     )
 
@@ -75,12 +81,11 @@ class CharacteristicsSeedJob(
   ) {
     log.info("Creating new Characteristic: ${row.propertyName}")
 
-    characteristicRepository.save(
-      CharacteristicEntity(
+    cas1CharacteristicRepository.save(
+      Cas1CharacteristicEntity(
         id = UUID.randomUUID(),
         propertyName = row.propertyName,
         name = row.name,
-        serviceScope = row.serviceScope,
         modelScope = row.modelScope,
         isActive = true,
       ),
@@ -89,7 +94,7 @@ class CharacteristicsSeedJob(
 
   private fun updateExistingCharacteristic(
     row: CharacteristicsSeedCsvRow,
-    existingCharacteristic: CharacteristicEntity,
+    existingCharacteristic: Cas1CharacteristicEntity,
   ) {
     log.info("Updating Characteristic: '${row.propertyName}' with name '${row.name}'")
 
@@ -97,7 +102,7 @@ class CharacteristicsSeedJob(
       this.name = row.name
     }
 
-    characteristicRepository.save(existingCharacteristic)
+    cas1CharacteristicRepository.save(existingCharacteristic)
   }
 }
 

@@ -3,13 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.seed
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpaceBookingSeedJobCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 
 class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
 
@@ -20,8 +19,8 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
       deliusEventNumber = "101",
       offlineApplication = givenAnOfflineApplication("CRN1", eventNumberSet = false),
       criteria = listOf(
-        getCharacteristic(CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        getCharacteristic(CharacteristicRepository.CAS1_PROPERTY_NAME_ENSUITE),
+        getCharacteristic(Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        getCharacteristic(Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_ENSUITE),
       ),
     )
 
@@ -35,8 +34,8 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
             eventNumber = "999",
             updateCriteria = true,
             criteria = listOf(
-              CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM,
-              CharacteristicRepository.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED,
+              Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM,
+              Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED,
             ),
           ),
         ),
@@ -46,12 +45,12 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
     val updatedSpaceBooking = cas1SpaceBookingRepository.findById(spaceBooking.id).get()
     assertThat(updatedSpaceBooking.deliusEventNumber).isEqualTo("999")
     assertThat(updatedSpaceBooking.criteria).containsExactlyInAnyOrder(
-      getCharacteristic(CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM),
-      getCharacteristic(CharacteristicRepository.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
+      getCharacteristic(Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM),
+      getCharacteristic(Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
     )
   }
 
-  private fun getCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+  private fun getCharacteristic(propertyName: String) = cas1CharacteristicRepository.findByPropertyName(propertyName)!!
 
   private fun rowsToCsv(rows: List<Cas1UpdateSpaceBookingSeedJobCsvRow>): String {
     val builder = CsvBuilder()

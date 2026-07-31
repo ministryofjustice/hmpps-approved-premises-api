@@ -137,7 +137,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
@@ -162,6 +161,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1BedEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1PremisesLocalRestrictionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1RoomEntityFactory
@@ -194,8 +194,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
@@ -232,6 +230,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
@@ -447,7 +447,7 @@ abstract class IntegrationTestBase {
   lateinit var assessmentReferralSystemNoteRepository: AssessmentReferralHistorySystemNoteTestRepository
 
   @Autowired
-  lateinit var characteristicRepository: CharacteristicRepository
+  lateinit var cas1CharacteristicRepository: Cas1CharacteristicRepository
 
   @Autowired
   lateinit var cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository
@@ -612,7 +612,7 @@ abstract class IntegrationTestBase {
   lateinit var assessmentReferralHistorySystemNoteEntityFactory: PersistedFactory<AssessmentReferralHistorySystemNoteEntity, UUID, AssessmentReferralHistorySystemNoteEntityFactory>
   lateinit var cas3BedspaceCharacteristicEntityFactory: PersistedFactory<Cas3BedspaceCharacteristicEntity, UUID, Cas3BedspaceCharacteristicEntityFactory>
   lateinit var cas3PremisesCharacteristicEntityFactory: PersistedFactory<Cas3PremisesCharacteristicEntity, UUID, Cas3PremisesCharacteristicEntityFactory>
-  lateinit var characteristicEntityFactory: PersistedFactory<CharacteristicEntity, UUID, CharacteristicEntityFactory>
+  lateinit var cas1CharacteristicEntityFactory: PersistedFactory<Cas1CharacteristicEntity, UUID, Cas1CharacteristicEntityFactory>
   lateinit var cas1RoomEntityFactory: PersistedFactory<Cas1RoomEntity, UUID, Cas1RoomEntityFactory>
   lateinit var cas1BedEntityFactory: PersistedFactory<Cas1BedEntity, UUID, Cas1BedEntityFactory>
   lateinit var domainEventFactory: PersistedFactory<DomainEventEntity, UUID, DomainEventEntityFactory>
@@ -729,7 +729,7 @@ abstract class IntegrationTestBase {
     assessmentReferralHistorySystemNoteEntityFactory = PersistedFactory({ AssessmentReferralHistorySystemNoteEntityFactory() }, assessmentReferralSystemNoteRepository)
     cas3BedspaceCharacteristicEntityFactory = PersistedFactory({ Cas3BedspaceCharacteristicEntityFactory() }, cas3BedspaceCharacteristicRepository)
     cas3PremisesCharacteristicEntityFactory = PersistedFactory({ Cas3PremisesCharacteristicEntityFactory() }, cas3PemisesCharacteristicRepository)
-    characteristicEntityFactory = PersistedFactory({ CharacteristicEntityFactory() }, characteristicRepository)
+    cas1CharacteristicEntityFactory = PersistedFactory({ Cas1CharacteristicEntityFactory() }, cas1CharacteristicRepository)
     cas1RoomEntityFactory = PersistedFactory({ Cas1RoomEntityFactory() }, roomRepository)
     cas1BedEntityFactory = PersistedFactory({ Cas1BedEntityFactory() }, bedRepository)
     domainEventFactory = PersistedFactory({ DomainEventEntityFactory() }, domainEventRepository)

@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummaryTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -33,13 +33,13 @@ class PlacementRequestBookingSummaryTransformerTest {
         .withCreatedAt(OffsetDateTime.now())
         .withCriteria(
           mutableListOf(
-            CharacteristicEntityFactory()
+            Cas1CharacteristicEntityFactory()
               .withPropertyName("hasEnSuite")
               .produce(),
-            CharacteristicEntityFactory()
+            Cas1CharacteristicEntityFactory()
               .withPropertyName("isCatered")
               .produce(),
-            CharacteristicEntityFactory()
+            Cas1CharacteristicEntityFactory()
               .withPropertyName("unmappable")
               .produce(),
           ),

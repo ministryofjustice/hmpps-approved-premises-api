@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1RoomEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedSummaryTransformer
 import java.time.LocalDate
@@ -30,11 +30,10 @@ class Cas1OutOfServiceBedSummaryTransformerTest {
 
   @Test
   fun toCas1OutOfServiceBedSummary() {
-    val roomCharacteristic = CharacteristicEntity(
+    val roomCharacteristic = Cas1CharacteristicEntity(
       id = UUID.randomUUID(),
       propertyName = "hasLift",
       name = "hasLift",
-      serviceScope = "approved-premises",
       modelScope = "room",
       isActive = true,
     )

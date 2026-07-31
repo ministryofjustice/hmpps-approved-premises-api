@@ -26,12 +26,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
@@ -113,7 +113,7 @@ class Cas1BookingDomainEventServiceTest {
       .withCanonicalDepartureDate(LocalDate.of(2025, 12, 12))
       .withPremises(premises)
       .withCreatedAt(createdAt)
-      .withCriteria(CharacteristicEntityFactory().withModelScope("room").withPropertyName("hasEnSuite").produce())
+      .withCriteria(Cas1CharacteristicEntityFactory().withModelScope("room").withPropertyName("hasEnSuite").produce())
       .produce()
 
     val changeRequestId = UUID.randomUUID()
@@ -555,8 +555,8 @@ class Cas1BookingDomainEventServiceTest {
 
     @Test
     fun `should successfully emit domain event for expected arrival departure date changes and characteristic`() {
-      val roomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("isArsonSuitable").produce()
-      val previousRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("hasEnSuite").produce()
+      val roomCharacteristic = Cas1CharacteristicEntityFactory().withModelScope("room").withPropertyName("isArsonSuitable").produce()
+      val previousRoomCharacteristic = Cas1CharacteristicEntityFactory().withModelScope("room").withPropertyName("hasEnSuite").produce()
 
       val booking = Cas1SpaceBookingEntityFactory()
         .withPremises(premises)

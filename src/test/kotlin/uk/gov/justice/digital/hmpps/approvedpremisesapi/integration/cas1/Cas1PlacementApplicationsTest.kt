@@ -1119,10 +1119,10 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
         withAssessment(placementApplicationEntity.application.getLatestAssessment()!! as ApprovedPremisesAssessmentEntity)
         withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
         withDesirableCriteria(
-          characteristicEntityFactory.produceAndPersistMultiple(5),
+          cas1CharacteristicEntityFactory.produceAndPersistMultiple(5),
         )
         withEssentialCriteria(
-          characteristicEntityFactory.produceAndPersistMultiple(3),
+          cas1CharacteristicEntityFactory.produceAndPersistMultiple(3),
         )
         withCreatedAt(createdAt)
       }

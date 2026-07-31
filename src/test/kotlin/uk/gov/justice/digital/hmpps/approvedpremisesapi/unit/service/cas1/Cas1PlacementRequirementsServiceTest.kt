@@ -14,12 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PostCodeDistrictEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 
 @ExtendWith(MockKExtension::class)
@@ -29,7 +29,7 @@ class Cas1PlacementRequirementsServiceTest {
   private lateinit var postcodeDistrictRepository: PostcodeDistrictRepository
 
   @MockK
-  private lateinit var characteristicRepository: CharacteristicRepository
+  private lateinit var cas1CharacteristicRepository: Cas1CharacteristicRepository
 
   @MockK
   private lateinit var placementRequirementsRepository: PlacementRequirementsRepository
@@ -46,8 +46,7 @@ class Cas1PlacementRequirementsServiceTest {
         .withDefaults()
         .produce()
 
-      fun createCas1Characteristic(propertyName: String) = CharacteristicEntityFactory()
-        .withServiceScope("approved-premises")
+      fun createCas1Characteristic(propertyName: String) = Cas1CharacteristicEntityFactory()
         .withPropertyName(propertyName)
         .produce()
 
@@ -64,22 +63,20 @@ class Cas1PlacementRequirementsServiceTest {
       } returnsArgument 0
 
       every {
-        characteristicRepository.findAllWherePropertyNameIn(
+        cas1CharacteristicRepository.findAllWherePropertyNameIn(
           listOf(
             "isSingle",
             "isPIPE",
           ),
-          "approved-premises",
         )
       } returns listOf(characteristicIsSingle, characteristicIsPipe)
 
       every {
-        characteristicRepository.findAllWherePropertyNameIn(
+        cas1CharacteristicRepository.findAllWherePropertyNameIn(
           listOf(
             "isESAP",
             "isCatered",
           ),
-          "approved-premises",
         )
       } returns listOf(characteristicIsEsap, characteristicIsCatered)
 

@@ -11,10 +11,6 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.ExcelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
@@ -24,6 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS
 import java.io.File
 import java.util.UUID
 
@@ -41,7 +41,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   private val premisesRepository: ApprovedPremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
-  private val characteristicRepository: CharacteristicRepository,
+  private val cas1CharacteristicRepository: Cas1CharacteristicRepository,
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
   private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val entityManager: EntityManager,
@@ -148,7 +148,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     val siteSurveyPremise: Cas1SiteSurveyPremise,
     val probationRegion: ProbationRegionEntity,
     val localAuthorityArea: LocalAuthorityAreaEntity,
-    val characteristicEntities: List<CharacteristicEntity>,
+    val characteristicEntities: List<Cas1CharacteristicEntity>,
     val longitude: Double,
     val latitude: Double,
     var point: Point,
@@ -315,7 +315,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun resolveCharacteristics(siteSurveyPremise: Cas1SiteSurveyPremise): List<CharacteristicEntity> {
+  private fun resolveCharacteristics(siteSurveyPremise: Cas1SiteSurveyPremise): List<Cas1CharacteristicEntity> {
     val specifiedCharacteristics = listOf(
       CharacteristicRequired("isIAP", siteSurveyPremise.iap),
       CharacteristicRequired("isPIPE", siteSurveyPremise.pipe),
@@ -369,7 +369,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun premiseCharacteristicsByPropertyName(propertyName: String) = characteristicRepository.findCas1ByPropertyNameAndScope(
+  private fun premiseCharacteristicsByPropertyName(propertyName: String) = cas1CharacteristicRepository.findByPropertyNameAndModelScope(
     propertyName = propertyName,
     modelName = "premises",
   ) ?: throw RuntimeException("Characteristic '$propertyName' does not exist for AP premises")

@@ -20,6 +20,7 @@ interface Cas3PremisesCharacteristicRepository :
 
   companion object Constants {
     const val CAS3_PROPERTY_NAME_SINGLE_OCCUPANCY = "isSingleOccupancy"
+    const val CAS3_PROPERTY_NAME_SHARED_PROPERTY = "isSharedProperty"
     const val CAS3_PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE = "isWheelchairAccessible"
     const val CAS3_PROPERTY_NAME_MEN_ONLY = "isMenOnly"
     const val CAS3_PROPERTY_NAME_WOMEN_ONLY = "isWomenOnly"

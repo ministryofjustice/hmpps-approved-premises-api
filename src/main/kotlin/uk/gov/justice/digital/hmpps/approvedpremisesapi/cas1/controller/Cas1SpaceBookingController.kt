@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApprovedPlacementAppeal
@@ -41,12 +40,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadReques
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_TRANSFER_CREATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
@@ -222,7 +221,7 @@ class Cas1SpaceBookingController(
     val characteristics = (cas1UpdateSpaceBooking.characteristics ?: emptyList())
       .map { it.value }
       .let { values ->
-        characteristicService.getCharacteristicsByPropertyNames(values, ServiceName.approvedPremises)
+        characteristicService.getCas1CharacteristicsByPropertyNames(values)
       }
       .filter { it.isModelScopeRoom() }
 
@@ -519,11 +518,10 @@ class Cas1SpaceBookingController(
     return Pair(arrivalDate, LocalTime.parse(arrivalTime))
   }
 
-  private fun getRequestedCharacteristics(newSpaceBooking: Cas1NewSpaceBooking): List<CharacteristicEntity> {
+  private fun getRequestedCharacteristics(newSpaceBooking: Cas1NewSpaceBooking): List<Cas1CharacteristicEntity> {
     val requestedCharacteristics = newSpaceBooking.characteristics ?: emptyList()
-    return characteristicService.getCharacteristicsByPropertyNames(
+    return characteristicService.getCas1CharacteristicsByPropertyNames(
       requestedCharacteristics.map { it.value },
-      ServiceName.approvedPremises,
     )
   }
 }

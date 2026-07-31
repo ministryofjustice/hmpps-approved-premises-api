@@ -6,12 +6,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
 import java.time.LocalDate
@@ -23,7 +23,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   application: ApprovedPremisesApplicationEntity? = null,
   deliusEventNumber: String? = null,
   offlineApplication: OfflineApplicationEntity? = null,
-  criteria: List<CharacteristicEntity>? = null,
+  criteria: List<Cas1CharacteristicEntity>? = null,
   placementRequest: PlacementRequestEntity? = null,
   expectedArrivalDate: LocalDate = LocalDate.now(),
   canonicalArrivalDate: LocalDate = expectedArrivalDate,
@@ -70,7 +70,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withCreatedBy(user)
     withDeliusEventNumber(deliusEventNumber)
     withPremises(premises ?: givenAnApprovedPremises())
-    withCriteria(criteria?.toMutableList() ?: emptyList<CharacteristicEntity>().toMutableList())
+    withCriteria(criteria?.toMutableList() ?: emptyList<Cas1CharacteristicEntity>().toMutableList())
     withNonArrivalConfirmedAt(nonArrivalConfirmedAt)
     withNonArrivalReason(nonArrivalReason)
     withNonArrivalNotes(nonArrivalNotes)

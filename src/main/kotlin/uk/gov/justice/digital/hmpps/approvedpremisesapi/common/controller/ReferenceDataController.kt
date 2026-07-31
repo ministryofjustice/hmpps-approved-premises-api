@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.Forbidden
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
@@ -43,9 +42,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
@@ -54,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CharacteristicTransformer
 import java.util.UUID
 
 @RestController
@@ -65,7 +65,7 @@ class ReferenceDataController(
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val cas3VoidBedspaceReasonRepository: Cas3VoidBedspaceReasonRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
-  private val characteristicRepository: CharacteristicRepository,
+  private val cas1CharacteristicRepository: Cas1CharacteristicRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
@@ -76,7 +76,7 @@ class ReferenceDataController(
   private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val cas3VoidBedspaceReasonTransformer: Cas3VoidBedspaceReasonTransformer,
   private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer,
-  private val characteristicTransformer: CharacteristicTransformer,
+  private val cas1CharacteristicTransformer: Cas1CharacteristicTransformer,
   private val probationRegionTransformer: ProbationRegionTransformer,
   private val nonArrivalReasonTransformer: NonArrivalReasonTransformer,
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
@@ -105,12 +105,17 @@ class ReferenceDataController(
     )
     @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
     @RequestParam(value = "modelScope", required = false) modelScope: String?,
-  ): ResponseEntity<List<Characteristic>> = ResponseEntity.ok(
-    characteristicRepository.findActiveByServiceScopeAndModelScope(
-      serviceScope = xServiceName?.value ?: "*",
-      modelScope = toModelScopeEnum(modelScope).value,
-    ).map(characteristicTransformer::transformJpaToApi),
-  )
+  ): ResponseEntity<List<Characteristic>> {
+    val characteristics = when (xServiceName == ServiceName.approvedPremises) {
+      true -> cas1CharacteristicRepository.findActiveByModelScope(
+        modelScope = toModelScopeEnum(modelScope).value,
+      )
+
+      false -> throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(characteristics.map(cas1CharacteristicTransformer::transformJpaToApi))
+  }
 
   /*
   this can be refactored to use the enum directly in the controller

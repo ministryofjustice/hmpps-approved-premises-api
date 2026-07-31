@@ -17,9 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getCharacteristicPropertyNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getOpenChangeRequestTypes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -281,9 +281,9 @@ class Cas1SpaceBookingTransformer(
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() = this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
+    fun List<Cas1CharacteristicEntity>.toCas1SpaceCharacteristics() = this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
 
-    private fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() = Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
+    private fun Cas1CharacteristicEntity.toCas1SpaceCharacteristicOrNull() = Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
       log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
       null
     }

@@ -27,13 +27,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
@@ -93,17 +93,17 @@ class PlacementRequestTransformerTest {
     .withAssessment(assessment)
     .withEssentialCriteria(
       listOf(
-        CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
-        CharacteristicEntityFactory().withPropertyName("isRecoveryFocussed").produce(),
-        CharacteristicEntityFactory().withPropertyName("someOtherPropertyName").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("isRecoveryFocussed").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("someOtherPropertyName").produce(),
       ),
     )
     .withDesirableCriteria(
       listOf(
-        CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
-        CharacteristicEntityFactory().withPropertyName("isSingle").produce(),
-        CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
-        CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("isSingle").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
+        Cas1CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
       ),
     )
 
@@ -134,17 +134,17 @@ class PlacementRequestTransformerTest {
       val placementRequirementsEntity = placementRequirementsFactory
         .withEssentialCriteria(
           listOf(
-            CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
-            CharacteristicEntityFactory().withPropertyName("isRecoveryFocussed").produce(),
-            CharacteristicEntityFactory().withPropertyName("someOtherPropertyName").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("isRecoveryFocussed").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("someOtherPropertyName").produce(),
           ),
         )
         .withDesirableCriteria(
           listOf(
-            CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
-            CharacteristicEntityFactory().withPropertyName("isSingle").produce(),
-            CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
-            CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("isSingle").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
+            Cas1CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
           ),
         )
         .withApType(JpaApType.ESAP)

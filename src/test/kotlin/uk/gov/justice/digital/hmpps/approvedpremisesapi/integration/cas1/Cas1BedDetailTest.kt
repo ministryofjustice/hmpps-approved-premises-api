@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1BedDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -60,7 +59,7 @@ class Cas1BedDetailTest : InitialiseDatabasePerClassTestBase() {
         withYieldedRoom {
           cas1RoomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
-            withCharacteristics(*(listOf("hasEnSuite", "isGroundFloor").map { characteristicRepository.findByPropertyNameAndScopes(it, ServiceName.approvedPremises.value, "room")!! }).toTypedArray())
+            withCharacteristics(*(listOf("hasEnSuite", "isGroundFloor").map { cas1CharacteristicRepository.findByPropertyNameAndModelScope(it, "room")!! }).toTypedArray())
           }
         }
       }

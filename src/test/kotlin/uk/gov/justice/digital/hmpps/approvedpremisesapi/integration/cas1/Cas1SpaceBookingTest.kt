@@ -663,20 +663,18 @@ class Cas1SpaceBookingTest {
     @BeforeAll
     fun setupTestData() {
       super.setupRegionAndKeyWorkerAndPremises()
-      characteristicRepository.deleteAll()
+      cas1CharacteristicRepository.deleteAll()
 
       val criteria = mutableListOf(
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withName("Single room")
           withPropertyName("isSingle")
-          withServiceScope("approved-premises")
 
           withModelScope("room")
         },
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withName("Wheelchair accessible")
           withPropertyName("isWheelchairAccessible")
-          withServiceScope("approved-premises")
           withModelScope("premises")
         },
       )
@@ -2877,7 +2875,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      characteristicRepository.deleteAll()
+      cas1CharacteristicRepository.deleteAll()
 
       region = givenAProbationRegion()
 
@@ -2985,28 +2983,24 @@ class Cas1SpaceBookingTest {
       val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
       val characteristics = mutableListOf(
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withName("Arson Room")
           withPropertyName("isArsonSuitable")
-          withServiceScope("approved-premises")
           withModelScope("room")
         },
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withName("En-Suit")
           withPropertyName("hasEnSuite")
-          withServiceScope("approved-premises")
           withModelScope("room")
         },
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withName("Single room")
           withPropertyName("isSingle")
-          withServiceScope("approved-premises")
           withModelScope("room")
         },
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withName("Wheelchair accessible")
           withPropertyName("isWheelchairAccessible")
-          withServiceScope("approved-premises")
           withModelScope("premises")
         },
       )
@@ -3078,16 +3072,14 @@ class Cas1SpaceBookingTest {
       )
 
       val characteristics = mutableListOf(
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withName("Step Free Designated")
           withPropertyName("isStepFreeDesignated")
-          withServiceScope("approved-premises")
           withModelScope("room")
         },
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withName("Catered")
           withPropertyName("isCatered")
-          withServiceScope("approved-premises")
           withModelScope("premises")
         },
       )
@@ -3231,7 +3223,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      characteristicRepository.deleteAll()
+      cas1CharacteristicRepository.deleteAll()
 
       region = givenAProbationRegion()
 
@@ -3355,7 +3347,7 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
-      characteristicRepository.deleteAll()
+      cas1CharacteristicRepository.deleteAll()
 
       region = givenAProbationRegion()
 

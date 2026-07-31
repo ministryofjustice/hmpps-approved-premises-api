@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomRepository
@@ -24,7 +24,7 @@ class ApprovedPremisesRoomsSeedJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val roomRepository: Cas1RoomRepository,
   private val bedRepository: Cas1BedRepository,
-  private val characteristicRepository: CharacteristicRepository,
+  private val cas1CharacteristicRepository: Cas1CharacteristicRepository,
 ) : SeedJob<ApprovedPremisesRoomsSeedCsvRow>(
   requiredHeaders = setOf(
     "apCode",
@@ -98,7 +98,7 @@ class ApprovedPremisesRoomsSeedJob(
     createOrUpdateBed(room, row)
   }
 
-  private fun createOrUpdateRoom(row: ApprovedPremisesRoomsSeedCsvRow, characteristics: List<CharacteristicEntity>, premises: Cas1PremisesBaseEntity): Cas1RoomEntity {
+  private fun createOrUpdateRoom(row: ApprovedPremisesRoomsSeedCsvRow, characteristics: List<Cas1CharacteristicEntity>, premises: Cas1PremisesBaseEntity): Cas1RoomEntity {
     val roomCode = "${row.apCode}-${row.roomNumber}"
 
     val room = when (val existingRoom = roomRepository.findByCode(roomCode)) {
@@ -176,7 +176,7 @@ class ApprovedPremisesRoomsSeedJob(
     )
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun characteristicsFromRow(row: ApprovedPremisesRoomsSeedCsvRow): List<CharacteristicEntity> = listOf(
+  private fun characteristicsFromRow(row: ApprovedPremisesRoomsSeedCsvRow): List<Cas1CharacteristicEntity> = listOf(
     CharacteristicValue("isSingle", castBooleanString(row.isSingle)),
     CharacteristicValue("isGroundFloor", castBooleanString(row.isGroundFloor)),
     CharacteristicValue("isFullyFm", castBooleanString(row.isFullyFm)),
@@ -200,7 +200,7 @@ class ApprovedPremisesRoomsSeedJob(
     CharacteristicValue("isStepFreeDesignated", castBooleanString(row.isStepFreeDesignated)),
   ).filter { it.value }
     .map {
-      characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "room")
+      cas1CharacteristicRepository.findByPropertyNameAndModelScope(propertyName = it.propertyName, modelName = "room")
         ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP room")
     }
 

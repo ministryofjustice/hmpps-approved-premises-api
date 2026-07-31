@@ -20,7 +20,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @BeforeEach
   fun removeDefaultCharacteristicsFromDatabaseMigrations() {
-    characteristicRepository.deleteAll()
+    cas1CharacteristicRepository.deleteAll()
   }
 
   @Test
@@ -31,11 +31,10 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
 
-    characteristicEntityFactory.produceAndPersist {
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
       withPropertyName("isArsonSuitable")
       withModelScope("room")
-      withServiceScope("temporary-accommodation")
     }
 
     seed(
@@ -68,11 +67,10 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
 
-    characteristicEntityFactory.produceAndPersist {
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
       withPropertyName("isArsonSuitable")
       withModelScope("premises")
-      withServiceScope("approved-premises")
     }
 
     seed(
@@ -176,10 +174,9 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Test
   fun `Creating new AP rooms with beds persists correctly`() {
-    characteristicEntityFactory.produceAndPersist {
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withPropertyName("isArsonSuitable")
       withModelScope("room")
-      withServiceScope("approved-premises")
     }
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -237,12 +234,11 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Test
   fun `Updating an existing AP room and beds persists correctly`() {
-    characteristicRepository.deleteAll()
+    cas1CharacteristicRepository.deleteAll()
 
-    val arsonCharacteristic = characteristicEntityFactory.produceAndPersist {
+    val arsonCharacteristic = cas1CharacteristicEntityFactory.produceAndPersist {
       withPropertyName("isArsonSuitable")
       withModelScope("room")
-      withServiceScope("approved-premises")
     }
 
     val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -275,10 +271,9 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
     // update the room with new notes, another characteristic, change the bed's name and add an additional bed
 
-    characteristicEntityFactory.produceAndPersist {
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withPropertyName("isGroundFloor")
       withModelScope("room")
-      withServiceScope("approved-premises")
     }
 
     val rowRoom4A = ApprovedPremisesRoomsSeedCsvRowFactory()

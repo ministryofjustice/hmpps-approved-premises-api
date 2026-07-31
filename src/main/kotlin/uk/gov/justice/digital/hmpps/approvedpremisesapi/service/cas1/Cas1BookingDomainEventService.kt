@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -28,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -415,7 +415,7 @@ class Cas1BookingDomainEventService(
     val transferredTo: TransferInfo? = null,
   )
 
-  private fun List<CharacteristicEntity>.toSpaceCharacteristics(): List<SpaceCharacteristic> = this.map { it.asSpaceCharacteristic() }
+  private fun List<Cas1CharacteristicEntity>.toSpaceCharacteristics(): List<SpaceCharacteristic> = this.map { it.asSpaceCharacteristic() }
 
-  private fun CharacteristicEntity.asSpaceCharacteristic() = SpaceCharacteristic.entries.first { it.value == this.propertyName }
+  private fun Cas1CharacteristicEntity.asSpaceCharacteristic() = SpaceCharacteristic.entries.first { it.value == this.propertyName }
 }

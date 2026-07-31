@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
@@ -26,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCatego
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CharacteristicTransformer
 import java.util.Optional
 import java.util.UUID
 
@@ -49,7 +49,7 @@ class ReferenceDataTest : IntegrationTestBase() {
   lateinit var localAuthorityAreaTransformer: LocalAuthorityAreaTransformer
 
   @Autowired
-  lateinit var characteristicTransformer: CharacteristicTransformer
+  lateinit var cas1CharacteristicTransformer: Cas1CharacteristicTransformer
 
   @Autowired
   lateinit var probationRegionTransformer: ProbationRegionTransformer
@@ -67,10 +67,10 @@ class ReferenceDataTest : IntegrationTestBase() {
   inner class GetCharacteristics {
 
     private fun setupCharacteristics() {
-      characteristicRepository.deleteAll()
+      cas1CharacteristicRepository.deleteAll()
 
       Characteristic.ModelScope.entries.forEach { entry ->
-        characteristicEntityFactory.produceAndPersist {
+        cas1CharacteristicEntityFactory.produceAndPersist {
           withIsActive(true)
           withModelScope(entry.value)
         }
@@ -86,6 +86,7 @@ class ReferenceDataTest : IntegrationTestBase() {
             .build()
         }
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "approved-premises")
         .exchange()
         .expectStatus()
         .isOk
@@ -96,58 +97,11 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     @Test
     fun `Get Characteristics returns 200 with correct body`() {
-      characteristicRepository.deleteAll()
+      cas1CharacteristicRepository.deleteAll()
 
-      val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10)
+      val characteristics = cas1CharacteristicEntityFactory.produceAndPersistMultiple(10)
       val expectedJson = jsonMapper.writeValueAsString(
-        characteristics.map(characteristicTransformer::transformJpaToApi),
-      )
-
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-      webTestClient.get()
-        .uri("/reference-data/characteristics")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(expectedJson)
-    }
-
-    @Test
-    fun `Get Characteristics for only temporary accommodation returns 200 with correct body`() {
-      characteristicRepository.deleteAll()
-
-      val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
-      val expectedJson = jsonMapper.writeValueAsString(
-        characteristics.map(characteristicTransformer::transformJpaToApi),
-      )
-
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-      webTestClient.get()
-        .uri("/reference-data/characteristics")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", "temporary-accommodation")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(expectedJson)
-    }
-
-    @Test
-    fun `Get Characteristics for only approved premises returns 200 with correct body`() {
-      characteristicRepository.deleteAll()
-
-      val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
-        withServiceScope(ServiceName.approvedPremises.value)
-      }
-      val expectedJson = jsonMapper.writeValueAsString(
-        characteristics.map(characteristicTransformer::transformJpaToApi),
+        characteristics.map(cas1CharacteristicTransformer::transformJpaToApi),
       )
 
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -163,23 +117,61 @@ class ReferenceDataTest : IntegrationTestBase() {
         .json(expectedJson)
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = ["cas2", "cas2v2", "temporary-accommodation"])
+    fun `Get Characteristics returns 403 when X-Service-Name is not approved-premises`(serviceName: String) {
+      cas1CharacteristicRepository.deleteAll()
+
+      cas1CharacteristicEntityFactory.produceAndPersistMultiple(10) {
+        withIsActive(true)
+      }
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/reference-data/characteristics")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", serviceName)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Get Characteristics returns 403 when no X-Service-Name header is provided`() {
+      cas1CharacteristicRepository.deleteAll()
+
+      cas1CharacteristicEntityFactory.produceAndPersistMultiple(10) {
+        withIsActive(true)
+      }
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/reference-data/characteristics")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
     @Test
     fun `Get Characteristics returns only active characteristics by default`() {
-      characteristicRepository.deleteAll()
+      cas1CharacteristicRepository.deleteAll()
 
-      val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+      val characteristics = cas1CharacteristicEntityFactory.produceAndPersistMultiple(10) {
         withIsActive(true)
       }
 
       // Unexpected characteristics
-      characteristicEntityFactory.produceAndPersistMultiple(10) {
+      cas1CharacteristicEntityFactory.produceAndPersistMultiple(10) {
         withIsActive(false)
       }
 
       val response = doRequest(modelScope = null)
 
       assertThat(response).isNotNull.hasSize(characteristics.size)
-      val expectedResponse = characteristics.map(characteristicTransformer::transformJpaToApi)
+      val expectedResponse = characteristics.map(cas1CharacteristicTransformer::transformJpaToApi)
       assertThat(response!!.containsAll(expectedResponse)).isTrue()
     }
 

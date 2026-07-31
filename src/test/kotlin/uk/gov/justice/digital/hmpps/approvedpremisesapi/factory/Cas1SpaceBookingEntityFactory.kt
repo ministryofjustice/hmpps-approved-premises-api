@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
@@ -16,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
 import java.time.LocalDate
@@ -51,7 +51,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var departureReason: Yielded<DepartureReasonEntity?> = { null }
   private var departureMoveOnCategory: Yielded<MoveOnCategoryEntity?> = { null }
   private var departureNotes: Yielded<String?> = { null }
-  private var criteria: Yielded<MutableList<CharacteristicEntity>> = { emptyList<CharacteristicEntity>().toMutableList() }
+  private var criteria: Yielded<MutableList<Cas1CharacteristicEntity>> = { emptyList<Cas1CharacteristicEntity>().toMutableList() }
   private var nonArrivalConfirmedAt: Yielded<Instant?> = { null }
   private var nonArrivalReason: Yielded<NonArrivalReasonEntity?> = { null }
   private var nonArrivalNotes: Yielded<String?> = { null }
@@ -182,7 +182,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.departureMoveOnCategory = { moveOnCategory }
   }
 
-  fun withCriteria(criteria: MutableList<CharacteristicEntity>) = apply {
+  fun withCriteria(criteria: MutableList<Cas1CharacteristicEntity>) = apply {
     this.criteria = { criteria }
   }
 
@@ -202,7 +202,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.deliusEventNumber = { deliusEventNumber }
   }
 
-  fun withCriteria(vararg criteria: CharacteristicEntity) = apply {
+  fun withCriteria(vararg criteria: Cas1CharacteristicEntity) = apply {
     this.criteria = { criteria.toMutableList() }
   }
 

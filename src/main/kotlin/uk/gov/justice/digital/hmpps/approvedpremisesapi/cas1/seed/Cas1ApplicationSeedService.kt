@@ -25,13 +25,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity.Companion.CHARACTERISTICS_OF_INTEREST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
@@ -73,7 +73,7 @@ class Cas1ApplicationSeedService(
   private val spaceBookingService: Cas1SpaceBookingService,
   private val placementRequestRepository: PlacementRequestRepository,
   private val premisesRepository: ApprovedPremisesRepository,
-  private val characteristicsRepository: CharacteristicRepository,
+  private val characteristicsRepository: Cas1CharacteristicRepository,
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val expiredApplicationsScheduledJob: Cas1ExpiredApplicationsScheduledJob,
   private val expireUnsubmittedApplicationsScheduledJob: Cas1ExpireUnsubmittedApplicationsScheduledJob,
@@ -331,7 +331,7 @@ class Cas1ApplicationSeedService(
           departureDate = departureDate,
         ),
         createdBy = application.createdByUser,
-        characteristics = characteristicsRepository.findAllWherePropertyNameIn(characteristics, "approved-premises"),
+        characteristics = characteristicsRepository.findAllWherePropertyNameIn(characteristics),
       ),
     )
   }
@@ -391,7 +391,7 @@ class Cas1ApplicationSeedService(
         departureMoveOnCategory = null,
         departureReason = null,
         departureNotes = null,
-        criteria = emptyList<CharacteristicEntity>().toMutableList(),
+        criteria = emptyList<Cas1CharacteristicEntity>().toMutableList(),
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
         nonArrivalReason = null,

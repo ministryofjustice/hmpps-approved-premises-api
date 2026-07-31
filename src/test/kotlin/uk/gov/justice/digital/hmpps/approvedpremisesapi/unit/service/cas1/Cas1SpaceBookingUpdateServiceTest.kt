@@ -14,8 +14,8 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -313,7 +313,7 @@ class Cas1SpaceBookingUpdateServiceTest {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
       val originalRoomCharacteristic =
-        CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+        Cas1CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
       val updateBookingDetails = UpdateBookingDetails(
@@ -323,7 +323,7 @@ class Cas1SpaceBookingUpdateServiceTest {
         departureDate = newDepartureDate,
         updatedBy = user,
         characteristics = listOf(
-          CharacteristicEntityFactory()
+          Cas1CharacteristicEntityFactory()
             .withPropertyName("hasEnSuite")
             .withModelScope("room")
             .produce(),
@@ -417,7 +417,7 @@ class Cas1SpaceBookingUpdateServiceTest {
     fun `should correctly update booking dates and characteristics`() {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
-      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      val originalRoomCharacteristic = Cas1CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
       val updateBookingDetails = UpdateBookingDetails(
@@ -427,7 +427,7 @@ class Cas1SpaceBookingUpdateServiceTest {
         departureDate = newDepartureDate,
         updatedBy = user,
         characteristics = listOf(
-          CharacteristicEntityFactory()
+          Cas1CharacteristicEntityFactory()
             .withPropertyName("hasEnSuite")
             .withModelScope("room")
             .produce(),
@@ -479,7 +479,7 @@ class Cas1SpaceBookingUpdateServiceTest {
     fun `should remove all room characteristics when no characteristics are provided`() {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
-      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      val originalRoomCharacteristic = Cas1CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
       val updateBookingDetails = UpdateBookingDetails(
@@ -533,7 +533,7 @@ class Cas1SpaceBookingUpdateServiceTest {
     fun `should not send booking amended email when only characteristics are changed`() {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
-      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      val originalRoomCharacteristic = Cas1CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
       val updateBookingDetails = UpdateBookingDetails(
@@ -583,7 +583,7 @@ class Cas1SpaceBookingUpdateServiceTest {
         .withApplication(null)
         .produce()
 
-      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      val originalRoomCharacteristic = Cas1CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
       val updateBookingDetails = UpdateBookingDetails(

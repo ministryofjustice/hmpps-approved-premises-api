@@ -3,18 +3,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import java.util.UUID
 
 @Service
 class Cas1UpdateSpaceBookingSeedJob(
   val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
-  val characteristicRepository: CharacteristicRepository,
+  val cas1CharacteristicRepository: Cas1CharacteristicRepository,
 ) : SeedJob<Cas1UpdateSpaceBookingSeedJobCsvRow>(
   requiredHeaders = setOf(
     "space_booking_id",
@@ -93,7 +92,7 @@ class Cas1UpdateSpaceBookingSeedJob(
     spaceBooking.criteria.clear()
     if (updatedCriteria.isNotEmpty()) {
       spaceBooking.criteria.addAll(
-        characteristicRepository.findAllWherePropertyNameIn(updatedCriteria, ServiceName.approvedPremises.value),
+        cas1CharacteristicRepository.findAllWherePropertyNameIn(updatedCriteria),
       )
     }
   }

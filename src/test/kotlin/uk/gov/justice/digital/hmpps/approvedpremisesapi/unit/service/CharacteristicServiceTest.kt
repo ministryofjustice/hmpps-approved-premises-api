@@ -1,200 +1,109 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import org.junit.jupiter.api.assertNull
+import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceCharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1RoomEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import java.util.UUID
 
 class CharacteristicServiceTest {
-  private val characteristicRepository = mockk<CharacteristicRepository>()
-  private val bedspaceCharacteristicRepository = mockk<Cas3BedspaceCharacteristicRepository>()
-  private val premisesCharacteristicRepository = mockk<Cas3PremisesCharacteristicRepository>()
-  private val characteristicService = CharacteristicService(characteristicRepository, bedspaceCharacteristicRepository, premisesCharacteristicRepository)
+  private val cas1CharacteristicRepository = mockk<Cas1CharacteristicRepository>()
+  private val cas3BedspaceCharacteristicRepository = mockk<Cas3BedspaceCharacteristicRepository>()
+  private val cas3PremisesCharacteristicRepository = mockk<Cas3PremisesCharacteristicRepository>()
+  private val characteristicService = CharacteristicService(
+    cas1CharacteristicRepository,
+    cas3BedspaceCharacteristicRepository,
+    cas3PremisesCharacteristicRepository,
+  )
 
   @Test
-  fun `serviceScopeMatches returns false if the characteristic has the wrong service scope`() {
-    val characteristicEntityFactory = CharacteristicEntityFactory()
-    val roomEntityFactory = Cas1RoomEntityFactory()
+  fun `getCas1CharacteristicsByPropertyNames delegates to the cas1 repository and returns the matching characteristics`() {
+    val propertyNames = listOf("isPIPE", "isESAP")
+    val expected = listOf(
+      Cas1CharacteristicEntityFactory().withPropertyName("isPIPE").produce(),
+      Cas1CharacteristicEntityFactory().withPropertyName("isESAP").produce(),
+    )
 
-    val characteristic = characteristicEntityFactory
-      .withModelScope("*")
-      .withServiceScope(ServiceName.temporaryAccommodation.value)
-      .produce()
+    every { cas1CharacteristicRepository.findAllWherePropertyNameIn(propertyNames) } returns expected
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
+    val result = characteristicService.getCas1CharacteristicsByPropertyNames(propertyNames)
 
-    val localAuthorityArea = LocalAuthorityEntityFactory().produce()
-
-    val room: Cas1RoomEntity = roomEntityFactory
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion { probationRegion }
-          .withYieldedLocalAuthorityArea { localAuthorityArea }
-          .produce()
-      }
-      .produce()
-
-    assertThat(characteristicService.serviceScopeMatches(characteristic, room)).isFalse
+    assertThat(result).isEqualTo(expected)
+    verify(exactly = 1) { cas1CharacteristicRepository.findAllWherePropertyNameIn(propertyNames) }
   }
 
   @Test
-  fun `modelScopeMatches returns false if the characteristic has the wrong model scope`() {
-    val characteristicEntityFactory = CharacteristicEntityFactory()
+  fun `getCas1CharacteristicsByPropertyNames returns an empty list when no characteristics match`() {
+    val propertyNames = listOf("doesNotExist")
 
-    val characteristic1 = characteristicEntityFactory
-      .withModelScope("room")
-      .withServiceScope("*")
-      .produce()
+    every { cas1CharacteristicRepository.findAllWherePropertyNameIn(propertyNames) } returns emptyList()
 
-    val characteristic2 = characteristicEntityFactory
-      .withModelScope("premises")
-      .withServiceScope("*")
-      .produce()
+    val result = characteristicService.getCas1CharacteristicsByPropertyNames(propertyNames)
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
-
-    val localAuthorityArea = LocalAuthorityEntityFactory().produce()
-
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
-    val room = Cas1RoomEntityFactory()
-      .withYieldedPremises { premises }
-      .produce()
-
-    assertThat(characteristicService.modelScopeMatches(characteristic1, premises)).isFalse
-    assertThat(characteristicService.modelScopeMatches(characteristic2, room)).isFalse
+    assertThat(result).isEmpty()
   }
 
   @Test
-  fun `serviceScopeMatches returns true if the service scope is correct`() {
-    val characteristicEntityFactory = CharacteristicEntityFactory()
-    val roomEntityFactory = Cas1RoomEntityFactory()
+  fun `getCas3BedspaceCharacteristic returns the characteristic when it exists`() {
+    val id = UUID.randomUUID()
+    val expected = Cas3BedspaceCharacteristicEntityFactory().withId(id).produce()
 
-    val characteristic1 = characteristicEntityFactory
-      .withModelScope("*")
-      .withServiceScope(ServiceName.approvedPremises.value)
-      .produce()
+    every { cas3BedspaceCharacteristicRepository.findByIdOrNull(id) } returns expected
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
+    val result = characteristicService.getCas3BedspaceCharacteristic(id)
 
-    val localAuthorityArea = LocalAuthorityEntityFactory().produce()
-
-    val premises1 = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
-    val room1: Cas1RoomEntity = roomEntityFactory
-      .withYieldedPremises { premises1 }
-      .produce()
-
-    assertThat(characteristicService.serviceScopeMatches(characteristic1, room1)).isTrue
-    assertThat(characteristicService.serviceScopeMatches(characteristic1, premises1)).isTrue
+    assertThat(result).isEqualTo(expected)
+    verify(exactly = 1) { cas3BedspaceCharacteristicRepository.findByIdOrNull(id) }
   }
 
   @Test
-  fun `modelScopeMatches returns true if the model scope is correct`() {
-    val characteristicEntityFactory = CharacteristicEntityFactory()
-    val roomEntityFactory = Cas1RoomEntityFactory()
+  fun `getCas3BedspaceCharacteristic returns null when the characteristic does not exist`() {
+    val id = UUID.randomUUID()
 
-    val characteristic1 = characteristicEntityFactory
-      .withModelScope("room")
-      .withServiceScope("*")
-      .produce()
+    every { cas3BedspaceCharacteristicRepository.findByIdOrNull(id) } returns null
 
-    val characteristic2 = characteristicEntityFactory
-      .withModelScope("premises")
-      .withServiceScope("*")
-      .produce()
+    val result = characteristicService.getCas3BedspaceCharacteristic(id)
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
-
-    val localAuthorityArea = LocalAuthorityEntityFactory().produce()
-
-    val premises1 = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
-    val room: Cas1RoomEntity = roomEntityFactory
-      .withYieldedPremises { premises1 }
-      .produce()
-
-    assertThat(characteristicService.modelScopeMatches(characteristic1, room)).isTrue
-    assertThat(characteristicService.modelScopeMatches(characteristic2, premises1)).isTrue
+    assertNull(result)
   }
 
   @Test
-  fun `serviceScopeMatches always matches on wildcard scopes`() {
-    val characteristic = CharacteristicEntityFactory()
-      .withModelScope("*")
-      .withServiceScope("*")
-      .produce()
+  fun `getCas3BedspaceCharacteristics returns only active bedspace characteristics`() {
+    val expected = listOf(
+      Cas3BedspaceCharacteristicEntityFactory().withIsActive(true).produce(),
+      Cas3BedspaceCharacteristicEntityFactory().withIsActive(true).produce(),
+    )
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
+    every { cas3BedspaceCharacteristicRepository.findByActive(active = true) } returns expected
 
-    val localAuthorityArea = LocalAuthorityEntityFactory().produce()
+    val result = characteristicService.getCas3BedspaceCharacteristics()
 
-    val premises1 = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
-    val room: Cas1RoomEntity = Cas1RoomEntityFactory()
-      .withYieldedPremises { premises1 }
-      .produce()
-
-    assertThat(characteristicService.serviceScopeMatches(characteristic, room)).isTrue
-    assertThat(characteristicService.serviceScopeMatches(characteristic, premises1)).isTrue
+    assertThat(result).isEqualTo(expected)
+    verify(exactly = 1) { cas3BedspaceCharacteristicRepository.findByActive(active = true) }
   }
 
   @Test
-  fun `modelScopeMatches always matches on wildcard scopes`() {
-    val characteristic = CharacteristicEntityFactory()
-      .withModelScope("*")
-      .withServiceScope("*")
-      .produce()
+  fun `getCas3PremisesCharacteristics returns only active premises characteristics`() {
+    val expected = listOf(
+      Cas3PremisesCharacteristicEntityFactory().isActive(true).produce(),
+      Cas3PremisesCharacteristicEntityFactory().isActive(true).produce(),
+    )
 
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
+    every { cas3PremisesCharacteristicRepository.findByActive(active = true) } returns expected
 
-    val localAuthorityArea = LocalAuthorityEntityFactory().produce()
+    val result = characteristicService.getCas3PremisesCharacteristics()
 
-    val premises1 = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
-    val room: Cas1RoomEntity = Cas1RoomEntityFactory()
-      .withYieldedPremises { premises1 }
-      .produce()
-
-    assertThat(characteristicService.modelScopeMatches(characteristic, room)).isTrue
-    assertThat(characteristicService.modelScopeMatches(characteristic, premises1)).isTrue
+    assertThat(result).isEqualTo(expected)
+    verify(exactly = 1) { cas3PremisesCharacteristicRepository.findByActive(active = true) }
   }
 }
