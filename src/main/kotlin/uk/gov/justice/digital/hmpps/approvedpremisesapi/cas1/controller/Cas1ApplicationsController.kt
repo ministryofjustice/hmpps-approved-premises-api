@@ -485,7 +485,7 @@ class Cas1ApplicationsController(
       val crn = it.getCrn()
       applicationsTransformer.transformDomainToCas1ApplicationSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
+        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
       )
     }
   }
