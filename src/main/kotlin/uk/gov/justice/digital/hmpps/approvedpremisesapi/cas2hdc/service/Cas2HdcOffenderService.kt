@@ -149,10 +149,14 @@ class Cas2HdcOffenderService(
       is ClientResult.Failure.StatusCode -> if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
         return PersonInfoResult.NotFound(crn)
       } else {
-        return PersonInfoResult.Unknown(crn, offenderResponse.toException())
+        log.warn("error fetching crn $crn", offenderResponse.toException())
+        return PersonInfoResult.NotFound(crn)
       }
 
-      is ClientResult.Failure -> return PersonInfoResult.Unknown(crn, offenderResponse.toException())
+      is ClientResult.Failure -> {
+        log.warn("error fetching crn $crn", offenderResponse.toException())
+        return PersonInfoResult.NotFound(crn)
+      }
     }
 
     val inmateDetails = offender.otherIds.nomsNumber?.let { nomsNumber ->
