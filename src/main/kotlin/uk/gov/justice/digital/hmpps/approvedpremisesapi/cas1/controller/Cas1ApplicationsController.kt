@@ -43,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -57,6 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1CreateApplicationLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
@@ -182,7 +182,6 @@ class Cas1ApplicationsController(
         getPersonDetailAndTransform(
           application = application,
           user = user,
-          ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
         ),
       )
     } else {
@@ -194,7 +193,6 @@ class Cas1ApplicationsController(
         getPersonDetailAndTransform(
           offlineApplication = offlineApplication,
           user = user,
-          ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
         ),
       )
     }
@@ -211,7 +209,7 @@ class Cas1ApplicationsController(
     val user = userService.getUserForRequest()
 
     val personInfo =
-      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.deliusUsername, false)) {
+      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.cas1CreateApplicationLaoStrategy())) {
         is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
@@ -471,9 +469,8 @@ class Cas1ApplicationsController(
   private fun getPersonDetailAndTransform(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
-    ignoreLaoRestrictions: Boolean = false,
   ): ApprovedPremisesApplication {
-    val personInfo = offenderDetailService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderDetailService.getPersonInfoResult(application.crn, user.cas1LaoStrategy())
 
     return applicationsTransformer.transformCas1JpaToApi(application, personInfo)
   }
@@ -496,9 +493,8 @@ class Cas1ApplicationsController(
   private fun getPersonDetailAndTransform(
     offlineApplication: OfflineApplicationEntity,
     user: UserEntity,
-    ignoreLaoRestrictions: Boolean = false,
   ): Application {
-    val personInfo = offenderDetailService.getPersonInfoResult(offlineApplication.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderDetailService.getPersonInfoResult(offlineApplication.crn, user.cas1LaoStrategy())
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }
