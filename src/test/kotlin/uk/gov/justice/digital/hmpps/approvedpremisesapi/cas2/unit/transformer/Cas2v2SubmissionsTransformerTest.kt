@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 import java.time.Instant
@@ -135,6 +137,7 @@ class Cas2v2SubmissionsTransformerTest {
         allocatedPomUserId = null,
         currentPrisonCode = null,
         assignmentDate = null,
+        cohort = Cas2Cohort.COURT_BAIL,
       )
 
       val expectedSubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
@@ -145,6 +148,7 @@ class Cas2v2SubmissionsTransformerTest {
         createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
         personName = "Example Offender",
+        cohort = Cas2CohortDto.COURT_BAIL,
       )
 
       val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(
