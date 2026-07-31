@@ -166,6 +166,49 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Get referrals filters out reallocated assessments`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val apArea = givenAnApArea(name = "London AP Area")
+          val cruManagementArea = givenACas1CruManagementArea(name = "London CRU")
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(crn)
+            withCreatedByUser(user)
+            withApArea(apArea)
+            withCruManagementArea(cruManagementArea)
+          }
+
+          approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAllocatedToUser(user)
+            withReallocatedAt(OffsetDateTime.now())
+            withCreatedAt(OffsetDateTime.now().minusDays(2).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          }
+
+          val currentAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAllocatedToUser(user)
+            withCreatedAt(OffsetDateTime.now().minusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          }
+
+          val response = webTestClient.get()
+            .uri("/cas1/external/referrals/$crn")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBodyList<Cas1ReferralHistory>()
+            .returnResult()
+            .responseBody
+
+          Assertions.assertThat(response).hasSize(1)
+          Assertions.assertThat(response!![0].id).isEqualTo(currentAssessment.id)
+        }
+      }
+    }
   }
 
   private fun createStaffDto(user: UserEntity) = Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
