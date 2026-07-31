@@ -95,9 +95,9 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             b.additional_information,
             b.transfer_reason,
             ( 
-              SELECT STRING_AGG (characteristics.property_name, ',')
+              SELECT STRING_AGG (cas1_characteristics.property_name, ',')
               FROM cas1_space_bookings_criteria sbc
-              LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
+              LEFT OUTER JOIN cas1_characteristics ON cas1_characteristics.id = sbc.characteristic_id
               WHERE sbc.space_booking_id = b.id 
               GROUP by sbc.space_booking_id
             ) AS characteristics_property_names,    

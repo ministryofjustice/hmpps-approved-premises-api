@@ -325,10 +325,10 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       withManagerDetails("some manager details")
       withCharacteristicsList(
         listOf(
-          characteristicRepository.findCas1ByPropertyName("isPIPE")!!,
-          characteristicRepository.findCas1ByPropertyName("isSuitableForVulnerable")!!,
-          characteristicRepository.findCas1ByPropertyName("isCatered")!!,
-          characteristicRepository.findCas1ByPropertyName("hasLift")!!,
+          cas1CharacteristicRepository.findByPropertyName("isPIPE")!!,
+          cas1CharacteristicRepository.findByPropertyName("isSuitableForVulnerable")!!,
+          cas1CharacteristicRepository.findByPropertyName("isCatered")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasLift")!!,
         ),
       )
       withCruManagementArea(givenACas1CruManagementArea())

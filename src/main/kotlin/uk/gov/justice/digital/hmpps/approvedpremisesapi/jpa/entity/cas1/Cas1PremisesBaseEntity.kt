@@ -24,7 +24,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil
@@ -47,9 +46,9 @@ class ApprovedPremisesJdbcRepository(private val jdbcTemplate: NamedParameterJdb
       FROM approved_premises ap
       LEFT OUTER JOIN cas1_rooms ON cas1_rooms.premises_id = ap.premises_id
       LEFT OUTER JOIN premises_characteristics premises_chars ON premises_chars.premises_id = ap.premises_id
-      LEFT OUTER JOIN characteristics premises_chars_resolved ON premises_chars_resolved.id = premises_chars.characteristic_id
+      LEFT OUTER JOIN cas1_characteristics premises_chars_resolved ON premises_chars_resolved.id = premises_chars.characteristic_id
       LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = cas1_rooms.id
-      LEFT OUTER JOIN characteristics room_chars_resolved ON room_chars_resolved.id = room_chars.characteristic_id
+      LEFT OUTER JOIN cas1_characteristics room_chars_resolved ON room_chars_resolved.id = room_chars.characteristic_id
       WHERE 
       ap.premises_id = :premisesId
       GROUP BY ap.premises_id
@@ -152,7 +151,7 @@ abstract class Cas1PremisesBaseEntity(
     joinColumns = [JoinColumn(name = "premises_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  var characteristics: MutableList<CharacteristicEntity>,
+  var characteristics: MutableList<Cas1CharacteristicEntity>,
   @Enumerated(value = EnumType.STRING)
   var status: PropertyStatus,
   @CreationTimestamp
@@ -180,7 +179,7 @@ class ApprovedPremisesEntity(
   var apCode: String,
   var qCode: String,
   rooms: MutableList<Cas1RoomEntity>,
-  characteristics: MutableList<CharacteristicEntity>,
+  characteristics: MutableList<Cas1CharacteristicEntity>,
   status: PropertyStatus,
   // TODO: Make not-null once Premises have had point added in all environments
   var point: Point?,

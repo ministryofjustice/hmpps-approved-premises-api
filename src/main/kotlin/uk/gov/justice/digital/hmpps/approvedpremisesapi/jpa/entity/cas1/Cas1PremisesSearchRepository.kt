@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ESAP
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ESAP
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import java.util.UUID
 
@@ -53,7 +53,7 @@ FROM
     SELECT pc.premises_id,
            ARRAY_REMOVE(ARRAY_AGG(DISTINCT c.property_name), null) AS property_name_array
     FROM premises_characteristics pc
-    JOIN characteristics c ON c.id = pc.characteristic_id
+    JOIN cas1_characteristics c ON c.id = pc.characteristic_id
     GROUP BY pc.premises_id
   ) premises_chars ON premises_chars.premises_id = p.id
   
@@ -62,7 +62,7 @@ FROM
            ARRAY_REMOVE(ARRAY_AGG(DISTINCT c.property_name), null) AS property_name_array
     FROM room_characteristics rc
     inner join cas1_rooms on cas1_rooms.id = rc.room_id
-    inner JOIN characteristics c ON c.id = rc.characteristic_id
+    inner JOIN cas1_characteristics c ON c.id = rc.characteristic_id
     GROUP BY cas1_rooms.premises_id
   ) room_chars ON room_chars.premises_id = p.id
   

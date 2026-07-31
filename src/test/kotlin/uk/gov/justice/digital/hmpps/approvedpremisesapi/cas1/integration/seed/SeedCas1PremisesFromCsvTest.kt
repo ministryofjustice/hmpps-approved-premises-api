@@ -23,7 +23,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
 
   @BeforeEach
   fun removeDefaultCharacteristicsFromDatabaseMigrations() {
-    characteristicRepository.deleteAll()
+    cas1CharacteristicRepository.deleteAll()
   }
 
   @Test
@@ -81,11 +81,10 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-    characteristicEntityFactory.produceAndPersist {
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
       withPropertyName("isCatered")
       withModelScope("premises")
-      withServiceScope("temporary-accommodation")
     }
 
     seed(
@@ -117,10 +116,9 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-    characteristicEntityFactory.produceAndPersist {
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
       withPropertyName("isCatered")
-      withServiceScope("approved-premises")
       withModelScope("room")
     }
 
@@ -206,15 +204,13 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-    characteristicEntityFactory.produceAndPersist {
-      withServiceScope("approved-premises")
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withModelScope("premises")
       withName("Is this premises catered?")
       withPropertyName("isCatered")
     }
 
-    characteristicEntityFactory.produceAndPersist {
-      withServiceScope("approved-premises")
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withModelScope("premises")
       withName("Is this an IAP?")
       withPropertyName("isIAP")

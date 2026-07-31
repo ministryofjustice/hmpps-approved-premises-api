@@ -733,9 +733,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
   }
 
-  private fun characteristicEntity() = characteristicEntityFactory.produceAndPersist {
+  private fun characteristicEntity() = cas1CharacteristicEntityFactory.produceAndPersist {
     withName(randomStringMultiCaseWithNumbers(10))
-    withServiceScope(Characteristic.ServiceScope.star.value)
     withModelScope(Characteristic.ModelScope.room.value)
     withPropertyName(randomStringMultiCaseWithNumbers(6))
   }

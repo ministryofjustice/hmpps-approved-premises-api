@@ -9,15 +9,14 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpaceBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpaceBookingSeedJobCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -27,15 +26,15 @@ class Cas1UpdateSpaceBookingSeedJobTest {
     val BOOKING_ID: UUID = UUID.fromString("46335983-2742-4736-8b6d-9113629a5286")
   }
 
-  private val arsonSuitableCharacteristic = CharacteristicEntityFactory()
-    .withPropertyName(CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE)
+  private val arsonSuitableCharacteristic = Cas1CharacteristicEntityFactory()
+    .withPropertyName(Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE)
     .produce()
 
-  private val stepFreeCharacteristic = CharacteristicEntityFactory()
-    .withPropertyName(CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED)
+  private val stepFreeCharacteristic = Cas1CharacteristicEntityFactory()
+    .withPropertyName(Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED)
     .produce()
 
-  private val otherCharacteristic = CharacteristicEntityFactory()
+  private val otherCharacteristic = Cas1CharacteristicEntityFactory()
     .withPropertyName("otherCharacteristic")
     .produce()
 
@@ -43,7 +42,7 @@ class Cas1UpdateSpaceBookingSeedJobTest {
   private lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
   @MockK
-  private lateinit var characteristicRepository: CharacteristicRepository
+  private lateinit var cas1CharacteristicRepository: Cas1CharacteristicRepository
 
   @InjectMockKs
   private lateinit var seedJob: Cas1UpdateSpaceBookingSeedJob
@@ -166,8 +165,8 @@ class Cas1UpdateSpaceBookingSeedJobTest {
           updateCriteria = true,
           criteria = listOf(
             "unexpectedProperty1",
-            CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-            CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+            Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+            Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
             "unexpectedProperty2",
           ),
         ),
@@ -183,12 +182,11 @@ class Cas1UpdateSpaceBookingSeedJobTest {
 
     every { cas1SpaceBookingRepository.findByIdOrNull(BOOKING_ID) } returns spaceBooking
     every {
-      characteristicRepository.findAllWherePropertyNameIn(
+      cas1CharacteristicRepository.findAllWherePropertyNameIn(
         listOf(
-          CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-          CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+          Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+          Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
         ),
-        ServiceName.approvedPremises.value,
       )
     } returns listOf(arsonSuitableCharacteristic, stepFreeCharacteristic)
     every { cas1SpaceBookingRepository.save(spaceBooking) } returns spaceBooking
@@ -199,8 +197,8 @@ class Cas1UpdateSpaceBookingSeedJobTest {
         updateEventNumber = false,
         updateCriteria = true,
         criteria = listOf(
-          CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-          CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+          Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+          Cas1CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
         ),
       ),
     )

@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1BedSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DomainBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
@@ -34,8 +34,8 @@ class Cas1BedDetailTransformerTest {
       Pair(
         domainSummary,
         listOf(
-          CharacteristicEntityFactory().withPropertyName("arsonOffences").produce(),
-          CharacteristicEntityFactory().withPropertyName("hasWheelChairAccessibleBathrooms").produce(),
+          Cas1CharacteristicEntityFactory().withPropertyName("arsonOffences").produce(),
+          Cas1CharacteristicEntityFactory().withPropertyName("hasWheelChairAccessibleBathrooms").produce(),
         ),
       ),
     )

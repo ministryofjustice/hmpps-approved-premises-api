@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import java.util.UUID
 
 @Repository
@@ -43,7 +42,7 @@ data class Cas1RoomEntity(
     joinColumns = [JoinColumn(name = "room_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  var characteristics: MutableList<CharacteristicEntity>,
+  var characteristics: MutableList<Cas1CharacteristicEntity>,
 ) {
 
   override fun toString() = "Cas1RoomEntity: $id"

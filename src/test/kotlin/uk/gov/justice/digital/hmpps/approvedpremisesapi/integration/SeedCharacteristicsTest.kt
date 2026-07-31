@@ -12,7 +12,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
 
   @BeforeEach
   fun removeDefaultCharacteristicsFromDatabaseMigrations() {
-    characteristicRepository.deleteAll()
+    cas1CharacteristicRepository.deleteAll()
   }
 
   @Test
@@ -24,7 +24,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "hasWideDoor,,temporary-accommodation,room\n",
     )
 
-    assertThat(characteristicRepository.count()).isEqualTo(0)
+    assertThat(cas1CharacteristicRepository.count()).isEqualTo(0)
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -43,7 +43,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "hasWideDoor,Is the entrance wide?,temporary-accommodation,bar\n",
     )
 
-    assertThat(characteristicRepository.count()).isEqualTo(0)
+    assertThat(cas1CharacteristicRepository.count()).isEqualTo(0)
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -62,7 +62,7 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "hasWideDoor,Is the entrance wide?,temporary-accommodation,\n",
     )
 
-    assertThat(characteristicRepository.count()).isEqualTo(0)
+    assertThat(cas1CharacteristicRepository.count()).isEqualTo(0)
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -73,54 +73,69 @@ class SeedCharacteristicsTest : SeedTestBase() {
   }
 
   @Test
-  fun `Seeding new characteristics twice (unique propertyName, serviceScope and modelScope) succeeds without dupes`() {
+  fun `Attempting to seed a non approved-premises characteristic fails and logs error`() {
+    seed(
+      SeedFileType.characteristics,
+      "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
+        "hasWideDoor,Is the room entrance wide?,temporary-accommodation,room\n",
+    )
+
+    assertThat(cas1CharacteristicRepository.count()).isEqualTo(0)
+
+    assertThat(logEntries).anyMatch {
+      it.level == "error" &&
+        it.message.contains("Unable to complete Seed Job") &&
+        it.throwable != null &&
+        it.throwable.message!!.contains(
+          "has service_scope 'temporary-accommodation' but only 'approved-premises' characteristics can be seeded",
+        )
+    }
+  }
+
+  @Test
+  fun `Seeding new characteristics twice (unique propertyName and modelScope) succeeds without dupes`() {
     val csv = "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
       "hasWideDoor,Is the door to this room at least 900mm wide?,approved-premises,room\n" +
-      "hasWideDoor,Is the room entrance wide?,temporary-accommodation,room\n" +
+      "hasWideDoor,Is the premises entrance wide?,approved-premises,premises\n" +
       "isIap,Is this an IAP?,approved-premises,premises\n"
 
     seed(SeedFileType.characteristics, csv)
     seed(SeedFileType.characteristics, csv)
 
-    val apWideDoorRoom = characteristicRepository.findByPropertyNameAndScopes(
+    val wideDoorRoom = cas1CharacteristicRepository.findByPropertyNameAndModelScope(
       propertyName = "hasWideDoor",
-      serviceName = "approved-premises",
       modelName = "room",
     )
-    val taWideDoorRoom = characteristicRepository.findByPropertyNameAndScopes(
+    val wideDoorPremises = cas1CharacteristicRepository.findByPropertyNameAndModelScope(
       propertyName = "hasWideDoor",
-      serviceName = "temporary-accommodation",
-      modelName = "room",
+      modelName = "premises",
     )
-    val apIapPremises = characteristicRepository.findByPropertyNameAndScopes(
+    val iapPremises = cas1CharacteristicRepository.findByPropertyNameAndModelScope(
       propertyName = "isIap",
-      serviceName = "approved-premises",
       modelName = "premises",
     )
 
-    assertThat(apWideDoorRoom!!.name).isEqualTo("Is the door to this room at least 900mm wide?")
-    assertThat(taWideDoorRoom!!.name).isEqualTo("Is the room entrance wide?")
-    assertThat(apIapPremises!!.name).isEqualTo("Is this an IAP?")
+    assertThat(wideDoorRoom!!.name).isEqualTo("Is the door to this room at least 900mm wide?")
+    assertThat(wideDoorPremises!!.name).isEqualTo("Is the premises entrance wide?")
+    assertThat(iapPremises!!.name).isEqualTo("Is this an IAP?")
 
-    assertThat(characteristicRepository.count()).isEqualTo(3)
+    assertThat(cas1CharacteristicRepository.count()).isEqualTo(3)
   }
 
   @Test
   fun `Updating a characteristic name succeeds`() {
-    characteristicEntityFactory.produceAndPersist {
+    cas1CharacteristicEntityFactory.produceAndPersist {
       withModelScope("room")
-      withServiceScope("approved-premises")
       withPropertyName("hasWideDoor")
       withName("Is the door wide?")
     }
 
-    val characteristic = characteristicRepository.findByPropertyNameAndScopes(
+    val characteristic = cas1CharacteristicRepository.findByPropertyNameAndModelScope(
       propertyName = "hasWideDoor",
-      serviceName = "approved-premises",
       modelName = "room",
     )
 
-    assertThat(characteristicRepository.count()).isEqualTo(1)
+    assertThat(cas1CharacteristicRepository.count()).isEqualTo(1)
     assertThat(characteristic!!.name).isEqualTo("Is the door wide?")
 
     seed(
@@ -129,13 +144,12 @@ class SeedCharacteristicsTest : SeedTestBase() {
         "hasWideDoor,Is the DOOR wide?,approved-premises,room\n",
     )
 
-    val updatedCharacteristic = characteristicRepository.findByPropertyNameAndScopes(
+    val updatedCharacteristic = cas1CharacteristicRepository.findByPropertyNameAndModelScope(
       propertyName = "hasWideDoor",
-      serviceName = "approved-premises",
       modelName = "room",
     )
 
-    assertThat(characteristicRepository.count()).isEqualTo(1)
+    assertThat(cas1CharacteristicRepository.count()).isEqualTo(1)
     assertThat(updatedCharacteristic!!.name).isEqualTo("Is the DOOR wide?")
   }
 }

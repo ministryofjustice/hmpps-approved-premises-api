@@ -379,7 +379,7 @@ from
        	    app.id = pr.application_id
        	  left join placement_requirements_desirable_criteria prdc on 
             prdc.placement_requirement_id  = pr.id 
-       	  inner join "characteristics" c on 
+       	  inner join cas1_characteristics c on 
             c.id = prdc.characteristic_id
           where 
        	    (app.crn = :crn
@@ -402,7 +402,7 @@ from
        	    app.id = pr.application_id
        	  left join placement_requirements_essential_criteria prec 
             on prec.placement_requirement_id  = pr.id 
-       	  inner join "characteristics" c 
+       	  inner join cas1_characteristics c 
             on c.id = prec.characteristic_id
           where 
        	    (app.crn = :crn

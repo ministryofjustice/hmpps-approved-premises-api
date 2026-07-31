@@ -1,23 +1,21 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CharacteristicTransformer
 
-class CharacteristicTransformerTest {
-  private val characteristicTransformer = CharacteristicTransformer()
+class Cas1CharacteristicTransformerTest {
+  private val characteristicTransformer = Cas1CharacteristicTransformer()
 
   @Test
   fun `transformToApi transforms correctly - includes propertyName`() {
-    val characteristicEntityFactory = CharacteristicEntityFactory()
+    val characteristicEntityFactory = Cas1CharacteristicEntityFactory()
 
     val characteristic = characteristicEntityFactory
       .withPropertyName("isCatered")
       .withName("Is this AP catered?")
       .withModelScope("premises")
-      .withServiceScope(ServiceName.approvedPremises.value)
       .produce()
 
     val result = characteristicTransformer.transformJpaToApi(characteristic)

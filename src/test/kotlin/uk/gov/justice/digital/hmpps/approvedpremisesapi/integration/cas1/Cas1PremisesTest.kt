@@ -12,7 +12,6 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1NationalOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1NationalOccupancyParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1PremisesController.Cas1CurrentKeyWorker
@@ -47,10 +46,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository.Companion.UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
@@ -59,6 +54,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
@@ -96,17 +95,17 @@ class Cas1PremisesTest : IntegrationTestBase() {
           apArea = givenAnApArea(name = "The ap area name"),
         ),
         managerDetails = "manager details",
-        characteristics = listOf(characteristicRepository.findCas1ByPropertyName("isSuitableForVulnerable")!!),
+        characteristics = listOf(cas1CharacteristicRepository.findByPropertyName("isSuitableForVulnerable")!!),
       )
 
       givenAnApprovedPremisesRoom(
         premises,
-        characteristics = listOf(characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!),
+        characteristics = listOf(cas1CharacteristicRepository.findByPropertyName("hasEnSuite")!!),
       )
 
       givenAnApprovedPremisesRoom(
         premises,
-        characteristics = listOf(characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!),
+        characteristics = listOf(cas1CharacteristicRepository.findByPropertyName("isArsonSuitable")!!),
       )
     }
 
@@ -779,16 +778,16 @@ class Cas1PremisesTest : IntegrationTestBase() {
       givenAnApprovedPremises(
         supportsSpaceBookings = true,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("isCatered")!!,
-          characteristicRepository.findCas1ByPropertyName("hasWideAccessToCommunalAreas")!!,
+          cas1CharacteristicRepository.findByPropertyName("isCatered")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasWideAccessToCommunalAreas")!!,
         ),
       )
 
       val matchingPremises = givenAnApprovedPremises(
         supportsSpaceBookings = true,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("isCatered")!!,
-          characteristicRepository.findCas1ByPropertyName("acceptsNonSexualChildOffenders")!!,
+          cas1CharacteristicRepository.findByPropertyName("isCatered")!!,
+          cas1CharacteristicRepository.findByPropertyName("acceptsNonSexualChildOffenders")!!,
         ),
       )
 
@@ -826,22 +825,22 @@ class Cas1PremisesTest : IntegrationTestBase() {
       givenAnApprovedPremisesBed(
         premises = premises,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
-          characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasEnSuite")!!,
+          cas1CharacteristicRepository.findByPropertyName("isArsonSuitable")!!,
         ),
       )
 
       givenAnApprovedPremisesBed(
         premises = premises,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasEnSuite")!!,
         ),
       )
 
       givenAnApprovedPremisesBed(
         premises = premises,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasEnSuite")!!,
         ),
       )
 
@@ -855,7 +854,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         canonicalDepartureDate = LocalDate.of(2025, 2, 1),
         premises = premises,
         criteria = listOf(
-          characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!,
+          cas1CharacteristicRepository.findByPropertyName("isArsonSuitable")!!,
         ),
       )
 
@@ -864,7 +863,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         canonicalDepartureDate = LocalDate.of(2025, 1, 3),
         premises = premises,
         criteria = listOf(
-          characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!,
+          cas1CharacteristicRepository.findByPropertyName("isArsonSuitable")!!,
         ),
       )
 
@@ -1005,9 +1004,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
     lateinit var outOfServiceBed: Cas1OutOfServiceBedEntity
     lateinit var outOfServiceBedEndingToday: Cas1OutOfServiceBedEntity
     lateinit var outOfServiceBedTodayOnly: Cas1OutOfServiceBedEntity
-    lateinit var isGroundFloorCharacteristic: CharacteristicEntity
-    lateinit var isArsonSuitableCharacteristic: CharacteristicEntity
-    lateinit var hasEnSuiteCharacteristic: CharacteristicEntity
+    lateinit var isGroundFloorCharacteristic: Cas1CharacteristicEntity
+    lateinit var isArsonSuitableCharacteristic: Cas1CharacteristicEntity
+    lateinit var hasEnSuiteCharacteristic: Cas1CharacteristicEntity
 
     val summaryDate: LocalDate = now()
     val tierA = "A2"
@@ -1178,9 +1177,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
     fun setupOutOfServiceBeds() {
       val now = now()
 
-      hasEnSuiteCharacteristic = characteristicRepository.findByPropertyName("hasEnSuite", "approved-premises")!!
-      isArsonSuitableCharacteristic = characteristicRepository.findByPropertyName("isArsonSuitable", "approved-premises")!!
-      isGroundFloorCharacteristic = characteristicRepository.findByPropertyName("isGroundFloor", "approved-premises")!!
+      hasEnSuiteCharacteristic = cas1CharacteristicRepository.findByPropertyName("hasEnSuite")!!
+      isArsonSuitableCharacteristic = cas1CharacteristicRepository.findByPropertyName("isArsonSuitable")!!
+      isGroundFloorCharacteristic = cas1CharacteristicRepository.findByPropertyName("isGroundFloor")!!
 
       val bed1 = givenAnApprovedPremisesBed(
         premises = premises,
@@ -1556,7 +1555,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries.spaceBookingSummaries[2].tier).isEqualTo(tierA)
     }
 
-    private fun findCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+    private fun findCharacteristic(propertyName: String) = cas1CharacteristicRepository.findByPropertyName(propertyName)!!
 
     private fun createSpaceBooking(
       crn: String,

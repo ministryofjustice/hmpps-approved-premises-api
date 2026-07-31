@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceSearchResult
@@ -18,14 +17,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ESAP
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ESAP
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
@@ -99,15 +98,15 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         longitude = 2.0,
         supportsSpaceBookings = true,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("hasWideAccessToCommunalAreas")!!,
-          characteristicRepository.findCas1ByPropertyName("hasWideStepFreeAccess")!!,
-          characteristicRepository.findCas1ByPropertyName("hasLift")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasWideAccessToCommunalAreas")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasWideStepFreeAccess")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasLift")!!,
         ),
       ).also {
         cas1RoomEntityFactory.produceAndPersist {
           withPremises(it)
           withCharacteristics(
-            characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
+            cas1CharacteristicRepository.findByPropertyName("hasEnSuite")!!,
           )
         }
       }
@@ -322,7 +321,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
-      fun createAp(characteristics: List<CharacteristicEntity>) = givenAnApprovedPremises(
+      fun createAp(characteristics: List<Cas1CharacteristicEntity>) = givenAnApprovedPremises(
         characteristics = characteristics,
         supportsSpaceBookings = true,
       )
@@ -548,7 +547,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     getCharacteristic(it)!!
   }
 
-  private fun getCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)
+  private fun getCharacteristic(propertyName: String) = cas1CharacteristicRepository.findByPropertyName(propertyName)
 
   private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = getCharacteristic(this.value)!!
 }

@@ -10,12 +10,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -52,7 +52,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   application: ApprovedPremisesApplicationEntity? = null,
-  essentialCriteria: List<CharacteristicEntity>? = null,
+  essentialCriteria: List<Cas1CharacteristicEntity>? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   apType: ApprovedPremisesType? = null,
   applicationCreatedAt: OffsetDateTime = OffsetDateTime.now().randomDateTimeBefore(30),
@@ -114,10 +114,10 @@ fun IntegrationTestBase.givenAPlacementRequest(
     withAssessment(assessment)
     withPostcodeDistrict(postcodeDistrict)
     withDesirableCriteria(
-      characteristicEntityFactory.produceAndPersistMultiple(5),
+      cas1CharacteristicEntityFactory.produceAndPersistMultiple(5),
     )
     withEssentialCriteria(
-      essentialCriteria ?: characteristicEntityFactory.produceAndPersistMultiple(3),
+      essentialCriteria ?: cas1CharacteristicEntityFactory.produceAndPersistMultiple(3),
     )
   }
 

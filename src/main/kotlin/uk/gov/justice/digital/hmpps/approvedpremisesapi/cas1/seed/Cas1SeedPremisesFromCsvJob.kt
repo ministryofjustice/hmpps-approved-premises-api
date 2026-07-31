@@ -5,8 +5,6 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -14,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import java.util.UUID
 
@@ -27,7 +27,7 @@ class Cas1SeedPremisesFromCsvJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
-  private val characteristicRepository: CharacteristicRepository,
+  private val cas1CharacteristicRepository: Cas1CharacteristicRepository,
   private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
 ) : SeedJob<ApprovedPremisesSeedCsvRow>(
   requiredHeaders = setOf(
@@ -138,7 +138,7 @@ class Cas1SeedPremisesFromCsvJob(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun characteristicsFromRow(row: ApprovedPremisesSeedCsvRow): List<CharacteristicEntity> = listOf(
+  private fun characteristicsFromRow(row: ApprovedPremisesSeedCsvRow): List<Cas1CharacteristicEntity> = listOf(
     CharacteristicValue("isIAP", castBooleanString(row.isIAP)),
     CharacteristicValue("isPIPE", castBooleanString(row.isPIPE)),
     CharacteristicValue("isESAP", castBooleanString(row.isESAP)),
@@ -162,7 +162,7 @@ class Cas1SeedPremisesFromCsvJob(
     CharacteristicValue("isMHAPStJosephs", castBooleanString(row.isMHAPStJosephs)),
   ).filter { it.value }
     .map {
-      characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
+      cas1CharacteristicRepository.findByPropertyNameAndModelScope(propertyName = it.propertyName, modelName = "premises")
         ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP premises")
     }
 
@@ -170,7 +170,7 @@ class Cas1SeedPremisesFromCsvJob(
     row: ApprovedPremisesSeedCsvRow,
     probationRegion: ProbationRegionEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
-    characteristics: List<CharacteristicEntity>,
+    characteristics: List<Cas1CharacteristicEntity>,
   ) {
     log.info("Creating new Approved Premises: ${row.apCode} ${row.name}")
 
@@ -223,7 +223,7 @@ class Cas1SeedPremisesFromCsvJob(
     existingApprovedPremises: ApprovedPremisesEntity,
     probationRegion: ProbationRegionEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
-    characteristics: List<CharacteristicEntity>,
+    characteristics: List<Cas1CharacteristicEntity>,
   ) {
     log.info("Updating existing Approved Premises: ${row.apCode} ${row.name}")
 

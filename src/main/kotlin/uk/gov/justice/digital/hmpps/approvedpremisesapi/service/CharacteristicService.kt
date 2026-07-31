@@ -2,51 +2,23 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import java.util.UUID
 
 @Service
 class CharacteristicService(
-  val characteristicRepository: CharacteristicRepository,
-  val bedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository,
-  val premisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
+  val cas1CharacteristicRepository: Cas1CharacteristicRepository,
+  val cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository,
+  val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
 ) {
-  fun getCharacteristicsByPropertyNames(requiredCharacteristics: List<String>, serviceName: ServiceName) = characteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics, serviceName.value)
+  fun getCas1CharacteristicsByPropertyNames(requiredCharacteristics: List<String>) = cas1CharacteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics)
 
-  fun serviceScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean {
-    val targetService = getServiceForTarget(target) ?: return false
+  fun getCas3BedspaceCharacteristic(characteristicId: UUID): Cas3BedspaceCharacteristicEntity? = cas3BedspaceCharacteristicRepository.findByIdOrNull(characteristicId)
 
-    return when (characteristic.serviceScope) {
-      "*" -> true
-      targetService -> true
-      else -> return false
-    }
-  }
+  fun getCas3BedspaceCharacteristics() = cas3BedspaceCharacteristicRepository.findByActive(active = true)
 
-  fun getCas3BedspaceCharacteristic(characteristicId: UUID): Cas3BedspaceCharacteristicEntity? = bedspaceCharacteristicRepository.findByIdOrNull(characteristicId)
-
-  fun getCas3BedspaceCharacteristics() = bedspaceCharacteristicRepository.findByActive(active = true)
-
-  fun getCas3PremisesCharacteristics() = premisesCharacteristicRepository.findByActive(active = true)
-
-  fun modelScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean = when (characteristic.modelScope) {
-    "*" -> true
-    "room" -> target is Cas1RoomEntity
-    "premises" -> target is Cas1PremisesBaseEntity
-    else -> false
-  }
-
-  private fun getServiceForTarget(target: Any): String? = when (target) {
-    is Cas1RoomEntity -> getServiceForTarget(target.premises)
-    is ApprovedPremisesEntity -> ServiceName.approvedPremises.value
-    else -> null
-  }
+  fun getCas3PremisesCharacteristics() = cas3PremisesCharacteristicRepository.findByActive(active = true)
 }

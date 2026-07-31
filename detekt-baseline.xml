@@ -68,8 +68,7 @@
     <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt:CancellationEntityFactory$throw RuntimeException("Reason must be provided")</ID>
     <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt:Cas2DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
     <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt:Cas2DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt:CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.modelScope}")</ID>
-    <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt:CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.serviceScope}")</ID>
+    <ID>TooGenericExceptionThrown:Cas1CharacteristicTransformer.kt:Cas1CharacteristicTransformer$throw RuntimeException("Unsupported model scope: ${jpa.modelScope}")</ID>
     <ID>TooGenericExceptionThrown:CharacteristicsSeedJob.kt:CharacteristicsSeedJob$throw RuntimeException("The field: '$requiredField' is required")</ID>
     <ID>TooGenericExceptionThrown:CharacteristicsSeedJob.kt:CharacteristicsSeedJob$throw RuntimeException("Your '$requiredField' value: '$value' is not recognised")</ID>
     <ID>TooGenericExceptionThrown:ExtensionEntityFactory.kt:ExtensionEntityFactory$throw RuntimeException("Booking must be provided")</ID>

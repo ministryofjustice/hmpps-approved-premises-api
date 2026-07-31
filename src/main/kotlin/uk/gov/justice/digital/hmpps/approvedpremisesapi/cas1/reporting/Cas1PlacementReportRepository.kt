@@ -57,7 +57,7 @@ class Cas1PlacementReportRepository(
                 criteria.space_booking_id,
                 STRING_AGG(c.property_name, ', ' ORDER BY c.property_name) AS criteria
             FROM cas1_space_bookings_criteria criteria
-            LEFT JOIN "characteristics" c ON c.id = criteria.characteristic_id
+            LEFT JOIN cas1_characteristics c ON c.id = criteria.characteristic_id
             GROUP BY criteria.space_booking_id
         ) criteria_grouped ON criteria_grouped.space_booking_id = csb.id
         WHERE 

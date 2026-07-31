@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.successOr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import java.time.Clock
@@ -121,7 +121,7 @@ class Cas1SpaceBookingUpdateService(
 
   private fun updateRoomCharacteristics(
     booking: Cas1SpaceBookingEntity,
-    newRoomCharacteristics: List<CharacteristicEntity>,
+    newRoomCharacteristics: List<Cas1CharacteristicEntity>,
   ) {
     booking.criteria.apply {
       retainAll { it.isModelScopePremises() }
@@ -148,7 +148,7 @@ class Cas1SpaceBookingUpdateService(
     val premisesId: UUID,
     val arrivalDate: LocalDate? = null,
     val departureDate: LocalDate? = null,
-    val characteristics: List<CharacteristicEntity>? = null,
+    val characteristics: List<Cas1CharacteristicEntity>? = null,
     val updatedBy: UserEntity,
     val updateType: Cas1SpaceBookingService.UpdateType,
     @Deprecated("will be removed soon)")

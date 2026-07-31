@@ -305,7 +305,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
         withCancellationReasonNotes("CANCELLATIONREASONNOTES")
         withCriteria(
           mutableListOf(
-            characteristicEntityFactory.produceAndPersist(),
+            cas1CharacteristicEntityFactory.produceAndPersist(),
           ),
         )
         withOfflineApplication(offlineApplication)

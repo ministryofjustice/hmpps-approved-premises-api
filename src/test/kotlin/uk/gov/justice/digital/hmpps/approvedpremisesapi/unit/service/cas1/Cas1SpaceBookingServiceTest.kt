@@ -26,12 +26,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PageCriteriaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -179,8 +179,8 @@ class Cas1SpaceBookingServiceTest {
         LockablePlacementRequestEntity(placementRequest.id)
 
       val characteristics = listOf(
-        CharacteristicEntityFactory().withName("c1").produce(),
-        CharacteristicEntityFactory().withName("c2").produce(),
+        Cas1CharacteristicEntityFactory().withName("c1").produce(),
+        Cas1CharacteristicEntityFactory().withName("c2").produce(),
       )
 
       val details = CreateBookingDetails(
@@ -246,8 +246,8 @@ class Cas1SpaceBookingServiceTest {
         LockablePlacementRequestEntity(placementRequest.id)
 
       val characteristics = listOf(
-        CharacteristicEntityFactory().withName("c1").produce(),
-        CharacteristicEntityFactory().withName("c2").produce(),
+        Cas1CharacteristicEntityFactory().withName("c1").produce(),
+        Cas1CharacteristicEntityFactory().withName("c2").produce(),
       )
 
       val details = CreateBookingDetails(
@@ -310,8 +310,8 @@ class Cas1SpaceBookingServiceTest {
         LockablePlacementRequestEntity(placementRequest.id)
 
       val characteristics = listOf(
-        CharacteristicEntityFactory().withName("c1").produce(),
-        CharacteristicEntityFactory().withName("c2").produce(),
+        Cas1CharacteristicEntityFactory().withName("c1").produce(),
+        Cas1CharacteristicEntityFactory().withName("c2").produce(),
       )
 
       val details = CreateBookingDetails(
@@ -1365,7 +1365,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns anotherChangeRequest
 
-      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+      every { characteristicService.getCas1CharacteristicsByPropertyNames(any()) } returns emptyList()
 
       every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
 
@@ -1409,7 +1409,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
 
-      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+      every { characteristicService.getCas1CharacteristicsByPropertyNames(any()) } returns emptyList()
 
       every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
 
@@ -1439,7 +1439,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
-      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+      every { characteristicService.getCas1CharacteristicsByPropertyNames(any()) } returns emptyList()
 
       val details = CreateBookingDetails(
         premisesId = DESTINATION_PREMISES_ID,
@@ -1483,7 +1483,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
-      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+      every { characteristicService.getCas1CharacteristicsByPropertyNames(any()) } returns emptyList()
 
       val transferInfo = TransferInfo(
         type = TransferType.PLANNED,
@@ -1546,7 +1546,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
 
-      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+      every { characteristicService.getCas1CharacteristicsByPropertyNames(any()) } returns emptyList()
 
       every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any()) } returns Unit
 

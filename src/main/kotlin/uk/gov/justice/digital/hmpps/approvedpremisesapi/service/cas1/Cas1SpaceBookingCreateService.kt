@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import java.time.Clock
@@ -168,7 +168,7 @@ class Cas1SpaceBookingCreateService(
     val expectedArrivalDate: LocalDate,
     val expectedDepartureDate: LocalDate,
     val createdBy: UserEntity,
-    val characteristics: List<CharacteristicEntity>,
+    val characteristics: List<Cas1CharacteristicEntity>,
     @Deprecated("will be removed in future)")
     val transferredFrom: TransferInfo?,
     val transferReason: TransferReason?,

@@ -16,10 +16,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -214,12 +214,12 @@ class PlacementRequestDetailTransformerTest {
       .withAssessment(assessment)
       .withEssentialCriteria(
         listOf(
-          CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
+          Cas1CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
         ),
       )
       .withDesirableCriteria(
         listOf(
-          CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
+          Cas1CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
         ),
       )
       .produce()

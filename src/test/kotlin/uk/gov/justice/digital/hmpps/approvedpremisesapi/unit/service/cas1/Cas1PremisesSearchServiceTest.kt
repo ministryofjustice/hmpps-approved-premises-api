@@ -16,9 +16,8 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
@@ -96,7 +95,7 @@ class Cas1PremisesSearchServiceTest {
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
 
     every {
-      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
+      characteristicService.getCas1CharacteristicsByPropertyNames(any())
     } returnsMany listOf(
       spaceCharacteristics,
     )
@@ -128,9 +127,8 @@ class Cas1PremisesSearchServiceTest {
     )
 
     verify(exactly = 1) {
-      characteristicService.getCharacteristicsByPropertyNames(
+      characteristicService.getCas1CharacteristicsByPropertyNames(
         Cas1SpaceCharacteristic.entries.map { it.value },
-        ServiceName.approvedPremises,
       )
     }
 
@@ -204,7 +202,7 @@ class Cas1PremisesSearchServiceTest {
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
 
     every {
-      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
+      characteristicService.getCas1CharacteristicsByPropertyNames(any())
     } returnsMany listOf(
       spaceCharacteristics,
     )
@@ -238,7 +236,7 @@ class Cas1PremisesSearchServiceTest {
     }
 
     verify {
-      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
+      characteristicService.getCas1CharacteristicsByPropertyNames(any())
     }
     confirmVerified()
   }
@@ -300,7 +298,7 @@ class Cas1PremisesSearchServiceTest {
     val spaceCharacteristicEntities = spaceCharacteristics.map { characteristicWithRandomModelScopeCalled(it.value) }
 
     every {
-      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
+      characteristicService.getCas1CharacteristicsByPropertyNames(any())
     } returnsMany listOf(
       spaceCharacteristicEntities,
     )
@@ -324,9 +322,8 @@ class Cas1PremisesSearchServiceTest {
     )
 
     verify(exactly = 1) {
-      characteristicService.getCharacteristicsByPropertyNames(
+      characteristicService.getCas1CharacteristicsByPropertyNames(
         spaceCharacteristics.map { it.value },
-        ServiceName.approvedPremises,
       )
 
       spaceSearchRepository.findPremisesForNewSpaceBookingByDistance(
@@ -339,16 +336,15 @@ class Cas1PremisesSearchServiceTest {
     }
 
     verify {
-      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
+      characteristicService.getCas1CharacteristicsByPropertyNames(any())
     }
 
     confirmVerified()
   }
 
-  private fun characteristicWithRandomModelScopeCalled(name: String) = CharacteristicEntityFactory()
+  private fun characteristicWithRandomModelScopeCalled(name: String) = Cas1CharacteristicEntityFactory()
     .withName(name)
     .withPropertyName(name)
-    .withServiceScope(ServiceName.approvedPremises.value)
     .produce()
 
   companion object {

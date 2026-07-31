@@ -196,10 +196,10 @@ class Cas1PlacementRequestSearchPaginationTest : IntegrationTestBase() {
       withAssessment(assessment)
       withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
       withDesirableCriteria(
-        characteristicEntityFactory.produceAndPersistMultiple(1),
+        cas1CharacteristicEntityFactory.produceAndPersistMultiple(1),
       )
       withEssentialCriteria(
-        characteristicEntityFactory.produceAndPersistMultiple(1),
+        cas1CharacteristicEntityFactory.produceAndPersistMultiple(1),
       )
     }
 

@@ -54,16 +54,16 @@ class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
       val bed1Active = givenAnApprovedPremisesBed(
         premises,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
-          characteristicRepository.findCas1ByPropertyName("isWheelchairDesignated")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasEnSuite")!!,
+          cas1CharacteristicRepository.findByPropertyName("isWheelchairDesignated")!!,
         ),
       )
 
       val bed2Active = givenAnApprovedPremisesBed(
         premises,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!,
-          characteristicRepository.findCas1ByPropertyName("hasStepFreeAccess")!!,
+          cas1CharacteristicRepository.findByPropertyName("isArsonSuitable")!!,
+          cas1CharacteristicRepository.findByPropertyName("hasStepFreeAccess")!!,
         ),
       )
 
@@ -77,7 +77,7 @@ class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
       givenAnApprovedPremisesBed(
         premises,
         characteristics = listOf(
-          characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!,
+          cas1CharacteristicRepository.findByPropertyName("isArsonSuitable")!!,
         ),
         endDate = LocalDate.now(),
       )

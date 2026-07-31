@@ -6,12 +6,12 @@ import org.javers.core.diff.ListCompareAlgorithm
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.ExcelSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomRepository
 import java.io.File
@@ -35,7 +35,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val roomRepository: Cas1RoomRepository,
   private val bedRepository: Cas1BedRepository,
-  private val characteristicRepository: CharacteristicRepository,
+  private val cas1CharacteristicRepository: Cas1CharacteristicRepository,
 ) : ExcelSeedJob {
 
   companion object {
@@ -95,7 +95,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private data class RoomInfo(
     val roomCode: String,
     val roomName: String,
-    val characteristics: List<CharacteristicEntity>,
+    val characteristics: List<Cas1CharacteristicEntity>,
   )
 
   private fun resolveRooms(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBedFactory.Cas1SiteSurveyBed>): List<RoomInfo> = siteSurveyBeds.map {
@@ -124,7 +124,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   )
 
   @Suppress("TooGenericExceptionThrown")
-  private fun resolveCharacteristics(bed: Cas1SiteSurveyBedFactory.Cas1SiteSurveyBed): List<CharacteristicEntity> = listOf(
+  private fun resolveCharacteristics(bed: Cas1SiteSurveyBedFactory.Cas1SiteSurveyBed): List<Cas1CharacteristicEntity> = listOf(
     CharacteristicRequired("isSingle", bed.isSingle),
     CharacteristicRequired("isGroundFloor", bed.isGroundFloor),
     CharacteristicRequired("isFullyFm", bed.isFullyFm),
@@ -147,7 +147,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     CharacteristicRequired("isStepFreeDesignated", bed.isStepFreeDesignated),
   ).filter { it.value }
     .map {
-      characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "room")
+      cas1CharacteristicRepository.findByPropertyNameAndModelScope(propertyName = it.propertyName, modelName = "room")
         ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP room")
     }
 

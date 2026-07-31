@@ -6,11 +6,11 @@ import org.locationtech.jts.geom.Point
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
@@ -37,7 +37,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var service: Yielded<String> = { "CAS1" }
   private var qCode: Yielded<String> = { randomStringUpperCase(4) }
-  private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
+  private var characteristics: Yielded<MutableList<Cas1CharacteristicEntity>> = { mutableListOf() }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.entries) }
   private var point: Yielded<Point?> = { null }
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
@@ -127,33 +127,14 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.qCode = { qCode }
   }
 
-  fun withCharacteristics(characteristics: List<CharacteristicEntity>) = apply {
+  fun withCharacteristics(characteristics: List<Cas1CharacteristicEntity>) = apply {
     this.characteristics = { characteristics.toMutableList() }
   }
 
-  fun withCharacteristicsList(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
+  fun withCharacteristicsList(characteristics: List<Cas1CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())
 
   fun withStatus(status: PropertyStatus) = apply {
     this.status = { status }
-  }
-
-  fun withUnitTestControlTestProbationAreaAndLocalAuthority() = apply {
-    this.withLocalAuthorityArea(
-      LocalAuthorityEntityFactory()
-        .withIdentifier("LOCALAUTHORITY")
-        .produce(),
-    )
-
-    this.withProbationRegion(
-      ProbationRegionEntityFactory()
-        .withDeliusCode("REGION")
-        .withApArea(
-          ApAreaEntityFactory()
-            .withIdentifier("APAREA")
-            .produce(),
-        )
-        .produce(),
-    )
   }
 
   fun withPoint(point: Point?) = apply {
