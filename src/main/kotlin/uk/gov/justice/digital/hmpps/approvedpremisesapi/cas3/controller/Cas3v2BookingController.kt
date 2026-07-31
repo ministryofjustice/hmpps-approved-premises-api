@@ -49,7 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.Forbidden
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -90,10 +89,7 @@ class Cas3v2BookingController(
     val booking = extractEntityFromCasResult(bookingResult)
     val personInfo = offenderDetailService.getPersonInfoResult(
       booking.crn,
-      user.deliusUsername,
-      user.hasQualification(
-        UserQualification.LAO,
-      ),
+      user.cas3LaoStrategy(),
     )
 
     val apiBooking = bookingTransformer.transformJpaToApi(
@@ -162,10 +158,7 @@ class Cas3v2BookingController(
     val booking = extractEntityFromCasResult(bookingResult)
     val personInfo = offenderDetailService.getPersonInfoResult(
       booking.crn,
-      user.deliusUsername,
-      user.hasQualification(
-        UserQualification.LAO,
-      ),
+      user.cas3LaoStrategy(),
     )
     val apiBooking = bookingTransformer.transformJpaToApi(
       booking,
@@ -192,7 +185,7 @@ class Cas3v2BookingController(
     }
 
     val personInfo =
-      offenderDetailService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+      offenderDetailService.getPersonInfoResult(crn, user.cas3LaoStrategy())
 
     if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: $crn")
 
