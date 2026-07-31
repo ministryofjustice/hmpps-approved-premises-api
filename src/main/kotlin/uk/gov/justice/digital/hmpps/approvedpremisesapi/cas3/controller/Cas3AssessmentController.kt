@@ -82,7 +82,7 @@ class Cas3AssessmentController(
 
     val assessment = extractEntityFromCasResult(cas3AssessmentService.getAssessmentAndValidate(user, assessmentId))
 
-    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.cas3LaoStrategy())
 
     val transformedResponse = cas3AssessmentTransformer.transformJpaToApi(assessment, personInfo)
 
@@ -106,7 +106,7 @@ class Cas3AssessmentController(
       ),
     )
 
-    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.cas3LaoStrategy())
 
     return ResponseEntity.ok(
       cas3AssessmentTransformer.transformJpaToApi(assessment, personInfo),

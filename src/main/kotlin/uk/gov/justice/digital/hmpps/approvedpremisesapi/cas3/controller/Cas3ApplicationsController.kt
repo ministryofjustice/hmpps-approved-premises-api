@@ -23,12 +23,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.Forbidden
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
@@ -52,7 +51,7 @@ class Cas3ApplicationsController(
     return ResponseEntity.ok(
       getPersonDetailAndTransformToSummary(
         applications = applications,
-        laoStrategy = CheckUserAccess(user.deliusUsername),
+        laoStrategy = user.cas3LaoStrategy(),
       ),
     )
   }
@@ -67,8 +66,7 @@ class Cas3ApplicationsController(
     return ResponseEntity.ok(
       getPersonDetailAndTransform(
         application = application,
-        user = user,
-        ignoreLaoRestrictions = false,
+        laoStrategy = user.cas3LaoStrategy(),
       ),
     )
   }
@@ -85,7 +83,7 @@ class Cas3ApplicationsController(
     val user = userService.getUserForRequest()
 
     val personInfo =
-      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.deliusUsername, false)) {
+      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.cas3LaoStrategy())) {
         is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
@@ -132,7 +130,7 @@ class Cas3ApplicationsController(
 
     val updatedApplication = extractEntityFromCasResult(applicationResult)
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user, false))
+    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user.cas3LaoStrategy()))
   }
 
   @PostMapping(
@@ -155,10 +153,9 @@ class Cas3ApplicationsController(
 
   private fun getPersonDetailAndTransform(
     application: TemporaryAccommodationApplicationEntity,
-    user: UserEntity,
-    ignoreLaoRestrictions: Boolean,
+    laoStrategy: LaoStrategy,
   ): Cas3Application {
-    val personInfo = offenderDetailService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderDetailService.getPersonInfoResult(application.crn, laoStrategy)
 
     return cas3ApplicationTransformer.transformJpaToApi(application, personInfo)
   }

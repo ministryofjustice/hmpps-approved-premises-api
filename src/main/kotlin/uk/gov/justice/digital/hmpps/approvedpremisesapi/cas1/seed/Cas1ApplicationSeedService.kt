@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Approved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
@@ -417,8 +418,7 @@ class Cas1ApplicationSeedServiceCaches(
       override fun load(crn: String): PersonInfoResult.Success.Full = when (
         val personInfoResult = offenderDetailService.getPersonInfoResult(
           crn = crn,
-          deliusUsername = null,
-          ignoreLaoRestrictions = true,
+          laoStrategy = LaoStrategy.NeverRestricted,
         )
       ) {
         is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(

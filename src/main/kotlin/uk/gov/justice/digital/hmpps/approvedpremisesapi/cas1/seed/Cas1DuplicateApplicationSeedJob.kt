@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
@@ -65,8 +66,7 @@ class Cas1DuplicateApplicationSeedJob(
       when (
         val personInfoResult = offenderDetailService.getPersonInfoResult(
           crn = sourceApplication.crn,
-          deliusUsername = null,
-          ignoreLaoRestrictions = true,
+          laoStrategy = LaoStrategy.NeverRestricted,
         )
       ) {
         is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(

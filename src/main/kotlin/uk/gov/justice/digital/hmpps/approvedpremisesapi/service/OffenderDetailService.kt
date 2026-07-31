@@ -25,27 +25,6 @@ class OffenderDetailService(
     laoStrategy: LaoStrategy,
   ) = getPersonInfoResults(setOf(crn), laoStrategy).first()
 
-  @Deprecated(
-    """Use version that takes limitedAccessStrategy, derive from [UserEntity.cas1LimitedAccessStrategy()] 
-    |or [UserEntity.cas3LimitedAccessStrategy()]""",
-  )
-  fun getPersonInfoResult(
-    crn: String,
-    deliusUsername: String?,
-    ignoreLaoRestrictions: Boolean,
-  ): PersonInfoResult {
-    check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
-
-    return getPersonInfoResults(
-      crns = setOf(crn),
-      laoStrategy = if (ignoreLaoRestrictions) {
-        LaoStrategy.NeverRestricted
-      } else {
-        LaoStrategy.CheckUserAccess(deliusUsername!!)
-      },
-    ).first()
-  }
-
   /**
    * Returns a list of [PersonInfoResult] for the given set of CRNs.
    * If the CRN is not found, it will return a [PersonInfoResult.NotFound] for that CRN so there will always be a result for each CRN.
