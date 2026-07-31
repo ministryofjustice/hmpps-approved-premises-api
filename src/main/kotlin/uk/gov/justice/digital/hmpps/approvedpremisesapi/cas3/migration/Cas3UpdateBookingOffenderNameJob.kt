@@ -40,7 +40,7 @@ class Cas3UpdateBookingOffenderNameJob(
         val personInfos = splitAndRetrievePersonInfo(pageSize, offendersCrn)
 
         slice.content.forEach {
-          val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
+          val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.NotFound(it.crn)
           updateBooking(personInfo, it)
         }
 
