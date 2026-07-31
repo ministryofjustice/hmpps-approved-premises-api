@@ -61,7 +61,6 @@ class Cas1PeopleController(
 
     val timeline = when (val personInfoResult = offenderDetailService.getPersonInfoResult(crn, user.cas1LaoStrategy())) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
-      is PersonInfoResult.Unknown -> throw personInfoResult.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
       is PersonInfoResult.Success.Full -> buildPersonInfoWithTimeline(personInfoResult, crn)
       is PersonInfoResult.Success.Restricted -> buildPersonInfoWithoutTimeline(personInfoResult)
     }

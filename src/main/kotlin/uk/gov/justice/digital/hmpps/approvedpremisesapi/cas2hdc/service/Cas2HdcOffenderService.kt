@@ -180,7 +180,7 @@ class Cas2HdcOffenderService(
 
   fun getFullInfoForPersonOrThrow(crn: String): PersonInfoResult.Success.Full {
     when (val personInfo = getInfoForPerson(crn)) {
-      is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(crn, "Offender")
+      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem("Offender $crn is Restricted.")
       is PersonInfoResult.Success.Full -> return personInfo
     }

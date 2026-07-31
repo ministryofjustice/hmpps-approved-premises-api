@@ -280,35 +280,6 @@ class OffenderDetailServiceTest {
     }
 
     @Test
-    fun `If offender unknown don't fetch inmate details and return unknown`() {
-      val personSummaryInfoResult = PersonSummaryInfoResult.Unknown(CRN1)
-
-      every {
-        mockOffenderService.getPersonSummaryInfoResults(
-          crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
-        )
-      } returns listOf(personSummaryInfoResult)
-
-      every {
-        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
-          personSummaryInfoResult = personSummaryInfoResult,
-          inmateStatus = null,
-        )
-      } returns mockPersonInfoResult1
-
-      val result = service.getPersonInfoResults(
-        crns = setOf(CRN1),
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
-      )
-
-      assertThat(result).hasSize(1)
-      assertThat(result[0]).isEqualTo(mockPersonInfoResult1)
-
-      verify { mockPrisonsApiClient wasNot Called }
-    }
-
-    @Test
     fun `If offender not found don't fetch inmate details`() {
       val personSummaryInfoResult = PersonSummaryInfoResult.NotFound(CRN1)
 
@@ -442,34 +413,6 @@ class OffenderDetailServiceTest {
       )
 
       assertThat(result).isEqualTo(mockPersonInfoResult1)
-    }
-
-    @Test
-    fun `If offender unknown don't fetch inmate details and return unknown`() {
-      val personSummaryInfoResult = PersonSummaryInfoResult.Unknown(CRN1)
-
-      every {
-        mockOffenderService.getPersonSummaryInfoResults(
-          crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
-        )
-      } returns listOf(personSummaryInfoResult)
-
-      every {
-        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
-          personSummaryInfoResult = personSummaryInfoResult,
-          inmateStatus = null,
-        )
-      } returns mockPersonInfoResult1
-
-      val result = service.getPersonInfoResult(
-        crn = CRN1,
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
-      )
-
-      assertThat(result).isEqualTo(mockPersonInfoResult1)
-
-      verify { mockPrisonsApiClient wasNot Called }
     }
 
     @Test

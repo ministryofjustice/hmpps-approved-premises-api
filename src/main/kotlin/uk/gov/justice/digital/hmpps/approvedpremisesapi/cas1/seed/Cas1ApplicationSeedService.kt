@@ -421,7 +421,7 @@ class Cas1ApplicationSeedServiceCaches(
           laoStrategy = LaoStrategy.NeverRestricted,
         )
       ) {
-        is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
+        is PersonInfoResult.NotFound -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
         )

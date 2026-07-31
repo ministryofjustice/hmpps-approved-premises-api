@@ -41,11 +41,6 @@ class PersonTransformer {
       nomsNumber = personSummaryInfoResult.nomsNumber,
       tier = personSummaryInfoResult.tier,
     )
-
-    is PersonSummaryInfoResult.Unknown -> PersonInfoResult.Unknown(
-      crn = personSummaryInfoResult.crn,
-      throwable = personSummaryInfoResult.throwable,
-    )
   }
 
   fun personInfoResultToPersonSummaryInfoResult(
@@ -65,10 +60,6 @@ class PersonTransformer {
       crn = personInfo.crn,
       nomsNumber = personInfo.nomsNumber,
       tier = personInfo.tier,
-    )
-
-    is PersonInfoResult.Unknown -> PersonSummaryInfoResult.Unknown(
-      crn = personInfo.crn,
     )
   }
 
@@ -94,7 +85,7 @@ class PersonTransformer {
         )
       }
 
-      is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> {
+      is PersonSummaryInfoResult.NotFound -> {
         return UnknownPersonSummary(
           crn = personSummaryInfo.crn,
           personType = PersonSummaryDiscriminator.unknownPersonSummary,
@@ -140,7 +131,7 @@ class PersonTransformer {
       tier = personInfoResult.tier,
     )
 
-    is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> UnknownPerson(
+    is PersonInfoResult.NotFound -> UnknownPerson(
       type = PersonType.unknownPerson,
       crn = personInfoResult.crn,
     )

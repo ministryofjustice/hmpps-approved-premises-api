@@ -27,9 +27,6 @@ fun getNameFromPersonSummaryInfoResult(result: PersonSummaryInfoResult): String 
   is PersonSummaryInfoResult.NotFound -> {
     "Unknown"
   }
-  is PersonSummaryInfoResult.Unknown -> {
-    "Unknown"
-  }
 }
 
 fun <V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? = when (this) {

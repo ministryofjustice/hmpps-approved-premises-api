@@ -58,7 +58,7 @@ class Cas3UpdateBookingOffenderNameJob(
     try {
       val offenderName = when (personInfo) {
         is PersonSummaryInfoResult.Success.Full -> "${personInfo.summary.name.forename} ${personInfo.summary.name.surname}"
-        is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> throw Exception("Offender not found for crn ${it.crn}")
+        is PersonSummaryInfoResult.NotFound -> throw Exception("Offender not found for crn ${it.crn}")
         is PersonSummaryInfoResult.Success.Restricted -> throw Exception("You are not authorized")
       }
 
