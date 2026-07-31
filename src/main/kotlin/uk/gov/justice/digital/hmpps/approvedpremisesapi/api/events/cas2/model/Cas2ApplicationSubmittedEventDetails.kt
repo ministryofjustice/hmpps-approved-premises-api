@@ -18,6 +18,8 @@ data class Cas2ApplicationSubmittedEventDetails(
 
   @get:JsonProperty("applicationOrigin", required = true) val applicationOrigin: String = "homeDetentionCurfew",
 
+  val cohort: Cas2EventCohort? = null,
+
   @Schema(example = "Thu Mar 30 01:00:00 BST 2023", description = "")
   @get:JsonProperty("bailHearingDate") val bailHearingDate: java.time.LocalDate? = null,
 

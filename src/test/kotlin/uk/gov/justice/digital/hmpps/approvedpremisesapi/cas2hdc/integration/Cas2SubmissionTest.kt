@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
@@ -731,6 +732,7 @@ class Cas2SubmissionTest(
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
             withCreatedByUser(submittingUser)
+            withCohort(Cas2Cohort.HDC)
             withData(
               """
                         {
@@ -774,6 +776,8 @@ class Cas2SubmissionTest(
         )
         assertThat(domainEventFromJson.eventDetails.applicationUrl)
           .isEqualTo(expectedFrontEndUrl)
+        assertThat(domainEventFromJson.eventDetails.cohort?.code).isEqualTo(Cas2Cohort.HDC.name)
+        assertThat(domainEventFromJson.eventDetails.cohort?.longDisplayName).isEqualTo(Cas2Cohort.HDC.longDisplayName)
 
         val persistedAssessment = realAssessmentRepository.findByServiceOrigin(Cas2ServiceOrigin.HDC).first()
         assertThat(persistedAssessment.application.id).isEqualTo(applicationId)

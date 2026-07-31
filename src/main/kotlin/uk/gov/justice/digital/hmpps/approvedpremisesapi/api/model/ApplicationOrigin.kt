@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonValue
  * The Application Origin is a misnomer as it doesn't identify the 'origin' of the application
  * in all cases. It can be thought of as the application's type
  */
+@Deprecated(
+  "ApplicationOrigin does not reliably identify the origin of an application use Cas2Cohort instead.",
+)
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApplicationOrigin(@get:JsonValue val value: String) {
 

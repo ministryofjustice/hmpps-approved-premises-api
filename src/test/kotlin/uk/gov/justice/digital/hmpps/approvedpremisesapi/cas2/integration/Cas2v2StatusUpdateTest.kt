@@ -137,6 +137,10 @@ class Cas2v2StatusUpdateTest(
           )
           assertThat(domainEventFromJson.eventDetails.applicationUrl)
             .isEqualTo(expectedFrontEndUrl)
+          assertThat(domainEventFromJson.eventDetails.cohort?.code)
+            .isEqualTo(Cas2Cohort.COURT_BAIL.name)
+          assertThat(domainEventFromJson.eventDetails.cohort?.longDisplayName)
+            .isEqualTo(Cas2Cohort.COURT_BAIL.longDisplayName)
         }
       }
     }

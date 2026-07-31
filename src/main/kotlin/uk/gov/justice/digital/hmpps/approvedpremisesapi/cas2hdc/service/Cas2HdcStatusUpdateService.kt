@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2EventCohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
@@ -151,6 +152,9 @@ class Cas2HdcStatusUpdateService(
           eventDetails = Cas2ApplicationStatusUpdatedEventDetails(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+            cohort = application.cohort?.let {
+              Cas2EventCohort(code = it.name, longDisplayName = it.longDisplayName)
+            },
             personReference = PersonReference(
               crn = application.crn,
               noms = application.nomsNumber.toString(),

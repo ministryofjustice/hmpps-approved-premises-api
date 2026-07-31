@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -87,6 +88,7 @@ class Cas2StatusUpdateTest(
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
+            withCohort(Cas2Cohort.HDC)
           }
 
           cas2AssessmentEntityFactory.produceAndPersist {
@@ -128,6 +130,10 @@ class Cas2StatusUpdateTest(
           )
           assertThat(domainEventFromJson.eventDetails.applicationUrl)
             .isEqualTo(expectedFrontEndUrl)
+          assertThat(domainEventFromJson.eventDetails.cohort?.code)
+            .isEqualTo(Cas2Cohort.HDC.name)
+          assertThat(domainEventFromJson.eventDetails.cohort?.longDisplayName)
+            .isEqualTo(Cas2Cohort.HDC.longDisplayName)
         }
       }
     }

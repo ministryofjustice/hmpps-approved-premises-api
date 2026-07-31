@@ -7,6 +7,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetailsSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2EventCohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
@@ -328,6 +329,9 @@ class Cas2HdcApplicationService(
               ),
             ),
             applicationOrigin = ApplicationOrigin.homeDetentionCurfew.toString(),
+            cohort = application.cohort?.let {
+              Cas2EventCohort(code = it.name, longDisplayName = it.longDisplayName)
+            },
           ),
         ),
       ),
