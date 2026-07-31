@@ -171,7 +171,7 @@ class Cas3ApplicationsController(
       val crn = it.getCrn()
       cas3ApplicationTransformer.transformDomainToCas3ApplicationSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
+        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
       )
     }
   }
