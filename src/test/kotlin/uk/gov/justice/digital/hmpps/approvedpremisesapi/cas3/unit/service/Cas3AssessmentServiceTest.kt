@@ -27,12 +27,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -123,14 +121,6 @@ class Cas3AssessmentServiceTest {
       every { userAccessServiceMock.userCanViewCas3Assessment(user, assessment) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-      every {
-        offenderServiceMock.getOffenderByCrn(
-          assessment.application.crn,
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
 
       every { offenderServiceMock.getPersonSummaryInfoResult(assessment.application.crn, user.cas1LaoStrategy()) } returns
         PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce(), tier = null)
@@ -573,10 +563,6 @@ class Cas3AssessmentServiceTest {
 
       every { userServiceMock.getUserForRequest() } returns user
 
-      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
       every {
         offenderServiceMock.getPersonSummaryInfoResult(
           assessment.application.crn,
@@ -649,13 +635,6 @@ class Cas3AssessmentServiceTest {
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
 
       every {
-        offenderServiceMock.getOffenderByCrn(
-          assessment.application.crn,
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Unauthorised()
-
-      every {
         offenderServiceMock.getPersonSummaryInfoResult(
           assessment.application.crn,
           user.cas1LaoStrategy(),
@@ -724,10 +703,6 @@ class Cas3AssessmentServiceTest {
       every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-
-      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
 
       every {
         offenderServiceMock.getPersonSummaryInfoResult(
