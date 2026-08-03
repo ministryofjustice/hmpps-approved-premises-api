@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
@@ -48,6 +49,7 @@ class Cas1PeopleController(
   private val licenceService: LicenceService,
   private val offenderService: OffenderService,
   private val healthAndMedicationService: HealthAndMedicationService,
+  private val caseService: CaseService,
 ) {
 
   companion object {
@@ -68,10 +70,16 @@ class Cas1PeopleController(
     return ResponseEntity.ok(timeline)
   }
 
-  @Operation(summary = "Returns a risk profile for a Person.")
+  @Operation(
+    summary = "Returns a risk profile for a Person.",
+    description = "Returns a 404 if a case for the CRN has not been previously registered in CAS.",
+  )
   @GetMapping("/people/{crn}/risk-profile")
   fun getPersonRiskProfile(@PathVariable crn: String): ResponseEntity<PersonRisks> {
-    val personRisks = offenderRiskService.getPersonRisks(crn)
+    val case = caseService.getCase(crn)
+      ?: throw NotFoundProblem(crn, "Case").also { sentryService.captureException(it) }
+
+    val personRisks = offenderRiskService.getPersonRisks(case)
     return ResponseEntity.ok(personRisks)
   }
 

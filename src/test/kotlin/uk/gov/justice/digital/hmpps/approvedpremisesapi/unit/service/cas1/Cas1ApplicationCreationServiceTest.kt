@@ -214,7 +214,8 @@ class Cas1ApplicationCreationServiceTest {
         )
         .produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, 123, "1", "A12HI")
 
@@ -248,7 +249,8 @@ class Cas1ApplicationCreationServiceTest {
 
       val riskRatings = PersonRisksFactory().produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       assertThrows<RuntimeException> { applicationService.createApplication(crn, user, 123, "1", "A12HI") }
 
@@ -303,7 +305,8 @@ class Cas1ApplicationCreationServiceTest {
         )
         .produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       val savedApplication = slot<ApplicationEntity>()
 
@@ -372,7 +375,8 @@ class Cas1ApplicationCreationServiceTest {
         )
         .produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       val savedApplication = slot<ApplicationEntity>()
 
@@ -442,7 +446,8 @@ class Cas1ApplicationCreationServiceTest {
         )
         .produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       val savedApplication = slot<ApplicationEntity>()
 

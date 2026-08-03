@@ -98,7 +98,8 @@ class Cas1ApplicationCreationService(
       return fieldValidationError
     }
 
-    val riskRatings = offenderRisksService.getPersonRisks(crn)
+    val case = caseService.ensureCaseExists(crn)
+    val riskRatings = offenderRisksService.getPersonRisks(case)
 
     val createdApplication = applicationRepository.saveAndFlush(
       createApprovedPremisesApplicationEntity(
@@ -138,7 +139,7 @@ class Cas1ApplicationCreationService(
     val case = caseService.ensureCaseExists(crn)
     case.tier ?: throw InternalServerErrorProblem("Could not find risk tier for offender with CRN $crn")
 
-    val riskRatings = offenderRisksService.getPersonRisks(crn)
+    val riskRatings = offenderRisksService.getPersonRisks(case)
 
     val createdApplicationId = applicationRepository.saveAndFlush(
       createApprovedPremisesApplicationEntity(

@@ -11,14 +11,14 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.MappaDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Registration
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService
@@ -28,19 +28,16 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZonedDateTime
-import java.util.UUID
 
 class OffenderRisksServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApOASysContextApiClient = mockk<ApAndOASysClient>()
-  private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockSentryService = mockk<SentryService>()
   private val mockOASysSuitabilityService = mockk<OASysSuitabilityService>()
 
   private val apDeliusContextApiOffenderRisksService = OffenderRisksService(
     mockApDeliusContextApiClient,
     mockApOASysContextApiClient,
-    mockHMPPSTierApiClient,
     mockSentryService,
     mockOASysSuitabilityService,
   )
@@ -48,12 +45,15 @@ class OffenderRisksServiceTest {
   @Test
   fun `getPersonRisks returns NotFound envelopes for RoSH, Tier, Mappa & flags when respective Clients return 404 and does not log error`() {
     val crn = "a-crn"
+    val caseDto = CaseDtoFactory()
+      .withCrn(crn)
+      .withTier(null)
+      .produce()
 
     mock404RoSH(crn)
-    mock404Tier(crn)
     mock404CaseDetail(crn)
 
-    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(caseDto)
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.tier.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.mappa.status).isEqualTo(RiskStatus.NotFound)
@@ -65,15 +65,18 @@ class OffenderRisksServiceTest {
   @Test
   fun `getPersonRisks returns Error envelopes for RoSH, Tier, Mappa & flags when respective Clients return 500 and logs error`() {
     val crn = "a-crn"
+    val caseDto = CaseDtoFactory()
+      .withCrn(crn)
+      .withTier(null)
+      .produce()
 
     mock500RoSH(crn)
-    mock500Tier(crn)
     mock500CaseDetail(crn)
     mockSentry()
 
-    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(caseDto)
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Error)
-    assertThat(result.tier.status).isEqualTo(RiskStatus.Error)
+    assertThat(result.tier.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.mappa.status).isEqualTo(RiskStatus.Error)
     assertThat(result.flags.status).isEqualTo(RiskStatus.Error)
 
@@ -82,13 +85,16 @@ class OffenderRisksServiceTest {
 
     assertThat(exceptions[0].message).isEqualTo("An error occurred obtaining Risks for getRoshRatings, crn: a-crn. Returning RiskWithStatus(status=Error). This does not necessarily block processing")
     assertThat(exceptions[1].message).isEqualTo("An error occurred obtaining Risks for toMappa, body: null. Returning RiskWithStatus(status=Error). This does not necessarily block processing")
-    assertThat(exceptions[2].message).isEqualTo("An error occurred obtaining Risks for getTier, crn: a-crn. Returning RiskWithStatus(status=Error). This does not necessarily block processing")
-    assertThat(exceptions[3].message).isEqualTo("An error occurred obtaining Risks for toRiskFlags, body: null. Returning RiskWithStatus(status=Error). This does not necessarily block processing")
+    assertThat(exceptions[2].message).isEqualTo("An error occurred obtaining Risks for toRiskFlags, body: null. Returning RiskWithStatus(status=Error). This does not necessarily block processing")
   }
 
   @Test
   fun `getPersonRisks returns Error envelopes when RoSH Client fails and logs error`() {
     val crn = "a-crn"
+    val caseDto = CaseDtoFactory()
+      .withCrn(crn)
+      .withTier(null)
+      .produce()
 
     every { mockApOASysContextApiClient.getRoshRatings(crn) } returns
       ClientResult.Failure.Other(
@@ -96,13 +102,12 @@ class OffenderRisksServiceTest {
         "/rosh/a-crn",
         RuntimeException(),
       )
-    mock500Tier(crn)
     mock500CaseDetail(crn)
     mockSentry()
 
-    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(caseDto)
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Error)
-    assertThat(result.tier.status).isEqualTo(RiskStatus.Error)
+    assertThat(result.tier.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.mappa.status).isEqualTo(RiskStatus.Error)
     assertThat(result.flags.status).isEqualTo(RiskStatus.Error)
 
@@ -116,6 +121,15 @@ class OffenderRisksServiceTest {
   @Test
   fun `getPersonRisks returns RoSH not found when OASys assessment is older than 6 months`() {
     val crn = "a-crn"
+    val caseDto = CaseDtoFactory()
+      .withCrn(crn)
+      .withTier(
+        TierDtoFactory()
+          .withTierScore("M2")
+          .withCalculationDate(LocalDateTime.parse("2022-09-06T14:59:00"))
+          .produce(),
+      )
+      .produce()
 
     mock200RoSH(
       crn,
@@ -127,16 +141,6 @@ class OffenderRisksServiceTest {
         withRiskKnownAdultCommunity(RiskLevel.HIGH)
         withRiskStaffCommunity(RiskLevel.VERY_HIGH)
       }.produce(),
-    )
-
-    mock200Tier(
-      crn,
-      Tier(
-        tierScore = "M2",
-        calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
-        changeReason = null,
-      ),
     )
 
     mock200CaseDetail(
@@ -171,7 +175,7 @@ class OffenderRisksServiceTest {
 
     every { mockOASysSuitabilityService.isSuitable(crn, any(), OASysSuitabilityService.SuitabilityStrategy.CompletedInLastSixMonths) } returns false
 
-    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(caseDto)
 
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.tier.status).isEqualTo(RiskStatus.Retrieved)
@@ -195,16 +199,6 @@ class OffenderRisksServiceTest {
         withRiskKnownAdultCommunity(RiskLevel.HIGH)
         withRiskStaffCommunity(RiskLevel.VERY_HIGH)
       }.produce(),
-    )
-
-    mock200Tier(
-      crn,
-      Tier(
-        tierScore = "M2",
-        calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
-        changeReason = "reason",
-      ),
     )
 
     mock200CaseDetail(
@@ -239,19 +233,17 @@ class OffenderRisksServiceTest {
 
     every { mockOASysSuitabilityService.isSuitable(crn, any(), OASysSuitabilityService.SuitabilityStrategy.CompletedInLastSixMonths) } returns true
 
-    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
+    val caseDto = CaseDtoFactory()
+      .withCrn(crn)
+      .withTier(
+        TierDtoFactory()
+          .withTierScore("M2")
+          .withCalculationDate(LocalDateTime.parse("2022-09-06T14:59:00"))
+          .produce(),
+      )
+      .produce()
 
-    assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
-    result.roshRisks.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.overallRisk).isEqualTo("Very High")
-      assertThat(it.riskToChildren).isEqualTo("Low")
-      assertThat(it.riskToPublic).isEqualTo("Medium")
-      assertThat(it.riskToKnownAdult).isEqualTo("High")
-      assertThat(it.riskToStaff).isEqualTo("Very High")
-
-      verify { mockSentryService wasNot Called }
-    }
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(caseDto)
 
     assertThat(result.tier.status).isEqualTo(RiskStatus.Retrieved)
     result.tier.value!!.let {
@@ -283,16 +275,6 @@ class OffenderRisksServiceTest {
         withRiskKnownAdultCommunity(RiskLevel.HIGH)
         withRiskStaffCommunity(RiskLevel.VERY_HIGH)
       }.produce(),
-    )
-
-    mock200Tier(
-      crn,
-      Tier(
-        tierScore = "M2",
-        calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
-        changeReason = "reason",
-      ),
     )
 
     mock200CaseDetail(
@@ -327,7 +309,17 @@ class OffenderRisksServiceTest {
 
     every { mockOASysSuitabilityService.isSuitable(crn, any(), OASysSuitabilityService.SuitabilityStrategy.CompletedInLastSixMonths) } returns true
 
-    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
+    val caseDto = CaseDtoFactory()
+      .withCrn(crn)
+      .withTier(
+        TierDtoFactory()
+          .withTierScore("M2")
+          .withCalculationDate(LocalDateTime.parse("2022-09-06T14:59:00"))
+          .produce(),
+      )
+      .produce()
+
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(caseDto)
 
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
     result.roshRisks.value!!.let {
@@ -362,16 +354,6 @@ class OffenderRisksServiceTest {
       )
   }
 
-  private fun mock404Tier(crn: String) {
-    every { mockHMPPSTierApiClient.getTier(crn) } returns
-      ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
-        "/crn/a-crn/tier",
-        HttpStatus.NOT_FOUND,
-        body = null,
-      )
-  }
-
   private fun mock404CaseDetail(crn: String) {
     every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns
       ClientResult.Failure.StatusCode(
@@ -392,16 +374,6 @@ class OffenderRisksServiceTest {
       )
   }
 
-  private fun mock500Tier(crn: String) {
-    every { mockHMPPSTierApiClient.getTier(crn) } returns
-      ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
-        "/crn/a-crn/tier",
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        body = null,
-      )
-  }
-
   private fun mock500CaseDetail(crn: String) {
     every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns
       ClientResult.Failure.StatusCode(
@@ -414,11 +386,6 @@ class OffenderRisksServiceTest {
 
   private fun mock200RoSH(crn: String, body: RoshRatings) {
     every { mockApOASysContextApiClient.getRoshRatings(crn) } returns
-      ClientResult.Success(HttpStatus.OK, body = body)
-  }
-
-  private fun mock200Tier(crn: String, body: Tier) {
-    every { mockHMPPSTierApiClient.getTier(crn) } returns
       ClientResult.Success(HttpStatus.OK, body = body)
   }
 

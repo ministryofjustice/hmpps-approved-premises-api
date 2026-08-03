@@ -1179,7 +1179,9 @@ class Cas3ApplicationServiceTest {
         )
         .produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      val caseDto = CaseDtoFactory().withCrn(crn).produce()
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       val result = cas3ApplicationService.createApplication(
         crn,
@@ -1262,7 +1264,9 @@ class Cas3ApplicationServiceTest {
         )
         .produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      val caseDto = CaseDtoFactory().withCrn(crn).produce()
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       val result = cas3ApplicationService.createApplication(
         crn,
@@ -1342,7 +1346,9 @@ class Cas3ApplicationServiceTest {
         )
         .produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      val caseDto = CaseDtoFactory().withCrn(crn).produce()
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       val result = cas3ApplicationService.createApplication(
         crn,
@@ -1423,7 +1429,9 @@ class Cas3ApplicationServiceTest {
         )
         .produce()
 
-      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+      val caseDto = CaseDtoFactory().withCrn(crn).produce()
+      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
+      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
 
       val result = cas3ApplicationService.createApplication(
         crn,
