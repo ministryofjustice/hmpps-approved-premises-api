@@ -59,6 +59,7 @@ class Cas2ApplicationsTransformer(
     assessment = cas2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
     timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
     applicationOrigin = jpa.applicationOrigin,
+    cohort = jpa.cohort?.apiType,
   )
 
   fun transformJpaSummaryToSummary(

@@ -30,4 +30,6 @@ data class Cas2SubmittedApplication(
   @get:JsonProperty("applicationOrigin") val applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,
 
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+
+  val cohort: Cas2CohortDto? = null,
 )

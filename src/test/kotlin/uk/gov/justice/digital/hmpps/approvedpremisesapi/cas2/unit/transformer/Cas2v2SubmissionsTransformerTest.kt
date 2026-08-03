@@ -89,13 +89,15 @@ class Cas2v2SubmissionsTransformerTest {
         .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .produce()
 
-      val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
+      val jpaEntity = submittedCas2ApplicationFactory.withCohort(Cas2Cohort.COURT_BAIL).withAssessment(assessmentEntity).produce()
 
       every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
 
       val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
 
       assertThat(transformation.submittedBy).isEqualTo(mockCas2User)
+
+      assertThat(transformation.cohort).isEqualTo(Cas2CohortDto.COURT_BAIL)
 
       assertThat(transformation.assessment.statusUpdates).isEqualTo(
         listOf(mockStatusUpdate),
@@ -113,6 +115,7 @@ class Cas2v2SubmissionsTransformerTest {
         "applicationOrigin",
         "assessment",
         "bailHearingDate",
+        "cohort",
       )
     }
   }
