@@ -1446,7 +1446,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             produceAndPersistAssessmentEntity(userEntity, application)
 
           webTestClient.post()
-            .uri("/assessments/${assessment.id}/referral-history-notes")
+            .uri("/cas3/assessments/${assessment.id}/referral-history-notes")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas3ReferralHistoryUserNote(
