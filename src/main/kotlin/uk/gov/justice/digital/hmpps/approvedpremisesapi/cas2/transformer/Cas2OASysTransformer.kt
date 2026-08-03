@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRisk
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshRatingsDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OASysAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
@@ -34,10 +35,18 @@ class Cas2OASysTransformer {
 
   fun toOASysRoshRatingsDto(roshRatings: RoshRatings?) = Cas2OAsysRoshRatingsDto(
     metadata = Cas2OASysAssessmentInfoTransformer().toAssessmentMetadata(roshRatings),
-    overallRisk = Cas2OASysRiskLevel.forValue(roshRatings?.rosh?.determineOverallRiskLevel()?.name),
-    riskToChildren = Cas2OASysRiskLevel.forValue(roshRatings?.rosh?.riskChildrenCommunity?.name),
-    riskToPublic = Cas2OASysRiskLevel.forValue(roshRatings?.rosh?.riskPublicCommunity?.name),
-    riskToKnownAdult = Cas2OASysRiskLevel.forValue(roshRatings?.rosh?.riskKnownAdultCommunity?.name),
-    riskToStaff = Cas2OASysRiskLevel.forValue(roshRatings?.rosh?.riskStaffCommunity?.name),
+    overallRisk = roshRatings?.rosh?.determineOverallRiskLevel().toCas2OASysRiskLevel(),
+    riskToChildren = roshRatings?.rosh?.riskChildrenCommunity.toCas2OASysRiskLevel(),
+    riskToPublic = roshRatings?.rosh?.riskPublicCommunity.toCas2OASysRiskLevel(),
+    riskToKnownAdult = roshRatings?.rosh?.riskKnownAdultCommunity.toCas2OASysRiskLevel(),
+    riskToStaff = roshRatings?.rosh?.riskStaffCommunity.toCas2OASysRiskLevel(),
   )
+}
+
+fun RiskLevel?.toCas2OASysRiskLevel() = when (this) {
+  RiskLevel.VERY_HIGH -> Cas2OASysRiskLevel.VERY_HIGH
+  RiskLevel.HIGH -> Cas2OASysRiskLevel.HIGH
+  RiskLevel.MEDIUM -> Cas2OASysRiskLevel.MEDIUM
+  RiskLevel.LOW -> Cas2OASysRiskLevel.LOW
+  null -> null
 }
