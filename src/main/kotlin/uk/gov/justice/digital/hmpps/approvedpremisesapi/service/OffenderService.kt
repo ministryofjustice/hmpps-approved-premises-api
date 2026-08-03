@@ -8,11 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
@@ -198,80 +196,6 @@ class OffenderService(
   private fun CaseSummary.hasLimitedAccess() = this.currentExclusion || this.currentRestriction
   private fun CaseAccess.hasLimitedAccess() = this.userExcluded || this.userRestricted
   private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
-
-  @Deprecated(
-    """ This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model
-     
-      Note that whilst this function returns CasResult.Unauthorised if offender is LAO and user can't access
-      them, the non-deprecated functions will instead return PersonSummaryInfoResult.Full.Restricted""",
-    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
-  )
-  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> = getOffender(
-    ignoreLaoRestrictions,
-    { offenderDetailsDataSource.getOffenderDetailSummary(crn) },
-    { offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn) },
-  )
-
-  /**
-   * Returns CasResult.Unauthorised if offender is LAO and user can't access them
-   */
-  @Deprecated(
-    """
-      This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model
-      
-      Note that whilst this function returns CasResult.Unauthorised if offender is LAO and user can't access
-      them, the non-deprecated functions will instead return PersonSummaryInfoResult.Full.Restricted
-    """,
-    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
-  )
-  @Suppress("detekt:CyclomaticComplexMethod", "detekt:NestedBlockDepth", "detekt:ReturnCount")
-  private fun getOffender(
-    ignoreLaoRestrictions: Boolean,
-    offenderProducer: () -> ClientResult<OffenderDetailSummary>?,
-    userAccessProducer: () -> ClientResult<UserOffenderAccess>?,
-  ): AuthorisableActionResult<OffenderDetailSummary> {
-    val offender = when (val offenderResponse = offenderProducer()) {
-      is ClientResult.Success -> offenderResponse.body
-      is ClientResult.Failure.StatusCode -> when (offenderResponse.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        else -> offenderResponse.throwException()
-      }
-      is ClientResult.Failure -> offenderResponse.throwException()
-      null -> return AuthorisableActionResult.NotFound()
-    }
-
-    if (!ignoreLaoRestrictions) {
-      if (offender.currentExclusion || offender.currentRestriction) {
-        val access = when (val accessResponse = userAccessProducer()) {
-          is ClientResult.Success -> accessResponse.body
-          is ClientResult.Failure.StatusCode -> {
-            if (accessResponse.status == HttpStatus.FORBIDDEN) {
-              // This is legacy behaviour to differentiate between the community api get access for
-              // a single CRN endpoint returning 403 (meaning the client can't access the endpoint),
-              // and the endpoint returning a response indicating the user can't access the offender
-              // This isn't required if directly calling apDeliusContextApiClient.getUserAccessForCrns
-              try {
-                accessResponse.deserializeTo<UserOffenderAccess>()
-                return AuthorisableActionResult.Unauthorised()
-              } catch (exception: Exception) {
-                accessResponse.throwException()
-              }
-            }
-
-            accessResponse.throwException()
-          }
-          is ClientResult.Failure -> accessResponse.throwException()
-          null -> return AuthorisableActionResult.NotFound()
-        }
-
-        if (access.userExcluded || access.userRestricted) {
-          return AuthorisableActionResult.Unauthorised()
-        }
-      }
-    }
-
-    return AuthorisableActionResult.Success(offender)
-  }
 
   fun isLao(crn: String): Boolean {
     val offender = when (val offenderResponse = apDeliusContextApiClient.getCaseSummaries(listOf(crn))) {
