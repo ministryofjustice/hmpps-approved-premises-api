@@ -47,5 +47,6 @@ class Cas2SubmissionsTransformer(
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     crn = jpaSummary.crn,
     nomsNumber = jpaSummary.nomsNumber,
+    cohort = jpaSummary.cohort?.apiType,
   )
 }
