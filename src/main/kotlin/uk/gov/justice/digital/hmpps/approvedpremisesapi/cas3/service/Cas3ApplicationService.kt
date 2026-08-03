@@ -8,9 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validatedCasResult
@@ -28,11 +27,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import java.time.Clock
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -122,15 +123,15 @@ class Cas3ApplicationService(
     }
 
     return validatedCasResult {
-      val offenderDetails =
+      val caseSummary =
         when (
-          val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+          val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy())
         ) {
-          is AuthorisableActionResult.NotFound -> return@validatedCasResult "$.crn" hasSingleValidationError "doesNotExist"
-          is AuthorisableActionResult.Unauthorised ->
+          is PersonSummaryInfoResult.NotFound -> return@validatedCasResult "$.crn" hasSingleValidationError "doesNotExist"
+          is PersonSummaryInfoResult.Success.Restricted ->
             return@validatedCasResult "$.crn" hasSingleValidationError "userPermission"
 
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+          is PersonSummaryInfoResult.Success.Full -> personSummaryInfoResult.summary
         }
 
       if (convictionId == null) {
@@ -165,7 +166,7 @@ class Cas3ApplicationService(
           deliusEventNumber,
           offenceId,
           riskRatings,
-          offenderDetails,
+          caseSummary,
           prisonName,
         ),
       )
@@ -314,7 +315,7 @@ class Cas3ApplicationService(
     deliusEventNumber: String?,
     offenceId: String?,
     riskRatings: PersonRisks?,
-    offenderDetails: OffenderDetailSummary,
+    caseSummary: CaseSummary,
     prisonName: String?,
   ): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = UUID.randomUUID(),
@@ -331,7 +332,7 @@ class Cas3ApplicationService(
     riskRatings = riskRatings,
     assessments = mutableListOf(),
     probationRegion = user.probationRegion,
-    nomsNumber = offenderDetails.otherIds.nomsNumber,
+    nomsNumber = caseSummary.nomsId,
     arrivalDate = null,
     isRegisteredSexOffender = null,
     needsAccessibleProperty = null,
@@ -344,7 +345,7 @@ class Cas3ApplicationService(
     dutyToReferOutcome = null,
     prisonNameOnCreation = prisonName,
     personReleaseDate = null,
-    name = "${offenderDetails.firstName} ${offenderDetails.surname}",
+    name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
     isHistoryOfSexualOffence = null,
     isConcerningSexualBehaviour = null,
     isConcerningArsonBehaviour = null,

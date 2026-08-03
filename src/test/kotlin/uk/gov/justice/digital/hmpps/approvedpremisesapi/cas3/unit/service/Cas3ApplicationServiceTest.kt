@@ -32,12 +32,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -57,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -64,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
 import java.time.Instant
@@ -1004,7 +1007,6 @@ class Cas3ApplicationServiceTest {
         inmateDetail = inmateDetail,
         tier = null,
       )
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
       val user = userWithUsername(username).apply {
         this.roles.add(
@@ -1014,6 +1016,8 @@ class Cas3ApplicationServiceTest {
             .produce(),
         )
       }
+
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.NotFound(crn)
 
       val result = cas3ApplicationService.createApplication(
         crn,
@@ -1040,7 +1044,6 @@ class Cas3ApplicationServiceTest {
         inmateDetail = inmateDetail,
         tier = null,
       )
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
       val user = userWithUsername(username).apply {
         this.roles.add(
@@ -1050,6 +1053,8 @@ class Cas3ApplicationServiceTest {
             .produce(),
         )
       }
+
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Restricted(crn, "noms123", TierDtoFactory().produce())
 
       val result = cas3ApplicationService.createApplication(
         crn,
@@ -1077,10 +1082,6 @@ class Cas3ApplicationServiceTest {
         tier = null,
       )
 
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
       val user = userWithUsername(username).apply {
         this.roles.add(
           UserRoleAssignmentEntityFactory()
@@ -1089,6 +1090,12 @@ class Cas3ApplicationServiceTest {
             .produce(),
         )
       }
+
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+        crn = crn,
+        summary = CaseSummaryFactory().produce(),
+        tier = TierDtoFactory().produce(),
+      )
 
       val result = cas3ApplicationService.createApplication(
         crn,
@@ -1128,13 +1135,15 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory()
-          .withFirstName("John")
-          .withLastName("Jonson")
-          .withNomsNumber("NOMS5511")
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+        crn = crn,
+        summary = CaseSummaryFactory()
+          .withName(NameFactory().withForename("John").withSurname("Jonson").produce())
+          .withNomsId("NOMS5511")
           .produce(),
+        tier = TierDtoFactory().produce(),
       )
+
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockCaseService.ensureCaseExists(any()) } returns CaseDtoFactory().produce()
@@ -1212,9 +1221,12 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+        crn = crn,
+        summary = CaseSummaryFactory().produce(),
+        tier = TierDtoFactory().produce(),
       )
+
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockCaseService.ensureCaseExists(any()) } returns CaseDtoFactory().produce()
@@ -1289,9 +1301,12 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+        crn = crn,
+        summary = CaseSummaryFactory().produce(),
+        tier = TierDtoFactory().produce(),
       )
+
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockCaseService.ensureCaseExists(any()) } returns CaseDtoFactory().produce()
@@ -1367,9 +1382,12 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+        crn = crn,
+        summary = CaseSummaryFactory().produce(),
+        tier = TierDtoFactory().produce(),
       )
+
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockCaseService.ensureCaseExists(any()) } returns CaseDtoFactory().produce()
