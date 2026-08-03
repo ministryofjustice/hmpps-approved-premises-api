@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import jakarta.transaction.Transactional
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
@@ -10,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
@@ -27,40 +24,6 @@ class AssessmentController(
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
 ) {
-  @Operation(
-    tags = ["Assessment data"],
-    summary = "Rejects an Assessment",
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/assessments/{assessmentId}/rejection"],
-    consumes = ["application/json"],
-  )
-  @Transactional
-  fun assessmentsAssessmentIdRejectionPost(
-    @PathVariable assessmentId: UUID,
-    @RequestBody assessmentRejection: AssessmentRejection,
-  ): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
-
-    val serializedData = jsonMapper.writeValueAsString(assessmentRejection.document)
-
-    val assessmentAuthResult =
-      cas3AssessmentService.rejectAssessment(
-        user,
-        assessmentId,
-        serializedData,
-        assessmentRejection.rejectionRationale,
-        assessmentRejection.referralRejectionReasonId,
-        assessmentRejection.referralRejectionReasonDetail,
-        assessmentRejection.isWithdrawn,
-      )
-
-    extractEntityFromCasResult(assessmentAuthResult)
-
-    return ResponseEntity(HttpStatus.OK)
-  }
-
   @Operation(
     tags = ["Assessment data"],
     summary = "Adds a user-written note to an assessment",
