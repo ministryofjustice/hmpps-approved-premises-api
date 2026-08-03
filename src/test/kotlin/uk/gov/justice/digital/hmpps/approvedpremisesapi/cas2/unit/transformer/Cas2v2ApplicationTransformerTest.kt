@@ -166,6 +166,56 @@ class Cas2v2ApplicationTransformerTest {
   }
 
   @Nested
+  inner class TransformJpaAndFullPersonToApiSubmitted {
+
+    @Test
+    fun `transforms a submitted CAS2v2 application correctly including cohort`() {
+      val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
+      every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
+
+      val application = Cas2ApplicationEntityFactory()
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withApplicationOrigin(ApplicationOrigin.prisonBail)
+        .withCohort(Cas2Cohort.PRISON_BAIL)
+        .withAssessment(
+          Cas2AssessmentEntityFactory()
+            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            .produce(),
+        ).produce()
+
+      val result = cas2ApplicationsTransformer.transformJpaAndFullPersonToApiSubmitted(application, mockk())
+
+      assertThat(result.id).isEqualTo(application.id)
+      assertThat(result.assessment.id).isEqualTo(assessment.id)
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+      assertThat(result.cohort).isEqualTo(Cas2CohortDto.PRISON_BAIL)
+    }
+
+    @Test
+    fun `transforms a submitted CAS2v2 application with a null cohort`() {
+      val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
+      every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
+
+      val application = Cas2ApplicationEntityFactory()
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withAssessment(
+          Cas2AssessmentEntityFactory()
+            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            .produce(),
+        ).produce()
+
+      val result = cas2ApplicationsTransformer.transformJpaAndFullPersonToApiSubmitted(application, mockk())
+
+      assertThat(result.id).isEqualTo(application.id)
+      assertThat(result.cohort).isNull()
+    }
+  }
+
+  @Nested
   inner class TransformJpaSummaryToSummary {
 
     @Test

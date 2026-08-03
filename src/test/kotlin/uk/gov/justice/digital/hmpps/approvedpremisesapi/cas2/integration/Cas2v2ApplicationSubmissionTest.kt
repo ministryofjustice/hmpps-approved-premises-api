@@ -380,6 +380,7 @@ class Cas2v2ApplicationSubmissionTest : IntegrationTestBase() {
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withApplicationOrigin(ApplicationOrigin.courtBail)
               withServiceOrigin(Cas2ServiceOrigin.BAIL)
+              withCohort(Cas2Cohort.COURT_BAIL)
               withData(
                 """
             {
@@ -482,6 +483,9 @@ class Cas2v2ApplicationSubmissionTest : IntegrationTestBase() {
 
             Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
               .isEqualTo(listOf("3rd update", "2nd update", "1st update", "Application submitted"))
+
+            Assertions.assertThat(responseBody.cohort)
+              .isEqualTo(Cas2Cohort.COURT_BAIL.apiType)
           }
         }
       }
@@ -561,6 +565,7 @@ class Cas2v2ApplicationSubmissionTest : IntegrationTestBase() {
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withApplicationOrigin(ApplicationOrigin.courtBail)
               withServiceOrigin(Cas2ServiceOrigin.BAIL)
+              withCohort(Cas2Cohort.COURT_BAIL)
               withData(
                 """
             {
@@ -663,6 +668,9 @@ class Cas2v2ApplicationSubmissionTest : IntegrationTestBase() {
 
             Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
               .isEqualTo(listOf("3rd update", "2nd update", "1st update", "Application submitted"))
+
+            Assertions.assertThat(responseBody.cohort)
+              .isEqualTo(Cas2Cohort.COURT_BAIL.apiType)
           }
         }
       }
