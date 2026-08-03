@@ -1129,7 +1129,11 @@ class Cas3ApplicationServiceTest {
       }
 
       every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
+        OffenderDetailsSummaryFactory()
+          .withFirstName("John")
+          .withLastName("Jonson")
+          .withNomsNumber("NOMS5511")
+          .produce(),
       )
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
@@ -1178,6 +1182,8 @@ class Cas3ApplicationServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
+        assertThat(it.name).isEqualTo("John Jonson")
+        assertThat(it.nomsNumber).isEqualTo("NOMS5511")
         assertThat(it.riskRatings).isEqualTo(riskRatings)
         assertThat(it.prisonNameOnCreation).isEqualTo(agencyName)
       }
