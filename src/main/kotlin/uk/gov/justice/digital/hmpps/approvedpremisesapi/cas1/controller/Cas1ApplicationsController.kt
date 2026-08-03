@@ -209,7 +209,7 @@ class Cas1ApplicationsController(
 
     val personInfo =
       when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.cas1CreateApplicationLaoStrategy())) {
-        is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
+        is PersonInfoResult.NotFound -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
         )
@@ -485,7 +485,7 @@ class Cas1ApplicationsController(
       val crn = it.getCrn()
       applicationsTransformer.transformDomainToCas1ApplicationSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
+        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
       )
     }
   }

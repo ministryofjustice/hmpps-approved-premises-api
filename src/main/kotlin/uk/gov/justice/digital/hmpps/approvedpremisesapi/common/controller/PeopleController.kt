@@ -84,7 +84,6 @@ class PeopleController(
 
     when (val personInfo = offenderDetailService.getPersonInfoResult(crn, user.cas1LaoStrategy())) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
-      is PersonInfoResult.Unknown -> throw personInfo.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
       is PersonInfoResult.Success -> return ResponseEntity.ok(
         personTransformer.personInfoResultToPerson(personInfo),
       )
@@ -292,7 +291,6 @@ class PeopleController(
       is PersonSummaryInfoResult.Success.Full -> personSummaryInfoResult.summary.nomsId
       is PersonSummaryInfoResult.Success.Restricted -> throw ForbiddenProblem()
       is PersonSummaryInfoResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is PersonSummaryInfoResult.Unknown -> throw NotFoundProblem(crn, "Person")
     }
 
     if (nomsNumber == null) {

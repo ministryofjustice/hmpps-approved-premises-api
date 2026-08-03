@@ -56,20 +56,6 @@ class PersonTransformerTest {
     }
 
     @Test
-    fun unknown() {
-      val result = personTransformer.personInfoResultToPersonSummaryInfoResult(
-        PersonInfoResult.Unknown(
-          crn = "CRN123",
-        ),
-      )
-
-      assertThat(result).isInstanceOf(PersonSummaryInfoResult.Unknown::class.java)
-      val unknown = result as PersonSummaryInfoResult.Unknown
-
-      assertThat(unknown.crn).isEqualTo("CRN123")
-    }
-
-    @Test
     fun restricted() {
       val result = personTransformer.personInfoResultToPersonSummaryInfoResult(
         PersonInfoResult.Success.Restricted(
@@ -185,19 +171,6 @@ class PersonTransformerTest {
       assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.unknownPersonSummary)
       assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
     }
-
-    @Test
-    fun `map unknown person`() {
-      val result = personTransformer.personSummaryInfoResultToPersonSummary(
-        PersonSummaryInfoResult.Unknown(
-          crn = "the crn",
-        ),
-      )
-
-      assertThat(result.crn).isEqualTo("the crn")
-      assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.unknownPersonSummary)
-      assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
-    }
   }
 
   @Nested
@@ -223,18 +196,6 @@ class PersonTransformerTest {
       val crn = "CRN123"
 
       val personInfoResult = PersonInfoResult.NotFound(crn)
-
-      val result = personTransformer.personInfoResultToPerson(personInfoResult)
-
-      assertThat(result is UnknownPerson).isTrue
-      assertThat(result.crn).isEqualTo(crn)
-    }
-
-    @Test
-    fun `transforms correctly for an unknown person info`() {
-      val crn = "CRN123"
-
-      val personInfoResult = PersonInfoResult.Unknown(crn)
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
@@ -820,20 +781,6 @@ class PersonTransformerTest {
       assertThat(result is PersonInfoResult.NotFound).isTrue
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result).isEqualTo(PersonInfoResult.NotFound(crn))
-    }
-
-    @Test
-    fun `transformPersonSummaryInfoToPersonInfo transforms correctly for an unknown person info`() {
-      val crn = randomStringMultiCaseWithNumbers(10)
-      val throwable = Throwable("Exception message")
-
-      val personSummaryInfoResult = PersonSummaryInfoResult.Unknown(crn, throwable)
-
-      val result = personTransformer.personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult, null)
-
-      assertThat(result is PersonInfoResult.Unknown).isTrue
-      assertThat(result.crn).isEqualTo(crn)
-      assertThat(result).isEqualTo(PersonInfoResult.Unknown(crn, throwable))
     }
   }
 }

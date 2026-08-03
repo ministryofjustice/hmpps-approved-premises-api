@@ -297,7 +297,7 @@ class Cas1AssessmentsController(
       val crn = it.crn
       cas1AssessmentTransformer.transformDomainToCas1AssessmentSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
+        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
       )
     }
   }

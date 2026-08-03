@@ -85,7 +85,7 @@ class Cas3ReportService(
     val personInfos = splitAndRetrievePersonInfo(crns)
     log.info("Person info retrieved")
     val reportData = referralsInScope.map {
-      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
+      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.NotFound(it.crn)
       TransitionalAccommodationReferralReportDataAndPersonInfo(it, personInfo)
     }
     log.info("Creating report")
@@ -245,7 +245,7 @@ class Cas3ReportService(
     val crns = bookingsInScope.map { it.crn }.distinct().toSet()
     val personInfos = splitAndRetrievePersonInfo(crns)
     val reportData = bookingsInScope.map {
-      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
+      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.NotFound(it.crn)
       FutureBookingsReportDataAndPersonInfo(it, personInfo)
     }
 
@@ -271,7 +271,7 @@ class Cas3ReportService(
     val crns = bookingsInScope.map { it.crn }.distinct().toSet()
     val personInfos = splitAndRetrievePersonInfo(crns)
     val reportData = bookingsInScope.map {
-      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
+      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.NotFound(it.crn)
       FutureBookingsCsvReportGenerator().convert(it, personInfo)
     }
 

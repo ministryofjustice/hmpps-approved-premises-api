@@ -198,7 +198,7 @@ class Cas3BedspaceSearchService(
   ): PersonType = when (personSummaryInfo) {
     is PersonSummaryInfoResult.Success.Full -> PersonType.fullPerson
     is PersonSummaryInfoResult.Success.Restricted -> PersonType.restrictedPerson
-    is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> PersonType.unknownPerson
+    is PersonSummaryInfoResult.NotFound -> PersonType.unknownPerson
   }
 
   private fun Cas3BedspaceSearchParameters.calculateEndDate(): LocalDate {

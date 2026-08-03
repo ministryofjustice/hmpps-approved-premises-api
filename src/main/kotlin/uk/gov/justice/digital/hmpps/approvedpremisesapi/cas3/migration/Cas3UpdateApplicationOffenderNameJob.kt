@@ -40,7 +40,7 @@ class Cas3UpdateApplicationOffenderNameJob(
         val personInfos = splitAndRetrievePersonInfo(pageSize, offendersCrn)
 
         slice.content.forEach {
-          val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
+          val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.NotFound(it.crn)
           updateApplication(personInfo, it)
         }
 
@@ -58,7 +58,7 @@ class Cas3UpdateApplicationOffenderNameJob(
     try {
       val offenderName = when (personInfo) {
         is PersonSummaryInfoResult.Success.Full -> "${personInfo.summary.name.forename} ${personInfo.summary.name.surname}"
-        is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> throw Exception("Offender not found")
+        is PersonSummaryInfoResult.NotFound -> throw Exception("Offender not found")
         is PersonSummaryInfoResult.Success.Restricted -> throw Exception("You are not authorized")
       }
 

@@ -84,7 +84,7 @@ class Cas3ApplicationsController(
 
     val personInfo =
       when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.cas3LaoStrategy())) {
-        is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
+        is PersonInfoResult.NotFound -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
         )
@@ -171,7 +171,7 @@ class Cas3ApplicationsController(
       val crn = it.getCrn()
       cas3ApplicationTransformer.transformDomainToCas3ApplicationSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
+        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
       )
     }
   }

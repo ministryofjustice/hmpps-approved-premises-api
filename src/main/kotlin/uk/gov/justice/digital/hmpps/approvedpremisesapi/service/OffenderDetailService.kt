@@ -51,7 +51,6 @@ class OffenderDetailService(
 
         is PersonSummaryInfoResult.Success.Restricted,
         is PersonSummaryInfoResult.NotFound,
-        is PersonSummaryInfoResult.Unknown,
         ->
           personTransformer.personSummaryInfoResultToPersonInfoResult(it, null)
       }

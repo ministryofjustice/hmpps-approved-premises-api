@@ -408,7 +408,6 @@ class OffenderService(
 
     is PersonSummaryInfoResult.Success.Restricted -> CasResult.Unauthorised()
     is PersonSummaryInfoResult.NotFound -> CasResult.NotFound("Person", crn)
-    is PersonSummaryInfoResult.Unknown -> CasResult.NotFound("Person", crn)
   }
 
   fun getOffenderBookingDetails(crn: String): CasResult<BookingDetails> {

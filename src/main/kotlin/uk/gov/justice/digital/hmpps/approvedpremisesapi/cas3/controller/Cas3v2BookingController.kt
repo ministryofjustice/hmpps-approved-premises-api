@@ -145,7 +145,7 @@ class Cas3v2BookingController(
         bookingTransformer.transformJpaToApi(
           jpa = booking,
           personInfo = personInfoResults.firstOrNull { pi -> pi.crn == booking.crn }
-            ?: PersonInfoResult.Unknown(booking.crn),
+            ?: PersonInfoResult.NotFound(booking.crn),
         )
       },
     )

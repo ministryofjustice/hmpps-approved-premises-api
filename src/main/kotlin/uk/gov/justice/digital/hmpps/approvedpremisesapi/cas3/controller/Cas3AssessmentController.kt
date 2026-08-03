@@ -220,7 +220,7 @@ class Cas3AssessmentController(
       val crn = it.crn
       cas3AssessmentTransformer.transformDomainToApiSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
+        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
       )
     }
   }
