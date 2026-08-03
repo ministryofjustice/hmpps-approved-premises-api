@@ -18,7 +18,7 @@ class Cas1ExternalReferralsController(
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/referrals/{crn}")
   fun getReferralsByCrn(@PathVariable crn: String): ResponseEntity<List<Cas1ReferralHistory>> = ResponseEntity.ok(
-    cas1AssessmentService.getApprovedPremisesAssessmentsByCrn(crn).flatMap {
+    cas1AssessmentService.getApprovedPremisesAssessmentsByCrnNotReallocated(crn).flatMap {
       val placementHistories = cas1ExternalApplicationService.getPlacementHistories(it.application.id)
       cas1AssessmentTransformer.transformDomainToApiCas1ReferralHistory(it, placementHistories)
     },

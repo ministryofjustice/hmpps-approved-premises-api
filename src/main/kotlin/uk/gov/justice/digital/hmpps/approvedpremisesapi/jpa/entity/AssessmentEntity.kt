@@ -191,8 +191,8 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   @Query("UPDATE ApprovedPremisesAssessmentEntity a SET a.dueAt = :dueAt WHERE a.id = :id")
   fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
 
-  @Query("SELECT a FROM ApprovedPremisesAssessmentEntity a WHERE a.application.crn = :crn")
-  fun findApprovedPremisesAssessmentsByCrn(crn: String): List<ApprovedPremisesAssessmentEntity>
+  @Query("SELECT a FROM ApprovedPremisesAssessmentEntity a WHERE a.application.crn = :crn AND a.reallocatedAt IS NULL")
+  fun findApprovedPremisesAssessmentsByCrnNotReallocated(crn: String): List<ApprovedPremisesAssessmentEntity>
 }
 
 @Repository
