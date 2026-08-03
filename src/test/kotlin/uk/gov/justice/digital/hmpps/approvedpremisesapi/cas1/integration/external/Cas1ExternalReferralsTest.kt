@@ -76,7 +76,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
 
           val expectedReferrals = listOf(
             Cas1ReferralHistory(
-              id = assessment1.id,
+              id = assessment1.application.id,
               applicationId = assessment1.application.id,
               date = assessment1.createdAt.toLocalDate(),
               applicationStatus = (assessment1.application as ApprovedPremisesApplicationEntity).status,
@@ -91,7 +91,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               uiUrl = "http://frontend/applications/${assessment1.application.id}",
             ),
             Cas1ReferralHistory(
-              id = assessment2.id,
+              id = assessment2.application.id,
               applicationId = assessment2.application.id,
               date = assessment2.createdAt.toLocalDate(),
               applicationStatus = (assessment2.application as ApprovedPremisesApplicationEntity).status,
@@ -106,7 +106,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               uiUrl = "http://frontend/applications/${assessment2.application.id}",
             ),
             Cas1ReferralHistory(
-              id = assessment3.id,
+              id = assessment3.application.id,
               applicationId = assessment3.application.id,
               date = assessment3.createdAt.toLocalDate(),
               applicationStatus = (assessment3.application as ApprovedPremisesApplicationEntity).status,
@@ -121,7 +121,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               uiUrl = "http://frontend/applications/${assessment3.application.id}",
             ),
             Cas1ReferralHistory(
-              id = assessment4.id,
+              id = assessment4.application.id,
               applicationId = assessment4.application.id,
               date = assessment4.createdAt.toLocalDate(),
               applicationStatus = (assessment4.application as ApprovedPremisesApplicationEntity).status,
@@ -136,7 +136,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               uiUrl = "http://frontend/applications/${assessment4.application.id}",
             ),
             Cas1ReferralHistory(
-              id = assessment5.id,
+              id = assessment5.application.id,
               applicationId = assessment5.application.id,
               date = assessment5.createdAt.toLocalDate(),
               applicationStatus = (assessment5.application as ApprovedPremisesApplicationEntity).status,
