@@ -6,9 +6,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OASysAssessmentMetadataDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OASysRiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRiskToSelfDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshRatingsDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshSummaryDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
@@ -250,7 +252,12 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
     fun `Assessment available`(role: RoleAndAuthSource) {
       apAndOASysMockSuccessfulRoshRatingsCall(
         crn = "CRN123",
-        response = RoshRatingsFactory().produce(),
+        response = RoshRatingsFactory()
+          .withRiskStaffCommunity(RiskLevel.LOW)
+          .withRiskChildrenCommunity(RiskLevel.MEDIUM)
+          .withRiskKnownAdultCommunity(RiskLevel.VERY_HIGH)
+          .withRiskPublicCommunity(RiskLevel.LOW)
+          .produce(),
       )
 
       val result = webTestClient.get()
@@ -262,6 +269,11 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .bodyAsObject<Cas2OAsysRoshRatingsDto>()
 
       assertThat(result.metadata.hasApplicableAssessment).isTrue
+      assertThat(result.riskToStaff).isEqualTo(Cas2OASysRiskLevel.LOW)
+      assertThat(result.riskToChildren).isEqualTo(Cas2OASysRiskLevel.MEDIUM)
+      assertThat(result.overallRisk).isEqualTo(Cas2OASysRiskLevel.VERY_HIGH)
+      assertThat(result.riskToKnownAdult).isEqualTo(Cas2OASysRiskLevel.VERY_HIGH)
+      assertThat(result.riskToPublic).isEqualTo(Cas2OASysRiskLevel.LOW)
     }
   }
 }
