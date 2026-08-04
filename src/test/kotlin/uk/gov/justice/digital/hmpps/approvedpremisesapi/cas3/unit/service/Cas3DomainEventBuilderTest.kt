@@ -256,6 +256,29 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
+  fun `getPersonArrivedDomainEvent normalises the premises postcode`() {
+    val arrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
+    val expectedDepartureDate = LocalDate.parse("2023-10-15")
+    val notes = "Some notes about the arrival"
+
+    val probationRegion = probationRegionEntity()
+
+    val premises = createCas3PremisesEntity(probationRegion, postcode = "dk8 4ag ")
+
+    val user = userEntity(probationRegion)
+
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
+
+    val booking = bookingEntity(premises, application)
+
+    booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
+
+    val event = cas3DomainEventBuilder.getPersonArrivedDomainEvent(booking, user)
+
+    assertThat(event.data.eventDetails.premises.postcode).isEqualTo("DK8 4AG")
+  }
+
+  @Test
   fun `getPersonArrivedDomainEvent transforms the booking and arrival information correctly without staff detail`() {
     val arrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
     val expectedDepartureDate = LocalDate.parse("2023-10-15")
@@ -344,6 +367,33 @@ class Cas3DomainEventBuilderTest {
       assertThat(event.data.eventType).isEqualTo(EventType.personDeparted)
     })
     assertStaffDetails(event.data.eventDetails.recordedBy, user)
+  }
+
+  @Test
+  fun `getPersonDepartedDomainEvent normalises the premises postcode`() {
+    val departureDateTime = OffsetDateTime.parse("2023-07-15T00:00:00Z")
+    val reasonName = "Returned to custody"
+    val notes = "Some notes about the departure"
+
+    val probationRegion = probationRegionEntity()
+
+    val premises = createCas3PremisesEntity(probationRegion, postcode = "dk8 4ag ")
+
+    val user = userEntity(probationRegion)
+
+    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
+
+    val booking = bookingEntity(premises, application)
+
+    val reason = departureReasonEntity(reasonName)
+
+    val moveOnCategory = moveOnCategoryEntity("Returned to custody", "RTC")
+
+    booking.departures += departureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
+
+    val event = cas3DomainEventBuilder.getPersonDepartedDomainEvent(booking, user)
+
+    assertThat(event.data.eventDetails.premises.postcode).isEqualTo("DK8 4AG")
   }
 
   @Test
@@ -778,7 +828,7 @@ class Cas3DomainEventBuilderTest {
     .withProbationRegion(probationRegion)
     .produce()
 
-  private fun createCas3PremisesEntity(probationRegion: ProbationRegionEntity): Cas3PremisesEntity {
+  private fun createCas3PremisesEntity(probationRegion: ProbationRegionEntity, postcode: String? = null): Cas3PremisesEntity {
     val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
       .withProbationRegion(probationRegion).produce()
     val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
@@ -786,6 +836,7 @@ class Cas3DomainEventBuilderTest {
       .withDefaults()
       .withLocalAuthorityArea(localAuthorityArea)
       .withProbationDeliveryUnit(probationDeliveryUnit)
+      .apply { if (postcode != null) withPostcode(postcode) }
       .produce()
   }
 

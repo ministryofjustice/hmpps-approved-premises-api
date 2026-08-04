@@ -407,6 +407,7 @@ class Cas3DomainEventService(
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 
+  @Transactional
   fun saveBookingCancelledUpdatedEvent(booking: Cas3BookingEntity, user: UserEntity) {
     val domainEvent = cas3DomainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
