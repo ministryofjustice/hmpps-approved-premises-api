@@ -43,6 +43,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
@@ -84,6 +86,8 @@ class ReferenceDataController(
   private val apAreaRepository: ApAreaRepository,
   private val apAreaTransformer: ApAreaTransformer,
   private val tierService: TierService,
+  private val featureFlagService: FeatureFlagService,
+
 ) {
 
   @Operation(
@@ -400,5 +404,15 @@ class ReferenceDataController(
     value = ["/reference-data/tiers"],
     produces = ["application/json"],
   )
-  fun referenceDataTiersGet(): ResponseEntity<List<AvailableTierDto>> = ResponseEntity.ok(tierService.getAvailableTiers())
+  fun referenceDataTiersGet(): ResponseEntity<List<AvailableTierDto>> {
+    val useTierV3 = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
+
+    return ResponseEntity.ok(
+      if (useTierV3) {
+        tierService.getAvailableTiersV3()
+      } else {
+        tierService.getAvailableTiersV2()
+      },
+    )
+  }
 }
