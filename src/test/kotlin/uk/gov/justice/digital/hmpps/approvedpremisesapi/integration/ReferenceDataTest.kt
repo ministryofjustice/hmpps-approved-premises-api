@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.AvailableTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
@@ -955,7 +956,8 @@ class ReferenceDataTest : IntegrationTestBase() {
   @Nested
   inner class GetAvailableTiers {
     @Test
-    fun `Get Available Tiers returns 200 with correct body`() {
+    fun `Get Available Tiers returns v2 tiers`() {
+      mockFeatureFlagService.setFlag(FeatureFlagService.FEATURE_FLAG_USE_TIER_V3, false)
       val expectedJson = jsonMapper.writeValueAsString(
         listOf(
           AvailableTierDto("D0"),
@@ -974,6 +976,35 @@ class ReferenceDataTest : IntegrationTestBase() {
           AvailableTierDto("A1"),
           AvailableTierDto("A2"),
           AvailableTierDto("A3"),
+        ),
+      )
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/reference-data/tiers")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+
+    @Test
+    fun `Get Available Tiers returns v3 tiers`() {
+      mockFeatureFlagService.setFlag(FeatureFlagService.FEATURE_FLAG_USE_TIER_V3, true)
+      val expectedJson = jsonMapper.writeValueAsString(
+        listOf(
+          AvailableTierDto("A"),
+          AvailableTierDto("B"),
+          AvailableTierDto("C"),
+          AvailableTierDto("D"),
+          AvailableTierDto("E"),
+          AvailableTierDto("F"),
+          AvailableTierDto("G"),
+          AvailableTierDto("MISSING"),
+          AvailableTierDto("NOT_SUPERVISED"),
         ),
       )
 
