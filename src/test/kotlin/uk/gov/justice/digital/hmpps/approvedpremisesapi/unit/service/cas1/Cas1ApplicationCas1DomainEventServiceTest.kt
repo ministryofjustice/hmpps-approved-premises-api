@@ -64,7 +64,6 @@ class Cas1ApplicationCas1DomainEventServiceTest {
   private val offenderRisksService = OffenderRisksService(
     apDeliusContextApiClient = mockApDeliusContextApiClient,
     apAndOASysClient = mockk(),
-    hmppsTierApiClient = mockk(),
     sentryService = mockk(),
     oaSysSuitabilityService = mockk(),
   )

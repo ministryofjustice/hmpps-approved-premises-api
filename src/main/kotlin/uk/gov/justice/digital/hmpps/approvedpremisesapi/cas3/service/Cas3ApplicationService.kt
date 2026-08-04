@@ -150,8 +150,10 @@ class Cas3ApplicationService(
         return@validatedCasResult fieldValidationError
       }
 
+      val case = caseService.ensureCaseExists(crn)
+
       val riskRatings: PersonRisks? = if (createWithRisks == true) {
-        offenderRisksService.getPersonRisks(crn)
+        offenderRisksService.getPersonRisks(case)
       } else {
         null
       }
@@ -170,8 +172,6 @@ class Cas3ApplicationService(
           prisonName,
         ),
       )
-
-      caseService.ensureCaseExists(crn)
 
       success(createdApplication)
     }

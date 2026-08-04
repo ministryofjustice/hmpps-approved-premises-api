@@ -3,13 +3,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoshRatingsCall
@@ -17,13 +20,29 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.LocalDateTime
 import java.util.UUID
 
 class Cas3PeopleTest : InitialiseDatabasePerClassTestBase() {
+  @Autowired
+  lateinit var sentryService: SentryService
 
   @Nested
   inner class GetPersonRiskProfileTest {
+
+    @Test
+    fun `Getting a person risk profile for a CRN that does not exist returns 404 and alerts Sentry`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR))
+      val crn = "NOT_FOUND_CRN"
+
+      webTestClient.get()
+        .uri("/cas3/people/$crn/risk-profile")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
 
     @Test
     fun `Getting a person risk profile for a CRN without a JWT returns 401`() {
@@ -54,8 +73,17 @@ class Cas3PeopleTest : InitialiseDatabasePerClassTestBase() {
       val roshRatings = RoshRatingsFactory().produce()
       val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "Change Reason")
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR))
+
       givenAnOffender { offenderDetails, _ ->
-        apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
+        val crn = offenderDetails.otherIds.crn
+        givenACase(
+          crn,
+          tierV2 = TierFactory()
+            .withTierScore("A1")
+            .produce(),
+        )
+
+        apDeliusContextMockSuccessfulCaseDetailCall(crn, caseDetail)
         apAndOASysMockSuccessfulRoshRatingsCall(offenderDetails.otherIds.crn, roshRatings)
         hmppsTierMockSuccessfulTierCall(
           offenderDetails.otherIds.crn,

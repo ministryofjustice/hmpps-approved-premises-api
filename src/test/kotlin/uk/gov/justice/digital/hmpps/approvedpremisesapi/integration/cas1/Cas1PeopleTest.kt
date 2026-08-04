@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.SentenceFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -66,6 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.LocalDate
@@ -77,6 +79,9 @@ import kotlin.collections.listOf
 class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var personTransformer: PersonTransformer
+
+  @Autowired
+  lateinit var sentryService: SentryService
 
   @Nested
   inner class GetTimelineForCrn {
@@ -543,6 +548,19 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
   inner class GetPersonRiskProfileTest {
 
     @Test
+    fun `Getting a person risk profile for a CRN that does not exist returns 404 and alerts Sentry`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val crn = "NOT_FOUND_CRN"
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/risk-profile")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
     fun `Getting a person risk profile for a CRN without a JWT returns 401`() {
       webTestClient.get()
         .uri("/cas1/people/CRN/risk-profile")
@@ -572,7 +590,18 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "Change Reason")
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       givenAnOffender { offenderDetails, _ ->
-        apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
+        val crn = offenderDetails.otherIds.crn
+        caseRepository.saveAndFlush(
+          CaseEntityFactory()
+            .withCrn(crn)
+            .withTierV2(
+              TierFactory()
+                .withTierScore("A1")
+                .produce(),
+            )
+            .produce(),
+        )
+        apDeliusContextMockSuccessfulCaseDetailCall(crn, caseDetail)
         apAndOASysMockSuccessfulRoshRatingsCall(offenderDetails.otherIds.crn, roshRatings)
         hmppsTierMockSuccessfulTierCall(
           offenderDetails.otherIds.crn,

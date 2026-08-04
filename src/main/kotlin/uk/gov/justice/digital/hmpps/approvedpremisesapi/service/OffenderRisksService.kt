@@ -2,16 +2,18 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.MappaDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 
@@ -19,20 +21,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 class OffenderRisksService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val apAndOASysClient: ApAndOASysClient,
-  private val hmppsTierApiClient: HMPPSTierApiClient,
   private val sentryService: SentryService,
   private val oaSysSuitabilityService: OASysSuitabilityService,
 ) {
 
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
 
-  fun getPersonRisks(crn: String): PersonRisks {
+  fun getPersonRisks(caseDto: CaseDto): PersonRisks {
+    val crn = caseDto.crn
     val caseDetailResponse = apDeliusContextApiClient.getCaseDetail(crn)
 
     return PersonRisks(
       roshRisks = getRoshRisksEnvelope(crn),
       mappa = caseDetailResponse.toMappa(),
-      tier = getRiskTierEnvelope(crn),
+      tier = getRiskTierEnvelope(caseDto),
       flags = caseDetailResponse.toRiskFlags(),
     )
   }
@@ -73,18 +75,22 @@ class OffenderRisksService(
     is ClientResult.Failure -> recordAndReturnError("getRoshRatings, crn: $crn", roshRisksResponse.toException())
   }
 
-  private fun getRiskTierEnvelope(crn: String): RiskWithStatus<RiskTier> = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
-    is ClientResult.Success -> RiskWithStatus(
-      value = RiskTier(
-        level = tierResponse.body.tierScore,
-        lastUpdated = tierResponse.body.calculationDate.toLocalDate(),
-      ),
-    )
-    is ClientResult.Failure.StatusCode -> when (tierResponse.status) {
-      HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
-      else -> recordAndReturnError("getTier, crn: $crn", tierResponse.toException())
+  private fun getRiskTierEnvelope(caseDto: CaseDto): RiskWithStatus<RiskTier> = when (val tier = caseDto.tier) {
+    null -> RiskWithStatus(status = RiskStatus.NotFound)
+    else -> {
+      when (tier.version) {
+        else -> RiskWithStatus(
+          value = RiskTier(
+            level = tier.tierScore,
+            lastUpdated = tier.calculationDate.toLocalDate(),
+            version = when (tier.version) {
+              TierVersionDto.V2 -> RiskTierVersion.V2
+              TierVersionDto.V3 -> RiskTierVersion.V3
+            },
+          ),
+        )
+      }
     }
-    is ClientResult.Failure -> recordAndReturnError("getTier, crn: $crn", tierResponse.toException())
   }
 
   fun ClientResult<CaseDetail>.toMappa(): RiskWithStatus<Mappa> = when (this) {

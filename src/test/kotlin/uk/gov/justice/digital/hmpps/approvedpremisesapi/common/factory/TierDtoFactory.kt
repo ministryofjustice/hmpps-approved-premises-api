@@ -21,6 +21,10 @@ class TierDtoFactory : Factory<TierDto> {
     this.tierScore = { tierScore }
   }
 
+  fun withCalculationDate(calculationDate: LocalDateTime) = apply {
+    this.calculationDate = { calculationDate }
+  }
+
   override fun produce(): TierDto = TierDto(
     tierScore = this.tierScore(),
     calculationDate = this.calculationDate(),
