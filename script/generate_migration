@@ -18,7 +18,7 @@ else
     exit 1
 fi
 
-timestamp=`date "+%Y%m%d%H%M%S"`
+timestamp=`date "+%Y%m%d%H%M%S000"`
 migration_name=`echo "$2" | awk '{print tolower($0)}' | tr ' ' '_'`
 filename="$(echo ${timestamp}__${migration_name}).sql"
 echo "Creating migration: $filename"
