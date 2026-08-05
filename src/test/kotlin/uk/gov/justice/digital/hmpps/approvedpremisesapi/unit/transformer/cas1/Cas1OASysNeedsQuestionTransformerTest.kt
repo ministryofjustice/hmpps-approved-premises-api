@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysSupportingInformationQuestionMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.HealthDetailsFactory
@@ -448,5 +450,41 @@ class Cas1OASysNeedsQuestionTransformerTest {
         ),
       )
     }
+
+    @ParameterizedTest(name = "generalHealth={0}, generalHealthSpecify={1}, healthConditions={2} -> answer={3}")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.Cas1OASysNeedsQuestionTransformerTest#question131Cases")
+    fun `Question 13-1 is derived from healthConditions when non-empty, otherwise falls back to generalHealth fields`(
+      generalHealth: Boolean,
+      generalHealthSpecify: String?,
+      healthConditions: String?,
+      expectedAnswer: String?,
+    ) {
+      val result = transformer.transformToOASysQuestions(
+        needsDetails = null,
+        sectionsToInclude = listOf(13),
+        healthDetails = HealthDetailsFactory()
+          .withGeneralHealth(generalHealth = generalHealth, generalHealthSpecify = generalHealthSpecify)
+          .withHealthConditions(healthConditions)
+          .produce(),
+      )
+
+      assertThat(result).contains(
+        OASysQuestion(
+          questionNumber = "13.1",
+          label = "General Health - Any physical or mental health conditions",
+          answer = expectedAnswer,
+        ),
+      )
+    }
+  }
+
+  companion object {
+    @JvmStatic
+    fun question131Cases() = listOf(
+      Arguments.of(true, "general health answer", "health conditions answer", "health conditions answer"),
+      Arguments.of(true, "general health answer", "", "general health answer"),
+      Arguments.of(true, "general health answer", null, "general health answer"),
+      Arguments.of(false, "general health answer", "", null),
+    )
   }
 }
