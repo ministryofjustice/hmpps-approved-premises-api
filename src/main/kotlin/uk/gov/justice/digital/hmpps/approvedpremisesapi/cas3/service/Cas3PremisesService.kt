@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResultValidatedScope.Companion.NDELIUS_MAX_POSTCODE_LENGTH
@@ -32,7 +31,7 @@ import java.util.UUID
 @Service
 class Cas3PremisesService(
   private val cas3PremisesRepository: Cas3PremisesRepository,
-  private val cas3v2DomainEventService: Cas3v2DomainEventService,
+  private val cas3DomainEventService: Cas3DomainEventService,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
@@ -72,7 +71,7 @@ class Cas3PremisesService(
     premises.endDate = null
     premises.status = Cas3PremisesStatus.online
     cas3PremisesRepository.save(premises)
-    cas3v2DomainEventService.savePremisesUnarchiveEvent(
+    cas3DomainEventService.savePremisesUnarchiveEvent(
       premises,
       currentStartDate,
       newStartDate = restartDate,
@@ -204,7 +203,7 @@ class Cas3PremisesService(
   }
 
   fun getPremisesArchiveHistory(premisesId: UUID): CasResult<List<Cas3PremisesArchiveAction>> = validatedCasResult {
-    val archiveHistory = cas3v2DomainEventService.getPremisesActiveDomainEvents(
+    val archiveHistory = cas3DomainEventService.getPremisesActiveDomainEvents(
       premisesId,
       listOf(DomainEventType.CAS3_PREMISES_ARCHIVED, DomainEventType.CAS3_PREMISES_UNARCHIVED),
     )

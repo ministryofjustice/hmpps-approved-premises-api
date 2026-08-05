@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_PREMISES
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.BedspaceStatusHelper.isCas3BedspaceActive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.BedspaceStatusHelper.isCas3BedspaceArchived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.BedspaceStatusHelper.isCas3BedspaceOnline
@@ -53,7 +52,7 @@ class Cas3ArchiveService(
   private val cas3BookingRepository: Cas3BookingRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val domainEventRepository: DomainEventRepository,
-  private val cas3v2DomainEventService: Cas3v2DomainEventService,
+  private val cas3DomainEventService: Cas3DomainEventService,
   private val workingDayService: WorkingDayService,
   private val jsonMapper: JsonMapper,
   private val clock: Clock,
@@ -88,7 +87,7 @@ class Cas3ArchiveService(
       )
     }
 
-    cas3v2DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED))
+    cas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED))
       .sortedByDescending { it.createdAt }
       .asSequence()
       .map { jsonMapper.readValue(it.data, CAS3BedspaceArchiveEvent::class.java).eventDetails.endDate }
@@ -228,7 +227,7 @@ class Cas3ArchiveService(
       )
     }
 
-    cas3v2DomainEventService.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED))
+    cas3DomainEventService.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED))
       .sortedByDescending { it.createdAt }
       .asSequence()
       .map { jsonMapper.readValue(it.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate }
@@ -589,7 +588,7 @@ class Cas3ArchiveService(
     premises.endDate = null
     premises.status = Cas3PremisesStatus.online
     val updatedPremises = cas3PremisesRepository.save(premises)
-    cas3v2DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, restartDate, currentEndDate, transactionId)
+    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, restartDate, currentEndDate, transactionId)
     return updatedPremises
   }
 
@@ -604,7 +603,7 @@ class Cas3ArchiveService(
       ),
     )
 
-    cas3v2DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, premisesId, originalStartDate, originalEndDate, transactionId)
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, premisesId, originalStartDate, originalEndDate, transactionId)
     return updatedBedspace
   }
 
@@ -698,7 +697,7 @@ class Cas3ArchiveService(
     val originalEndDate = bedspace.endDate
     bedspace.endDate = endDate
     val updatedBedspace = cas3BedspacesRepository.save(bedspace)
-    cas3v2DomainEventService.saveBedspaceArchiveEvent(updatedBedspace, premisesId, originalEndDate, transactionId)
+    cas3DomainEventService.saveBedspaceArchiveEvent(updatedBedspace, premisesId, originalEndDate, transactionId)
     return updatedBedspace
   }
 
@@ -717,7 +716,7 @@ class Cas3ArchiveService(
     premises.endDate = endDate
     premises.status = Cas3PremisesStatus.archived
     val updatedPremises = cas3PremisesRepository.save(premises)
-    cas3v2DomainEventService.savePremisesArchiveEvent(premises, endDate, transactionId)
+    cas3DomainEventService.savePremisesArchiveEvent(premises, endDate, transactionId)
     return updatedPremises
   }
 }

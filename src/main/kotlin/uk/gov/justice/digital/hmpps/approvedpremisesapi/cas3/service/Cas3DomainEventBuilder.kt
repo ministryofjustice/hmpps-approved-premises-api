@@ -480,7 +480,7 @@ class Cas3DomainEventBuilder(
     premises = Premises(
       addressLine1 = booking.premises.addressLine1,
       addressLine2 = booking.premises.addressLine2,
-      postcode = booking.premises.postcode,
+      postcode = booking.premises.postcode.trim().uppercase(),
       town = booking.premises.town,
       region = booking.premises.probationDeliveryUnit.probationRegion.name,
     ),
@@ -591,7 +591,7 @@ class Cas3DomainEventBuilder(
     premises = Premises(
       addressLine1 = booking.premises.addressLine1,
       addressLine2 = booking.premises.addressLine2,
-      postcode = booking.premises.postcode,
+      postcode = booking.premises.postcode.trim().uppercase(),
       town = booking.premises.town,
       region = booking.premises.probationDeliveryUnit.probationRegion.name,
     ),

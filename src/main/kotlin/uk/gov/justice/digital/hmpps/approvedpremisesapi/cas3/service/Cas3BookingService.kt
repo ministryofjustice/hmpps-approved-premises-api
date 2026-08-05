@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Turn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validatedCasResult
@@ -63,7 +62,7 @@ class Cas3BookingService(
   private val cas3TurnaroundRepository: Cas3TurnaroundRepository,
   private val assessmentRepository: AssessmentRepository,
   private val offenderService: OffenderService,
-  private val cas3DomainEventService: Cas3v2DomainEventService,
+  private val cas3DomainEventService: Cas3DomainEventService,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val cas3ConfirmationRepository: Cas3ConfirmationRepository,
   private val cas3ExtensionRepository: Cas3ExtensionRepository,
@@ -192,7 +191,7 @@ class Cas3BookingService(
 
     booking.turnarounds += turnaround
 
-    cas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(booking, user)
+    cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking, user)
 
     success(booking)
   }

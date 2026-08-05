@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_CREATE_BEDSPACE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_LENGTH_BEDSPACE_REFERENCE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.BedspaceStatusHelper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult.Cas3FieldValidationError
@@ -34,7 +33,7 @@ class Cas3BedspacesService(
   private val characteristicService: CharacteristicService,
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
   private val cas3PremisesService: Cas3PremisesService,
-  private val cas3v2DomainEventService: Cas3v2DomainEventService,
+  private val cas3DomainEventService: Cas3DomainEventService,
   private val jsonMapper: JsonMapper,
 ) {
 
@@ -134,7 +133,7 @@ class Cas3BedspacesService(
   }
 
   fun getBedspaceArchiveHistory(bedspaceId: UUID): CasResult<List<Cas3BedspaceArchiveAction>> = validatedCasResult {
-    val domainEvents = cas3v2DomainEventService.getBedspaceActiveDomainEvents(
+    val domainEvents = cas3DomainEventService.getBedspaceActiveDomainEvents(
       bedspaceId,
       listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
     )
@@ -145,7 +144,7 @@ class Cas3BedspacesService(
   }
 
   fun getBedspacesArchiveHistory(bedspaceIds: List<UUID>): List<Cas3BedspaceArchiveActions> {
-    val domainEvents = cas3v2DomainEventService.getBedspacesActiveDomainEvents(
+    val domainEvents = cas3DomainEventService.getBedspacesActiveDomainEvents(
       bedspaceIds,
       listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
     )

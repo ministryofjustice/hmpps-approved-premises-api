@@ -51,7 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -88,7 +88,7 @@ import java.util.UUID
 
 class Cas3BookingServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
-  private val mockCas3DomainEventService = mockk<Cas3v2DomainEventService>()
+  private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
   private val mockBookingRepository = mockk<Cas3BookingRepository>()
   private val mockArrivalRepository = mockk<Cas3ArrivalRepository>()
@@ -473,7 +473,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
@@ -505,7 +505,7 @@ class Cas3BookingServiceTest {
       }
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
           match {
             it.crn == crn &&
               it.premises == premises &&
@@ -553,7 +553,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
@@ -629,7 +629,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
@@ -708,7 +708,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
@@ -786,7 +786,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
@@ -822,7 +822,7 @@ class Cas3BookingServiceTest {
       }
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
           match {
             it.crn == crn &&
               it.premises == premises &&
@@ -872,7 +872,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
@@ -904,7 +904,7 @@ class Cas3BookingServiceTest {
       }
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
           match {
             it.crn == crn &&
               it.premises == premises &&
@@ -954,7 +954,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
@@ -986,7 +986,7 @@ class Cas3BookingServiceTest {
       }
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
           match {
             it.crn == crn &&
               it.premises == premises &&
@@ -1085,7 +1085,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       assertThatExceptionOfType(RuntimeException::class.java)
         .isThrownBy {
@@ -1116,7 +1116,7 @@ class Cas3BookingServiceTest {
       }
 
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
           match {
             it.crn == crn &&
               it.premises == premises &&
@@ -1166,7 +1166,7 @@ class Cas3BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockBedspaceRepository.findArchivedBedspaceByBedspaceIdAndDate(any(), any()) } returns bedspace
 
@@ -1198,7 +1198,7 @@ class Cas3BookingServiceTest {
       }
 
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
           match {
             it.crn == crn &&
               it.premises == premises &&

@@ -22,8 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BedspacesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
@@ -42,7 +42,7 @@ class Cas3BedspaceServiceTest {
   private val mockCharacteristicService = mockk<CharacteristicService>()
   private val mockCas3BedspacesRepository = mockk<Cas3BedspacesRepository>()
   private val mockCas3PremisesService = mockk<Cas3PremisesService>()
-  private val mockCas3v2DomainEventService = mockk<Cas3v2DomainEventService>()
+  private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
 
   private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
 
@@ -50,7 +50,7 @@ class Cas3BedspaceServiceTest {
     mockCharacteristicService,
     mockCas3BedspacesRepository,
     mockCas3PremisesService,
-    mockCas3v2DomainEventService,
+    mockCas3DomainEventService,
     jsonMapper,
   )
 
@@ -288,7 +288,7 @@ class Cas3BedspaceServiceTest {
     fun `When getBedspaceArchiveHistory returns Success with empty list of histories`() {
       val bedspaceId = UUID.randomUUID()
 
-      every { mockCas3v2DomainEventService.getBedspaceActiveDomainEvents(bedspaceId, listOf(CAS3_BEDSPACE_ARCHIVED, CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
+      every { mockCas3DomainEventService.getBedspaceActiveDomainEvents(bedspaceId, listOf(CAS3_BEDSPACE_ARCHIVED, CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
 
       val result = cas3v2BedspacesService.getBedspaceArchiveHistory(bedspaceId)
 
@@ -378,7 +378,7 @@ class Cas3BedspaceServiceTest {
       )
       val domainEventIn3Days = createBedspaceUnarchiveDomainEvent(dataIn3DaysUnarchive)
 
-      every { mockCas3v2DomainEventService.getBedspaceActiveDomainEvents(bedspaceId, listOf(CAS3_BEDSPACE_ARCHIVED, CAS3_BEDSPACE_UNARCHIVED)) } returns
+      every { mockCas3DomainEventService.getBedspaceActiveDomainEvents(bedspaceId, listOf(CAS3_BEDSPACE_ARCHIVED, CAS3_BEDSPACE_UNARCHIVED)) } returns
         listOf(
           domainEventFourMonthsAgo,
           domainEventOneWeekAgo,
@@ -480,7 +480,7 @@ class Cas3BedspaceServiceTest {
       val bedThreeUnarchiveDomainEventOneWeeksAgo = createUnarchiveDomainEvent(bedThreeUnarchiveEventTwoWeeksAgo)
 
       every {
-        mockCas3v2DomainEventService.getBedspacesActiveDomainEvents(
+        mockCas3DomainEventService.getBedspacesActiveDomainEvents(
           bedspacesIds,
           listOf(CAS3_BEDSPACE_ARCHIVED, CAS3_BEDSPACE_UNARCHIVED),
         )
@@ -543,7 +543,7 @@ class Cas3BedspaceServiceTest {
         bedspaceStartDate = LocalDate.now().minusDays(30),
       )
 
-      every { mockCas3v2DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
+      every { mockCas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
 
       val result = cas3v2BedspacesService.getBedspaceStatus(bedspace)
 
@@ -557,7 +557,7 @@ class Cas3BedspaceServiceTest {
         bedspaceEndDate = LocalDate.now(),
       )
 
-      every { mockCas3v2DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
+      every { mockCas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
 
       val result = cas3v2BedspacesService.getBedspaceStatus(bedspace)
 
@@ -591,8 +591,8 @@ class Cas3BedspaceServiceTest {
       )
       val bedspaceArchiveDomainEvent = createBedspaceArchiveDomainEvent(bedspaceArchiveEvent)
 
-      every { mockCas3v2DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_UNARCHIVED)) } returns listOf(bedspaceUnarchiveDomainEvent)
-      every { mockCas3v2DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns listOf(bedspaceArchiveDomainEvent)
+      every { mockCas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_UNARCHIVED)) } returns listOf(bedspaceUnarchiveDomainEvent)
+      every { mockCas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns listOf(bedspaceArchiveDomainEvent)
 
       val result = cas3v2BedspacesService.getBedspaceStatus(bedspace)
 
@@ -604,7 +604,7 @@ class Cas3BedspaceServiceTest {
       val (_, bedspace) = createPremisesAndBedspace(
         bedspaceStartDate = LocalDate.now().plusDays(7),
       )
-      every { mockCas3v2DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
+      every { mockCas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
 
       val result = cas3v2BedspacesService.getBedspaceStatus(bedspace)
 

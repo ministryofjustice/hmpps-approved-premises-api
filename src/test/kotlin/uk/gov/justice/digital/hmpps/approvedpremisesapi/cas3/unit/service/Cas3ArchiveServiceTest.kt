@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ArchiveService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
@@ -69,7 +69,7 @@ class Cas3ArchiveServiceTest {
   private val cas3BookingRepositoryMock = mockk<Cas3BookingRepository>()
   private val cas3BedspaceRepositoryMock = mockk<Cas3BedspacesRepository>()
   private val workingDayServiceMock = mockk<WorkingDayService>()
-  private val cas3DomainEventServiceMock = mockk<Cas3v2DomainEventService>()
+  private val cas3DomainEventServiceMock = mockk<Cas3DomainEventService>()
   private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
 
   private val cas3v2ArchiveService = Cas3ArchiveService(
