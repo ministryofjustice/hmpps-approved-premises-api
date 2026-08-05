@@ -117,6 +117,7 @@ class Cas3ApplicationService(
     offenceId: String?,
     createWithRisks: Boolean? = true,
     personInfo: PersonInfoResult.Success.Full,
+    referredBy: String? = null,
   ): CasResult<TemporaryAccommodationApplicationEntity> {
     if (!user.hasRole(UserRole.CAS3_REFERRER)) {
       return CasResult.Unauthorised()
@@ -170,6 +171,7 @@ class Cas3ApplicationService(
           riskRatings,
           caseSummary,
           prisonName,
+          referredBy,
         ),
       )
 
@@ -317,6 +319,7 @@ class Cas3ApplicationService(
     riskRatings: PersonRisks?,
     caseSummary: CaseSummary,
     prisonName: String?,
+    referredBy: String? = null,
   ): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = UUID.randomUUID(),
     crn = crn,
@@ -353,6 +356,7 @@ class Cas3ApplicationService(
     probationDeliveryUnit = null,
     previousReferralProbationRegion = null,
     previousReferralProbationDeliveryUnit = null,
+    referredBy = referredBy,
   )
 
   private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {

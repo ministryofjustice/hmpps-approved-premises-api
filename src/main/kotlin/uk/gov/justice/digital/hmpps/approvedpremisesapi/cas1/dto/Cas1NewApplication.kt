@@ -13,4 +13,6 @@ data class Cas1NewApplication(
 
   @Schema(example = "M1502750438")
   val offenceId: String,
+
+  val referredBy: String? = null,
 )

@@ -57,6 +57,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity?> = { null }
   private var previousReferralProbationRegion: Yielded<ProbationRegionEntity?> = { null }
   private var previousReferralProbationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity?> = { null }
+  private var referredBy: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -214,6 +215,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.previousReferralProbationDeliveryUnit = { outOfRegionProbationDeliveryUnit }
   }
 
+  fun withReferredBy(referredBy: String?) = apply {
+    this.referredBy = { referredBy }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -250,6 +255,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     probationDeliveryUnit = this.probationDeliveryUnit(),
     previousReferralProbationRegion = this.previousReferralProbationRegion(),
     previousReferralProbationDeliveryUnit = this.previousReferralProbationDeliveryUnit(),
+    referredBy = this.referredBy(),
   )
 
   fun withDefaults() = TemporaryAccommodationApplicationEntityFactory()

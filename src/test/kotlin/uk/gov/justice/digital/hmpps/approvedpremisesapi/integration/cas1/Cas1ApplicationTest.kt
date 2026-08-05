@@ -1931,6 +1931,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
                 convictionId = 123,
                 deliusEventNumber = "1",
                 offenceId = "789",
+                referredBy = "SAS",
               ),
             )
             .exchange()
@@ -1945,6 +1946,10 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(result.tier.calculationDate).isEqualTo(tier.calculationDate)
           assertThat(result.tier.provisional).isNull()
           assertThat(result.tier.version.name).isEqualTo(TierVersion.V2.name)
+
+          val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(result.applicationId)
+          assertThat(persistedApplication).isNotNull
+          assertThat(persistedApplication!!.referredBy).isEqualTo("SAS")
         }
       }
     }
