@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+cutoff_date="20260804"
+migration_dir="src/main/resources/db/migration/all"
+
+for file in "$migration_dir"/*.sql; do
+  filename="$(basename "$file")"
+  file_date_prefix="$(echo "$filename" | cut -c1-8)"
+
+  [ "$file_date_prefix" \> "20260804" ] || continue
+
+  case "$filename" in
+    20261021113642__add_cohort_to_cas_2_application_summary_views.sql) continue ;;
+  esac
+
+  if ! echo "$filename" | grep -Eq '^[0-9]{14}000__.+\.sql$'; then
+    echo "Invalid migration filename: $filename"
+    echo "Expected pattern: ^[0-9]{14}000__.+\\.sql$"
+    echo "Use the generate_migration.sh script to create a new migration"
+    exit 1
+  fi
+done
+
+echo "Migration filename check passed for files after $cutoff_date"

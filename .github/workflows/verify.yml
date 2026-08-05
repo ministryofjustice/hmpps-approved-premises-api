@@ -8,8 +8,24 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  verify_migration_scripts:
+    name: Check migration script filenames
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: 'false'
+          fetch-depth: 0
+
+      - name: Validate migration script filenames
+        run: sh ./script/verify_migration_scripts
+
   gradle_build:
     name: Gradle Build
+    needs: verify_migration_scripts
     permissions:
       contents: read
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
