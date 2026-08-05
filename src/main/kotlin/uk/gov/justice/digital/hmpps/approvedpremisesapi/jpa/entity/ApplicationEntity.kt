@@ -423,6 +423,7 @@ class ApprovedPremisesApplicationEntity(
   var noticeType: Cas1ApplicationTimelinessCategory?,
   var licenceExpiryDate: LocalDate?,
   var expiredReason: String?,
+  var referredBy: String?,
 ) : ApplicationEntity(
   id,
   crn,
@@ -523,6 +524,7 @@ class TemporaryAccommodationApplicationEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "previous_referral_probation_delivery_unit_id")
   var previousReferralProbationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  var referredBy: String?,
 ) : ApplicationEntity(
   id,
   crn,

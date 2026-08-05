@@ -70,6 +70,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var noticeType: Yielded<Cas1ApplicationTimelinessCategory?> = { null }
   private var licenseExpiryDate: Yielded<LocalDate?> = { null }
   private var expiredReason: Yielded<String?> = { null }
+  private var referredBy: Yielded<String?> = { null }
 
   fun withDefaults() = apply {
     withCreatedByUser(UserEntityFactory().withDefaults().produce())
@@ -235,6 +236,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.expiredReason = { expiredReason }
   }
 
+  fun withReferredBy(referredBy: String?) = apply {
+    this.referredBy = { referredBy }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -276,5 +281,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     noticeType = this.noticeType(),
     licenceExpiryDate = this.licenseExpiryDate(),
     expiredReason = this.expiredReason(),
+    referredBy = this.referredBy(),
   )
 }

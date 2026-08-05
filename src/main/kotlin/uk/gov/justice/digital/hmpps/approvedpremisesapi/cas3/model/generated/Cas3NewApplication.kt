@@ -22,4 +22,6 @@ data class Cas3NewApplication(
 
   @Schema(example = "M1502750438", description = "")
   @get:JsonProperty("offenceId") val offenceId: String? = null,
+
+  val referredBy: String? = null,
 )

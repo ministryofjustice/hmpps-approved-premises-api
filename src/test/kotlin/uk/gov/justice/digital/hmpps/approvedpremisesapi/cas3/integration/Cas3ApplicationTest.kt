@@ -764,6 +764,11 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           it.offenceId == offenceId
       }
 
+      val persistedApplication =
+        temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst.id)
+      assertThat(persistedApplication).isNotNull
+      assertThat(persistedApplication!!.referredBy).isEqualTo("SAS")
+
       if (agencyName != null) {
         val accommodationApplicationEntity =
           temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst.id)
@@ -782,6 +787,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           convictionId = 123,
           deliusEventNumber = "1",
           offenceId = offenceId,
+          referredBy = "SAS",
         ),
       )
       .exchange()

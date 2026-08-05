@@ -135,6 +135,7 @@ class Cas1ApplicationCreationService(
     convictionId: Long,
     deliusEventNumber: String,
     offenceId: String,
+    referredBy: String? = null,
   ): CasResult<Cas1CreateApplicationOutcome> {
     val case = caseService.ensureCaseExists(crn)
     case.tier ?: throw InternalServerErrorProblem("Could not find risk tier for offender with CRN $crn")
@@ -151,6 +152,7 @@ class Cas1ApplicationCreationService(
         riskRatings,
         case.nomsNumber,
         case.name?.uppercase() ?: error("name is null"),
+        referredBy,
       ),
     ).id
 
@@ -171,6 +173,7 @@ class Cas1ApplicationCreationService(
     riskRatings: PersonRisks,
     nomsNumber: String?,
     name: String,
+    referredBy: String? = null,
   ): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = UUID.randomUUID(),
     crn = crn,
@@ -212,6 +215,7 @@ class Cas1ApplicationCreationService(
     noticeType = null,
     licenceExpiryDate = null,
     expiredReason = null,
+    referredBy = referredBy,
   )
 
   fun createOfflineApplication(offlineApplication: OfflineApplicationEntity) = offlineApplicationRepository.save(offlineApplication)
