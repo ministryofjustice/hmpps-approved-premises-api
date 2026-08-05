@@ -35,6 +35,7 @@ class HealthDetails(
 data class HealthDetailsInner(
   val generalHealth: Boolean?,
   val generalHealthSpecify: String?,
+  val healthConditions: String?,
   val electronicMonitoringSpecify: String?,
   val electronicMonitoringElectricity: Boolean?,
   val electronicMonitoring: Boolean?,
