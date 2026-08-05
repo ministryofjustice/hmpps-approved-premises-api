@@ -24,6 +24,7 @@ class Cas2v2SubjectAccessRequestRepository(
         select
         	ca.crn,
         	ca.noms_number,
+        	ca."data",
         	ca."document",
         	nu."name" as created_by_user,
         	ca.created_at,
@@ -36,7 +37,18 @@ class Cas2v2SubjectAccessRequestRepository(
         	ca.abandoned_at,
           ca.application_origin,
           ca.service_origin,
-          CAST( ca.bail_hearing_date as DATE) 
+          CAST( ca.bail_hearing_date as DATE),
+          CASE ca.cohort
+            WHEN 'HDC' THEN 'Home Detention Curfew'
+            WHEN 'PRISON_BAIL' THEN 'Prison Bail'
+            WHEN 'COURT_BAIL' THEN 'Court Bail'
+            WHEN 'ATCR' THEN 'Alternative to Custodial Recall (ATCR)'
+            WHEN 'HCRD' THEN 'Homeless at Conditional Release Date (HCRD)'
+            WHEN 'HEFR' THEN 'Homeless at End of Fixed-term Recall'
+            WHEN 'ISC' THEN 'Intensive Supervision Courts (ISC)'
+            WHEN 'RARR' THEN 'Risk Assessed Recall Review (RARR)'
+            WHEN 'FROM_AP' THEN 'Referral from Approved Premises'
+            END as cohort_long_display_name
         from
         	cas_2_applications ca
         inner join cas_2_users nu on 
@@ -69,7 +81,7 @@ class Cas2v2SubjectAccessRequestRepository(
           caa.service_origin
           from
           	cas_2_assessments caa
-          inner join public.cas_2_applications ca 
+          inner join cas_2_applications ca 
           on
           	ca.id = caa.application_id and ca.service_origin = 'BAIL'
           where 

@@ -90,6 +90,9 @@ interface Cas2LockableApplicationRepository : JpaRepository<Cas2LockableApplicat
   fun acquirePessimisticLock(id: UUID): Cas2LockableApplicationEntity?
 }
 
+/*
+ * If these values change, then the Cas2v2SubjectAccessRequestRepository needs to be updated to reflect the new values.
+ */
 enum class Cas2Cohort(val apiType: Cas2CohortDto, val displayName: String, val longDisplayName: String, val assessmentSla: String) {
   HDC(Cas2CohortDto.HOME_DETENTION_CURFEW, "HDC", "Home Detention Curfew", "3 working days"),
   PRISON_BAIL(Cas2CohortDto.PRISON_BAIL, "Prison Bail", "Prison Bail", "1 working day"),

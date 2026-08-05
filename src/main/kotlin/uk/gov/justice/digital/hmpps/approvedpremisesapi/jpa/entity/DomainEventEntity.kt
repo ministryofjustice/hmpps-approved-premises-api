@@ -109,7 +109,10 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     Limit 1
     """,
   )
-  fun findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(cas3BedspaceId: UUID, type: DomainEventType): DomainEventEntity?
+  fun findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(
+    cas3BedspaceId: UUID,
+    type: DomainEventType,
+  ): DomainEventEntity?
 
   @Query(
     """
@@ -120,7 +123,10 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     Limit 1
     """,
   )
-  fun findLastCas3PremisesActiveDomainEventByPremisesIdAndType(cas3PremisesId: UUID, type: DomainEventType): DomainEventEntity?
+  fun findLastCas3PremisesActiveDomainEventByPremisesIdAndType(
+    cas3PremisesId: UUID,
+    type: DomainEventType,
+  ): DomainEventEntity?
 
   @Query(
     """
@@ -129,7 +135,10 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     WHERE d.cas3BedspaceId in :cas3BedspaceIds and d.type in :bedspaceDomainEventTypes and d.cas3CancelledAt is null
     """,
   )
-  fun findCas3BedspacesActiveDomainEventsByType(cas3BedspaceIds: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity>
+  fun findCas3BedspacesActiveDomainEventsByType(
+    cas3BedspaceIds: List<UUID>,
+    bedspaceDomainEventTypes: List<DomainEventType>,
+  ): List<DomainEventEntity>
 
   fun findByCas3TransactionIdAndType(cas3TransactionId: UUID, type: DomainEventType): List<DomainEventEntity>
 
@@ -142,7 +151,10 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     WHERE d.cas3PremisesId = :cas3PremisesId and d.type in :premisesDomainEventTypes and d.cas3CancelledAt is null
     """,
   )
-  fun findPremisesActiveDomainEventsByType(cas3PremisesId: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity>
+  fun findPremisesActiveDomainEventsByType(
+    cas3PremisesId: UUID,
+    premisesDomainEventTypes: List<DomainEventType>,
+  ): List<DomainEventEntity>
 
   @Query(
     """
@@ -214,7 +226,7 @@ data class DomainEventEntity(
   @MapKeyColumn(name = "name")
   @MapKeyEnumerated(EnumType.STRING)
   @Column(name = "value")
-  @CollectionTable(name = "domain_events_metadata", joinColumns = [ JoinColumn(name = "domain_event_id") ])
+  @CollectionTable(name = "domain_events_metadata", joinColumns = [JoinColumn(name = "domain_event_id")])
   val metadata: Map<MetaDataName, String?> = emptyMap(),
   /**
    * Use to track the schema version used for the [data] property. The schema version
@@ -233,6 +245,9 @@ data class DomainEventEntity(
 
 enum class TriggerSourceType { USER, SYSTEM }
 
+/**
+ * If you are updating this by adding other CAS-specific types, please also update the SAR template to include the DomainEvent Metadata section.
+ */
 enum class MetaDataName {
   CAS1_APP_REASON_FOR_SHORT_NOTICE,
   CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER,

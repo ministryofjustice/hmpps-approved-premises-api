@@ -1,0 +1,331 @@
+{
+  "placement-location": {
+    "alternative-region": {
+      "alternativeRegion": "yes",
+      "regionName": "East of England"
+    },
+    "different-region": {},
+    "placement-pdu": {},
+    "alternative-pdu": {
+      "alternativePdu": "yes",
+      "pduId": "ce1ee6e6-f510-4442-b9af-a658b94d3a82",
+      "pduName": "Bedfordshire (includes Bedford, Central Bedfordshire and Luton)"
+    },
+    "alternative-pdu-reason": {
+      "reason": "Reasons X, Y, Z"
+    }
+  },
+  "offence-and-behaviour-summary": {
+    "history-of-sexual-offence": {
+      "historyOfSexualOffence": "no"
+    },
+    "concerning-sexual-behaviour": {
+      "concerningSexualBehaviour": "yes",
+      "concerningSexualBehaviourDetail": "Sexual behaviour concerns details"
+    },
+    "history-of-arson-offence": {
+      "historyOfArsonOffence": "no"
+    },
+    "concerning-arson-behaviour": {
+      "concerningArsonBehaviour": "yes",
+      "concerningArsonBehaviourDetail": "Arson behaviour concerns details"
+    }
+  },
+  "sentence-information": {
+    "offending-summary": {
+      "summary": "A brief summary of offending history"
+    },
+    "sentence-type": {
+      "sentenceType": "extendedDeterminate"
+    },
+    "sentence-length": {
+      "years": "2",
+      "months": "",
+      "weeks": "",
+      "days": "4"
+    },
+    "sentence-expiry": {
+      "sentenceExpiryDate": "2124-01-19",
+      "sentenceExpiryDate-year": "2124",
+      "sentenceExpiryDate-month": "1",
+      "sentenceExpiryDate-day": "19"
+    },
+    "release-type": {
+      "releaseTypes": [
+        "crdLicence",
+        "fixedTermRecall"
+      ],
+      "crdLicenceStartDate-year": "2122",
+      "crdLicenceStartDate-month": "4",
+      "crdLicenceStartDate-day": "1",
+      "crdLicenceStartDate": "2122-04-01",
+      "crdLicenceEndDate-year": "2122",
+      "crdLicenceEndDate-month": "7",
+      "crdLicenceEndDate-day": "18",
+      "crdLicenceEndDate": "2122-07-18",
+      "fixedTermRecallStartDate-year": "2024",
+      "fixedTermRecallStartDate-month": "1",
+      "fixedTermRecallStartDate-day": "19",
+      "fixedTermRecallStartDate": "2024-01-19",
+      "fixedTermRecallEndDate-year": "2024",
+      "fixedTermRecallEndDate-month": "7",
+      "fixedTermRecallEndDate-day": "9",
+      "fixedTermRecallEndDate": "2024-07-09"
+    }
+  },
+  "contact-details": {
+    "practitioner-name": {
+      "name": "Practitioner Name"
+    },
+    "practitioner-email": {
+      "email": "name@example.gov.uk"
+    },
+    "practitioner-phone": {
+      "phone": "01234 56780"
+    },
+    "practitioner-pdu": {
+      "id": "3fa6a349-5f48-4c42-8d96-938bda727c35",
+      "name": "Suffolk"
+    },
+    "probation-practitioner": {
+      "name": "Practitioner Name",
+      "email": "name@example.gov.uk",
+      "phone": "01234 56780",
+      "pdu": {
+        "id": "3fa6a349-5f48-4c42-8d96-938bda727c35",
+        "name": "Suffolk"
+      }
+    },
+    "backup-contact": {
+      "name": "Backup Name",
+      "phone": "09876 54321",
+      "email": "backup-name@example.gov.uk"
+    },
+    "pop-phone-number": {
+      "phone": "01235 467890"
+    }
+  },
+  "eligibility": {
+    "eligibility-reason": {
+      "reason": "homelessFromApprovedPremises"
+    },
+    "release-date": {
+      "releaseDate": "2026-07-13",
+      "releaseDate-year": "2026",
+      "releaseDate-month": "7",
+      "releaseDate-day": "13"
+    },
+    "accommodation-required-from-date": {
+      "accommodationRequiredFromDate": "2026-07-15",
+      "accommodationRequiredFromDate-year": "2026",
+      "accommodationRequiredFromDate-month": "7",
+      "accommodationRequiredFromDate-day": "15"
+    }
+  },
+  "consent": {
+    "consent-given": {
+      "consentGiven": "yes"
+    }
+  },
+  "licence-conditions": {
+    "additional-licence-conditions": {
+      "conditions": [
+        "civilOrders",
+        "nonAssociation",
+        "nonContact",
+        "other"
+      ],
+      "alcoholMonitoringDetail": "",
+      "civilOrdersDetail": "Civil orders detail",
+      "curfewDetail": "",
+      "drugTestingDetail": "",
+      "engagementWithServicesDetail": "",
+      "exclusionZoneDetail": "",
+      "initmateRelationshipsDetail": "",
+      "noContactWithChildrenDetail": "",
+      "nonAssociationDetail": "Non association detail",
+      "nonContactDetail": "Non contact detail",
+      "programmesDetail": "",
+      "residencyRestrictionDetail": "",
+      "otherDetail": "Other detail"
+    }
+  },
+  "prison-information": {
+    "adjudications": {
+      "adjudications": [
+        {
+          "id": 1531418,
+          "reportedAt": "2025-06-25T12:13:00Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Commits any assault - all assault on other person",
+          "hearingHeld": true,
+          "finding": "PROVED"
+        }
+      ]
+    },
+    "acct-alerts": {
+      "acctAlerts": []
+    }
+  },
+  "placement-considerations": {
+    "accommodation-sharing": {
+      "accommodationSharing": "yes",
+      "accommodationSharingYesDetail": "Some detail",
+      "accommodationSharingNoDetail": ""
+    },
+    "cooperation": {
+      "support": "Support detail"
+    },
+    "anti-social-behaviour": {
+      "concerns": "yes",
+      "concernsDetail": "Anti-social behaviour concerns detail"
+    },
+    "substance-misuse": {
+      "substanceMisuse": "yes",
+      "substanceMisuseDetail": "Details of drug and alcohol misuse"
+    },
+    "rosh-level": {
+      "riskToChildren": "Risk to children detail",
+      "riskToPublic": "Risk to public detail",
+      "riskToKnownAdult": "Risk to known adult detail",
+      "riskToStaff": "Risk to staff detail",
+      "riskToSelfConcerns": "yes",
+      "riskToSelf": "Risk to self detail",
+      "safetyPlanCompleted": "yesAndConsentToShareHasBeenGiven"
+    },
+    "risk-management-plan": {
+      "version": "2",
+      "riskManagementAnswers": {
+        "QRM33": "There is a Restraining Order in place to protect xx xxx:\r\n\r\nYou are prohibited from: \r\n1. Contacting xxx xxx directly or indirectly including via social media \r\n2. Entering any part of any premises occupied by xxx xxx for the time being as their usual place of residence, this is in place until 16/11/23\r\n\r\nThere is also a Restraining Order in place to protect a previous victim xxx xxx:\r\n\r\nYou are prohibited from:- \r\n1. Contacting directly or indirectly xxx xxx, this is in place until further order.\r\n\r\nConsideration of multi agency meetings to further protect victims will need to be considered before release. \r\n\r\nBlocks are on place at HMP Cardiff to prevent contact and safeguard victims. ",
+        "QRM32": "Motivational work will be undertaken with Mr Davies and will underpin all interventions. Work will be undertaken on a face to face basis with POM, \r\n\r\nPractical Support will be provided by Prison Officers - relating to practical daily issues - they will be available on the wing at all times.  \r\n\r\nPrison Offender Manager will see Mr Davies on a fortnightly basis to assess progress with the supervision plan.\r\n\r\nMr Davies screens into the PD Pathway - and a consultation with the POM will take place. This will be arranged with Forensic Psychology. \r\n\r\nMr Davies has commenced in cell work through RES which will be monitored by the POM. .\r\n\r\nMr Davies' contact with the mental heaalth team will need to be confirmed. ",
+        "QRM31": "In custody - \r\n\r\nMr Davies will be managed by HMP Berwyn within the prison regime. \r\nHis behaviour will be managed through the IEP and adjudications system.\r\nIf his behaviour is concerning he will be referred to CSIP or IRMT for risk management -he will be removed to the CASU. \r\n\r\nMr Davies is subject to PPRC protocol - no contact with anyone under 18 years old without prior assessment-should he be suspected of contact or any increase in risk detected via Intel he will be subject to phone monitoring.",
+        "QRM30": "Mr Davies is currently at HMP Berwyn\r\n\r\nxxx xxx Prison Offender Manager at HMP Berwynf - he will be seen as required in line with National Standards and as required by OMU. \r\n\r\nKey Worker - To be confirmed with SMS in HMP Berwyn. - to be seen in line with key worker protocol. \r\n\r\nOMIC - Prison Offender Manager has responsibility for this case, but this will be transferred to the COM at the appropriate juncture as per OMIC guidance. A handover will be completed at that juncture. \r\n\r\nPD - Screening has been completed - Mr Davies screens in, and this will be progressed to a PD consultation. \r\n\r\nMr Davies needs to be assessed for his suitability for programmes by psychology and the Interventions team. \r\nHe has been assessed as a Category C prisoner. "
+      },
+      "riskManagementSummaries": [
+        {
+          "label": "Victim safety planning",
+          "questionNumber": "RM33",
+          "answer": "There is a Restraining Order in place to protect xx xxx:\r\n\r\nYou are prohibited from: \r\n1. Contacting xxx xxx directly or indirectly including via social media \r\n2. Entering any part of any premises occupied by xxx xxx for the time being as their usual place of residence, this is in place until 16/11/23\r\n\r\nThere is also a Restraining Order in place to protect a previous victim xxx xxx:\r\n\r\nYou are prohibited from:- \r\n1. Contacting directly or indirectly xxx xxx, this is in place until further order.\r\n\r\nConsideration of multi agency meetings to further protect victims will need to be considered before release. \r\n\r\nBlocks are on place at HMP Cardiff to prevent contact and safeguard victims. "
+        },
+        {
+          "label": "Interventions and treatment",
+          "questionNumber": "RM32",
+          "answer": "Motivational work will be undertaken with Mr Davies and will underpin all interventions. Work will be undertaken on a face to face basis with POM, \r\n\r\nPractical Support will be provided by Prison Officers - relating to practical daily issues - they will be available on the wing at all times.  \r\n\r\nPrison Offender Manager will see Mr Davies on a fortnightly basis to assess progress with the supervision plan.\r\n\r\nMr Davies screens into the PD Pathway - and a consultation with the POM will take place. This will be arranged with Forensic Psychology. \r\n\r\nMr Davies has commenced in cell work through RES which will be monitored by the POM. .\r\n\r\nMr Davies' contact with the mental heaalth team will need to be confirmed. "
+        },
+        {
+          "label": "Monitoring and control",
+          "questionNumber": "RM31",
+          "answer": "In custody - \r\n\r\nMr Davies will be managed by HMP Berwyn within the prison regime. \r\nHis behaviour will be managed through the IEP and adjudications system.\r\nIf his behaviour is concerning he will be referred to CSIP or IRMT for risk management -he will be removed to the CASU. \r\n\r\nMr Davies is subject to PPRC protocol - no contact with anyone under 18 years old without prior assessment-should he be suspected of contact or any increase in risk detected via Intel he will be subject to phone monitoring."
+        },
+        {
+          "label": "Supervision",
+          "questionNumber": "RM30",
+          "answer": "Mr Davies is currently at HMP Berwyn\r\n\r\nxxx xxx Prison Offender Manager at HMP Berwynf - he will be seen as required in line with National Standards and as required by OMU. \r\n\r\nKey Worker - To be confirmed with SMS in HMP Berwyn. - to be seen in line with key worker protocol. \r\n\r\nOMIC - Prison Offender Manager has responsibility for this case, but this will be transferred to the COM at the appropriate juncture as per OMIC guidance. A handover will be completed at that juncture. \r\n\r\nPD - Screening has been completed - Mr Davies screens in, and this will be progressed to a PD consultation. \r\n\r\nMr Davies needs to be assessed for his suitability for programmes by psychology and the Interventions team. \r\nHe has been assessed as a Category C prisoner. "
+        }
+      ],
+      "oasysImported": "2026-05-20",
+      "oasysCompleted": "2026-02-09T10:10:37Z"
+    }
+  },
+  "approvals-for-specific-risks": {
+    "approvals-for-specific-risks": {
+      "approvals": "yes",
+      "approvalsDetail": "Approvals detail"
+    }
+  },
+  "behaviour-in-cas": {
+    "previous-stays": {
+      "previousStays": "yes"
+    },
+    "previous-stays-details": {
+      "accommodationTypes": [
+        "cas1",
+        "cas3"
+      ],
+      "cas1Detail": "Approved Premises detail",
+      "cas2Detail": "",
+      "cas3Detail": "CAS3 detail"
+    }
+  },
+  "disability-cultural-and-specific-needs": {
+    "needs": {
+      "needs": [
+        "hearingImpairment",
+        "neurodivergence",
+        "physicalHealth",
+        "other"
+      ],
+      "hearingImpairmentDetail": "Hearing impairment detail",
+      "languageDetail": "",
+      "learningDisabilityDetail": "",
+      "mentalHealthDetail": "",
+      "mobilityDetail": "",
+      "neurodivergenceDetail": "Neurodivergence detail",
+      "physicalHealthDetail": "Physical health detail",
+      "visualImpairmentDetail": "",
+      "otherDetail": "Other needs detail"
+    },
+    "property-attributes-or-adaptations": {
+      "propertyAttributesOrAdaptations": "yes",
+      "propertyAttributesOrAdaptationsDetail": "Adaptation requirements detail"
+    },
+    "religious-or-cultural-needs": {
+      "religiousOrCulturalNeeds": "yes",
+      "religiousOrCulturalNeedsDetail": "Religious needs detail"
+    }
+  },
+  "safeguarding-and-support": {
+    "safeguarding-and-vulnerability": {
+      "concerns": "yes",
+      "concernsDetail": "Concerns A, B, and C"
+    },
+    "support-in-the-community": {
+      "support": "Community support details"
+    },
+    "local-connections": {
+      "localConnections": "Local connection details"
+    },
+    "caring-responsibilities": {
+      "caringResponsibilities": "yes",
+      "caringResponsibilitiesDetail": "Caring responsibilities X, Y, and Z"
+    }
+  },
+  "food-allergies": {
+    "food-allergies": {
+      "foodAllergies": "yes",
+      "foodAllergiesDetail": "Allergic to X, Y, Z"
+    }
+  },
+  "move-on-plan": {
+    "move-on-plan": {
+      "plan": "A move on plan"
+    }
+  },
+  "accommodation-referral-details": {
+    "dtr-submitted": {
+      "dtrSubmitted": "yes"
+    },
+    "dtr-details": {
+      "reference": "ABC123",
+      "localAuthorityAreaName": "Barking and Dagenham",
+      "dutyToReferOutcome": "acceptedPreventionAndReliefDuty",
+      "dutyToReferOutcomeOtherDetails": "",
+      "date-year": "2022",
+      "date-month": "4",
+      "date-day": "12",
+      "date": "2022-04-12"
+    },
+    "crs-submitted": {
+      "crsSubmitted": "yes"
+    },
+    "other-accommodation-options": {
+      "otherOptions": "yes",
+      "otherOptionsDetail": "Other accommodation details"
+    }
+  },
+  "check-your-answers": {
+    "review": {
+      "reviewed": "1"
+    }
+  }
+}

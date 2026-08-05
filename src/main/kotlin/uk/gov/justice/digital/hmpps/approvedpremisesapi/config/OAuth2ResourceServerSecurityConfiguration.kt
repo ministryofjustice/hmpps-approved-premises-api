@@ -95,6 +95,7 @@ class OAuth2ResourceServerSecurityConfiguration {
 
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
         authorize(HttpMethod.GET, "/subject-access-request", hasAuthority("ROLE_SAR_DATA_ACCESS"))
+        authorize(HttpMethod.GET, "/subject-access-request/template", hasAuthority("ROLE_SAR_DATA_ACCESS"))
 
         authorize(HttpMethod.GET, "/cas1/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.GET, "/cas3/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))

@@ -1,0 +1,309 @@
+{
+  "sections": [
+    {
+      "title": "Accommodation need",
+      "tasks": [
+        {
+          "title": "Placement location",
+          "id": "placement-location",
+          "content": [
+            {
+              "Is the placement for the East of England region?": "Yes, East of England"
+            },
+            {
+              "Is placement required in a different PDU?": "Yes",
+              "PDU in East of England": "Bedfordshire (includes Bedford, Central Bedfordshire and Luton)"
+            },
+            {
+              "Reason for choosing a different PDU": "Reasons X, Y, Z"
+            }
+          ]
+        },
+        {
+          "title": "Offence and behaviour summary",
+          "id": "offence-and-behaviour-summary",
+          "content": [
+            {
+              "Has the person ever been convicted of a sexual offence?": "No"
+            },
+            {
+              "Are there concerns about the person's sexual behaviour?": "Yes - Sexual behaviour concerns details"
+            },
+            {
+              "Has the person ever been convicted of arson?": "No"
+            },
+            {
+              "Are there concerns about arson for the person?": "Yes - Arson behaviour concerns details"
+            }
+          ]
+        },
+        {
+          "title": "Sentence information",
+          "id": "sentence-information",
+          "content": [
+            {
+              "Offence ID": "M2500403796",
+              "Summary of offending history": "A brief summary of offending history"
+            },
+            {
+              "Which of the following best describes the sentence type?": "Extended determinate custody"
+            },
+            {
+              "What is the sentence length?": "2 years, 4 days"
+            },
+            {
+              "Sentence expiry date": "19 January 2124"
+            },
+            {
+              "What is the release type?": "Conditional release date (CRD)\nFixed-term Recall",
+              "CRD start date": "1 April 2122",
+              "CRD end date": "18 July 2122",
+              "Licence start date": "19 January 2024",
+              "Licence end date": "9 July 2024"
+            }
+          ]
+        },
+        {
+          "title": "Contact details",
+          "id": "contact-details",
+          "content": [
+            {
+              "Probation practitioner details": [
+                {
+                  "Name": "Practitioner Name",
+                  "Email": "name@example.gov.uk",
+                  "Phone": "01234 56780",
+                  "PDU": "Suffolk"
+                }
+              ]
+            },
+            {
+              "Backup contact / senior probation officer details": [
+                {
+                  "Name": "Backup Name",
+                  "Phone": "09876 54321",
+                  "Email": "backup-name@example.gov.uk"
+                }
+              ]
+            },
+            {
+              "What is the person's phone number?": "01235 467890"
+            }
+          ]
+        },
+        {
+          "title": "Eligibility",
+          "id": "eligibility",
+          "content": [
+            {
+              "How is the person eligible for CAS3?": "Moving on as homeless from an Approved Premises (CAS1)"
+            },
+            {
+              "Release date": "13 July 2026"
+            },
+            {
+              "Accommodation required from date": "15 July 2026"
+            }
+          ]
+        },
+        {
+          "title": "Consent",
+          "id": "consent",
+          "content": [
+            {
+              "Has consent for CAS3 been given?": "Yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Assess placement risks and needs",
+      "tasks": [
+        {
+          "title": "Licence conditions",
+          "id": "licence-conditions",
+          "content": [
+            {
+              "Civil orders (e.g. SHPT), restraining orders, criminal behaviour orders": "Civil orders detail",
+              "Non association": "Non association detail",
+              "Non contact": "Non contact detail",
+              "Other conditions (relevant to accommodation)": "Other detail"
+            }
+          ]
+        },
+        {
+          "title": "Prison information",
+          "id": "prison-information",
+          "content": [
+            {
+              "Adjudications": [
+                {
+                  "Adjudication number": 1531418,
+                  "Report date and time": "25 Jun 2025, 13:13",
+                  "Establishment": "Moorland (HMP & YOI)",
+                  "Offence description": "Commits any assault - all assault on other person",
+                  "Finding": "Proved"
+                }
+              ]
+            },
+            {
+              "ACCT Alerts": "No ACCT information available for the person at the time of referral"
+            }
+          ]
+        },
+        {
+          "title": "Placement considerations",
+          "id": "placement-considerations",
+          "content": [
+            {
+              "Is the person suitable to share accommodation with others?": "Yes - Some detail"
+            },
+            {
+              "How will you support the person's placement considering any risks to the support worker?": "Support detail"
+            },
+            {
+              "Are there any concerns or risks relating to anti-social behaviour?": "Yes - Anti-social behaviour concerns detail"
+            },
+            {
+              "Does the person have any current or previous issues with drug or alcohol misuse?": "Yes - Details of drug and alcohol misuse"
+            },
+            {
+              "How will risk to children impact placement?": "Risk to children detail",
+              "How will risk to public impact placement?": "Risk to public detail",
+              "How will risk to known adult impact placement?": "Risk to known adult detail",
+              "How will risk to staff impact placement?": "Risk to staff detail",
+              "Are there any current or past concerns about self-harm or suicide?": "Yes",
+              "How will risk to self impact placement?": "Risk to self detail",
+              "Has a safety plan been completed?": "Yes, and consent to share has been given"
+            },
+            {
+              "RM33: Victim safety planning": "There is a Restraining Order in place to protect xx xxx:\r\n\r\nYou are prohibited from: \r\n1. Contacting xxx xxx directly or indirectly including via social media \r\n2. Entering any part of any premises occupied by xxx xxx for the time being as their usual place of residence, this is in place until 16/11/23\r\n\r\nThere is also a Restraining Order in place to protect a previous victim xxx xxx:\r\n\r\nYou are prohibited from:- \r\n1. Contacting directly or indirectly xxx xxx, this is in place until further order.\r\n\r\nConsideration of multi agency meetings to further protect victims will need to be considered before release. \r\n\r\nBlocks are on place at HMP Cardiff to prevent contact and safeguard victims. ",
+              "RM32: Interventions and treatment": "Motivational work will be undertaken with Mr Davies and will underpin all interventions. Work will be undertaken on a face to face basis with POM, \r\n\r\nPractical Support will be provided by Prison Officers - relating to practical daily issues - they will be available on the wing at all times.  \r\n\r\nPrison Offender Manager will see Mr Davies on a fortnightly basis to assess progress with the supervision plan.\r\n\r\nMr Davies screens into the PD Pathway - and a consultation with the POM will take place. This will be arranged with Forensic Psychology. \r\n\r\nMr Davies has commenced in cell work through RES which will be monitored by the POM. .\r\n\r\nMr Davies' contact with the mental heaalth team will need to be confirmed. ",
+              "RM31: Monitoring and control": "In custody - \r\n\r\nMr Davies will be managed by HMP Berwyn within the prison regime. \r\nHis behaviour will be managed through the IEP and adjudications system.\r\nIf his behaviour is concerning he will be referred to CSIP or IRMT for risk management -he will be removed to the CASU. \r\n\r\nMr Davies is subject to PPRC protocol - no contact with anyone under 18 years old without prior assessment-should he be suspected of contact or any increase in risk detected via Intel he will be subject to phone monitoring.",
+              "RM30: Supervision": "Mr Davies is currently at HMP Berwyn\r\n\r\nxxx xxx Prison Offender Manager at HMP Berwynf - he will be seen as required in line with National Standards and as required by OMU. \r\n\r\nKey Worker - To be confirmed with SMS in HMP Berwyn. - to be seen in line with key worker protocol. \r\n\r\nOMIC - Prison Offender Manager has responsibility for this case, but this will be transferred to the COM at the appropriate juncture as per OMIC guidance. A handover will be completed at that juncture. \r\n\r\nPD - Screening has been completed - Mr Davies screens in, and this will be progressed to a PD consultation. \r\n\r\nMr Davies needs to be assessed for his suitability for programmes by psychology and the Interventions team. \r\nHe has been assessed as a Category C prisoner. "
+            }
+          ]
+        },
+        {
+          "title": "Approvals for specific risks",
+          "id": "approvals-for-specific-risks",
+          "content": [
+            {
+              "Have your received approval for this referral?": "Yes - Approvals detail",
+              "Risk of serious harm": [
+                {
+                  "Overall risk of serious harm": "High",
+                  "Risk to children": "Medium",
+                  "Risk to public": "High",
+                  "Risk to known adult": "High",
+                  "Risk to staff": "Low"
+                }
+              ],
+              "Multi-agency public protection arrangements": "Something went wrong. We are unable to include MAPPA information. This risk data must be checked manually outside of this service.",
+              "NDelius risk flags (registers)": "Contact Suspended\nRisk to Staff\nRisk to Children\nRisk to Known Adult\nRisk to Prisoner\nRisk to Public"
+            }
+          ]
+        },
+        {
+          "title": "Behaviour in CAS",
+          "id": "behaviour-in-cas",
+          "content": [
+            {
+              "Has the person previously stayed in Community Accommodation Services (CAS)?": "Yes"
+            },
+            {
+              "Approved Premises (AP or CAS1)": "Approved Premises detail",
+              "CAS3": "CAS3 detail"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Health, disability, culture, and safeguarding",
+      "tasks": [
+        {
+          "title": "Health, disability and cultural needs",
+          "id": "disability-cultural-and-specific-needs",
+          "content": [
+            {
+              "Hearing impairment": "Hearing impairment detail",
+              "Neurodivergence": "Neurodivergence detail",
+              "Physical health condition, for example diabetes, epilepsy, asthma": "Physical health detail",
+              "Another need": "Other needs detail"
+            },
+            {
+              "Will the person require a property with specific attributes or adaptations?": "Yes - Adaptation requirements detail"
+            },
+            {
+              "Does the person have any religious or cultural needs?": "Yes - Religious needs detail"
+            }
+          ]
+        },
+        {
+          "title": "Safeguarding and support",
+          "id": "safeguarding-and-support",
+          "content": [
+            {
+              "Do you have any concerns about safeguarding and/or vulnerability?": "Yes - Concerns A, B, and C"
+            },
+            {
+              "Details of support in the community": "Community support details"
+            },
+            {
+              "Details of local connections": "Local connection details"
+            },
+            {
+              "Does the person have any caring responsibilities?": "Yes - Caring responsibilities X, Y, and Z"
+            }
+          ]
+        },
+        {
+          "title": "Food allergies",
+          "id": "food-allergies",
+          "content": [
+            {
+              "Does the person have any food allergies or dietary requirements?": "Yes - Allergic to X, Y, Z"
+            }
+          ]
+        },
+        {
+          "title": "Move on plan",
+          "id": "move-on-plan",
+          "content": [
+            {
+              "How will you prepare the person for move on after placement?": "A move on plan"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Required referrals",
+      "tasks": [
+        {
+          "title": "Accommodation referral details",
+          "id": "accommodation-referral-details",
+          "content": [
+            {
+              "Has the Duty to refer (England) or Application for Assistance (Wales) been submitted?": "Yes"
+            },
+            {
+              "Reference number": "ABC123",
+              "Submission date": "12 April 2022",
+              "What is the local authority?": "Barking and Dagenham",
+              "Have you received an outcome from the local authority?": "Yes, it was accepted on prevention and relief duty"
+            },
+            {
+              "Has a referral to Commissioned Rehabilitative Services (CRS) been submitted?": "Yes"
+            },
+            {
+              "Have other accommodation options been considered?": "Yes - Other accommodation details"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

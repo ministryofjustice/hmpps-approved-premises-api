@@ -26,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.cache.CacheManager
+import org.springframework.context.annotation.Import
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
@@ -270,6 +271,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelperConfig
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
@@ -280,6 +282,7 @@ import java.util.UUID
 @ActiveProfiles("test")
 @Tag("integration")
 @AutoConfigureWebTestClient
+@Import(SarIntegrationTestHelperConfig::class)
 abstract class IntegrationTestBase {
   @Autowired
   lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
@@ -667,6 +670,7 @@ abstract class IntegrationTestBase {
 
     webTestClient = webTestClient.mutate()
       .responseTimeout(Duration.ofMinutes(20))
+      .codecs { it.defaultCodecs().maxInMemorySize(1 * 1024 * 1024) }
       .build()
 
     wiremockManager.beforeTest()

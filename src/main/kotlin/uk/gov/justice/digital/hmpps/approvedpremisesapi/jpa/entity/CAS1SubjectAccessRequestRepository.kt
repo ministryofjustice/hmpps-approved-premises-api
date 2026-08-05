@@ -26,6 +26,7 @@ from
 		apa.name,
 		a.crn,
 		a.noms_number,
+		a."data",
 		a."document",
 		a.created_at,
 		a.submitted_at,
@@ -135,6 +136,7 @@ from
                app.crn,
                app.noms_number,
                u."name" as assessor_name,
+               assess."data",
                assess."document",
                assess.created_at,
                assess.allocated_at,
@@ -149,7 +151,11 @@ from
                apa.agree_with_short_notice_reason_comments,
                apa.reason_for_late_application
            from
+               approved_premises_assessments apa
+           inner join
                assessments assess
+           on
+               apa.assessment_id = assess.id
            inner join 
                applications app
            on
@@ -158,10 +164,6 @@ from
                users u 
            on
                u.id = assess.allocated_to_user_id
-           left join 
-               approved_premises_assessments apa 
-           on
-               apa.assessment_id = assess.id
           where
               (app.crn = :crn or app.noms_number = :noms_number )
           and 
@@ -237,6 +239,7 @@ from
           select
             a.crn,
             a.noms_number,
+            pa."data",
             pa."document",
             pa.created_at,
             pa.submitted_at ,
