@@ -1035,6 +1035,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       val healthDetails = HealthDetailsFactory()
         .withGeneralHealth(true, "some health issues")
+        .withHealthConditions("some health conditions")
         .withDrugsMisuse(drugsMisuse)
         .withAlcoholMisuse(alcoholMisuse)
         .withLastUpdatedDate(LAST_UPDATED_DATE)
@@ -1052,6 +1053,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       assertThat(response.generalHealth).isEqualTo(healthDetails.health.generalHealth)
       assertThat(response.generalHealthSpecify).isEqualTo(healthDetails.health.generalHealthSpecify)
+      assertThat(response.healthConditions).isEqualTo(healthDetails.health.healthConditions)
       assertThat(response.drugsMisuse!!.community).isEqualTo(drugsMisuse.community)
       assertThat(response.drugsMisuse.electronicMonitoring).isEqualTo(drugsMisuse.electronicMonitoring)
       assertThat(response.drugsMisuse.programme).isEqualTo(drugsMisuse.programme)

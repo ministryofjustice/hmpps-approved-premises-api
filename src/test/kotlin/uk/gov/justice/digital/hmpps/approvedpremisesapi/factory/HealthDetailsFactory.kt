@@ -8,12 +8,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.Health
 class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
   private var generalHealth: Yielded<Boolean?> = { false }
   private var generalHealthSpecify: Yielded<String?> = { null }
+  private var healthConditions: Yielded<String?> = { null }
   private var drugsMisuse: Yielded<HealthIssue?> = { null }
   private var alcoholMisuse: Yielded<HealthIssue?> = { null }
 
   fun withGeneralHealth(generalHealth: Boolean?, generalHealthSpecify: String?) = apply {
     this.generalHealth = { generalHealth }
     this.generalHealthSpecify = { generalHealthSpecify }
+  }
+
+  fun withHealthConditions(healthConditions: String?) = apply {
+    this.healthConditions = { healthConditions }
   }
 
   fun withDrugsMisuse(drugsMisuse: HealthIssue?) = apply {
@@ -38,6 +43,7 @@ class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
     health = HealthDetailsInner(
       generalHealth = this.generalHealth(),
       generalHealthSpecify = this.generalHealthSpecify(),
+      healthConditions = this.healthConditions(),
       electronicMonitoringSpecify = null,
       electronicMonitoringElectricity = null,
       electronicMonitoring = null,
