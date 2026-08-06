@@ -68,13 +68,14 @@ class Cas1ApplicationCreationService(
   private val offenderDetailService: OffenderDetailService,
 ) {
 
+  @Transactional
   fun createApprovedPremisesApplication(
     offenderDetails: OffenderDetailSummary,
     user: UserEntity,
     convictionId: Long?,
     deliusEventNumber: String?,
     offenceId: String?,
-  ) = validatedCasResult {
+  ): CasResult<ApprovedPremisesApplicationEntity> = validatedCasResult {
     val crn = offenderDetails.otherIds.crn
 
     val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn)) {
@@ -114,8 +115,6 @@ class Cas1ApplicationCreationService(
       ),
     )
 
-    caseService.ensureCaseExists(crn)
-
     managingTeamCodes.forEach {
       createdApplication.teamCodes += applicationTeamCodeRepository.save(
         ApplicationTeamCodeEntity(
@@ -129,6 +128,7 @@ class Cas1ApplicationCreationService(
     return success(createdApplication)
   }
 
+  @Transactional
   fun createApplication(
     crn: String,
     user: UserEntity,
