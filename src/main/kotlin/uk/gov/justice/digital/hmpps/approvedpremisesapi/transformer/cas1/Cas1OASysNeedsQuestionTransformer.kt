@@ -139,10 +139,10 @@ class Cas1OASysNeedsQuestionTransformer {
       sectionLabel = OASysLabels.sectionToLabel.getValue("13"),
       questionNumber = "13.1",
       questionLabel = OASysLabels.questionToLabel.getValue("13.1"),
-      answer = if (healthDetails?.health?.generalHealth == true) healthDetails.health.generalHealthSpecify else null,
       /*
       'health' is always optional, allowing the user to elect to enter health information even if there is no health information in OASys
        */
+      answer = getHealthAnswer(healthDetails),
       optional = true,
       linkedToHarm = null,
       linkedToReOffending = null,
@@ -150,4 +150,14 @@ class Cas1OASysNeedsQuestionTransformer {
   )
 
   private fun isOptional(linkedToHarm: Boolean?) = linkedToHarm != true
+
+  private fun getHealthAnswer(healthDetails: HealthDetails?): String? {
+    val health = healthDetails?.health ?: return null
+
+    if (!health.healthConditions.isNullOrEmpty()) {
+      return health.healthConditions
+    }
+
+    return if (health.generalHealth == true) health.generalHealthSpecify else null
+  }
 }
