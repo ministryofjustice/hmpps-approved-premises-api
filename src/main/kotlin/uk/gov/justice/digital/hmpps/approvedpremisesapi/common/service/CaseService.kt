@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
@@ -53,6 +55,7 @@ class CaseService(
   private val useTierV3: Boolean
     get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
 
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   fun ensureCaseExists(crn: String): CaseDto {
     val normalizedCrn = crn.uppercase()
     val caseSummary = getCaseSummary(normalizedCrn)
