@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -39,6 +41,7 @@ class Cas1ApplicationService(
   private val cas1UserAccessService: Cas1UserAccessService,
   private val userAccessService: UserAccessService,
   private val offenderService: OffenderService,
+  private val featureFlagService: FeatureFlagService,
 ) {
   fun getApplication(applicationId: UUID) = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
@@ -95,10 +98,18 @@ class Cas1ApplicationService(
     pageSize: Int? = 10,
     createdByUserId: UUID? = null,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
+    val useTierV3 = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
+
     val sortField = when (sortBy) {
       ApplicationSortField.arrivalDate -> "arrivalDate"
       ApplicationSortField.createdAt -> "a.created_at"
       ApplicationSortField.tier -> "tier"
+      ApplicationSortField.personTier ->
+        if (useTierV3) {
+          "personTierV3Score"
+        } else {
+          "personTierV2Score"
+        }
       ApplicationSortField.releaseType -> "releaseType"
       else -> "a.created_at"
     }

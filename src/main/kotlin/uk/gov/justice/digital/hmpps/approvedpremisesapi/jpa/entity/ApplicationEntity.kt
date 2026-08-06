@@ -66,6 +66,8 @@ SELECT
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
     apa.status as status,
     apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+    (cases.tier_v2->>'tierScore')::text AS personTierV2Score,
+    (cases.tier_v3->>'tierScore')::text AS personTierV3Score,
     apa.is_withdrawn as isWithdrawn,
     apa.release_type as releaseType,
     (
@@ -75,6 +77,7 @@ SELECT
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 LEFT JOIN users u on u.id = a.created_by_user_id
+LEFT OUTER JOIN cases ON cases.crn = a.crn
 WHERE apa.is_inapplicable IS NOT TRUE 
 AND (
       :crnOrName IS NULL OR 

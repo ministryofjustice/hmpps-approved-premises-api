@@ -359,7 +359,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   }
 
   @ParameterizedTest
-  @EnumSource(ApplicationSortField::class)
+  @EnumSource(ApplicationSortField::class, names = ["personTier"], mode = EnumSource.Mode.EXCLUDE)
   fun `findAllApprovedPremisesSummaries sorts by a given field in ascending order`(sortField: ApplicationSortField) {
     allApplications.sort(SortDirection.asc, sortField)
     val chunkedApplications = allApplications.chunked(10)
@@ -388,7 +388,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   }
 
   @ParameterizedTest
-  @EnumSource(ApplicationSortField::class)
+  @EnumSource(ApplicationSortField::class, names = ["personTier"], mode = EnumSource.Mode.EXCLUDE)
   fun `findAllApprovedPremisesSummaries sorts by a given field in descending order`(sortField: ApplicationSortField) {
     allApplications.sort(SortDirection.desc, sortField)
     val chunkedApplications = allApplications.chunked(10)
@@ -451,6 +451,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
         ApplicationSortField.createdAt -> compareValues(a.createdAt, b.createdAt)
         ApplicationSortField.arrivalDate -> compareValues(a.arrivalDate, b.arrivalDate)
         ApplicationSortField.tier -> compareValues(a.riskRatings?.tier?.status, b.riskRatings?.tier?.status)
+        ApplicationSortField.personTier -> error("personTier uses dedicated integration tests")
         ApplicationSortField.releaseType -> compareValues(a.releaseType, b.releaseType)
       }
 
