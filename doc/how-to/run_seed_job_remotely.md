@@ -57,7 +57,7 @@ For XLSX files:
 - Alternatively, you can check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) with the following query:
   ```
   union traces, exceptions
-  | where cloud_RoleName == 'approved-premises-api' and customDimensions contains ("uk.gov.justice.digital.hmpps.approvedpremisesapi.seed")
+  | where cloud_RoleName == 'hmpps-approved-premises-api' and customDimensions contains ("uk.gov.justice.digital.hmpps.approvedpremisesapi.seed")
   | project timestamp, message, outerMessage, severityLevel, customDimensions, problemId, operation_Name, operation_Id
    ```
   
