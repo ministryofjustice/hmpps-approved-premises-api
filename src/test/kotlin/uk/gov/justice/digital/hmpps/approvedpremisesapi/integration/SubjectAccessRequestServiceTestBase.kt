@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
@@ -62,10 +61,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     const val EVENT_NUMBER = "1"
     const val OFFENCE_ID = "BEING_BAD"
     const val CONVICTION_ID = 2L
-    val RELEASE_TYPE_CONDITIONAL = Cas1ReleaseType.reReleasedPostRecall
-    const val WITHDRAWAL_REASON_NOT_WITHDRAWN = "NOT WITHDRAWN"
-    const val OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE = "NOT APPLICABLE"
-    const val SENTENCE_TYPE_CUSTODIAL = "CUSTODIAL"
     const val NAME = "Jeffity Jeff"
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
@@ -234,8 +229,9 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
         "occurred_at": "$ALLOCATED_AT",
         "created_at": "$CREATED_AT",
         "data": ${domainEvent.data},
-        "triggered_by_user": ${user?.let {"\"${it.name}\""} ?: "null"},
-        "noms_number": "${domainEvent.nomsNumber}"
+        "triggered_by_username": ${user?.let {"\"${it.deliusUsername}\""} ?: "null"},
+        "noms_number": "${domainEvent.nomsNumber}",
+        "application_submitted_at": "$SUBMITTED_AT"
       }
     """.trimIndent()
 
@@ -257,24 +253,45 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     userId: UUID?,
     type: DomainEventType,
     serviceName: ServiceName = ServiceName.approvedPremises,
+  ) = domainEventEntity(
+    params = DomainEventBuilderParams(offender, applicationId, assessmentId, userId, serviceName),
+    type = type,
+  )
+
+  fun domainEventEntity(
+    params: DomainEventBuilderParams,
+    type: DomainEventType,
+    data: Any? = null,
   ): DomainEventEntity = domainEventFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withService(serviceName)
-    withCrn(offender.otherIds.crn)
-    withNomsNumber(offender.otherIds.nomsNumber)
-    withApplicationId(applicationId)
-    withAssessmentId(assessmentId)
+    withService(params.serviceName)
+    withCrn(params.offender.otherIds.crn)
+    withNomsNumber(params.offender.otherIds.nomsNumber)
+    withApplicationId(params.applicationId)
+    withAssessmentId(params.assessmentId)
     withType(type)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withOccurredAt(OffsetDateTime.parse(ALLOCATED_AT))
-    withData("{ }")
-    withTriggeredByUserId(userId)
+    withData(
+      data?.let {
+        jsonMapper.writeValueAsString(data)
+      } ?: " { } ",
+    )
+    withTriggeredByUserId(params.userId)
     withMetadata(
       mapOf(
         MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),
       ),
     )
   }
+
+  data class DomainEventBuilderParams(
+    val offender: OffenderDetailSummary,
+    val applicationId: UUID,
+    val assessmentId: UUID,
+    val userId: UUID?,
+    val serviceName: ServiceName,
+  )
 
   fun probationRegionEntity(
     name: String = "Probation Region ${randomStringMultiCaseWithNumbers(5)}",
