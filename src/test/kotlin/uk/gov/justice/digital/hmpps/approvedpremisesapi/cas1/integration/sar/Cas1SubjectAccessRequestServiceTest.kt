@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.service.Cas1SubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
@@ -25,13 +27,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
 @SuppressWarnings("LargeClass")
-class CAS1SarServiceTest : Cas1SarTestBase() {
+class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
+
+  @Autowired
+  lateinit var cas1SarService: Cas1SubjectAccessRequestService
 
   @Test
   fun `Get CAS1 Information - No Results`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNull(result)
   }
@@ -40,7 +45,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
   fun `Get CAS1 Information - Test Null Dates`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
+      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
 
     assertNull(result)
   }
@@ -52,7 +57,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
     val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
     assertNotNull(result)
 
     val expectedJson = """
@@ -87,7 +92,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
 
     val timelineNotes = applicationTimelineNoteEntity(application)
 
-    val result = sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val result = cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -124,7 +129,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     val assessment = approvedPremisesAssessmentEntity(application)
 
     val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -157,7 +162,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     val clarificationNote = approvedPremisesAssessmentClarificationNoteEntity(assessment)
 
     val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -207,7 +212,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     )
 
     val result =
-      sarService.getCAS1Result(
+      cas1SarService.getSarResult(
         offenderDetails.otherIds.crn,
         offenderDetails.otherIds.nomsNumber,
         START_DATE,
@@ -248,7 +253,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     )
 
     val result =
-      sarService.getCAS1Result(
+      cas1SarService.getSarResult(
         offenderDetails.otherIds.crn,
         offenderDetails.otherIds.nomsNumber,
         START_DATE,
@@ -285,7 +290,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
     val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -319,7 +324,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     val appeal = appealEntity(application, assessment)
 
     val result =
-      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -352,7 +357,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
 
     val placementApplication = placementApplicationEntity(application)
     val result =
-      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -387,7 +392,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
 
     val placementRequest = placementRequestEntity(assessment, application, placementApplication)
     val result =
-      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -423,7 +428,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     val bookingNotMade = bookingNotMadeEntity(placementRequest)
 
     val result =
-      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -457,7 +462,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
     val assessment = approvedPremisesAssessmentEntity(application)
     val user = userEntity()
     val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
-    val result = sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val result = cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 

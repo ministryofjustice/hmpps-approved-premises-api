@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.sar
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2SubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2SarTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -12,11 +14,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
 class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
+  @Autowired
+  lateinit var cas2SubjectAccessRequestService: Cas2SubjectAccessRequestService
+
   @Test
   fun `Get CAS2 v2 Information - No Results`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS2v2Result(
+      cas2SubjectAccessRequestService.getSarResult(
         offenderDetails.otherIds.crn,
         offenderDetails.otherIds.nomsNumber,
         START_DATE,
@@ -30,7 +35,7 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
   fun `Get CAS2 v2 Information - null date Check`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
+      cas2SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
 
     assertNull(result)
   }
@@ -42,7 +47,7 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
     val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
 
-    val result = sarService.getCAS2v2Result(
+    val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -73,7 +78,7 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
     val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
     val assessment = cas2AssessmentEntity(application, Cas2ServiceOrigin.BAIL)
 
-    val result = sarService.getCAS2v2Result(
+    val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -106,7 +111,7 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
 
-    val result = sarService.getCAS2v2Result(
+    val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -142,7 +147,7 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
     val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
 
-    val result = sarService.getCAS2v2Result(
+    val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -178,7 +183,7 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
     val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, DomainEventType.CAS2_APPLICATION_SUBMITTED, ServiceName.cas2v2)
 
-    val result = sarService.getCAS2v2Result(
+    val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,

@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3SubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -19,13 +21,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 
-class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase() {
+class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase() {
+
+  @Autowired
+  lateinit var cas3SubjectAccessRequestService: Cas3SubjectAccessRequestService
 
   @Test
   fun `Get CAS3 Information - No Results`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas3SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNull(result)
   }
@@ -34,7 +39,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   fun `Get CAS3 Information - Null dates check`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
+      cas3SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
 
     assertNull(result)
   }
@@ -44,7 +49,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (offenderDetails, _) = givenAnOffender()
     val (user, _) = givenAUser()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
-    val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+    val result = cas3SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
     assertNotNull(result)
 
     val expectedJson = """
@@ -69,7 +74,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (user, _) = givenAUser()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
-    val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+    val result = cas3SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -98,7 +103,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val assessmentReferralHistoryNoteSystem =
       assessmentReferralHistorySystemNoteEntity(temporaryAccomodationAssessment, user)
     val assessmentReferralHistoryNoteUser = assessmentReferralHistoryUserNoteEntity(temporaryAccomodationAssessment, user)
-    val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+    val result = cas3SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -127,7 +132,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val booking = bookingEntity(offenderDetails, application)
 
     val result =
-      sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas3SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -157,7 +162,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val bookingExtension = bookingExtensionEntity(booking)
 
     val result =
-      sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas3SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -186,7 +191,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val cancellation = cancellationEntity(booking)
 
     val result =
-      sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas3SubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 
@@ -214,7 +219,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val assessment = temporaryAccommodationAssessmentEntity(application)
 
     val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, DomainEventType.CAS3_REFERRAL_SUBMITTED, ServiceName.temporaryAccommodation)
-    val result = sarService.getCAS3Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
+    val result = cas3SubjectAccessRequestService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
 

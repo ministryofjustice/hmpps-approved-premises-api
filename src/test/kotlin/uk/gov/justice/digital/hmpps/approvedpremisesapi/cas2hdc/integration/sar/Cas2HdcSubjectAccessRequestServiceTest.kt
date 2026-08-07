@@ -3,18 +3,23 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcSubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
-class CAS2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
+class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
+
+  @Autowired
+  lateinit var cas2HdcSubjectAccessRequestService: Cas2HdcSubjectAccessRequestService
 
   @Test
   fun `Get CAS2 Information - No Results`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas2HdcSubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNull(result)
   }
@@ -23,7 +28,7 @@ class CAS2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
   fun `Get CAS2 Information - null date Check`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
+      cas2HdcSubjectAccessRequestService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
 
     assertNull(result)
   }
@@ -35,7 +40,7 @@ class CAS2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
     val application = cas2ApplicationEntity(offenderDetails, user)
 
-    val result = sarService.getCAS2Result(
+    val result = cas2HdcSubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -66,7 +71,7 @@ class CAS2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
 
-    val result = sarService.getCAS2Result(
+    val result = cas2HdcSubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -99,7 +104,7 @@ class CAS2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
 
-    val result = sarService.getCAS2Result(
+    val result = cas2HdcSubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -135,7 +140,7 @@ class CAS2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
     val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
 
-    val result = sarService.getCAS2Result(
+    val result = cas2HdcSubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -172,7 +177,7 @@ class CAS2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
     val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, DomainEventType.CAS2_APPLICATION_SUBMITTED, ServiceName.cas2)
 
-    val result = sarService.getCAS2Result(
+    val result = cas2HdcSubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
