@@ -72,6 +72,7 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     )
     val user = userEntityFactory.produceAndPersist {
       withName(TEST_CREATED_BY_USER_NAME)
+      withDeliusUsername(TEST_CREATED_BY_USER_NAME)
       withProbationRegion(givenAProbationRegion())
     }
     val assessor = userEntityFactory.produceAndPersist {

@@ -181,7 +181,14 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
     val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
-    val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, DomainEventType.CAS2_APPLICATION_SUBMITTED, ServiceName.cas2v2)
+    val domainEvent = domainEventEntity(
+      offenderDetails,
+      application.id,
+      assessment.id,
+      null,
+      DomainEventType.CAS2_APPLICATION_SUBMITTED,
+      ServiceName.cas2v2,
+    )
 
     val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,

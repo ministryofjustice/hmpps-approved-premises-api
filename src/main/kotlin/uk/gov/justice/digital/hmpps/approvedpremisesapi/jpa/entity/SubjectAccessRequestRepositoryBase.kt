@@ -242,18 +242,26 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                  de.occurred_at,
                  de.created_at,
                  de."data",
-                 u."name" as triggered_by_user,
-                 de.noms_number
+                 de.noms_number,
+                 CASE
+                   WHEN cas1_3_app.id IS NOT NULL THEN cas1_3_app.submitted_at
+                   WHEN cas2_app.id IS NOT NULL THEN cas2_app.submitted_at
+                   ELSE NULL
+                 END as application_submitted_at,
+                 u.delius_username as triggered_by_username
                from
                      domain_events de 
                left join users u on 
                      u.id = de.triggered_by_user_id
+               left join applications cas1_3_app on de.application_id = cas1_3_app.id     
+               left join cas_2_applications cas2_app on de.application_id = cas2_app.id
                where
                   de.service = :service_name and
                   (de.crn = :crn
                         or de.noms_number = :noms_number )
                and (:start_date::date is null or de.created_at >= :start_date)
                and (:end_date::date is null or de.created_at <= :end_date) 
+               order by de.created_at
            ) domain_events
       """.trimIndent(),
       MapSqlParameterSource()

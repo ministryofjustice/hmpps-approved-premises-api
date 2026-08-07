@@ -2,11 +2,24 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationExpiredFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeBookedByFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventEnvelopeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.CruFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonReferenceFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 
 /**
  * Per-service SAR compliance test for CAS1.
@@ -29,6 +42,7 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     const val TEST_APPLICANT_NAME = "SAR-TEST-APPLICANT"
     const val TEST_APPLICATION_CREATED_BY_USER_NAME = "SAR-TEST-CREATED-BY-USER"
     const val TEST_ASSESSOR_NAME = "SAR-TEST-ASSESSOR"
+    const val TEST_ASSESSOR_USERNAME = "SAR-TEST-ASSESSOR-USERNAME"
     const val TEST_CASE_MANAGER_NAME = "SAR-TEST-CASE-MANAGER"
     const val TEST_SPACE_BOOKING_CREATED_BY_USER_NAME = "SAR-TEST-BOOKING-CREATED-BY"
     const val TEST_PREMISES_NAME = "SAR-TEST-PREMISES"
@@ -100,11 +114,13 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       .produce()
     val createdByUser = userEntityFactory.produceAndPersist {
       withName(TEST_APPLICATION_CREATED_BY_USER_NAME)
+      withDeliusUsername(TEST_APPLICATION_CREATED_BY_USER_NAME)
       withProbationRegion(givenAProbationRegion())
     }
     val assessor = userEntityFactory.produceAndPersist {
       withName(TEST_ASSESSOR_NAME)
       withProbationRegion(givenAProbationRegion())
+      withDeliusUsername(TEST_ASSESSOR_USERNAME)
     }
     val spaceBookingCreatedByUser = userEntityFactory.produceAndPersist {
       withName(TEST_SPACE_BOOKING_CREATED_BY_USER_NAME)
@@ -162,7 +178,7 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     bookingNotMadeEntity(placementRequest)
 
     val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
-      withId(java.util.UUID.fromString(TEST_NON_ARRIVAL_REASON_ID))
+      withId(UUID.fromString(TEST_NON_ARRIVAL_REASON_ID))
       withName(TEST_NON_ARRIVAL_REASON_NAME)
     }
     val departureReason = departureReasonEntityFactory.produceAndPersist {
@@ -190,8 +206,88 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       characteristicPropertyName = TEST_CHARACTERISTIC_PROPERTY_NAME,
     )
 
-    domainEventEntity(offenderDetails, application.id, assessment.id, assessor.id, DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
+    val domainEventCommon = DomainEventBuilderParams(offenderDetails, application.id, assessment.id, assessor.id, ServiceName.approvedPremises)
+
+    domainEventEntity(domainEventCommon, DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+    domainEventEntity(domainEventCommon, DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
+    domainEventEntity(domainEventCommon, DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
+      data = domainEventDetailsWrapper(
+        ApplicationExpiredFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPreviousStatus("ASSESSED")
+          .withUpdatedStatus("EXPIRED")
+          .produce(),
+      ),
+    )
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+      data = domainEventDetailsWrapper(
+        BookingMadeFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withCreatedAt(Instant.parse(CREATED_AT))
+          .withBookedBy(
+            BookingMadeBookedByFactory()
+              .withStaffMember(staticStaffMember())
+              .withCru(CruFactory().withName("cru").produce())
+              .produce(),
+          )
+          .withPremises(staticPremises())
+          .withArrivalOn(LocalDate.of(2025, 1, 1))
+          .withDepartureOn(LocalDate.of(2025, 2, 1))
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+      data = domainEventDetailsWrapper(
+        BookingChangedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withChangedAt(Instant.parse(CREATED_AT))
+          .withChangedBy(staticStaffMember())
+          .withPremises(staticPremises())
+          .withPreviousArrivalOn(LocalDate.of(2025, 1, 1))
+          .withPreviousDepartureOn(LocalDate.of(2025, 2, 1))
+          .withArrivalOn(LocalDate.of(2025, 3, 1))
+          .withDepartureOn(LocalDate.of(2025, 4, 1))
+          .produce(),
+      ),
+    )
   }
+
+  private fun staticPremises() = Premises(
+    id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+    name = TEST_PREMISES_NAME,
+    apCode = "code",
+    legacyApCode = "legacyApCode",
+    localAuthorityAreaName = "localAuthName",
+  )
+
+  private fun staticStaffMember() = StaffMemberFactory()
+    .withSurname("sur")
+    .withForenames("for")
+    .withStaffCode("code")
+    .withUsername("username")
+    .produce()
+
+  private fun <T : Cas1DomainEventPayload> domainEventDetailsWrapper(details: T) = Cas1DomainEventEnvelopeFactory<T>()
+    .withId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+    .withDetails(details)
+    .withTimestamp(Instant.parse(CREATED_AT))
+    .produce()
 
   @Test
   fun `CAS1 SAR API should return expected data`() {
