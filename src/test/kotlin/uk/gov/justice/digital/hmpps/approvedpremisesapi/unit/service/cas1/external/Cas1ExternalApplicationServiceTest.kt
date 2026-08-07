@@ -1085,7 +1085,7 @@ class Cas1ExternalApplicationServiceTest {
   ) = Cas1PlacementPairDto(
     dateApplied = placement?.statusSetDate ?: requestForPlacement.statusSetDate,
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
-      decision = requestForPlacement.decision,
+      decision = requestForPlacement.decision?.apiValue,
       submittedBy = requestForPlacement.submittedBy,
       submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
       withdrawalReason = requestForPlacement.withdrawalReason,
@@ -1134,7 +1134,7 @@ class Cas1ExternalApplicationServiceTest {
       )
     },
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
-      decision = requestForPlacement?.decision,
+      decision = requestForPlacement?.decision?.apiValue,
       rejectionReason = null,
       submittedBy = requestForPlacement?.submittedBy,
       submittedAt = requestForPlacement?.submittedAt?.toLocalDate(),

@@ -44,7 +44,7 @@ class Cas1ExternalApplicationTransformer(
     withdrawalDate: LocalDate?,
     placement: Cas1SpaceBookingShortSummary?,
   ) = Cas1ExternalRequestForPlacementDto(
-    decision = rfp.decision,
+    decision = rfp.decision?.apiValue,
     rejectionReason = rejectionReason,
     submittedBy = rfp.submittedBy,
     submittedAt = rfp.submittedAt?.toLocalDate(),
