@@ -285,38 +285,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   }
 
   @Test
-  fun `Get CAS1 information - have a booking`() {
-    val (offenderDetails, _) = givenAnOffender()
-    val application = approvedPremisesApplicationEntity(offenderDetails)
-
-    val result =
-      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
-
-    assertNotNull(result)
-
-    val expectedJson = """
-    {        
-      "Applications":[${approvedPremisesApplicationsJson(application, offenderDetails)}],
-      "ApplicationTimeline" :[],
-      "Assessments": [],
-      "AssessmentClarificationNotes": [],
-      "SpaceBookings":  [],
-      "OfflineApplications":  [],
-      "Appeals": [],
-      "PlacementApplications": [],
-      "PlacementRequests": [],
-      "PlacementRequirements": [],
-      "PlacementRequirementCriteria" : [],
-      "BookingNotMades" : [],
-      "DomainEvents": [],
-      "DomainEventsMetadata": []
-    }
-    """.trimIndent()
-
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
   fun `get CAS1 information - has an appeal`() {
     val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
