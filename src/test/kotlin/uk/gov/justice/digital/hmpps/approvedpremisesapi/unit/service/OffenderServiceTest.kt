@@ -509,6 +509,7 @@ class OffenderServiceTest {
         offenderService.getPersonSummaryInfoResults(
           crns = setOf(OFFENDER_1_CRN),
           laoStrategy = CheckUserAccess(USERNAME),
+          includeTier = true,
         )
       }
     }
@@ -562,6 +563,7 @@ class OffenderServiceTest {
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
+        includeTier = true,
       )
 
       assertThat(results).hasSize(1)
@@ -570,6 +572,71 @@ class OffenderServiceTest {
       assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
       assertThat(result0.summary).isSameAs(offender1CaseSummary)
       assertThat(result0.tier).isSameAs(OFFENDER_1_TIER)
+    }
+
+    @Test
+    fun `single crn with no limited access, includeTier false, does not fetch cases and returns Success with null tier`() {
+      val offender1CaseSummary = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withNomsId(OFFENDER_1_NOMS)
+        .withCurrentExclusion(false)
+        .withCurrentRestriction(false)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN),
+        laoStrategy = CheckUserAccess(USERNAME),
+        includeTier = false,
+      )
+
+      assertThat(results).hasSize(1)
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.Success.Full
+      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
+      assertThat(result0.summary).isSameAs(offender1CaseSummary)
+      assertThat(result0.tier).isNull()
+
+      verify(exactly = 0) { mockCaseService.getCases(any()) }
+    }
+
+    @Test
+    fun `single crn getPersonSummaryInfoResult with includeTier false, does not fetch cases and returns Success with null tier`() {
+      val offender1CaseSummary = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withNomsId(OFFENDER_1_NOMS)
+        .withCurrentExclusion(false)
+        .withCurrentRestriction(false)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+      val result = offenderService.getPersonSummaryInfoResult(
+        crn = OFFENDER_1_CRN,
+        laoStrategy = CheckUserAccess(USERNAME),
+        includeTier = false,
+      )
+
+      assertThat(result).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      result as PersonSummaryInfoResult.Success.Full
+      assertThat(result.crn).isEqualTo(OFFENDER_1_CRN)
+      assertThat(result.summary).isSameAs(offender1CaseSummary)
+      assertThat(result.tier).isNull()
+
+      verify(exactly = 0) { mockCaseService.getCases(any()) }
     }
 
     @ParameterizedTest
@@ -603,6 +670,7 @@ class OffenderServiceTest {
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
+        includeTier = true,
       )
 
       assertThat(results).hasSize(1)
@@ -654,6 +722,7 @@ class OffenderServiceTest {
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
+        includeTier = true,
       )
 
       assertThat(results).hasSize(1)
@@ -707,6 +776,7 @@ class OffenderServiceTest {
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
+        includeTier = true,
       )
 
       assertThat(results).hasSize(1)
@@ -745,6 +815,7 @@ class OffenderServiceTest {
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = LaoStrategy.NeverRestricted,
+        includeTier = true,
       )
 
       verify(exactly = 0) { mockApDeliusContextApiClient.getUserAccessForCrns(any(), any()) }
@@ -844,6 +915,7 @@ class OffenderServiceTest {
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN, OFFENDER_4_CRN, OFFENDER_5_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
+        includeTier = true,
       )
 
       assertThat(results).hasSize(5)
@@ -901,6 +973,7 @@ class OffenderServiceTest {
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
+        includeTier = true,
       )
 
       assertThat(results).hasSize(1)
