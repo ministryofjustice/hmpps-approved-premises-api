@@ -1,15 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.json.JSONObject
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2v2SubjectAccessRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2SubjectAccessRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.CAS3SubjectAccessRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.service.Cas1SubjectAccessRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2SubjectAccessRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcSubjectAccessRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3SubjectAccessRequestService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonProbationSubjectAccessRequestService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
 import java.time.LocalDate
@@ -18,206 +14,17 @@ import java.time.LocalTime
 
 @Service
 class SubjectAccessRequestService(
-  val jsonMapper: JsonMapper,
-  val cas1SubjectAccessRequestRepository: CAS1SubjectAccessRequestRepository,
-  val cas2SubjectAccessRequestRepository: Cas2SubjectAccessRequestRepository,
-  val cas3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
-  val cas2v2SubjectAccessRequestRepository: Cas2v2SubjectAccessRequestRepository,
+  val cas1SubjectAccessRequestService: Cas1SubjectAccessRequestService,
+  val cas2SubjectAccessRequestService: Cas2SubjectAccessRequestService,
+  val cas2HdcSubjectAccessRequestService: Cas2HdcSubjectAccessRequestService,
+  val cas3SubjectAccessRequestService: Cas3SubjectAccessRequestService,
 ) : HmppsPrisonProbationSubjectAccessRequestService {
 
-  private val log = LoggerFactory.getLogger(this::class.java)
-
-  @SuppressWarnings("CyclomaticComplexMethod")
-  fun getCAS1Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val approvedPremisesApplicationsJson = cas1SubjectAccessRequestRepository.getApprovedPremisesApplicationsJson(crn, nomsNumber, startDate, endDate)
-    val apApplicationTimelineJson = cas1SubjectAccessRequestRepository.getApprovedPremisesApplicationTimeLineJson(crn, nomsNumber, startDate, endDate)
-    val apAssessmentsJson = cas1SubjectAccessRequestRepository.getApprovedPremisesAssessments(crn, nomsNumber, startDate, endDate)
-    val apAssessmentClarificationNotesJson = cas1SubjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
-
-    val apSpaceBookingsJson = cas1SubjectAccessRequestRepository.spaceBookings(crn, nomsNumber, startDate, endDate)
-    val domainEventsJson = cas1SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate)
-    val domainEventMetaDataJson = cas1SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate)
-
-    val placementApplicationsJson = cas1SubjectAccessRequestRepository.placementApplications(crn, nomsNumber, startDate, endDate)
-    val placementRequestsJson = cas1SubjectAccessRequestRepository.placementRequests(crn, nomsNumber, startDate, endDate)
-    val placementRequirementsJson = cas1SubjectAccessRequestRepository.placementRequirements(crn, nomsNumber, startDate, endDate)
-    val placementRequirementCriteriaJson = cas1SubjectAccessRequestRepository.placementRequirementsCriteria(crn, nomsNumber, startDate, endDate)
-    val offlineApplicationsJson = cas1SubjectAccessRequestRepository.offlineApplications(crn, nomsNumber, startDate, endDate)
-    val bookingNotMadesJson = cas1SubjectAccessRequestRepository.bookingNotMades(crn, nomsNumber, startDate, endDate)
-    val appealsJson = cas1SubjectAccessRequestRepository.appeals(crn, nomsNumber, startDate, endDate)
-
-    if (listOf(
-        approvedPremisesApplicationsJson,
-        apApplicationTimelineJson,
-        apAssessmentsJson,
-        apAssessmentClarificationNotesJson,
-        apSpaceBookingsJson,
-        domainEventsJson,
-        domainEventMetaDataJson,
-        placementApplicationsJson,
-        placementRequestsJson,
-        placementRequirementsJson,
-        placementRequirementCriteriaJson,
-        offlineApplicationsJson,
-        bookingNotMadesJson,
-        appealsJson,
-      ).all { it == null }
-    ) {
-      return null
-    }
-
-    val result = """
-      {
-         "Applications": ${ approvedPremisesApplicationsJson ?: "[]"},
-         "ApplicationTimeline": ${ apApplicationTimelineJson ?: "[]"},
-         "Assessments": ${ apAssessmentsJson ?: "[]"},
-         "AssessmentClarificationNotes": ${ apAssessmentClarificationNotesJson ?: "[]"},
-         "SpaceBookings": ${ apSpaceBookingsJson ?: "[]"},
-         "OfflineApplications": ${ offlineApplicationsJson ?: "[]"},
-         "Appeals": ${ appealsJson ?: "[]"},
-         "PlacementApplications": ${ placementApplicationsJson ?: "[]"},
-         "PlacementRequests": ${ placementRequestsJson ?: "[]"},
-         "PlacementRequirements": ${ placementRequirementsJson ?: "[]"},
-         "PlacementRequirementCriteria": ${ placementRequirementCriteriaJson ?: "[]"},
-         "BookingNotMades": ${ bookingNotMadesJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventMetaDataJson ?: "[]"}
-      }
-    """.trimIndent()
-    log.logDebugMessage("CAS1", result)
-
-    return result
-  }
-
-  fun getCAS3Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val temporaryAccommodationApplicationsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationApplications(crn, nomsNumber, startDate, endDate)
-    val temporaryAccommodationAssessmentsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationAssessments(crn, nomsNumber, startDate, endDate)
-    val assessmentReferralHistoryNotesJson = cas3SubjectAccessRequestRepository.assessmentReferralHistoryNotes(crn, nomsNumber, startDate, endDate)
-    val bookingsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationBookings(crn, nomsNumber, startDate, endDate)
-    val bookingExtensionsJson = cas3SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
-    val cancellationsJson = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate)
-    val domainEventsJson = cas3SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS3")
-    val domainEventsMetaDataJson = cas3SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS3")
-
-    if (listOf(
-        temporaryAccommodationApplicationsJson,
-        temporaryAccommodationAssessmentsJson,
-        assessmentReferralHistoryNotesJson,
-        bookingsJson,
-        bookingExtensionsJson,
-        cancellationsJson,
-        domainEventsJson,
-        domainEventsMetaDataJson,
-      ).all { it == null }
-    ) {
-      return null
-    }
-
-    val result = """
-      {
-         "Applications": ${ temporaryAccommodationApplicationsJson ?: "[]"},
-         "Assessments": ${ temporaryAccommodationAssessmentsJson ?: "[]"},
-         "AssessmentReferralHistoryNotes": ${ assessmentReferralHistoryNotesJson ?: "[]"},
-         "Bookings": ${ bookingsJson ?: "[]"},
-         "BookingExtensions": ${ bookingExtensionsJson ?: "[]"},
-         "Cancellations": ${ cancellationsJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventsMetaDataJson ?: "[]"}
-      }
-    """.trimIndent()
-
-    log.logDebugMessage("CAS3", result)
-    return result
-  }
-
-  fun getCAS2Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val applicationsJson = cas2SubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val applicationNotesJson =
-      cas2SubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val statusUpdatesJson = cas2SubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val statusUpdateDetailsJson =
-      cas2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val assessmentsJson = cas2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val domainEventsJson = cas2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2")
-    val domainEventsMetaDataJson =
-      cas2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2")
-
-    if (listOf(
-        applicationsJson,
-        applicationNotesJson,
-        statusUpdatesJson,
-        statusUpdateDetailsJson,
-        assessmentsJson,
-        domainEventsJson,
-        domainEventsMetaDataJson,
-
-      ).all { it == null }
-    ) {
-      return null
-    }
-
-    val result = """
-      {
-         "Applications": ${ applicationsJson ?: "[]"},
-         "ApplicationNotes": ${ applicationNotesJson ?: "[]"},
-         "Assessments": ${ assessmentsJson ?: "[]"},
-         "StatusUpdates": ${ statusUpdatesJson ?: "[]"},
-         "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventsMetaDataJson ?: "[]"}
-      }
-    """.trimIndent()
-    log.logDebugMessage("CAS2", result)
-
-    return result
-  }
-
-  fun getCAS2v2Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val applicationsJson = cas2v2SubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate)
-    val applicationNotesJson = cas2v2SubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate)
-    val statusUpdatesJson = cas2v2SubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate)
-    val statusUpdateDetailsJson =
-      cas2v2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
-    val assessmentsJson = cas2v2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
-    val domainEventsJson = cas2v2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2V2")
-    val domainEventsMetaDataJson =
-      cas2v2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2V2")
-
-    if (listOf(
-        applicationsJson,
-        applicationNotesJson,
-        statusUpdatesJson,
-        statusUpdateDetailsJson,
-        assessmentsJson,
-        domainEventsJson,
-        domainEventsMetaDataJson,
-
-      ).all { it == null }
-    ) {
-      return null
-    }
-
-    val result = """
-      {
-         "Applications": ${ applicationsJson ?: "[]"},
-         "ApplicationNotes": ${ applicationNotesJson ?: "[]"},
-         "Assessments": ${ assessmentsJson ?: "[]"},
-         "StatusUpdates": ${ statusUpdatesJson ?: "[]"},
-         "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventsMetaDataJson ?: "[]"}
-      }
-    """.trimIndent()
-    log.logDebugMessage("CAS2v2", result)
-
-    return result
-  }
-
   fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val approvedPremises = getCAS1Result(crn, nomsNumber, startDate, endDate)
-    val temporaryAccommodation = getCAS3Result(crn, nomsNumber, startDate, endDate)
-    val shortTermAccommodation = getCAS2Result(crn, nomsNumber, startDate, endDate)
-    val bailAccommodation = getCAS2v2Result(crn, nomsNumber, startDate, endDate)
+    val approvedPremises = cas1SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
+    val temporaryAccommodation = cas3SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
+    val shortTermAccommodation = cas2HdcSubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
+    val bailAccommodation = cas2SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
 
     if (listOf(approvedPremises, temporaryAccommodation, shortTermAccommodation, bailAccommodation).all { it == null }) {
       return null
@@ -253,13 +60,5 @@ class SubjectAccessRequestService(
       content = JSONObject(sarResults)
         .toMap().entries,
     )
-  }
-  private fun Logger.logDebugMessage(service: String, result: String) {
-    if (this.isDebugEnabled) {
-      val prettyPrintJson = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-        jsonMapper.readValue(result, Any::class.java),
-      )
-      log.debug("$service SAR Result is $prettyPrintJson")
-    }
   }
 }
