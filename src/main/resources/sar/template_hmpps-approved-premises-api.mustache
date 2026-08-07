@@ -1,399 +1,5 @@
 §<h1 class="title">Community Accommodation</h1>
 {{#.}}
-    {{#CAS2-HDC}}
-    <h2>Short term accommodation</h2>
-
-        <h3>Status update details</h3>
-        {{#StatusUpdateDetails}}
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-30">Status Label</td>
-                    <td class="data-column-30">Created at</td>
-                    <td class="data-column-30">Detail Label</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue status_label }}</td>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue detail_label }}</td>
-                </tr>
-            </table>
-        {{/StatusUpdateDetails}}
-        {{^StatusUpdateDetails}}
-            <p>No Data Held</p>
-        {{/StatusUpdateDetails}}
-
-        <h3>Applications</h3>
-        {{#Applications}}
-            <h4>Application</h4>
-            <br/>
-            <table class="summary-list">
-                <tr><td>Submitted at</td><td>{{ optionalValue (formatDate submitted_at) }}</td></tr>
-                <tr><td>Conditional release date</td><td>{{ optionalValue (formatDate conditional_release_date) }}</td></tr>
-                <tr><td>Created by user</td><td>{{ getUserLastName created_by_user }}</td></tr>
-                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
-                <tr><td>Abandoned at</td><td>{{ optionalValue (formatDate abandoned_at) }}</td></tr>
-                <tr><td>Referring prison code</td><td>{{ getPrisonName referring_prison_code }}</td></tr>
-                <tr><td>Preferred areas</td><td>{{ optionalValue preferred_areas }}</td></tr>
-                <tr><td>Home Detention Curfew eligibility date</td><td>{{ optionalValue (formatDate hdc_eligibility_date) }}</td></tr>
-            </table>
-
-            <h5>Document</h5>
-            {{#document}}
-                {{#sections}}
-                    <p><b>{{ title }}</b></p>
-                    {{#tasks}}
-                        <p><b>{{ title }}</b></p>
-                        {{#questionsAndAnswers}}
-                            <table class="summary-list">
-                                <tr><td>Question</td><td>{{ optionalValue question }}</td></tr>
-                                <tr><td>Answer</td><td>{{ optionalValue answer }}</td></tr>
-                            </table>
-                        {{/questionsAndAnswers}}
-                    {{/tasks}}
-                    {{^tasks}}
-                        <p>No Data Held</p>
-                    {{/tasks}}
-                {{/sections}}
-                {{^sections}}
-                    <p>No Data Held</p>
-                {{/sections}}
-            {{/document}}
-            {{^document}}
-                <p>No Data Held</p>
-            {{/document}}
-
-        {{/Applications}}
-        {{^Applications}}
-            <p>No Data Held</p>
-        {{/Applications}}
-
-        <h3>Assessments</h3>
-        {{#Assessments}}
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-30">Created at</td>
-                    <td class="data-column-30">Assessor name</td>
-                    <td class="data-column-30">Nacro referral id</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue assessor_name }}</td>
-                    <td>{{ optionalValue nacro_referral_id }}</td>
-                </tr>
-            </table>
-        {{/Assessments}}
-        {{^Assessments}}
-            <p>No Data Held</p>
-        {{/Assessments}}
-
-        <h3>Status updates</h3>
-        {{#StatusUpdates}}
-            <br/>
-            <table class="summary-list">
-                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
-                <tr><td>Description</td><td>{{ optionalValue description }}</td></tr>
-                <tr><td>Assessor origin</td><td>{{ optionalValue assessor_origin }}</td></tr>
-                <tr><td>Assessor name</td><td>{{ optionalValue assessor_name }}</td></tr>
-                <tr><td>Label</td><td>{{ optionalValue label }}</td></tr>
-            </table>
-        {{/StatusUpdates}}
-        {{^StatusUpdates}}
-            <p>No Data Held</p>
-        {{/StatusUpdates}}
-
-        <h3>Application Notes</h3>
-        {{#ApplicationNotes}}
-            <br/>
-            <table class="summary-list">
-                <tr><td>Created by user</td><td>{{ optionalValue created_by_user }}</td></tr>
-                <tr><td>Body</td><td>{{ optionalValue body }}</td></tr>
-            </table>
-        {{/ApplicationNotes}}
-        {{^ApplicationNotes}}
-            <p>No Data Held</p>
-        {{/ApplicationNotes}}
-
-        <h3>Domain Events</h3>
-        {{#DomainEvents}}
-
-            {{#if (eq type "CAS2_APPLICATION_SUBMITTED")}}
-                <h4>Application Submitted</h4>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Submitted at</td>
-                        <td class="data-column-30">Submitted by</td>
-                        <td class="data-column-30">Referring prison</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.submittedAt) }}</td>
-                        <td>{{ getUserLastName data.eventDetails.submittedBy.staffMember.username }}</td>
-                        <td>{{ getPrisonName data.eventDetails.referringPrisonCode }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Preferred areas</td>
-                        <td class="data-column-30">Home Detention Curfew eligibility date</td>
-                        <td class="data-column-30">Conditional release date</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.preferredAreas }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.hdcEligibilityDate) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.conditionalReleaseDate) }}</td>
-                    </tr>
-                </table>
-            {{/if}}
-
-            {{#if (eq type "CAS2_APPLICATION_STATUS_UPDATED")}}
-                <h4>Application Status Updated</h4>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">New status name</td>
-                        <td class="data-column-25">New status label</td>
-                        <td class="data-column-25">New status details name</td>
-                        <td class="data-column-25">New status details label</td>
-                    </tr>
-                    <tr>
-                        <td>{{ convertCamelCase data.eventDetails.newStatus.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.label }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.label }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Updated by</td>
-                        <td class="data-column-25">Updated by email</td>
-                        <td class="data-column-25">Updated by origin</td>
-                    </tr>
-                    <tr>
-                        <td>{{ getUserLastName data.eventDetails.updatedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.updatedBy.email }}</td>
-                        <td>{{ optionalValue data.eventDetails.updatedBy.origin }}</td>
-                    </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>New status description</td><td>{{ optionalValue data.eventDetails.newStatus.description }}</td></tr>
-                </table>
-            {{/if}}
-
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-20">Created at</td>
-                    <td class="data-column-20">Occurred at</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue (formatDate occurred_at) }}</td>
-                </tr>
-            </table>
-
-        {{/DomainEvents}}
-        {{^DomainEvents}}
-            <p>No Data Held</p>
-        {{/DomainEvents}}
-
-    {{/CAS2-HDC}}
-
-    {{#CAS2}}
-        <h2>Bail accommodation</h2>
-
-        <h3>Status update details</h3>
-        {{#StatusUpdateDetails}}
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-30">Status Label</td>
-                    <td class="data-column-30">Created at</td>
-                    <td class="data-column-30">Detail Label</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue status_label }}</td>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue detail_label }}</td>
-                </tr>
-            </table>
-        {{/StatusUpdateDetails}}
-        {{^StatusUpdateDetails}}
-            <p>No Data Held</p>
-        {{/StatusUpdateDetails}}
-
-        <h3>Applications</h3>
-        {{#Applications}}
-            <h4>Application</h4>
-            <br/>
-            <table class="summary-list">
-                <tr><td>Submitted at</td><td>{{ optionalValue (formatDate submitted_at) }}</td></tr>
-                <tr><td>Conditional release date</td><td>{{ optionalValue (formatDate conditional_release_date) }}</td></tr>
-                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
-                <tr><td>Abandoned at</td><td>{{ optionalValue (formatDate abandoned_at) }}</td></tr>
-                <tr><td>Referring prison code</td><td>{{ getPrisonName referring_prison_code }}</td></tr>
-                <tr><td>Bail hearing date</td><td>{{ optionalValue (formatDate bail_hearing_date) }}</td></tr>
-                <tr><td>Application origin</td><td>{{ optionalValue application_origin }}</td></tr>
-                <tr><td>Preferred areas</td><td>{{ optionalValue preferred_areas }}</td></tr>
-                <tr><td>Home Detention Curfew eligibility date</td><td>{{ optionalValue (formatDate hdc_eligibility_date) }}</td></tr>
-                <tr><td>Telephone Number</td><td>{{ optionalValue telephone_number }}</td></tr>
-                <tr><td>Cohort</td><td>{{ optionalValue cohort_long_display_name }}</td></tr>
-            </table>
-
-            <h5>Document</h5>
-            {{#document}}
-                {{#sections}}
-                    <p><b>{{ title }}</b></p>
-                    {{#tasks}}
-                        <p><b>{{ title }}</b></p>
-                        {{#questionsAndAnswers}}
-                            <table class="summary-list">
-                                <tr><td>Question</td><td>{{ optionalValue question }}</td></tr>
-                                <tr><td>Answer</td><td>{{ optionalValue answer }}</td></tr>
-                            </table>
-                        {{/questionsAndAnswers}}
-                    {{/tasks}}
-                    {{^tasks}}
-                        <p>No Data Held</p>
-                    {{/tasks}}
-                {{/sections}}
-                {{^sections}}
-                    <p>No Data Held</p>
-                {{/sections}}
-            {{/document}}
-            {{^document}}
-                <p>No Data Held</p>
-            {{/document}}
-
-        {{/Applications}}
-        {{^Applications}}
-            <p>No Data Held</p>
-        {{/Applications}}
-
-        <h3>Assessments</h3>
-        {{#Assessments}}
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-30">Created at</td>
-                    <td class="data-column-30">Assessor name</td>
-                    <td class="data-column-30">Nacro referral id</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue assessor_name }}</td>
-                    <td>{{ optionalValue nacro_referral_id }}</td>
-                </tr>
-            </table>
-        {{/Assessments}}
-        {{^Assessments}}
-            <p>No Data Held</p>
-        {{/Assessments}}
-
-        <h3>Status updates</h3>
-        {{#StatusUpdates}}
-            <br/>
-            <table class="summary-list">
-                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
-                <tr><td>Description</td><td>{{ optionalValue description }}</td></tr>
-                <tr><td>Assessor name</td><td>{{ optionalValue assessor_name }}</td></tr>
-                <tr><td>Label</td><td>{{ optionalValue label }}</td></tr>
-            </table>
-        {{/StatusUpdates}}
-        {{^StatusUpdates}}
-            <p>No Data Held</p>
-        {{/StatusUpdates}}
-
-        <h3>Application Notes</h3>
-        {{#ApplicationNotes}}
-            <br/>
-            <table class="summary-list">
-                <tr><td>Created by user</td><td>{{ optionalValue created_by_user }}</td></tr>
-                <tr><td>Body</td><td>{{ optionalValue body }}</td></tr>
-            </table>
-        {{/ApplicationNotes}}
-        {{^ApplicationNotes}}
-            <p>No Data Held</p>
-        {{/ApplicationNotes}}
-
-        <h3>Domain Events</h3>
-        {{#DomainEvents}}
-
-            {{#if (eq type "CAS2_APPLICATION_SUBMITTED")}}
-                <h4>Application Submitted</h4>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Submitted at</td>
-                        <td class="data-column-30">Submitted by</td>
-                        <td class="data-column-30">Referring prison</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.submittedAt) }}</td>
-                        <td>{{ getUserLastName data.eventDetails.submittedBy.staffMember.username }}</td>
-                        <td>{{ getPrisonName data.eventDetails.referringPrisonCode }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Preferred areas</td>
-                        <td class="data-column-30">Home Detention Curfew eligibility date</td>
-                        <td class="data-column-30">Conditional release date</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.preferredAreas }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.hdcEligibilityDate) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.conditionalReleaseDate) }}</td>
-                    </tr>
-                </table>
-            {{/if}}
-
-            {{#if (eq type "CAS2_APPLICATION_STATUS_UPDATED")}}
-                <h4>Application Status Updated</h4>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">New status name</td>
-                        <td class="data-column-25">New status label</td>
-                        <td class="data-column-25">New status details name</td>
-                        <td class="data-column-25">New status details label</td>
-                    </tr>
-                    <tr>
-                        <td>{{ convertCamelCase data.eventDetails.newStatus.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.label }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.label }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Updated by</td>
-                        <td class="data-column-25">Updated by email</td>
-                        <td class="data-column-25">Updated by origin</td>
-                    </tr>
-                    <tr>
-                        <td>{{ getUserLastName data.eventDetails.updatedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.updatedBy.email }}</td>
-                        <td>{{ optionalValue data.eventDetails.updatedBy.origin }}</td>
-                    </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>New status description</td><td>{{ optionalValue data.eventDetails.newStatus.description }}</td></tr>
-                </table>
-            {{/if}}
-
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-20">Created at</td>
-                    <td class="data-column-20">Triggered by user</td>
-                    <td class="data-column-20">Occurred at</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ getUserLastName triggered_by_user }}</td>
-                    <td>{{ optionalValue (formatDate occurred_at) }}</td>
-                </tr>
-            </table>
-
-        {{/DomainEvents}}
-        {{^DomainEvents}}
-            <p>No Data Held</p>
-        {{/DomainEvents}}
-
-    {{/CAS2}}
-
     {{#CAS1}}
     <h2>Approved Premises</h2>
 
@@ -1666,6 +1272,400 @@
             <p>No Data Held</p>
         {{/DomainEvents}}
     {{/CAS1}}
+
+    {{#CAS2-HDC}}
+    <h2>Short term accommodation</h2>
+
+        <h3>Status update details</h3>
+        {{#StatusUpdateDetails}}
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Status Label</td>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Detail Label</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue status_label }}</td>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ optionalValue detail_label }}</td>
+                </tr>
+            </table>
+        {{/StatusUpdateDetails}}
+        {{^StatusUpdateDetails}}
+            <p>No Data Held</p>
+        {{/StatusUpdateDetails}}
+
+        <h3>Applications</h3>
+        {{#Applications}}
+            <h4>Application</h4>
+            <br/>
+            <table class="summary-list">
+                <tr><td>Submitted at</td><td>{{ optionalValue (formatDate submitted_at) }}</td></tr>
+                <tr><td>Conditional release date</td><td>{{ optionalValue (formatDate conditional_release_date) }}</td></tr>
+                <tr><td>Created by user</td><td>{{ getUserLastName created_by_user }}</td></tr>
+                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
+                <tr><td>Abandoned at</td><td>{{ optionalValue (formatDate abandoned_at) }}</td></tr>
+                <tr><td>Referring prison code</td><td>{{ getPrisonName referring_prison_code }}</td></tr>
+                <tr><td>Preferred areas</td><td>{{ optionalValue preferred_areas }}</td></tr>
+                <tr><td>Home Detention Curfew eligibility date</td><td>{{ optionalValue (formatDate hdc_eligibility_date) }}</td></tr>
+            </table>
+
+            <h5>Document</h5>
+            {{#document}}
+                {{#sections}}
+                    <p><b>{{ title }}</b></p>
+                    {{#tasks}}
+                        <p><b>{{ title }}</b></p>
+                        {{#questionsAndAnswers}}
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>{{ optionalValue question }}</td></tr>
+                                <tr><td>Answer</td><td>{{ optionalValue answer }}</td></tr>
+                            </table>
+                        {{/questionsAndAnswers}}
+                    {{/tasks}}
+                    {{^tasks}}
+                        <p>No Data Held</p>
+                    {{/tasks}}
+                {{/sections}}
+                {{^sections}}
+                    <p>No Data Held</p>
+                {{/sections}}
+            {{/document}}
+            {{^document}}
+                <p>No Data Held</p>
+            {{/document}}
+
+        {{/Applications}}
+        {{^Applications}}
+            <p>No Data Held</p>
+        {{/Applications}}
+
+        <h3>Assessments</h3>
+        {{#Assessments}}
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Assessor name</td>
+                    <td class="data-column-30">Nacro referral id</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ optionalValue assessor_name }}</td>
+                    <td>{{ optionalValue nacro_referral_id }}</td>
+                </tr>
+            </table>
+        {{/Assessments}}
+        {{^Assessments}}
+            <p>No Data Held</p>
+        {{/Assessments}}
+
+        <h3>Status updates</h3>
+        {{#StatusUpdates}}
+            <br/>
+            <table class="summary-list">
+                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
+                <tr><td>Description</td><td>{{ optionalValue description }}</td></tr>
+                <tr><td>Assessor origin</td><td>{{ optionalValue assessor_origin }}</td></tr>
+                <tr><td>Assessor name</td><td>{{ optionalValue assessor_name }}</td></tr>
+                <tr><td>Label</td><td>{{ optionalValue label }}</td></tr>
+            </table>
+        {{/StatusUpdates}}
+        {{^StatusUpdates}}
+            <p>No Data Held</p>
+        {{/StatusUpdates}}
+
+        <h3>Application Notes</h3>
+        {{#ApplicationNotes}}
+            <br/>
+            <table class="summary-list">
+                <tr><td>Created by user</td><td>{{ optionalValue created_by_user }}</td></tr>
+                <tr><td>Body</td><td>{{ optionalValue body }}</td></tr>
+            </table>
+        {{/ApplicationNotes}}
+        {{^ApplicationNotes}}
+            <p>No Data Held</p>
+        {{/ApplicationNotes}}
+
+        <h3>Domain Events</h3>
+        {{#DomainEvents}}
+
+            {{#if (eq type "CAS2_APPLICATION_SUBMITTED")}}
+                <h4>Application Submitted</h4>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-30">Submitted at</td>
+                        <td class="data-column-30">Submitted by</td>
+                        <td class="data-column-30">Referring prison</td>
+                    </tr>
+                    <tr>
+                        <td>{{ optionalValue (formatDate data.eventDetails.submittedAt) }}</td>
+                        <td>{{ getUserLastName data.eventDetails.submittedBy.staffMember.username }}</td>
+                        <td>{{ getPrisonName data.eventDetails.referringPrisonCode }}</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-30">Preferred areas</td>
+                        <td class="data-column-30">Home Detention Curfew eligibility date</td>
+                        <td class="data-column-30">Conditional release date</td>
+                    </tr>
+                    <tr>
+                        <td>{{ optionalValue data.eventDetails.preferredAreas }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.hdcEligibilityDate) }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.conditionalReleaseDate) }}</td>
+                    </tr>
+                </table>
+            {{/if}}
+
+            {{#if (eq type "CAS2_APPLICATION_STATUS_UPDATED")}}
+                <h4>Application Status Updated</h4>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">New status name</td>
+                        <td class="data-column-25">New status label</td>
+                        <td class="data-column-25">New status details name</td>
+                        <td class="data-column-25">New status details label</td>
+                    </tr>
+                    <tr>
+                        <td>{{ convertCamelCase data.eventDetails.newStatus.name }}</td>
+                        <td>{{ optionalValue data.eventDetails.newStatus.label }}</td>
+                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.name }}</td>
+                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.label }}</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">Updated by</td>
+                        <td class="data-column-25">Updated by email</td>
+                        <td class="data-column-25">Updated by origin</td>
+                    </tr>
+                    <tr>
+                        <td>{{ getUserLastName data.eventDetails.updatedBy.username }}</td>
+                        <td>{{ optionalValue data.eventDetails.updatedBy.email }}</td>
+                        <td>{{ optionalValue data.eventDetails.updatedBy.origin }}</td>
+                    </tr>
+                </table>
+                <table class="summary-list">
+                    <tr><td>New status description</td><td>{{ optionalValue data.eventDetails.newStatus.description }}</td></tr>
+                </table>
+            {{/if}}
+
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-20">Created at</td>
+                    <td class="data-column-20">Occurred at</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ optionalValue (formatDate occurred_at) }}</td>
+                </tr>
+            </table>
+
+        {{/DomainEvents}}
+        {{^DomainEvents}}
+            <p>No Data Held</p>
+        {{/DomainEvents}}
+
+    {{/CAS2-HDC}}
+
+    {{#CAS2}}
+        <h2>Bail accommodation</h2>
+
+        <h3>Status update details</h3>
+        {{#StatusUpdateDetails}}
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Status Label</td>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Detail Label</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue status_label }}</td>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ optionalValue detail_label }}</td>
+                </tr>
+            </table>
+        {{/StatusUpdateDetails}}
+        {{^StatusUpdateDetails}}
+            <p>No Data Held</p>
+        {{/StatusUpdateDetails}}
+
+        <h3>Applications</h3>
+        {{#Applications}}
+            <h4>Application</h4>
+            <br/>
+            <table class="summary-list">
+                <tr><td>Submitted at</td><td>{{ optionalValue (formatDate submitted_at) }}</td></tr>
+                <tr><td>Conditional release date</td><td>{{ optionalValue (formatDate conditional_release_date) }}</td></tr>
+                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
+                <tr><td>Abandoned at</td><td>{{ optionalValue (formatDate abandoned_at) }}</td></tr>
+                <tr><td>Referring prison code</td><td>{{ getPrisonName referring_prison_code }}</td></tr>
+                <tr><td>Bail hearing date</td><td>{{ optionalValue (formatDate bail_hearing_date) }}</td></tr>
+                <tr><td>Application origin</td><td>{{ optionalValue application_origin }}</td></tr>
+                <tr><td>Preferred areas</td><td>{{ optionalValue preferred_areas }}</td></tr>
+                <tr><td>Home Detention Curfew eligibility date</td><td>{{ optionalValue (formatDate hdc_eligibility_date) }}</td></tr>
+                <tr><td>Telephone Number</td><td>{{ optionalValue telephone_number }}</td></tr>
+                <tr><td>Cohort</td><td>{{ optionalValue cohort_long_display_name }}</td></tr>
+            </table>
+
+            <h5>Document</h5>
+            {{#document}}
+                {{#sections}}
+                    <p><b>{{ title }}</b></p>
+                    {{#tasks}}
+                        <p><b>{{ title }}</b></p>
+                        {{#questionsAndAnswers}}
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>{{ optionalValue question }}</td></tr>
+                                <tr><td>Answer</td><td>{{ optionalValue answer }}</td></tr>
+                            </table>
+                        {{/questionsAndAnswers}}
+                    {{/tasks}}
+                    {{^tasks}}
+                        <p>No Data Held</p>
+                    {{/tasks}}
+                {{/sections}}
+                {{^sections}}
+                    <p>No Data Held</p>
+                {{/sections}}
+            {{/document}}
+            {{^document}}
+                <p>No Data Held</p>
+            {{/document}}
+
+        {{/Applications}}
+        {{^Applications}}
+            <p>No Data Held</p>
+        {{/Applications}}
+
+        <h3>Assessments</h3>
+        {{#Assessments}}
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Assessor name</td>
+                    <td class="data-column-30">Nacro referral id</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ optionalValue assessor_name }}</td>
+                    <td>{{ optionalValue nacro_referral_id }}</td>
+                </tr>
+            </table>
+        {{/Assessments}}
+        {{^Assessments}}
+            <p>No Data Held</p>
+        {{/Assessments}}
+
+        <h3>Status updates</h3>
+        {{#StatusUpdates}}
+            <br/>
+            <table class="summary-list">
+                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
+                <tr><td>Description</td><td>{{ optionalValue description }}</td></tr>
+                <tr><td>Assessor name</td><td>{{ optionalValue assessor_name }}</td></tr>
+                <tr><td>Label</td><td>{{ optionalValue label }}</td></tr>
+            </table>
+        {{/StatusUpdates}}
+        {{^StatusUpdates}}
+            <p>No Data Held</p>
+        {{/StatusUpdates}}
+
+        <h3>Application Notes</h3>
+        {{#ApplicationNotes}}
+            <br/>
+            <table class="summary-list">
+                <tr><td>Created by user</td><td>{{ optionalValue created_by_user }}</td></tr>
+                <tr><td>Body</td><td>{{ optionalValue body }}</td></tr>
+            </table>
+        {{/ApplicationNotes}}
+        {{^ApplicationNotes}}
+            <p>No Data Held</p>
+        {{/ApplicationNotes}}
+
+        <h3>Domain Events</h3>
+        {{#DomainEvents}}
+
+            {{#if (eq type "CAS2_APPLICATION_SUBMITTED")}}
+                <h4>Application Submitted</h4>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-30">Submitted at</td>
+                        <td class="data-column-30">Submitted by</td>
+                        <td class="data-column-30">Referring prison</td>
+                    </tr>
+                    <tr>
+                        <td>{{ optionalValue (formatDate data.eventDetails.submittedAt) }}</td>
+                        <td>{{ getUserLastName data.eventDetails.submittedBy.staffMember.username }}</td>
+                        <td>{{ getPrisonName data.eventDetails.referringPrisonCode }}</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-30">Preferred areas</td>
+                        <td class="data-column-30">Home Detention Curfew eligibility date</td>
+                        <td class="data-column-30">Conditional release date</td>
+                    </tr>
+                    <tr>
+                        <td>{{ optionalValue data.eventDetails.preferredAreas }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.hdcEligibilityDate) }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.conditionalReleaseDate) }}</td>
+                    </tr>
+                </table>
+            {{/if}}
+
+            {{#if (eq type "CAS2_APPLICATION_STATUS_UPDATED")}}
+                <h4>Application Status Updated</h4>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">New status name</td>
+                        <td class="data-column-25">New status label</td>
+                        <td class="data-column-25">New status details name</td>
+                        <td class="data-column-25">New status details label</td>
+                    </tr>
+                    <tr>
+                        <td>{{ convertCamelCase data.eventDetails.newStatus.name }}</td>
+                        <td>{{ optionalValue data.eventDetails.newStatus.label }}</td>
+                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.name }}</td>
+                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.label }}</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">Updated by</td>
+                        <td class="data-column-25">Updated by email</td>
+                        <td class="data-column-25">Updated by origin</td>
+                    </tr>
+                    <tr>
+                        <td>{{ getUserLastName data.eventDetails.updatedBy.username }}</td>
+                        <td>{{ optionalValue data.eventDetails.updatedBy.email }}</td>
+                        <td>{{ optionalValue data.eventDetails.updatedBy.origin }}</td>
+                    </tr>
+                </table>
+                <table class="summary-list">
+                    <tr><td>New status description</td><td>{{ optionalValue data.eventDetails.newStatus.description }}</td></tr>
+                </table>
+            {{/if}}
+
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-20">Created at</td>
+                    <td class="data-column-20">Triggered by user</td>
+                    <td class="data-column-20">Occurred at</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ getUserLastName triggered_by_user }}</td>
+                    <td>{{ optionalValue (formatDate occurred_at) }}</td>
+                </tr>
+            </table>
+
+        {{/DomainEvents}}
+        {{^DomainEvents}}
+            <p>No Data Held</p>
+        {{/DomainEvents}}
+
+    {{/CAS2}}
 
     {{#CAS3}}
     <h2>Temporary Accommodation</h2>
