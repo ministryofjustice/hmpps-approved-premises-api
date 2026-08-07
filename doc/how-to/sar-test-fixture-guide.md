@@ -61,7 +61,7 @@ cp src/test/resources/cas1-sar-report.html.log src/test/resources/sar/cas1-expec
 
 The `template_hmpps-approved-premises-api.mustache` file is shared across all services. 
 
-- Use conditional sections like `{{#ApprovedPremises}}...{{/ApprovedPremises}}` or `{{#TemporaryAccommodation}}...{{/TemporaryAccommodation}}` to isolate service-specific sections.
+- Use conditional sections like `{{#CAS1}}...{{/CAS1}}` or `{{#CAS3}}...{{/CAS3}}` to isolate service-specific sections.
 - If you add new data to the API response, you must update the template to display it.
 - After updating the template, you **must** regenerate the HTML fixtures for **all** services that might be affected to ensure their compliance tests still pass.
 
