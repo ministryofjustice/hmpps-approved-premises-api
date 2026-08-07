@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
@@ -29,6 +30,7 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     const val TEST_APPLICANT_NAME = "SAR-TEST-APPLICANT"
     const val TEST_APPLICATION_CREATED_BY_USER_NAME = "SAR-TEST-CREATED-BY-USER"
     const val TEST_ASSESSOR_NAME = "SAR-TEST-ASSESSOR"
+    const val TEST_ASSESSOR_USERNAME = "SAR-TEST-ASSESSOR-USERNAME"
     const val TEST_CASE_MANAGER_NAME = "SAR-TEST-CASE-MANAGER"
     const val TEST_SPACE_BOOKING_CREATED_BY_USER_NAME = "SAR-TEST-BOOKING-CREATED-BY"
     const val TEST_PREMISES_NAME = "SAR-TEST-PREMISES"
@@ -105,6 +107,7 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     val assessor = userEntityFactory.produceAndPersist {
       withName(TEST_ASSESSOR_NAME)
       withProbationRegion(givenAProbationRegion())
+      withDeliusUsername(TEST_ASSESSOR_USERNAME)
     }
     val spaceBookingCreatedByUser = userEntityFactory.produceAndPersist {
       withName(TEST_SPACE_BOOKING_CREATED_BY_USER_NAME)
@@ -190,7 +193,10 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       characteristicPropertyName = TEST_CHARACTERISTIC_PROPERTY_NAME,
     )
 
-    domainEventEntity(offenderDetails, application.id, assessment.id, assessor.id, DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
+    val domainEventCommon = DomainEventBuilderParams(offenderDetails, application.id, assessment.id, assessor.id, ServiceName.approvedPremises)
+
+    domainEventEntity(domainEventCommon, DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+    domainEventEntity(domainEventCommon, DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
   }
 
   @Test
