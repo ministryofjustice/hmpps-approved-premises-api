@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
@@ -772,6 +773,162 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(responseBody[2].tier).isEqualTo("M1")
         }
       }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and sorted by person tier v2 desc`() {
+      mockFeatureFlagService.setFlag(FEATURE_FLAG_USE_TIER_V3, false)
+
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offender1, _ ->
+          givenAnOffender { offender2, _ ->
+            givenAnOffender { offender3, _ ->
+
+              val crn1 = offender1.otherIds.crn
+              val crn2 = offender2.otherIds.crn
+              val crn3 = offender3.otherIds.crn
+
+              approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(crn1)
+                withCreatedByUser(userEntity)
+              }
+
+              approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(crn2)
+                withCreatedByUser(userEntity)
+              }
+
+              approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(crn3)
+                withCreatedByUser(userEntity)
+              }
+
+              caseEntityFactory.produceAndPersist {
+                withCrn(crn1)
+                withTierV2(
+                  TierFactory()
+                    .withTierScore("A")
+                    .produce(),
+                )
+              }
+
+              caseEntityFactory.produceAndPersist {
+                withCrn(crn2)
+                withTierV2(
+                  TierFactory()
+                    .withTierScore("Z")
+                    .produce(),
+                )
+              }
+
+              caseEntityFactory.produceAndPersist {
+                withCrn(crn3)
+                withTierV2(
+                  TierFactory()
+                    .withTierScore("M")
+                    .produce(),
+                )
+              }
+
+              val responseBody = webTestClient.get()
+                .uri("/cas1/applications/all?page=1&sortDirection=desc&sortBy=personTier")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+              assertThat(responseBody).hasSize(3)
+
+              assertThat(responseBody[0].person.crn).isEqualTo(crn2)
+              assertThat(responseBody[0].person.personTierScore()).isEqualTo("Z")
+
+              assertThat(responseBody[1].person.crn).isEqualTo(crn3)
+              assertThat(responseBody[1].person.personTierScore()).isEqualTo("M")
+
+              assertThat(responseBody[2].person.crn).isEqualTo(crn1)
+              assertThat(responseBody[2].person.personTierScore()).isEqualTo("A")
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and sorted by person tier v3 desc`() {
+      mockFeatureFlagService.setFlag(FEATURE_FLAG_USE_TIER_V3, true)
+
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offender1, _ ->
+          givenAnOffender { offender2, _ ->
+            givenAnOffender { offender3, _ ->
+
+              val crn1 = offender1.otherIds.crn
+              val crn2 = offender2.otherIds.crn
+              val crn3 = offender3.otherIds.crn
+
+              approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(crn1)
+                withCreatedByUser(userEntity)
+              }
+
+              approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(crn2)
+                withCreatedByUser(userEntity)
+              }
+
+              approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(crn3)
+                withCreatedByUser(userEntity)
+              }
+
+              caseEntityFactory.produceAndPersist {
+                withCrn(crn1)
+                withTierV2(TierFactory().withTierScore("A").produce())
+                withTierV3(TierFactory().withTierScore("Z").produce())
+              }
+
+              caseEntityFactory.produceAndPersist {
+                withCrn(crn2)
+                withTierV2(TierFactory().withTierScore("Z").produce())
+                withTierV3(TierFactory().withTierScore("A").produce())
+              }
+
+              caseEntityFactory.produceAndPersist {
+                withCrn(crn3)
+                withTierV2(TierFactory().withTierScore("M").produce())
+                withTierV3(TierFactory().withTierScore("M").produce())
+              }
+
+              val responseBody = webTestClient.get()
+                .uri("/cas1/applications/all?page=1&sortDirection=desc&sortBy=personTier")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+              assertThat(responseBody).hasSize(3)
+
+              assertThat(responseBody[0].person.crn).isEqualTo(crn1)
+              assertThat(responseBody[0].person.personTierScore()).isEqualTo("Z")
+
+              assertThat(responseBody[1].person.crn).isEqualTo(crn3)
+              assertThat(responseBody[1].person.personTierScore()).isEqualTo("M")
+
+              assertThat(responseBody[2].person.crn).isEqualTo(crn2)
+              assertThat(responseBody[2].person.personTierScore()).isEqualTo("A")
+            }
+          }
+        }
+      }
+    }
+    private fun Person.personTierScore() = when (this) {
+      is FullPerson -> this.tier?.tierScore
+      is RestrictedPerson -> this.tier?.tierScore
+      else -> null
     }
 
     @Test

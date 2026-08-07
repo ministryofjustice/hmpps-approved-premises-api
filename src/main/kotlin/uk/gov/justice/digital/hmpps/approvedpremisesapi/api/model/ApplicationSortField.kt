@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 enum class ApplicationSortField(@get:JsonValue val value: String) {
 
   tier("tier"),
+  personTier("personTier"),
   createdAt("createdAt"),
   arrivalDate("arrivalDate"),
   releaseType("releaseType"),
