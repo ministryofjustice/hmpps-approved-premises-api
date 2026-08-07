@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -58,7 +57,7 @@ data class Cas1ExternalAssessmentDto(
 
 data class Cas1ExternalRequestForPlacementDto(
   val status: RequestForPlacementStatus?,
-  val decision: PlacementApplicationDecision?,
+  val decision: PlacementApplicationDecisionDto?,
   val rejectionReason: String?,
   val submittedBy: Cas1StaffDto?,
   val submittedAt: LocalDate?,

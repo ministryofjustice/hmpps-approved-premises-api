@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -98,7 +99,7 @@ class Cas1ExternalApplicationTransformerTest {
 
       val suitablePlacementPair = Cas1PlacementPairDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
-          decision = PlacementApplicationDecision.REJECTED,
+          decision = PlacementApplicationDecisionDto.rejected,
           rejectionReason = "No space",
           submittedBy = requestSubmittedBy,
           submittedAt = LocalDate.now(),
@@ -271,7 +272,7 @@ class Cas1ExternalApplicationTransformerTest {
 
       val expected = Cas1PlacementPairDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
-          decision = requestForPlacement.decision,
+          decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
@@ -359,7 +360,7 @@ class Cas1ExternalApplicationTransformerTest {
       val expected = Cas1PlacementPairDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           status = requestForPlacement.status,
-          decision = requestForPlacement.decision,
+          decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
@@ -458,7 +459,7 @@ class Cas1ExternalApplicationTransformerTest {
       val expected = Cas1PlacementPairDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           status = requestForPlacement.status,
-          decision = requestForPlacement.decision,
+          decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
@@ -556,7 +557,7 @@ class Cas1ExternalApplicationTransformerTest {
 
       val expected = Cas1PlacementPairDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
-          decision = requestForPlacement.decision,
+          decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
@@ -612,7 +613,7 @@ class Cas1ExternalApplicationTransformerTest {
         .produce()
       val expected = Cas1PlacementPairDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
-          decision = requestForPlacement.decision,
+          decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),

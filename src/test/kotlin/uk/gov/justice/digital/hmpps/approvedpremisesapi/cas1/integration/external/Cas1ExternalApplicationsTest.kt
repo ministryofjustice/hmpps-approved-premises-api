@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalReq
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
@@ -161,8 +162,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
-
-                decision = placementApplication.decision,
+                decision = placementApplication.decision?.apiValue,
                 rejectionReason = null,
                 submittedBy = transformToStaffDto(placementApplication.createdByUser),
                 submittedAt = placementApplication.submittedAt?.toLocalDate(),
@@ -329,7 +329,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
-                decision = placementApplication.decision,
+                decision = placementApplication.decision?.apiValue,
                 rejectionReason = envelopedData.eventDetails.decisionSummary,
                 submittedBy = transformToStaffDto(placementApplication.createdByUser),
                 submittedAt = placementApplication.submittedAt?.toLocalDate(),
@@ -476,7 +476,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
-                decision = placementApplication.decision,
+                decision = placementApplication.decision?.apiValue,
                 rejectionReason = null,
                 submittedBy = transformToStaffDto(placementApplication.createdByUser),
                 submittedAt = placementApplication.submittedAt?.toLocalDate(),
@@ -617,7 +617,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
-                decision = PlacementApplicationDecision.ACCEPTED,
+                decision = PlacementApplicationDecisionDto.accepted,
                 rejectionReason = null,
                 submittedBy = transformToStaffDto(application.createdByUser),
                 submittedAt = placementRequest.createdAt.toLocalDate(),
