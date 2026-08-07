@@ -1,6 +1,6 @@
 §<h1 class="title">Community Accommodation</h1>
 {{#.}}
-    {{#ShortTermAccommodation}}
+    {{#CAS2-HDC}}
     <h2>Short term accommodation</h2>
 
         <h3>Status update details</h3>
@@ -193,9 +193,9 @@
             <p>No Data Held</p>
         {{/DomainEvents}}
 
-    {{/ShortTermAccommodation}}
+    {{/CAS2-HDC}}
 
-    {{#BailAccommodation}}
+    {{#CAS2}}
         <h2>Bail accommodation</h2>
 
         <h3>Status update details</h3>
@@ -392,9 +392,9 @@
             <p>No Data Held</p>
         {{/DomainEvents}}
 
-    {{/BailAccommodation}}
+    {{/CAS2}}
 
-    {{#ApprovedPremises}}
+    {{#CAS1}}
     <h2>Approved Premises</h2>
 
         <h3>Applications</h3>
@@ -1665,9 +1665,9 @@
         {{^DomainEvents}}
             <p>No Data Held</p>
         {{/DomainEvents}}
-    {{/ApprovedPremises}}
+    {{/CAS1}}
 
-    {{#TemporaryAccommodation}}
+    {{#CAS3}}
     <h2>Temporary Accommodation</h2>
 
         <h3>Booking Extensions</h3>
@@ -2301,7 +2301,7 @@
             <p>No Data Held</p>
         {{/DomainEvents}}
 
-    {{/TemporaryAccommodation}}
+    {{/CAS3}}
 
 {{/.}}
 {{^.}}
