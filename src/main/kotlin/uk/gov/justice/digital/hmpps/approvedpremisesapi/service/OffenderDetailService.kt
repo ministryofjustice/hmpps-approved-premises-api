@@ -23,7 +23,8 @@ class OffenderDetailService(
   fun getPersonInfoResult(
     crn: String,
     laoStrategy: LaoStrategy,
-  ) = getPersonInfoResults(setOf(crn), laoStrategy).first()
+    includeTier: Boolean = true,
+  ) = getPersonInfoResults(setOf(crn), laoStrategy, includeTier).first()
 
   /**
    * Returns a list of [PersonInfoResult] for the given set of CRNs.
@@ -32,10 +33,11 @@ class OffenderDetailService(
   fun getPersonInfoResults(
     crns: Set<String>,
     laoStrategy: LaoStrategy,
+    includeTier: Boolean = true,
   ): List<PersonInfoResult> {
     if (crns.isEmpty()) return emptyList()
 
-    val offendersDetails = offenderService.getPersonSummaryInfoResults(crns, laoStrategy)
+    val offendersDetails = offenderService.getPersonSummaryInfoResults(crns, laoStrategy, includeTier)
 
     return offendersDetails.map {
       when (it) {

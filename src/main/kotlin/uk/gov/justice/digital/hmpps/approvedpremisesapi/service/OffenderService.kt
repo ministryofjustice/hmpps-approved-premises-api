@@ -79,11 +79,11 @@ class OffenderService(
       .flatMap { it.stream() }
       .collect(Collectors.toList())
   }
-
   fun getPersonSummaryInfoResult(
     crn: String,
     laoStrategy: LaoStrategy,
-  ) = getPersonSummaryInfoResults(setOf(crn), laoStrategy).first()
+    includeTier: Boolean = true,
+  ) = getPersonSummaryInfoResults(setOf(crn), laoStrategy, includeTier).first()
 
   /**
    * Returns a list of [PersonSummaryInfoResult] for the given set of CRNs.
@@ -92,6 +92,7 @@ class OffenderService(
   fun getPersonSummaryInfoResults(
     crns: Set<String>,
     laoStrategy: LaoStrategy,
+    includeTier: Boolean = true,
   ): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
@@ -121,7 +122,10 @@ class OffenderService(
       }
     }
 
-    val casesByCrn = caseService.getCases(crnsList).associateBy { it.crn }
+    val casesByCrn = when (includeTier) {
+      true -> caseService.getCases(crnsList).associateBy { it.crn }
+      false -> emptyMap()
+    }
 
     return crns.map { crn ->
       toPersonSummaryInfo(

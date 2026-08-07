@@ -82,7 +82,7 @@ class PeopleController(
   ): ResponseEntity<Person> {
     val user = userService.getUserForRequest()
 
-    when (val personInfo = offenderDetailService.getPersonInfoResult(crn, user.cas1LaoStrategy())) {
+    when (val personInfo = offenderDetailService.getPersonInfoResult(crn, user.cas1LaoStrategy(), includeTier = false)) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Success -> return ResponseEntity.ok(
         personTransformer.personInfoResultToPerson(personInfo),
