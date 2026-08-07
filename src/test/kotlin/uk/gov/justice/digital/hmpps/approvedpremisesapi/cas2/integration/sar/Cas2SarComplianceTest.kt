@@ -1,34 +1,35 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2HdcSarTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.LocalDate
 
 /**
- * Per-service SAR compliance test for CAS2.
+ * Per-service SAR compliance test for CAS2V2.
  *
  * Cross-service SAR infrastructure (Flyway schema, JPA entity snapshot, template
  * endpoint smoke tests) lives in `SarIntegrationTest` — they only need to run
  * once for the whole app, since all four CAS services share one DB and one
  * template file.
  *
- * This class verifies CAS2's slice end-to-end against CAS2-specific fixtures
+ * This class verifies CAS2V2's slice end-to-end against CAS2V2-specific fixtures
  * via [CasSarFixtureAsserter].
  */
-class Cas2SarComplianceTest : Cas2SarTestBase() {
+class Cas2SarComplianceTest : Cas2HdcSarTestBase() {
 
   companion object {
-    const val TEST_CRN = "X320742"
-    const val TEST_NOMS_NUMBER = "A1234BD"
+    const val TEST_CRN = "X320743"
+    const val TEST_NOMS_NUMBER = "A1234BE"
     const val TEST_NOMIS_USER_NAME = "SAR-TEST-NOMIS-USER"
-    const val TEST_EXTERNAL_USER_NAME = "SAR-TEST-EXTERNAL-USER"
     const val TEST_ASSESSOR_NAME = "SAR-TEST-ASSESSOR"
-    const val TEST_NACRO_REFERRAL_ID = "0000000001"
+    const val TEST_NACRO_REFERRAL_ID = "0000000002"
     const val TEST_REFERRING_PRISON_CODE = "ABC"
     const val TEST_TELEPHONE_NUMBER = "0123456"
     val TEST_FROM_DATE: LocalDate = LocalDate.of(2019, 1, 1)
@@ -36,8 +37,8 @@ class Cas2SarComplianceTest : Cas2SarTestBase() {
 
     const val EXPECTED_API_RESPONSE_PATH = "/sar/cas2-expected-api-response.json"
     const val EXPECTED_REPORT_PATH = "/sar/cas2-expected-report.html"
-    const val GENERATED_API_RESPONSE_FILENAME = "cas2-sar-api-response.json.log"
-    const val GENERATED_REPORT_FILENAME = "cas2-sar-report.html.log"
+    const val GENERATED_API_RESPONSE_FILENAME = "sar/cas2-expected-api-response.json"
+    const val GENERATED_REPORT_FILENAME = "sar/cas2-expected-report.html"
   }
 
   private val asserter by lazy {
@@ -67,37 +68,37 @@ class Cas2SarComplianceTest : Cas2SarTestBase() {
         withNomsNumber(TEST_NOMS_NUMBER)
       },
     )
-    val user = cas2NomisUserEntity(Cas2ServiceOrigin.HDC, name = TEST_NOMIS_USER_NAME)
-    val assessor = cas2ExternalUserEntity(name = TEST_EXTERNAL_USER_NAME)
+    val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL, name = TEST_NOMIS_USER_NAME)
     val application = cas2ApplicationEntity(
       offenderDetails,
       user,
-      Cas2ServiceOrigin.HDC,
+      Cas2ServiceOrigin.BAIL,
       referringPrisonCode = TEST_REFERRING_PRISON_CODE,
       telephoneNumber = TEST_TELEPHONE_NUMBER,
-      data = CAS2_APPLICATION_DATA,
+      data = CAS2V2_APPLICATION_DATA,
       document = "null",
     )
     cas2ApplicationEntity(
       offenderDetails,
       user,
-      Cas2ServiceOrigin.HDC,
+      Cas2ServiceOrigin.BAIL,
       referringPrisonCode = TEST_REFERRING_PRISON_CODE,
       telephoneNumber = TEST_TELEPHONE_NUMBER,
-      data = CAS2_APPLICATION_DATA,
-      document = CAS2_APPLICATION_DOCUMENT,
+      data = CAS2V2_APPLICATION_DATA,
+      document = CAS2V2_APPLICATION_DOCUMENT,
+      cohort = Cas2Cohort.ATCR,
     )
     val assessment = cas2AssessmentEntity(
       application,
-      Cas2ServiceOrigin.HDC,
+      Cas2ServiceOrigin.BAIL,
       assessorName = TEST_ASSESSOR_NAME,
       nacroReferralId = TEST_NACRO_REFERRAL_ID,
     )
 
     cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
     cas2StatusUpdateDetailEntity(statusUpdate)
-    domainEventEntity(offenderDetails, application.id, assessment.id, null, DomainEventType.CAS2_APPLICATION_SUBMITTED, ServiceName.cas2)
+    domainEventEntity(offenderDetails, application.id, assessment.id, null, DomainEventType.CAS2_APPLICATION_SUBMITTED, ServiceName.cas2v2)
   }
 
   @Test
