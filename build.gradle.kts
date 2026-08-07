@@ -36,7 +36,7 @@ dependencies {
   implementation("com.google.guava:guava:33.6.0-jre")
   implementation("org.javers:javers-core:7.11.7")
 
-  val springDocOpenApiStarterVersion = "3.0.2"
+  val springDocOpenApiStarterVersion = "3.1.0"
   // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
   // generated schema, making it incompatible with the typescript generators and in some
   // places it was incorrect. We're pinning version 3.0.2 until a new version is available
