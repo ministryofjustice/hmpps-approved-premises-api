@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -106,7 +105,7 @@ class PersonSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Searching for a CRN returns OK with correct body, including tier v2`() {
+  fun `Searching for a CRN returns OK with correct body, tier is not included`() {
     givenAUser { _, jwt ->
       givenAnOffender(
         offenderDetailsConfigBlock = {
@@ -162,7 +161,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 genderIdentity = "This is a self described identity",
                 prisonName = "HMP Bristol",
                 isRestricted = false,
-                tier = tier.toDto(),
+                tier = null,
               ),
             ),
           )
