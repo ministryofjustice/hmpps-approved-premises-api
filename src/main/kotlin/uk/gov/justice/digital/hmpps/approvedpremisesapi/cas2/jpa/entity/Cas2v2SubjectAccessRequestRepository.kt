@@ -202,13 +202,15 @@ class Cas2v2SubjectAccessRequestRepository(
                  de.occurred_at,
                  de.created_at,
                  de."data",
-                 u."name" as triggered_by_user,
-                 de.noms_number
+                 de.noms_number,
+                 cas2_app.submitted_at as application_submitted_at,
+                 u.username as triggered_by_username
                from
                      domain_events de 
                left join cas_2_users u on 
                      u.id = de.triggered_by_user_id
                      and u.service_origin = 'BAIL'
+               left join cas_2_applications cas2_app on de.application_id = cas2_app.id
                where
                   de.service = :service_name and
                   (de.crn = :crn

@@ -12,6 +12,18 @@ class ApplicationExpiredFactory : Factory<ApplicationExpired> {
   private var previousStatus: Yielded<String> = { ApprovedPremisesApplicationStatus.STARTED.name }
   private var updatedStatus: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
 
+  fun withApplicationId(applicationId: UUID) = apply {
+    this.applicationId = { applicationId }
+  }
+
+  fun withPreviousStatus(previousStatus: String) = apply {
+    this.previousStatus = { previousStatus }
+  }
+
+  fun withUpdatedStatus(updatedStatus: String) = apply {
+    this.updatedStatus = { updatedStatus }
+  }
+
   override fun produce() = ApplicationExpired(
     applicationId = this.applicationId(),
     previousStatus = this.previousStatus(),

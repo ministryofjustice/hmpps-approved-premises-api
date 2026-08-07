@@ -68,7 +68,10 @@ class Cas2SarComplianceTest : Cas2HdcSarTestBase() {
         withNomsNumber(TEST_NOMS_NUMBER)
       },
     )
-    val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL, name = TEST_NOMIS_USER_NAME)
+    val user = cas2NomisUserEntity(
+      Cas2ServiceOrigin.BAIL,
+      name = TEST_NOMIS_USER_NAME,
+    )
     val application = cas2ApplicationEntity(
       offenderDetails,
       user,
