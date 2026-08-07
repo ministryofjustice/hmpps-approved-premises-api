@@ -26,22 +26,18 @@ To generate new fixtures for a specific service (e.g., CAS3), run the following 
 SAR_GENERATE_ACTUAL=true ./gradlew integrationTest --tests "uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar.Cas3SarComplianceTest"
 ```
 
-For other services, change the test class name:
+Change the provided test class name depending on which template you are trying to generate fixtures for:
 - CAS1: `uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar.Cas1SarComplianceTest`
+- CAS2 HDC: `uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2HdcSarComplianceTest`
 - CAS2: `uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar.Cas2SarComplianceTest`
-- CAS2v2: `uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.sar.Cas2v2SarComplianceTest`
+- CAS3: `uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar.Cas3SarComplianceTest`
 
 ### 2. Locate the generated files
 
-The tests are configured to save the actual output to `.log` files in the `src/test/resources/` directory (not in the `sar/` subdirectory) to avoid overwriting the source of truth until it's ready.
+The tests are configured to save the actual output to `.log` files in the `src/test/resources/` directory (not in the `sar/` subdirectory) to avoid overwriting the source of truth until it's ready e.g.
 
-Commonly generated filenames include:
 - `cas1-sar-api-response.json.log`
 - `cas1-sar-report.html.log`
-- `cas2-sar-api-response.json.log`
-- `cas2-sar-report.html.log`
-- `cas3-sar-api-response.json.log`
-- `cas3-sar-report.html.log` 
 
 ### 3. Update the expected fixtures
 
@@ -65,7 +61,7 @@ cp src/test/resources/cas1-sar-report.html.log src/test/resources/sar/cas1-expec
 
 The `template_hmpps-approved-premises-api.mustache` file is shared across all services. 
 
-- Use conditional sections like `{{#ApprovedPremises}}...{{/ApprovedPremises}}` or `{{#TemporaryAccommodation}}...{{/TemporaryAccommodation}}` to isolate service-specific sections.
+- Use conditional sections like `{{#CAS1}}...{{/CAS1}}` or `{{#CAS3}}...{{/CAS3}}` to isolate service-specific sections.
 - If you add new data to the API response, you must update the template to display it.
 - After updating the template, you **must** regenerate the HTML fixtures for **all** services that might be affected to ensure their compliance tests still pass.
 

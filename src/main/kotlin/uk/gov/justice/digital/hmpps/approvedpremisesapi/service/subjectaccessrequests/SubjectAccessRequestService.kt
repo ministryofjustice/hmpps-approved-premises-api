@@ -32,10 +32,10 @@ class SubjectAccessRequestService(
 
     return """
       {
-         "ApprovedPremises": ${ approvedPremises ?: "[]"},
-         "TemporaryAccommodation": ${ temporaryAccommodation ?: "[]"},
-         "ShortTermAccommodation": ${ shortTermAccommodation ?: "[]"},
-         "BailAccommodation": ${ bailAccommodation ?: "[]"}
+         "CAS1": ${ approvedPremises ?: "[]"},
+         "CAS2-HDC": ${ shortTermAccommodation ?: "[]"},
+         "CAS2": ${ bailAccommodation ?: "[]"},
+         "CAS3": ${temporaryAccommodation ?: "[]"}
       }
     """.trimIndent()
   }

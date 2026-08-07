@@ -19,7 +19,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
+open class Cas2HdcSarTestBase : SubjectAccessRequestServiceTestBase() {
 
   companion object {
     const val CAS2_DATA_PATH = "db/seed/dev+test/cas2_application_data"

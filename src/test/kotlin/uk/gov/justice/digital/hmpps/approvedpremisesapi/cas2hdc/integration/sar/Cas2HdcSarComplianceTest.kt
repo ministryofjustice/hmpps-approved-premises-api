@@ -20,7 +20,7 @@ import java.time.LocalDate
  * This class verifies CAS2's slice end-to-end against CAS2-specific fixtures
  * via [CasSarFixtureAsserter].
  */
-class Cas2SarComplianceTest : Cas2SarTestBase() {
+class Cas2HdcSarComplianceTest : Cas2HdcSarTestBase() {
 
   companion object {
     const val TEST_CRN = "X320742"
@@ -34,10 +34,10 @@ class Cas2SarComplianceTest : Cas2SarTestBase() {
     val TEST_FROM_DATE: LocalDate = LocalDate.of(2019, 1, 1)
     val TEST_TO_DATE: LocalDate = LocalDate.of(2024, 12, 31)
 
-    const val EXPECTED_API_RESPONSE_PATH = "/sar/cas2-expected-api-response.json"
-    const val EXPECTED_REPORT_PATH = "/sar/cas2-expected-report.html"
-    const val GENERATED_API_RESPONSE_FILENAME = "cas2-sar-api-response.json.log"
-    const val GENERATED_REPORT_FILENAME = "cas2-sar-report.html.log"
+    const val EXPECTED_API_RESPONSE_PATH = "/sar/cas2-hdc-expected-api-response.json"
+    const val EXPECTED_REPORT_PATH = "/sar/cas2-hdc-expected-report.html"
+    const val GENERATED_API_RESPONSE_FILENAME = "cas2-hdc-sar-api-response.json.log"
+    const val GENERATED_REPORT_FILENAME = "cas2-hdc-sar-report.html.log"
   }
 
   private val asserter by lazy {
