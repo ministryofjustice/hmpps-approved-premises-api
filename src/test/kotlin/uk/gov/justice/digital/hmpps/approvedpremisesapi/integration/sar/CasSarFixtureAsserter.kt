@@ -41,13 +41,17 @@ class CasSarFixtureAsserter(
   private val generatedReportFilename: String,
 ) {
 
+  companion object {
+    val DEFAULT_CONTENT_TYPE = Any::class.java
+  }
+
   fun assertApiDataMatchesFixture(
     prn: String? = null,
     crn: String? = null,
     fromDate: LocalDate? = null,
     toDate: LocalDate? = null,
   ) {
-    val response = sarHelper.requestSarData(prn, crn, fromDate, toDate, webTestClient)
+    val response = sarHelper.requestSarData(prn, crn, fromDate, toDate, webTestClient, DEFAULT_CONTENT_TYPE)
     val actualJson = sarHelper.toJson(response)
 
     if (generateActual()) {
@@ -73,7 +77,7 @@ class CasSarFixtureAsserter(
     sarHelper.stubFindLocationNameByNomisIdWith("PROPERTY BOX 1")
     sarHelper.stubFindLocationNameByDpsIdWith("PROPERTY BOX 2")
 
-    val dataResponse = sarHelper.requestSarData(prn, crn, fromDate, toDate, webTestClient)
+    val dataResponse = sarHelper.requestSarData(prn, crn, fromDate, toDate, webTestClient, DEFAULT_CONTENT_TYPE)
     val templateResponse = sarHelper.requestSarTemplate(webTestClient)
 
     val renderResult = sarHelper.renderServiceReport(
