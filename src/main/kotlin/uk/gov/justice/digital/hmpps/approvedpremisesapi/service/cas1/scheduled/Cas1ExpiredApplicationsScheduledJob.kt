@@ -29,7 +29,7 @@ class Cas1ExpiredApplicationsScheduledJob(
   @Scheduled(cron = "0 0 2 * * ?")
   @SchedulerLock(name = "cas1_expire_applications", lockAtMostFor = "5m", lockAtLeastFor = "1m")
   fun expireApplications() {
-    val applicationIds = applicationRepository.findAllExpiredApplications()
+    val applicationIds = applicationRepository.findAllExpiredApplications(ApplicationRepository.APPLICATION_EXPIRY_DAYS)
 
     log.info("There are ${applicationIds.size} applications to update.")
 

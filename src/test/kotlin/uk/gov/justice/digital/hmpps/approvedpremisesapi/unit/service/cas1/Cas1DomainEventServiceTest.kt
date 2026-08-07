@@ -92,11 +92,6 @@ class Cas1DomainEventServiceTest {
       .filter { it.cas == DomainEventCas.CAS1 && it.cas1Info!!.emittable }
 
     @JvmStatic
-    fun allEmittableCas1DomainEventTypes() = DomainEventType
-      .entries
-      .filter { it.cas == DomainEventCas.CAS1 && it.cas1Info!!.emittable }
-
-    @JvmStatic
     fun allNonEmittableCas1DomainEventTypes() = DomainEventType
       .entries
       .filter { it.cas == DomainEventCas.CAS1 && !it.cas1Info!!.emittable }
