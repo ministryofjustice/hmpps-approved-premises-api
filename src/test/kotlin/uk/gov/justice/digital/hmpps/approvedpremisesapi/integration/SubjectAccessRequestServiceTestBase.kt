@@ -257,24 +257,40 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     userId: UUID?,
     type: DomainEventType,
     serviceName: ServiceName = ServiceName.approvedPremises,
+  ) = domainEventEntity(
+    params = DomainEventBuilderParams(offender, applicationId, assessmentId, userId, serviceName),
+    type = type,
+  )
+
+  fun domainEventEntity(
+    params: DomainEventBuilderParams,
+    type: DomainEventType,
   ): DomainEventEntity = domainEventFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withService(serviceName)
-    withCrn(offender.otherIds.crn)
-    withNomsNumber(offender.otherIds.nomsNumber)
-    withApplicationId(applicationId)
-    withAssessmentId(assessmentId)
+    withService(params.serviceName)
+    withCrn(params.offender.otherIds.crn)
+    withNomsNumber(params.offender.otherIds.nomsNumber)
+    withApplicationId(params.applicationId)
+    withAssessmentId(params.assessmentId)
     withType(type)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withOccurredAt(OffsetDateTime.parse(ALLOCATED_AT))
     withData("{ }")
-    withTriggeredByUserId(userId)
+    withTriggeredByUserId(params.userId)
     withMetadata(
       mapOf(
         MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),
       ),
     )
   }
+
+  data class DomainEventBuilderParams(
+    val offender: OffenderDetailSummary,
+    val applicationId: UUID,
+    val assessmentId: UUID,
+    val userId: UUID?,
+    val serviceName: ServiceName,
+  )
 
   fun probationRegionEntity(
     name: String = "Probation Region ${randomStringMultiCaseWithNumbers(5)}",

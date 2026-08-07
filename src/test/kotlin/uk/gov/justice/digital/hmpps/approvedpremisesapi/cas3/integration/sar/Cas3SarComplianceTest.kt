@@ -32,8 +32,6 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     const val TEST_DUTY_TO_REFER_AREA = "SAR-TEST-LAA"
     const val TEST_REJECTION_REASON_NAME = "SAR-REJ"
     const val TEST_PROBATION_REGION = "SAR-TEST-REGION"
-    const val TEST_PROBATION_DELIVERY_UNIT = "SAR-TEST-PDU"
-    const val TEST_PREMISES_NAME = "SAR-TEST-PREMISES"
     val TEST_FROM_DATE: LocalDate = LocalDate.of(2019, 1, 1)
     val TEST_TO_DATE: LocalDate = LocalDate.of(2024, 12, 31)
 
