@@ -1107,66 +1107,10 @@
         <h3>Domain Events</h3>
         {{#DomainEvents}}
 
-            {{#if (eq type "CAS2_APPLICATION_SUBMITTED")}}
-                <h4>Application Submitted</h4>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Submitted at</td>
-                        <td class="data-column-30">Submitted by</td>
-                        <td class="data-column-30">Referring prison</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.submittedAt) }}</td>
-                        <td>{{ getUserLastName data.eventDetails.submittedBy.staffMember.username }}</td>
-                        <td>{{ getPrisonName data.eventDetails.referringPrisonCode }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Preferred areas</td>
-                        <td class="data-column-30">Home Detention Curfew eligibility date</td>
-                        <td class="data-column-30">Conditional release date</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.preferredAreas }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.hdcEligibilityDate) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.conditionalReleaseDate) }}</td>
-                    </tr>
-                </table>
-            {{/if}}
-
-            {{#if (eq type "CAS2_APPLICATION_STATUS_UPDATED")}}
-                <h4>Application Status Updated</h4>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">New status name</td>
-                        <td class="data-column-25">New status label</td>
-                        <td class="data-column-25">New status details name</td>
-                        <td class="data-column-25">New status details label</td>
-                    </tr>
-                    <tr>
-                        <td>{{ convertCamelCase data.eventDetails.newStatus.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.label }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.label }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Updated by</td>
-                        <td class="data-column-25">Updated by email</td>
-                        <td class="data-column-25">Updated by origin</td>
-                    </tr>
-                    <tr>
-                        <td>{{ getUserLastName data.eventDetails.updatedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.updatedBy.email }}</td>
-                        <td>{{ optionalValue data.eventDetails.updatedBy.origin }}</td>
-                    </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>New status description</td><td>{{ optionalValue data.eventDetails.newStatus.description }}</td></tr>
-                </table>
-            {{/if}}
+            <h4>
+            {{#if (eq type "CAS2_APPLICATION_SUBMITTED")}}Application Submitted{{/if}}
+            {{#if (eq type "CAS2_APPLICATION_STATUS_UPDATED")}}Application Status Updated{{/if}}
+            </h4>
 
             <table class="data-table">
                 <tr>
@@ -1304,76 +1248,18 @@
         <h3>Domain Events</h3>
         {{#DomainEvents}}
 
-            {{#if (eq type "CAS2_APPLICATION_SUBMITTED")}}
-                <h4>Application Submitted</h4>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Submitted at</td>
-                        <td class="data-column-30">Submitted by</td>
-                        <td class="data-column-30">Referring prison</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.submittedAt) }}</td>
-                        <td>{{ getUserLastName data.eventDetails.submittedBy.staffMember.username }}</td>
-                        <td>{{ getPrisonName data.eventDetails.referringPrisonCode }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Preferred areas</td>
-                        <td class="data-column-30">Home Detention Curfew eligibility date</td>
-                        <td class="data-column-30">Conditional release date</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.preferredAreas }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.hdcEligibilityDate) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.conditionalReleaseDate) }}</td>
-                    </tr>
-                </table>
-            {{/if}}
-
-            {{#if (eq type "CAS2_APPLICATION_STATUS_UPDATED")}}
-                <h4>Application Status Updated</h4>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">New status name</td>
-                        <td class="data-column-25">New status label</td>
-                        <td class="data-column-25">New status details name</td>
-                        <td class="data-column-25">New status details label</td>
-                    </tr>
-                    <tr>
-                        <td>{{ convertCamelCase data.eventDetails.newStatus.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.label }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.newStatus.statusDetails.label }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Updated by</td>
-                        <td class="data-column-25">Updated by email</td>
-                        <td class="data-column-25">Updated by origin</td>
-                    </tr>
-                    <tr>
-                        <td>{{ getUserLastName data.eventDetails.updatedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.updatedBy.email }}</td>
-                        <td>{{ optionalValue data.eventDetails.updatedBy.origin }}</td>
-                    </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>New status description</td><td>{{ optionalValue data.eventDetails.newStatus.description }}</td></tr>
-                </table>
-            {{/if}}
+            <h4>
+            {{#if (eq type "CAS2_APPLICATION_SUBMITTED")}}Application Submitted{{/if}}
+            {{#if (eq type "CAS2_APPLICATION_STATUS_UPDATED")}}Application Status Updated{{/if}}
+            </h4>
 
             <table class="data-table">
                 <tr>
                     <td class="data-column-20">Created at</td>
-                    <td class="data-column-20">Triggered by user</td>
                     <td class="data-column-20">Occurred at</td>
                 </tr>
                 <tr>
                     <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ getUserLastName triggered_by_user }}</td>
                     <td>{{ optionalValue (formatDate occurred_at) }}</td>
                 </tr>
             </table>
