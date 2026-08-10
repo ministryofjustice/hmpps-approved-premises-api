@@ -3,20 +3,42 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationExpiredFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKeyWorkerAssignedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeBookedByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventEnvelopeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.CruFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.DestinationProviderFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MoveOnCategoryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedDestinationFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonReferenceFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationAllocatedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -32,6 +54,7 @@ import java.util.UUID
  * This class verifies CAS1's slice end-to-end against CAS1-specific fixtures
  * via [CasSarFixtureAsserter].
  */
+@SuppressWarnings("LongMethod")
 class Cas1SarComplianceTest : Cas1SarTestBase() {
 
   companion object {
@@ -205,7 +228,15 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       characteristicName = TEST_CHARACTERISTIC_NAME,
       characteristicPropertyName = TEST_CHARACTERISTIC_PROPERTY_NAME,
     )
+    setupDomainEvents(offenderDetails, application, assessment, assessor)
+  }
 
+  private fun setupDomainEvents(
+    offenderDetails: OffenderDetailSummary,
+    application: ApprovedPremisesApplicationEntity,
+    assessment: AssessmentEntity,
+    assessor: UserEntity,
+  ) {
     val domainEventCommon = DomainEventBuilderParams(offenderDetails, application.id, assessment.id, assessor.id, ServiceName.approvedPremises)
 
     domainEventEntity(domainEventCommon, DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
@@ -264,6 +295,254 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
           .withArrivalOn(LocalDate.of(2025, 3, 1))
           .withDepartureOn(LocalDate.of(2025, 4, 1))
           .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
+      data = domainEventDetailsWrapper(
+        BookingCancelledFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withCancelledAt(Instant.parse(CREATED_AT))
+          .withCancelledBy(staticStaffMember())
+          .withCancellationRecordedAt(Instant.parse(CREATED_AT))
+          .withPremises(staticPremises())
+          .withCancellationReason("reason")
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
+      data = domainEventDetailsWrapper(
+        BookingKeyWorkerAssignedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPremises(staticPremises())
+          .withArrivalDate(LocalDate.of(2025, 3, 1))
+          .withDepartureDate(LocalDate.of(2025, 4, 1))
+          .withPreviousKeyWorkerName("Previous Keyworker Name")
+          .withAssignedKeyWorkerName("Assigned Keyworker Name")
+          .withKeyWorker(staticStaffMember())
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
+      data = domainEventDetailsWrapper(
+        PersonArrivedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPremises(staticPremises())
+          .withApplicationSubmittedOn(LocalDate.of(2025, 3, 1))
+          .withArrivedAt(Instant.parse("2025-03-01T10:15:30.00Z"))
+          .withExpectedDepartureOn(LocalDate.of(2025, 4, 1))
+          .withNotes("not used")
+          .withRecordedBy(staticStaffMember())
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
+      data = domainEventDetailsWrapper(
+        PersonDepartedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPremises(staticPremises())
+          .withDepartedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withReason("departure reason")
+          .withLegacyReasonCode("DR")
+          .withRecordedBy(staticStaffMember())
+          .withPersonDepartedDestination(
+            PersonDepartedDestinationFactory()
+              .withMoveOnCategory(MoveOnCategoryFactory().withId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4")).withDescription("move on").withLegacyMoveOnCategoryCode("mo1").produce())
+              .withDestinationProvider(DestinationProviderFactory().withId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4")).withName("move on").produce())
+              .produce(),
+          )
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
+      data = domainEventDetailsWrapper(
+        PersonNotArrivedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPremises(staticPremises())
+          .withExpectedArrivalOn(LocalDate.of(2025, 3, 1))
+          .withNotes("notes")
+          .withReason("reason")
+          .withLegacyReasonCode("RC1")
+          .withRecordedBy(staticStaffMember())
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
+      data = domainEventDetailsWrapper(
+        BookingNotMadeFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withAttemptedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withAttemptedBy(
+            BookingMadeBookedByFactory()
+              .withStaffMember(staticStaffMember())
+              .withCru(CruFactory().withName("CRU").produce())
+              .produce(),
+          )
+          .withFailureDescription("failure")
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+      data = domainEventDetailsWrapper(
+        AssessmentAllocatedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withAllocatedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withAllocatedBy(staticStaffMember())
+          .withAllocatedTo(staticStaffMember())
+          .withAssessmentUrl("url")
+          .withAssessmentId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
+      data = domainEventDetailsWrapper(
+        RequestForPlacementCreatedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withDeliusEventNumber("1")
+          .withCreatedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withCreatedBy(staticStaffMember())
+          .withExpectedArrival(LocalDate.of(2023, 1, 1))
+          .withDuration(25)
+          .withRequestForPlacementId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
+      data = domainEventDetailsWrapper(
+        RequestForPlacementAssessedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPlacementApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withAssessedBy(staticStaffMember())
+          .withDecision(RequestForPlacementAssessed.Decision.accepted)
+          .withDecisionSummary("the decision summary")
+          .withExpectedArrival(LocalDate.of(2023, 1, 1))
+          .withDuration(25)
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
+      data = domainEventDetailsWrapper(
+        PlacementApplicationAllocatedFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPlacementApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withAllocatedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withPlacementDates(
+            listOf(
+              DatePeriod(
+                startDate = LocalDate.of(2023, 1, 1),
+                endDate = LocalDate.of(2023, 2, 1),
+              ),
+            ),
+          )
+          .withAllocatedTo(staticStaffMember())
+          .withAllocatedBy(staticStaffMember())
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
+      data = domainEventDetailsWrapper(
+        PlacementApplicationWithdrawnFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withPlacementApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withSubmittedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withWithdrawnByStaffMember(staticStaffMember())
+          .withWithdrawnByProbationArea(ProbationAreaFactory().withCode("code").withName("name").produce())
+          .withWithdrawnAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withWithdrawalReason("withdrawalReason")
+          .withDeliusEventNumber("1")
+          .withPlacementDates(
+            listOf(
+              DatePeriod(
+                startDate = LocalDate.of(2023, 1, 1),
+                endDate = LocalDate.of(2023, 2, 1),
+              ),
+            ),
+          ).produce(),
+      ),
+    )
+
+    domainEventEntity(
+      params = domainEventCommon,
+      type = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
+      data = domainEventDetailsWrapper(
+        MatchRequestWithdrawnFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("NA")
+          .withMatchRequestId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(PersonReferenceFactory().withCrn(TEST_CRN).withNoms(TEST_NOMS_NUMBER).produce())
+          .withSubmittedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withWithdrawnByStaffMember(staticStaffMember())
+          .withWithdrawnByProbationArea(ProbationAreaFactory().withCode("code").withName("name").produce())
+          .withWithdrawnAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withWithdrawalReason("withdrawalReason")
+          .withDeliusEventNumber("1")
+          .withDatePeriod(
+            DatePeriod(startDate = LocalDate.of(2023, 1, 1), endDate = LocalDate.of(2023, 2, 1)),
+          ).produce(),
       ),
     )
   }

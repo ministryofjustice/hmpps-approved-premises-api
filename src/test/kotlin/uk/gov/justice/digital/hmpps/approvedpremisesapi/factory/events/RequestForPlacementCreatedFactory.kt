@@ -25,8 +25,28 @@ class RequestForPlacementCreatedFactory : Factory<RequestForPlacementCreated> {
   private var requestForPlacementType: Yielded<RequestForPlacementType> = { RequestForPlacementType.additionalPlacement }
   private var requestForPlacementId: Yielded<UUID> = { UUID.randomUUID() }
 
+  fun withApplicationId(applicationId: UUID) = apply {
+    this.applicationId = { applicationId }
+  }
+
+  fun withPersonReference(personReference: PersonReference) = apply {
+    this.personReference = { personReference }
+  }
+
   fun withRequestForPlacementType(requestForPlacementType: RequestForPlacementType) = apply {
     this.requestForPlacementType = { requestForPlacementType }
+  }
+
+  fun withDeliusEventNumber(deliusEventNumber: String) = apply {
+    this.deliusEventNumber = { deliusEventNumber }
+  }
+
+  fun withCreatedAt(createdAt: Instant) = apply {
+    this.createdAt = { createdAt }
+  }
+
+  fun withCreatedBy(createdBy: StaffMember) = apply {
+    this.createdBy = { createdBy }
   }
 
   fun withExpectedArrival(expectedArrival: LocalDate) = apply {
@@ -39,6 +59,10 @@ class RequestForPlacementCreatedFactory : Factory<RequestForPlacementCreated> {
 
   fun withApplicationUrl(applicationUrl: String) = apply {
     this.applicationUrl = { applicationUrl }
+  }
+
+  fun withRequestForPlacementId(requestForPlacementId: UUID) = apply {
+    this.requestForPlacementId = { requestForPlacementId }
   }
 
   override fun produce() = RequestForPlacementCreated(
