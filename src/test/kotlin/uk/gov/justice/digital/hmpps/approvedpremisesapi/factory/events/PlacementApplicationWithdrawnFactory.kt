@@ -34,6 +34,9 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
     this.applicationUrl = { applicationUrl }
   }
 
+  fun withPlacementApplicationId(placementApplicationId: UUID) = apply {
+    this.placementApplicationId = { placementApplicationId }
+  }
   fun withPersonReference(personReference: PersonReference) = apply {
     this.personReference = { personReference }
   }

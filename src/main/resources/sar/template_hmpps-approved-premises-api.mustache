@@ -714,20 +714,19 @@
             {{#if (eq type "APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED")}}Approved Premises Assessment Info Requested{{/if}}
             {{#if (eq type "APPROVED_PREMISES_BOOKING_MADE")}}Approved Premises Booking Made{{/if}}
             {{#if (eq type "APPROVED_PREMISES_BOOKING_CHANGED")}}Approved Premises Booking Changed{{/if}}
-
             {{#if (eq type "APPROVED_PREMISES_BOOKING_CANCELLED")}}Approved Premises Booking Cancelled{{/if}}
             {{#if (eq type "APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED")}}Approved Premises Booking Keyworker Assigned{{/if}}
-            {{#if (eq type "APPROVED_PREMISES_BOOKING_NOT_MADE")}}Approved Premises Booking Not Made{{/if}}
             {{#if (eq type "APPROVED_PREMISES_PERSON_ARRIVED")}}Approved Premises Person Arrived{{/if}}
-            {{#if (eq type "APPROVED_PREMISES_PERSON_NOT_ARRIVED")}}Approved Premises Person Not Arrived{{/if}}
             {{#if (eq type "APPROVED_PREMISES_PERSON_DEPARTED")}}Approved Premises Person Departed{{/if}}
+            {{#if (eq type "APPROVED_PREMISES_PERSON_NOT_ARRIVED")}}Approved Premises Person Not Arrived{{/if}}
+            {{#if (eq type "APPROVED_PREMISES_BOOKING_NOT_MADE")}}Approved Premises Booking Not Made{{/if}}
             {{#if (eq type "APPROVED_PREMISES_ASSESSMENT_ALLOCATED")}}Approved Premises Assessment Allocated{{/if}}
             {{#if (eq type "APPROVED_PREMISES_ASSESSMENT_APPEALED")}}Approved Premises Assessment Appealed{{/if}}
-            {{#if (eq type "APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN")}}Approved Premises Match Request Withdrawn{{/if}}
             {{#if (eq type "APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED")}}Approved Premises Request For Placement Created{{/if}}
             {{#if (eq type "APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED")}}Approved Premises Request For Placement Assessed{{/if}}
-            {{#if (eq type "APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED")}}Approved Premises Placement Application Allocated{{/if}}
-            {{#if (eq type "APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN")}}Approved Premises Placement Application Withdrawn{{/if}}
+            {{#if (eq type "APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED")}}Approved Premises Request for Placement Allocated{{/if}}
+            {{#if (eq type "APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN")}}Approved Premises Request for Placement Withdrawn{{/if}}
+            {{#if (eq type "APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN")}}Approved Premises Placement Request Withdrawn{{/if}}
             </h4>
 
             <table class="data-table">
@@ -760,13 +759,13 @@
                 <table class="data-table">
                     <tr>
                         <td class="data-column-30">Premises name</td>
-                        <td class="data-column-30">Departure on</td>
-                        <td class="data-column-30">Arrival on</td>
+                        <td class="data-column-30">Arrival Date</td>
+                        <td class="data-column-30">Departure Date</td>
                     </tr>
                     <tr>
                         <td>{{ optionalValue data.eventDetails.premises.name }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.departureOn) }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.arrivalOn) }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.departureOn) }}</td>
                     </tr>
                 </table>
             {{/if}}
@@ -801,28 +800,14 @@
             {{#if (eq type "APPROVED_PREMISES_BOOKING_CANCELLED")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Cancellation reason</td>
                         <td class="data-column-30">Premises name</td>
-                        <td class="data-column-30">Premises local authority area</td>
+                        <td class="data-column-30"></td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue data.eventDetails.cancellationReason }}</td>
                         <td>{{ optionalValue data.eventDetails.premises.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.localAuthorityAreaName }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Cancelled by</td>
-                        <td class="data-column-25">Cancellation recorded at</td>
-                        <td class="data-column-25">Cancelled at</td>
-                        <td class="data-column-25">Cancelled at date</td>
-                    </tr>
-                    <tr>
-                        <td>{{#data.eventDetails.cancelledBy.username}}{{getUserLastName .}}{{/data.eventDetails.cancelledBy.username}}{{^data.eventDetails.cancelledBy.username}}{{optionalValue data.eventDetails.cancelledBy.surname}}{{/data.eventDetails.cancelledBy.username}}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.cancellationRecordedAt) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.cancelledAt) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.cancelledAtDate) }}</td>
+                        <td></td>
+                        <td></td>
                     </tr>
                 </table>
             {{/if}}
@@ -830,43 +815,26 @@
             {{#if (eq type "APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Assigned keyworker name</td>
-                        <td class="data-column-30">Previous keyworker name</td>
-                        <td class="data-column-30">Arrival date</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.assignedKeyWorkerName }}</td>
-                        <td>{{ optionalValue data.eventDetails.previousKeyWorkerName }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.arrivalDate) }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Departure date</td>
                         <td class="data-column-30">Premises name</td>
-                        <td class="data-column-30">Premises local authority area</td>
+                        <td class="data-column-30">Arrival Date</td>
+                        <td class="data-column-30">Departure Date</td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.departureDate) }}</td>
                         <td>{{ optionalValue data.eventDetails.premises.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.localAuthorityAreaName }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.arrivalDate) }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.departureDate) }}</td>
                     </tr>
                 </table>
-            {{/if}}
-
-            {{#if (eq type "APPROVED_PREMISES_BOOKING_NOT_MADE")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Attempted at</td>
-                        <td class="data-column-25">Attempted by staff member</td>
-                        <td class="data-column-25">Attempted by central referrals unit</td>
-                        <td class="data-column-25">Failure description</td>
+                        <td class="data-column-30">Assigned keyworker</td>
+                        <td class="data-column-30"></td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.attemptedAt) }}</td>
-                        <td>{{#data.eventDetails.attemptedBy.staffMember.username}}{{getUserLastName .}}{{/data.eventDetails.attemptedBy.staffMember.username}}{{^data.eventDetails.attemptedBy.staffMember.username}}{{optionalValue data.eventDetails.attemptedBy.staffMember.surname}}{{/data.eventDetails.attemptedBy.staffMember.username}}</td>
-                        <td>{{ optionalValue data.eventDetails.attemptedBy.cru.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.failureDescription }}</td>
+                        <td>{{#data.eventDetails.keyWorker.username}}{{getUserLastName .}}{{/data.eventDetails.keyWorker.username}}</td>
+                        <td></td>
+                        <td></td>
                     </tr>
                 </table>
             {{/if}}
@@ -874,32 +842,30 @@
             {{#if (eq type "APPROVED_PREMISES_PERSON_ARRIVED")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Arrived at</td>
-                        <td class="data-column-25">Premises name</td>
-                        <td class="data-column-25">Premises local authority area name</td>
-                        <td class="data-column-25">Keyworker</td>
+                        <td class="data-column-30">Premises name</td>
+                        <td class="data-column-30">Arrived at</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.arrivedAt) }}</td>
                         <td>{{ optionalValue data.eventDetails.premises.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.localAuthorityAreaName }}</td>
-                        <td>{{#data.eventDetails.keyWorker.username}}{{getUserLastName .}}{{/data.eventDetails.keyWorker.username}}{{^data.eventDetails.keyWorker.username}}{{optionalValue data.eventDetails.keyWorker.surname}}{{/data.eventDetails.keyWorker.username}}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.arrivedAt) }}</td>
+                        <td></td>
                     </tr>
                 </table>
+            {{/if}}
+
+            {{#if (eq type "APPROVED_PREMISES_PERSON_DEPARTED")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Application submitted on</td>
-                        <td class="data-column-25">Expected departure on</td>
-                        <td class="data-column-25">Previous expected departure on</td>
+                        <td class="data-column-30">Premises name</td>
+                        <td class="data-column-30">Departed at</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.applicationSubmittedOn) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.expectedDepartureOn) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.previousExpectedDepartureOn) }}</td>
+                        <td>{{ optionalValue data.eventDetails.premises.name }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.departedAt) }}</td>
+                        <td></td>
                     </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
                 </table>
             {{/if}}
 
@@ -907,67 +873,13 @@
                 <table class="data-table">
                     <tr>
                         <td class="data-column-30">Premises name</td>
-                        <td class="data-column-30">Premises local authority area</td>
                         <td class="data-column-30">Expected arrival on</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
                         <td>{{ optionalValue data.eventDetails.premises.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.localAuthorityAreaName }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.premises.expectedArrivalOn) }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Recorded by</td>
-                        <td class="data-column-30">Reason</td>
-                    </tr>
-                    <tr>
-                        <td>{{#data.eventDetails.recordedBy.username}}{{getUserLastName .}}{{/data.eventDetails.recordedBy.username}}{{^data.eventDetails.recordedBy.username}}{{optionalValue data.eventDetails.recordedBy.surname}}{{/data.eventDetails.recordedBy.username}}</td>
-                        <td>{{ optionalValue data.eventDetails.reason }}</td>
-                    </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
-                </table>
-            {{/if}}
-
-            {{#if (eq type "APPROVED_PREMISES_PERSON_DEPARTED")}}
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Reason</td>
-                        <td class="data-column-25">Legacy reason code</td>
-                        <td class="data-column-25">Premises name</td>
-                        <td class="data-column-25">Premises local authority area</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.reason }}</td>
-                        <td>{{ optionalValue data.eventDetails.legacyReasonCode }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.localAuthorityAreaName }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Keyworker</td>
-                        <td class="data-column-30">Destination premises</td>
-                        <td class="data-column-30">Destination provider</td>
-                    </tr>
-                    <tr>
-                        <td>{{#data.eventDetails.keyWorker.username}}{{getUserLastName .}}{{/data.eventDetails.keyWorker.username}}{{^data.eventDetails.keyWorker.username}}{{optionalValue data.eventDetails.keyWorker.surname}}{{/data.eventDetails.keyWorker.username}}</td>
-                        <td>{{ optionalValue data.eventDetails.destination.premises }}</td>
-                        <td>{{ optionalValue data.eventDetails.destination.destinationProvider }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Legacy move on category code</td>
-                        <td class="data-column-30">Move on category description</td>
-                        <td class="data-column-30">Departed at</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.destination.moveOnCategory.legacyMoveOnCategoryCode }}</td>
-                        <td>{{ optionalValue data.eventDetails.destination.moveOnCategory.description }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.departedAt) }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.expectedArrivalOn) }}</td>
+                        <td></td>
                     </tr>
                 </table>
             {{/if}}
@@ -975,62 +887,29 @@
             {{#if (eq type "APPROVED_PREMISES_ASSESSMENT_ALLOCATED")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Allocated at</td>
-                        <td class="data-column-30">Allocated by</td>
                         <td class="data-column-30">Allocated to</td>
+                        <td class="data-column-30"></td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.allocatedAt) }}</td>
-                        <td>{{#data.eventDetails.allocatedBy.username}}{{getUserLastName .}}{{/data.eventDetails.allocatedBy.username}}{{^data.eventDetails.allocatedBy.username}}{{optionalValue data.eventDetails.allocatedBy.surname}}{{/data.eventDetails.allocatedBy.username}}</td>
-                        <td>{{#data.eventDetails.allocatedTo.username}}{{getUserLastName .}}{{/data.eventDetails.allocatedTo.username}}{{^data.eventDetails.allocatedTo.username}}{{optionalValue data.eventDetails.allocatedTo.surname}}{{/data.eventDetails.allocatedTo.username}}</td>
+                        <td>{{#data.eventDetails.allocatedTo.username}}{{getUserLastName .}}{{/data.eventDetails.allocatedTo.username}}</td>
+                        <td></td>
+                        <td></td>
                     </tr>
-                </table>
-            {{/if}}
-
-            {{#if (eq type "APPROVED_PREMISES_ASSESSMENT_APPEALED")}}
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Created at</td>
-                        <td class="data-column-30">Created by</td>
-                        <td class="data-column-30">Decision</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.createdAt) }}</td>
-                        <td>{{#data.eventDetails.createdBy.username}}{{getUserLastName .}}{{/data.eventDetails.createdBy.username}}{{^data.eventDetails.createdBy.username}}{{optionalValue data.eventDetails.createdBy.surname}}{{/data.eventDetails.createdBy.username}}</td>
-                        <td>{{ optionalValue data.eventDetails.decision }}</td>
-                    </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td class="data-column-75">Decision detail</td><td>{{ optionalValue data.eventDetails.decisionDetail }}</td></tr>
-                    <tr><td class="data-column-25">Appeal detail</td><td>{{ optionalValue data.eventDetails.appealDetail }}</td></tr>
                 </table>
             {{/if}}
 
             {{#if (eq type "APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Withdrawn at</td>
-                        <td class="data-column-25">Withdrawn by staff member</td>
-                        <td class="data-column-25">Withdrawn by probation area</td>
-                        <td class="data-column-25">Withdrawal reason</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.withdrawnAt) }}</td>
-                        <td>{{#data.eventDetails.withdrawnBy.staffMember.username}}{{getUserLastName .}}{{/data.eventDetails.withdrawnBy.staffMember.username}}{{^data.eventDetails.withdrawnBy.staffMember.username}}{{optionalValue data.eventDetails.withdrawnBy.staffMember.surname}}{{/data.eventDetails.withdrawnBy.staffMember.username}}</td>
-                        <td>{{ optionalValue data.eventDetails.withdrawnBy.probationArea.name }}</td>
-                        <td>{{ optionalValue data.eventDetails.withdrawalReason }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
                         <td class="data-column-30">Start date</td>
                         <td class="data-column-30">End date</td>
-                        <td class="data-column-30">Request is for applications arrival date</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
                         <td>{{ optionalValue (formatDate data.eventDetails.datePeriod.startDate) }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.datePeriod.endDate) }}</td>
-                        <td>{{ convertBoolean data.eventDetails.requestIsForApplicationsArrivalDate }}</td>
+                        <td></td>
                     </tr>
                 </table>
             {{/if}}
@@ -1038,24 +917,14 @@
             {{#if (eq type "APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Duration</td>
                         <td class="data-column-30">Expected arrival</td>
-                        <td class="data-column-30">Request for placement type</td>
+                        <td class="data-column-30">Duration</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue data.eventDetails.duration }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.expectedArrival) }}</td>
-                        <td>{{ optionalValue data.eventDetails.requestForPlacementType }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Created at</td>
-                        <td class="data-column-30">Created by</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.createdAt) }}</td>
-                        <td>{{#data.eventDetails.createdBy.username}}{{getUserLastName .}}{{/data.eventDetails.createdBy.username}}{{^data.eventDetails.createdBy.username}}{{optionalValue data.eventDetails.createdBy.surname}}{{/data.eventDetails.createdBy.username}}</td>
+                        <td>{{ optionalValue data.eventDetails.duration }}</td>
+                        <td></td>
                     </tr>
                 </table>
             {{/if}}
@@ -1063,14 +932,14 @@
             {{#if (eq type "APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Assessed by</td>
                         <td class="data-column-30">Expected arrival</td>
                         <td class="data-column-30">Duration</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{#data.eventDetails.assessedBy.username}}{{getUserLastName .}}{{/data.eventDetails.assessedBy.username}}{{^data.eventDetails.assessedBy.username}}{{optionalValue data.eventDetails.assessedBy.surname}}{{/data.eventDetails.assessedBy.username}}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.expectedArrival) }}</td>
                         <td>{{ optionalValue data.eventDetails.duration }}</td>
+                        <td></td>
                     </tr>
                 </table>
                 <table class="data-table">
@@ -1088,14 +957,14 @@
             {{#if (eq type "APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED")}}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25"></td>
+                        <td class="data-column-30">Expected arrival</td>
+                        <td class="data-column-30">Expected departure</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.allocatedAt) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.placementDates.startDate) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.placementDates.endDate) }}</td>
-                        <td>{{#data.eventDetails.allocatedTo.username}}{{getUserLastName .}}{{/data.eventDetails.allocatedTo.username}}{{^data.eventDetails.allocatedTo.username}}{{optionalValue data.eventDetails.allocatedTo.surname}}{{/data.eventDetails.allocatedTo.username}}</td>
-                        <td>{{#data.eventDetails.allocatedBy.username}}{{getUserLastName .}}{{/data.eventDetails.allocatedBy.username}}{{^data.eventDetails.allocatedBy.username}}{{optionalValue data.eventDetails.allocatedBy.surname}}{{/data.eventDetails.allocatedBy.username}}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.placementDates.0.startDate) }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.placementDates.0.endDate) }}</td>
+                        <td></td>
                     </tr>
                 </table>
             {{/if}}
@@ -1104,26 +973,14 @@
                 <h4>Approved Premises Placement Application Withdrawn</h4>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Withdrawn at</td>
-                        <td class="data-column-30">Withdrawal reason</td>
-                        <td class="data-column-30">Withdrawn by</td>
+                        <td class="data-column-30">Expected arrival</td>
+                        <td class="data-column-30">Expected departure</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue (formatDate data.eventDetails.withdrawnAt) }}</td>
-                        <td>{{ optionalValue data.eventDetails.withdrawalReason }}</td>
-                        <td>{{#data.eventDetails.withdrawnBy.staffMember.username}}{{getUserLastName .}}{{/data.eventDetails.withdrawnBy.staffMember.username}}{{^data.eventDetails.withdrawnBy.staffMember.username}}{{optionalValue data.eventDetails.withdrawnBy.staffMember.surname}}{{/data.eventDetails.withdrawnBy.staffMember.username}}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-30">Probabtion area</td>
-                        <td class="data-column-30">Placement start date</td>
-                        <td class="data-column-30">Placement end date</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.probationArea.name }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.placementDates.startDate) }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.placementDates.endDate) }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.placementDates.0.startDate) }}</td>
+                        <td>{{ optionalValue (formatDate data.eventDetails.placementDates.0.endDate) }}</td>
+                        <td></td>
                     </tr>
                 </table>
             {{/if}}
