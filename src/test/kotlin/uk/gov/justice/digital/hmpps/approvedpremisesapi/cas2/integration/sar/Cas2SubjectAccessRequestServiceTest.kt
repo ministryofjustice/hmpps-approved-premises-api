@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.sar
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2SubjectAccessRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2SarTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2HdcSarTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
-class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
+class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
 
   @Autowired
   lateinit var cas2SubjectAccessRequestService: Cas2SubjectAccessRequestService

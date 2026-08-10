@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
-class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
+class Cas2HdcSubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
 
   @Autowired
   lateinit var cas2HdcSubjectAccessRequestService: Cas2HdcSubjectAccessRequestService
