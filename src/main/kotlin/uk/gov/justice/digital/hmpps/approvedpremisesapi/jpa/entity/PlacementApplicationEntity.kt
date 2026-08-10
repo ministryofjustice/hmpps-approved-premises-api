@@ -112,6 +112,8 @@ data class PlacementApplicationEntity(
 
   var decisionMadeAt: OffsetDateTime?,
 
+  var decisionSummary: String? = null,
+
   var placementType: PlacementType?,
 
   /**

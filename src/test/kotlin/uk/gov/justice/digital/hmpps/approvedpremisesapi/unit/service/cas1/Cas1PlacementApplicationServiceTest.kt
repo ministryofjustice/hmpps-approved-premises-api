@@ -599,6 +599,7 @@ class Cas1PlacementApplicationServiceTest {
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
         assertThat(it.decisionMadeAt).isWithinTheLastMinute()
+        assertThat(it.decisionSummary).isEqualTo("decisionSummary accepted")
         assertThat(it.authorisedDuration).isEqualTo(7)
 
         verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
@@ -657,6 +658,7 @@ class Cas1PlacementApplicationServiceTest {
 
         assertThat(it.decision).isEqualTo(expectedDecision)
         assertThat(it.decisionMadeAt).isWithinTheLastMinute()
+        assertThat(it.decisionSummary).isEqualTo("decisionSummary rejected")
 
         verify { placementRequestService wasNot Called }
         verify { cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplication) }
