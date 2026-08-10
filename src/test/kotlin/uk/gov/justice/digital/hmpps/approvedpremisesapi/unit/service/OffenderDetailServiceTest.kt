@@ -123,6 +123,7 @@ class OffenderDetailServiceTest {
       val results = service.getPersonInfoResults(
         crns = emptySet(),
         laoStrategy = LaoStrategy.NeverRestricted,
+        includeTier = true,
       )
 
       assertThat(results).isEmpty()
@@ -143,6 +144,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = LaoStrategy.NeverRestricted,
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -163,6 +165,7 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
         laoStrategy = LaoStrategy.NeverRestricted,
+        includeTier = true,
       )
 
       assertThat(result).hasSize(1)
@@ -181,6 +184,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -201,6 +205,7 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
         laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = true,
       )
 
       assertThat(result).hasSize(1)
@@ -231,6 +236,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult1Success, personSummaryInfoResult2Restricted, personSummaryInfoResult3Success)
 
@@ -271,6 +277,7 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
         laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = true,
       )
 
       assertThat(result).hasSize(3)
@@ -287,6 +294,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -300,6 +308,7 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
         laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = true,
       )
 
       assertThat(result).hasSize(1)
@@ -316,6 +325,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -329,12 +339,61 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
         laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = true,
       )
 
       assertThat(result).hasSize(1)
       assertThat(result[0]).isEqualTo(mockPersonInfoResult1)
 
       verify { mockPrisonsApiClient wasNot Called }
+    }
+
+    @Test
+    fun `If includeTier is false, don't fetch tier from OffenderService`() {
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(
+        crn = CRN1,
+        summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
+      )
+
+      every {
+        mockOffenderService.getPersonSummaryInfoResults(
+          crns = setOf(CRN1),
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = false,
+        )
+      } returns listOf(personSummaryInfoResult)
+
+      val inmateDetails = InmateDetailFactory().produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(NOMS1) } returns ClientResult.Success(
+        HttpStatus.OK,
+        inmateDetails,
+      )
+
+      every {
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
+          personSummaryInfoResult = personSummaryInfoResult,
+          inmateStatus = inmateDetails,
+        )
+      } returns mockPersonInfoResult1
+
+      val result = service.getPersonInfoResults(
+        crns = setOf(CRN1),
+        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = false,
+      )
+
+      assertThat(result).hasSize(1)
+      assertThat(result[0]).isEqualTo(mockPersonInfoResult1)
+
+      verify(exactly = 1) {
+        mockOffenderService.getPersonSummaryInfoResults(
+          crns = setOf(CRN1),
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = false,
+        )
+      }
     }
   }
 
@@ -353,6 +412,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = LaoStrategy.NeverRestricted,
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -373,6 +433,7 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResult(
         crn = CRN1,
         laoStrategy = LaoStrategy.NeverRestricted,
+        includeTier = true,
       )
 
       assertThat(result).isEqualTo(mockPersonInfoResult1)
@@ -390,6 +451,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -410,6 +472,7 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResult(
         crn = CRN1,
         laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = true,
       )
 
       assertThat(result).isEqualTo(mockPersonInfoResult1)
@@ -423,6 +486,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -436,6 +500,7 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResult(
         crn = CRN1,
         laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = true,
       )
 
       assertThat(result).isEqualTo(mockPersonInfoResult1)
@@ -451,6 +516,7 @@ class OffenderDetailServiceTest {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
           laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -464,11 +530,59 @@ class OffenderDetailServiceTest {
       val result = service.getPersonInfoResult(
         crn = CRN1,
         laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = true,
       )
 
       assertThat(result).isEqualTo(mockPersonInfoResult1)
 
       verify { mockPrisonsApiClient wasNot Called }
+    }
+
+    @Test
+    fun `If includeTier is false, don't fetch tier from OffenderService`() {
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(
+        crn = CRN1,
+        summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
+      )
+
+      every {
+        mockOffenderService.getPersonSummaryInfoResults(
+          crns = setOf(CRN1),
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = false,
+        )
+      } returns listOf(personSummaryInfoResult)
+
+      val inmateDetails = InmateDetailFactory().produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(NOMS1) } returns ClientResult.Success(
+        HttpStatus.OK,
+        inmateDetails,
+      )
+
+      every {
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
+          personSummaryInfoResult = personSummaryInfoResult,
+          inmateStatus = inmateDetails,
+        )
+      } returns mockPersonInfoResult1
+
+      val result = service.getPersonInfoResult(
+        crn = CRN1,
+        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        includeTier = false,
+      )
+
+      assertThat(result).isEqualTo(mockPersonInfoResult1)
+
+      verify(exactly = 1) {
+        mockOffenderService.getPersonSummaryInfoResults(
+          crns = setOf(CRN1),
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          includeTier = false,
+        )
+      }
     }
   }
 }

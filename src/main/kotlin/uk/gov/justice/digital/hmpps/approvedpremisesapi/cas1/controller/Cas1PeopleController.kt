@@ -61,7 +61,7 @@ class Cas1PeopleController(
   fun getTimelineForCrn(@PathVariable crn: String): ResponseEntity<Cas1PersonalTimeline> {
     val user = userService.getUserForRequest()
 
-    val timeline = when (val personInfoResult = offenderDetailService.getPersonInfoResult(crn, user.cas1LaoStrategy())) {
+    val timeline = when (val personInfoResult = offenderDetailService.getPersonInfoResult(crn, user.cas1LaoStrategy(), includeTier = false)) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Success.Full -> buildPersonInfoWithTimeline(personInfoResult, crn)
       is PersonInfoResult.Success.Restricted -> buildPersonInfoWithoutTimeline(personInfoResult)
