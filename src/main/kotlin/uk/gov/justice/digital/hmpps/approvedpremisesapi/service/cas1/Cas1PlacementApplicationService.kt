@@ -470,6 +470,7 @@ class Cas1PlacementApplicationService(
     placementApplicationEntity.apply {
       decision = JpaPlacementApplicationDecision.valueOf(placementApplicationDecisionEnvelope.decision)
       decisionMadeAt = OffsetDateTime.now(clock)
+      decisionSummary = placementApplicationDecisionEnvelope.decisionSummary
     }
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)

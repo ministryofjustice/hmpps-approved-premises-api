@@ -1020,6 +1020,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
 
                 assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
                 assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
+                assertThat(updatedPlacementApplication.decisionSummary).isEqualTo("DecisionSummary")
 
                 val createdPlacementRequests =
                   placementRequestTestRepository.findAllByApplication(placementApplicationEntity.application)
@@ -1033,6 +1034,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
                 assertThat(createdPlacementApplication.duration).isEqualTo(createdPlacementApplication.duration)
                 assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
                 assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+                assertThat(updatedPlacementApplication.decisionSummary).isEqualTo("DecisionSummary")
 
                 emailAsserter.assertEmailsRequestedCount(1)
                 emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_ACCEPTED_V2)
@@ -1071,6 +1073,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
 
                 assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.REJECTED)
                 assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
+                assertThat(updatedPlacementApplication.decisionSummary).isEqualTo("DecisionSummary")
 
                 val createdPlacementRequests =
                   placementRequestTestRepository.findAllByApplication(placementApplicationEntity.application)
