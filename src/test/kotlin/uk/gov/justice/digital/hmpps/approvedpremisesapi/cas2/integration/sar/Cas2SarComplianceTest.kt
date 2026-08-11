@@ -2,8 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2EventCohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar.Cas1SarComplianceTest
@@ -31,6 +34,7 @@ import java.util.UUID
  * This class verifies CAS2's slice end-to-end against CAS2-specific fixtures
  * via [CasSarFixtureAsserter].
  */
+@SuppressWarnings("LongMethod")
 class Cas2SarComplianceTest : Cas2SarTestBase() {
 
   companion object {
@@ -122,33 +126,49 @@ class Cas2SarComplianceTest : Cas2SarTestBase() {
     domainEventEntity(
       domainEventParams,
       DomainEventType.CAS2_APPLICATION_SUBMITTED,
-      data = Cas2ApplicationSubmittedEventDetailsFactory()
-        .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
-        .withApplicationUrl("url")
-        .withPersonReference(PersonReference(Cas1SarComplianceTest.TEST_CRN, Cas1SarComplianceTest.TEST_NOMS_NUMBER))
-        .withReferringPrisonCode("ref")
-        .withPreferredAreas("preferred_areas")
-        .withHdcEligibilityDate(LocalDate.of(2024, 1, 1))
-        .withConditionalReleaseDate(LocalDate.of(2024, 1, 2))
-        .withSubmittedAt(java.time.Instant.parse("2025-04-01T10:15:30.00Z"))
-        .withSubmittedByStaffMember(staticStaffMember())
-        .withCohort(Cas2EventCohort("code", "name"))
-        .produce(),
+      data = Cas2ApplicationSubmittedEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.applicationSubmitted,
+        eventDetails =
+        Cas2ApplicationSubmittedEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("url")
+          .withPersonReference(
+            PersonReference(
+              Cas1SarComplianceTest.TEST_CRN,
+              Cas1SarComplianceTest.TEST_NOMS_NUMBER,
+            ),
+          )
+          .withReferringPrisonCode("ref")
+          .withPreferredAreas("preferred_areas")
+          .withHdcEligibilityDate(LocalDate.of(2024, 1, 1))
+          .withConditionalReleaseDate(LocalDate.of(2024, 1, 2))
+          .withSubmittedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withSubmittedByStaffMember(staticStaffMember())
+          .withCohort(Cas2EventCohort("code", "name"))
+          .produce(),
+      ),
     )
 
     domainEventEntity(
       domainEventParams,
       DomainEventType.CAS2_APPLICATION_STATUS_UPDATED,
-      data = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
-        .withApplicationUrl("url")
-        .withPersonReference(PersonReference(Cas1SarComplianceTest.TEST_CRN, Cas1SarComplianceTest.TEST_NOMS_NUMBER))
-        .withUpdatedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
-        .withNewStatus(Cas2StatusFactory().produce())
-        .withStatus(Cas2StatusFactory().produce())
-        .withUpdatedBy(ExternalUserFactory().withName("name").withUsername("username").produce())
-        .withCohort(Cas2EventCohort("code", "name"))
-        .produce(),
+      data = Cas2ApplicationStatusUpdatedEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withApplicationUrl("url")
+          .withPersonReference(PersonReference(Cas1SarComplianceTest.TEST_CRN, Cas1SarComplianceTest.TEST_NOMS_NUMBER))
+          .withUpdatedAt(Instant.parse("2025-04-01T10:15:30.00Z"))
+          .withNewStatus(Cas2StatusFactory().produce())
+          .withStatus(Cas2StatusFactory().produce())
+          .withUpdatedBy(ExternalUserFactory().withName("name").withUsername("username").produce())
+          .withCohort(Cas2EventCohort("code", "name"))
+          .produce(),
+      ),
     )
   }
 
