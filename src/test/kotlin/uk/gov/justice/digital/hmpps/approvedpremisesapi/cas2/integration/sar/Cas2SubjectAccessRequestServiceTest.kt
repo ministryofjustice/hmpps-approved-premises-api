@@ -205,7 +205,7 @@ class Cas2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
       "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents": [${domainEventJson(domainEvent, null)}],
+      "DomainEvents": [${domainEventJson(domainEvent, null, embeddedBooking = false)}],
       "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
    }
     """.trimIndent()
