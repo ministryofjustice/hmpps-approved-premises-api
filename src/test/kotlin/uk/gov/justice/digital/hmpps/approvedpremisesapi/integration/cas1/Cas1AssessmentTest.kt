@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejectionReasonDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea
@@ -1506,6 +1507,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
                 reasonForLateApplication = "medical condition",
                 document = mapOf("document" to "value"),
                 rejectionRationale = "reasoning",
+                rejectionReason = Cas1AssessmentRejectionReasonDto.riskToCommunity,
               ),
             )
             .exchange()
