@@ -13,11 +13,15 @@ import org.springframework.data.repository.findByIdOrNull
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.PreviousBookingCancellationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.PreviousBookingDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
@@ -36,11 +40,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -83,6 +89,7 @@ class Cas3ApplicationServiceTest {
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockUserRepository = mockk<UserRepository>()
+  private val mockCas3BookingRepository = mockk<Cas3BookingRepository>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockUserService = mockk<UserService>()
@@ -102,6 +109,7 @@ class Cas3ApplicationServiceTest {
     mockProbationDeliveryUnitRepository,
     mockProbationRegionRepository,
     mockUserRepository,
+    mockCas3BookingRepository,
     mockUserService,
     mockUserAccessService,
     mockAssessmentService,
@@ -168,10 +176,15 @@ class Cas3ApplicationServiceTest {
         .produce()
 
       val suitableApplication = Cas3SuitableApplication(
-        inProgressApplicationNewer.id,
-        ApplicationStatus.inProgress,
-        null,
+        id = inProgressApplicationNewer.id,
+        applicationStatus = ApplicationStatus.inProgress,
+        applicationSubmittedDate = null,
+        applicationSubmittedByName = null,
+        applicationRejectedReason = null,
+        assessmentStatus = null,
         bookingStatus = null,
+        bookingProvisionalOfferSentDate = null,
+        previousBookings = null,
         premises = null,
         uiUrl = uiUrl.replace("#applicationId", inProgressApplicationNewer.id.toString()),
       )
@@ -181,7 +194,8 @@ class Cas3ApplicationServiceTest {
         inProgressApplicationOlder,
       )
       every { mockCas3BookingService.getLatestBooking(inProgressApplicationNewer.id) } returns null
-      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(inProgressApplicationNewer, null) } returns suitableApplication
+      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(inProgressApplicationNewer, emptyList()) } returns suitableApplication
+      every { mockCas3BookingRepository.findAllCas3BookingEntity(inProgressApplicationNewer.id) } returns emptyList()
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -245,16 +259,22 @@ class Cas3ApplicationServiceTest {
       )
 
       val suitableApplication = Cas3SuitableApplication(
-        submittedApplication2.id,
-        ApplicationStatus.submitted,
-        null,
+        id = submittedApplication2.id,
+        applicationStatus = ApplicationStatus.submitted,
+        applicationSubmittedDate = submittedApplication2.submittedAt!!.toLocalDate(),
+        applicationSubmittedByName = submittedApplication2.createdByUser.name,
+        applicationRejectedReason = null,
+        assessmentStatus = null,
         bookingStatus = null,
+        bookingProvisionalOfferSentDate = null,
+        previousBookings = null,
         premises = null,
         uiUrl = uiUrl.replace("#applicationId", submittedApplication2.id.toString()),
       )
 
+      every { mockCas3BookingRepository.findAllCas3BookingEntity(submittedApplication2.id) } returns emptyList()
+      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication2, emptyList()) } returns suitableApplication
       every { mockCas3BookingService.getLatestBooking(submittedApplication2.id) } returns null
-      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication2, null) } returns suitableApplication
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -296,16 +316,22 @@ class Cas3ApplicationServiceTest {
       )
 
       val suitableApplication = Cas3SuitableApplication(
-        submittedApplication2.id,
-        ApplicationStatus.submitted,
-        null,
+        id = submittedApplication2.id,
+        applicationStatus = ApplicationStatus.submitted,
+        applicationSubmittedDate = submittedApplication2.submittedAt!!.toLocalDate(),
+        applicationSubmittedByName = submittedApplication2.createdByUser.name,
+        applicationRejectedReason = null,
+        assessmentStatus = null,
         bookingStatus = null,
+        bookingProvisionalOfferSentDate = null,
+        previousBookings = null,
         premises = null,
         uiUrl = uiUrl.replace("#applicationId", submittedApplication2.id.toString()),
       )
 
+      every { mockCas3BookingRepository.findAllCas3BookingEntity(submittedApplication2.id) } returns emptyList()
       every { mockCas3BookingService.getLatestBooking(submittedApplication2.id) } returns null
-      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication2, null) } returns suitableApplication
+      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication2, emptyList()) } returns suitableApplication
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -333,22 +359,26 @@ class Cas3ApplicationServiceTest {
 
       submittedApplication.assessments = mutableListOf(latestAssessment)
 
+      val suitableApplication = Cas3SuitableApplication(
+        id = submittedApplication.id,
+        applicationStatus = ApplicationStatus.submitted,
+        applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
+        applicationSubmittedByName = submittedApplication.createdByUser.name,
+        applicationRejectedReason = null,
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+        bookingStatus = null,
+        bookingProvisionalOfferSentDate = null,
+        previousBookings = null,
+        premises = null,
+        uiUrl = uiUrl.replace("#applicationId", submittedApplication.id.toString()),
+      )
+
       every { mockTemporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn) } returns listOf(
         submittedApplication,
       )
-
-      val suitableApplication = Cas3SuitableApplication(
-        submittedApplication.id,
-        ApplicationStatus.submitted,
-        TemporaryAccommodationAssessmentStatus.readyToPlace,
-        bookingStatus = null,
-        premises = null,
-        uiUrl = uiUrl.replace("#applicationId", submittedApplication.id.toString()),
-
-      )
-
+      every { mockCas3BookingRepository.findAllCas3BookingEntity(submittedApplication.id) } returns emptyList()
       every { mockCas3BookingService.getLatestBooking(submittedApplication.id) } returns null
-      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication, null) } returns suitableApplication
+      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication, emptyList()) } returns suitableApplication
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -356,7 +386,59 @@ class Cas3ApplicationServiceTest {
     }
 
     @Test
-    fun `getSuitableApplicationByCrn returns newest application and includes assessment status and latest booking status`() {
+    fun `getSuitableApplicationByCrn returns newest application and includes rejected assessment status and reason`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val submittedApplication = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withPersonReleaseDate(LocalDate.now().plusMonths(2))
+        .withCreatedAt(now.minusMonths(4))
+        .withSubmittedAt(now.minusMonths(4))
+        .produce()
+
+      val latestAssessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(submittedApplication)
+        .withCreatedAt(now.minusDays(2))
+        .withReferralRejectionReason(
+          ReferralRejectionReasonEntityFactory()
+            .withName("Some reason")
+            .produce(),
+        )
+        .produce()
+
+      submittedApplication.assessments = mutableListOf(latestAssessment)
+
+      val suitableApplication = Cas3SuitableApplication(
+        id = submittedApplication.id,
+        applicationStatus = ApplicationStatus.submitted,
+        applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
+        applicationSubmittedByName = submittedApplication.createdByUser.name,
+        applicationRejectedReason = "Some reason",
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.rejected,
+        bookingStatus = null,
+        bookingProvisionalOfferSentDate = null,
+        previousBookings = null,
+        premises = null,
+        uiUrl = uiUrl.replace("#applicationId", submittedApplication.id.toString()),
+      )
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn) } returns listOf(
+        submittedApplication,
+      )
+      every { mockCas3BookingRepository.findAllCas3BookingEntity(submittedApplication.id) } returns emptyList()
+      every { mockCas3BookingService.getLatestBooking(submittedApplication.id) } returns null
+      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication, emptyList()) } returns suitableApplication
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(suitableApplication)
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns newest application and includes assessment status and booking status`() {
       val user = UserEntityFactory()
         .withDefaults()
         .produce()
@@ -392,10 +474,15 @@ class Cas3ApplicationServiceTest {
         .produce()
 
       val suitableApplication = Cas3SuitableApplication(
-        submittedApplication.id,
-        ApplicationStatus.submitted,
-        TemporaryAccommodationAssessmentStatus.readyToPlace,
+        id = submittedApplication.id,
+        applicationStatus = ApplicationStatus.submitted,
+        applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
+        applicationSubmittedByName = submittedApplication.createdByUser.name,
+        applicationRejectedReason = null,
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
         bookingStatus = Cas3BookingStatus.provisional,
+        bookingProvisionalOfferSentDate = booking.createdAt.toLocalDate(),
+        previousBookings = null,
         premises = Cas3ExternalPremisesDto(
           startDate = booking.arrivalDate,
           endDate = booking.departureDate,
@@ -406,11 +493,115 @@ class Cas3ApplicationServiceTest {
           postcode = booking.premises.postcode,
         ),
         uiUrl = uiUrl.replace("#applicationId", submittedApplication.id.toString()),
-
       )
 
       every { mockCas3BookingService.getLatestBooking(submittedApplication.id) } returns booking
-      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication, booking) } returns suitableApplication
+      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication, listOf(booking)) } returns suitableApplication
+      every { mockCas3BookingRepository.findAllCas3BookingEntity(submittedApplication.id) } returns listOf(booking)
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(suitableApplication)
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns newest application and includes assessment status and latest booking status`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val submittedApplication = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withPersonReleaseDate(LocalDate.now().plusMonths(2))
+        .withCreatedAt(now.minusMonths(4))
+        .withSubmittedAt(now.minusMonths(4))
+        .produce()
+
+      val latestAssessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(submittedApplication)
+        .withCreatedAt(now.minusDays(2))
+        .produce()
+
+      submittedApplication.assessments = mutableListOf(latestAssessment)
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn) } returns listOf(
+        submittedApplication,
+      )
+
+      val laterPremises = Cas3PremisesEntityFactory()
+        .produce()
+
+      val earlierPremises = Cas3PremisesEntityFactory()
+        .produce()
+
+      val laterBooking = Cas3BookingEntityFactory()
+        .withDefaults()
+        .withStatus(Cas3BookingStatus.provisional)
+        .withPremises(laterPremises)
+        .withArrivalDate(LocalDate.now().plusMonths(1))
+        .withDepartureDate(LocalDate.now().plusMonths(2))
+        .withCreatedAt(OffsetDateTime.now().minusDays(1))
+        .produce()
+
+      val previousBooking = Cas3BookingEntityFactory()
+        .withDefaults()
+        .withStatus(Cas3BookingStatus.closed)
+        .withPremises(earlierPremises)
+        .withArrivalDate(LocalDate.now().plusMonths(1))
+        .withDepartureDate(LocalDate.now().plusMonths(2))
+        .withCreatedAt(OffsetDateTime.now().minusDays(2))
+        .produce()
+
+      val cancelledPreviousBooking = Cas3BookingEntityFactory()
+        .withDefaults()
+        .withStatus(Cas3BookingStatus.cancelled)
+        .withPremises(earlierPremises)
+        .withArrivalDate(LocalDate.now().plusMonths(1))
+        .withDepartureDate(LocalDate.now().plusMonths(2))
+        .withCreatedAt(OffsetDateTime.now().minusDays(3))
+        .produce()
+
+      val previousBookingCancellation = Cas3CancellationEntityFactory()
+        .withBooking(cancelledPreviousBooking)
+        .withReason(CancellationReasonEntityFactory().produce())
+        .produce()
+
+      val suitableApplication = Cas3SuitableApplication(
+        id = submittedApplication.id,
+        applicationStatus = ApplicationStatus.submitted,
+        applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
+        applicationSubmittedByName = submittedApplication.createdByUser.name,
+        applicationRejectedReason = null,
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+        bookingStatus = Cas3BookingStatus.provisional,
+        bookingProvisionalOfferSentDate = laterBooking.createdAt.toLocalDate(),
+        previousBookings = listOf(
+          PreviousBookingDto(bookingStatus = previousBooking.status, cancellation = null),
+          PreviousBookingDto(
+            bookingStatus = cancelledPreviousBooking.status,
+            cancellation =
+            PreviousBookingCancellationDto(
+              cancellationDate = previousBookingCancellation.createdAt.toLocalDate(),
+              cancellationReason = previousBookingCancellation.reason.name,
+            ),
+          ),
+        ),
+        premises = Cas3ExternalPremisesDto(
+          startDate = laterBooking.arrivalDate,
+          endDate = laterBooking.departureDate,
+          name = laterBooking.premises.name,
+          addressLine1 = laterBooking.premises.addressLine1,
+          addressLine2 = laterBooking.premises.addressLine2,
+          town = laterBooking.premises.town,
+          postcode = laterBooking.premises.postcode,
+        ),
+        uiUrl = uiUrl.replace("#applicationId", submittedApplication.id.toString()),
+      )
+
+      every { mockCas3BookingService.getLatestBooking(submittedApplication.id) } returns previousBooking
+      every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication, listOf(previousBooking, cancelledPreviousBooking)) } returns suitableApplication
+      every { mockCas3BookingRepository.findAllCas3BookingEntity(submittedApplication.id) } returns listOf(previousBooking, cancelledPreviousBooking)
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),

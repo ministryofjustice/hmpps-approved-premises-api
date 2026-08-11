@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
@@ -48,6 +49,7 @@ class Cas3ApplicationService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val userRepository: UserRepository,
+  private val cas3BookingRepository: Cas3BookingRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
@@ -81,7 +83,7 @@ class Cas3ApplicationService(
     ?.let {
       transformer.transformToCas3SuitableApplication(
         application = it,
-        booking = cas3BookingService.getLatestBooking(it.id),
+        bookings = cas3BookingRepository.findAllCas3BookingEntity(it.id),
       )
     }
 

@@ -8,11 +8,14 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.PreviousBookingCancellationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.PreviousBookingDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
@@ -20,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary
@@ -108,8 +112,59 @@ class Cas3ApplicationTransformerTest {
     val expected = Cas3SuitableApplication(
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
+      applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+      applicationSubmittedByName = application.createdByUser.name,
+      applicationRejectedReason = null,
       assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
       bookingStatus = null,
+      bookingProvisionalOfferSentDate = null,
+      previousBookings = null,
+      premises = null,
+      uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+    )
+
+    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, null)
+
+    assertThat(result).isEqualTo(expected)
+  }
+
+  @Test
+  fun `transformToCas3SuitableApplication transforms correctly without a booking - rejected status`() {
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withArrivalDate(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce(),
+          )
+          .produce()
+      }
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withDecision(AssessmentDecision.REJECTED)
+      .withReferralRejectionReason(
+        ReferralRejectionReasonEntityFactory()
+          .withName("Rejected reason")
+          .produce(),
+      )
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+
+    val expected = Cas3SuitableApplication(
+      id = application.id,
+      applicationStatus = ApplicationStatus.submitted,
+      applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+      applicationSubmittedByName = application.createdByUser.name,
+      applicationRejectedReason = "Rejected reason",
+      assessmentStatus = TemporaryAccommodationAssessmentStatus.rejected,
+      bookingStatus = null,
+      bookingProvisionalOfferSentDate = null,
+      previousBookings = null,
       premises = null,
       uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
     )
@@ -150,8 +205,13 @@ class Cas3ApplicationTransformerTest {
     val expected = Cas3SuitableApplication(
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
+      applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+      applicationSubmittedByName = application.createdByUser.name,
+      applicationRejectedReason = null,
       assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
       bookingStatus = Cas3BookingStatus.arrived,
+      bookingProvisionalOfferSentDate = null,
+      previousBookings = emptyList(),
       premises = Cas3ExternalPremisesDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
@@ -164,7 +224,215 @@ class Cas3ApplicationTransformerTest {
       uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
     )
 
-    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, booking)
+    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, listOf(booking))
+
+    assertThat(result).isEqualTo(expected)
+  }
+
+  @Test
+  fun `transformToCas3SuitableApplication transforms correctly with a provisional booking`() {
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withArrivalDate(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce(),
+          )
+          .produce()
+      }
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+    val premises = Cas3PremisesEntityFactory().produce()
+    val booking = Cas3BookingEntityFactory()
+      .withApplication(application)
+      .withDefaults()
+      .withPremises(premises)
+      .withStatus(Cas3BookingStatus.provisional)
+      .produce()
+
+    val expected = Cas3SuitableApplication(
+      id = application.id,
+      applicationStatus = ApplicationStatus.submitted,
+      applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+      applicationSubmittedByName = application.createdByUser.name,
+      applicationRejectedReason = null,
+      assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+      bookingStatus = Cas3BookingStatus.provisional,
+      bookingProvisionalOfferSentDate = booking.createdAt.toLocalDate(),
+      previousBookings = emptyList(),
+      premises = Cas3ExternalPremisesDto(
+        startDate = booking.arrivalDate,
+        endDate = booking.departureDate,
+        name = premises.name,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+      ),
+      uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+    )
+
+    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, listOf(booking))
+
+    assertThat(result).isEqualTo(expected)
+  }
+
+  @Test
+  fun `transformToCas3SuitableApplication transforms correctly with a previous closed booking`() {
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withArrivalDate(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce(),
+          )
+          .produce()
+      }
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+    val premises = Cas3PremisesEntityFactory().produce()
+    val booking = Cas3BookingEntityFactory()
+      .withApplication(application)
+      .withDefaults()
+      .withPremises(premises)
+      .withStatus(Cas3BookingStatus.arrived)
+      .withCreatedAt(OffsetDateTime.now().minusDays(1))
+      .produce()
+
+    val previousBooking = Cas3BookingEntityFactory()
+      .withApplication(application)
+      .withDefaults()
+      .withPremises(premises)
+      .withStatus(Cas3BookingStatus.closed)
+      .withCreatedAt(OffsetDateTime.now().minusDays(2))
+      .produce()
+
+    val expected = Cas3SuitableApplication(
+      id = application.id,
+      applicationStatus = ApplicationStatus.submitted,
+      applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+      applicationSubmittedByName = application.createdByUser.name,
+      applicationRejectedReason = null,
+      assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+      bookingStatus = Cas3BookingStatus.arrived,
+      bookingProvisionalOfferSentDate = null,
+      previousBookings = listOf(PreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null)),
+      premises = Cas3ExternalPremisesDto(
+        startDate = booking.arrivalDate,
+        endDate = booking.departureDate,
+        name = premises.name,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+      ),
+      uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+    )
+
+    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, listOf(booking, previousBooking))
+
+    assertThat(result).isEqualTo(expected)
+  }
+
+  @Test
+  fun `transformToCas3SuitableApplication transforms correctly with a previous closed booking and previous cancelled booking`() {
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withArrivalDate(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce(),
+          )
+          .produce()
+      }
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+    val premises = Cas3PremisesEntityFactory().produce()
+    val booking = Cas3BookingEntityFactory()
+      .withApplication(application)
+      .withDefaults()
+      .withPremises(premises)
+      .withStatus(Cas3BookingStatus.arrived)
+      .withCreatedAt(OffsetDateTime.now().minusDays(1))
+      .produce()
+
+    val previousBooking = Cas3BookingEntityFactory()
+      .withApplication(application)
+      .withDefaults()
+      .withPremises(premises)
+      .withStatus(Cas3BookingStatus.closed)
+      .withCreatedAt(OffsetDateTime.now().minusDays(2))
+      .produce()
+
+    val previousCancelledBooking = Cas3BookingEntityFactory()
+      .withApplication(application)
+      .withDefaults()
+      .withPremises(premises)
+      .withStatus(Cas3BookingStatus.cancelled)
+      .withCreatedAt(OffsetDateTime.now().minusDays(4))
+      .produce()
+
+    val cancellation = Cas3CancellationEntityFactory()
+      .withDefaults()
+      .withBooking(previousCancelledBooking)
+      .withCreatedAt(OffsetDateTime.now().minusDays(3))
+      .produce()
+
+    previousCancelledBooking.cancellations = mutableListOf(cancellation)
+
+    val expected = Cas3SuitableApplication(
+      id = application.id,
+      applicationStatus = ApplicationStatus.submitted,
+      applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+      applicationSubmittedByName = application.createdByUser.name,
+      applicationRejectedReason = null,
+      assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+      bookingStatus = Cas3BookingStatus.arrived,
+      bookingProvisionalOfferSentDate = null,
+      previousBookings = listOf(
+        PreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null),
+        PreviousBookingDto(
+          bookingStatus = Cas3BookingStatus.cancelled,
+          cancellation = PreviousBookingCancellationDto(
+            cancellationDate = cancellation.createdAt.toLocalDate(),
+            cancellationReason = cancellation.reason.name,
+          ),
+        ),
+      ),
+      premises = Cas3ExternalPremisesDto(
+        startDate = booking.arrivalDate,
+        endDate = booking.departureDate,
+        name = premises.name,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+      ),
+      uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+    )
+
+    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, listOf(booking, previousBooking, previousCancelledBooking))
 
     assertThat(result).isEqualTo(expected)
   }

@@ -54,8 +54,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
+            applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+            applicationSubmittedByName = application.createdByUser.name,
+            applicationRejectedReason = null,
             assessmentStatus = null,
             bookingStatus = null,
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = emptyList(),
             premises = null,
             uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
           )
@@ -89,8 +94,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.inProgress,
-            null,
+            applicationSubmittedDate = application.submittedAt?.toLocalDate(),
+            applicationSubmittedByName = application.createdByUser.name,
+            applicationRejectedReason = null,
+            assessmentStatus = null,
             bookingStatus = null,
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = emptyList(),
             premises = null,
             uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
           )
@@ -143,8 +153,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
+            applicationSubmittedDate = application.submittedAt?.toLocalDate(),
+            applicationSubmittedByName = application.createdByUser.name,
+            applicationRejectedReason = null,
             assessmentStatus = null,
             bookingStatus = Cas3BookingStatus.confirmed,
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = emptyList(),
             premises = Cas3ExternalPremisesDto(
               startDate = booking.arrivalDate,
               endDate = booking.departureDate,
