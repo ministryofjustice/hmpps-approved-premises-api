@@ -163,6 +163,10 @@ data class PlacementApplicationEntity(
   var sentenceType: String? = null,
   var situation: String? = null,
 
+  /**
+   * Indicates that this placement application was created as part of the 'one-off' backfill job to
+   * ensure a placement application exists for every
+   */
   val backfilledAutomatic: Boolean = false,
 
   @Version
