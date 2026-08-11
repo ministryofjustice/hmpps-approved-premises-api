@@ -248,13 +248,17 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                    WHEN cas2_app.id IS NOT NULL THEN cas2_app.submitted_at
                    ELSE NULL
                  END as application_submitted_at,
-                 u.delius_username as triggered_by_username
+                 u.delius_username as triggered_by_username,
+                 cas3_booking.arrival_date as cas3_booking_arrival_date,
+                 cas3_premises.name as cas3_booking_premises_name
                from
                      domain_events de 
                left join users u on 
                      u.id = de.triggered_by_user_id
                left join applications cas1_3_app on de.application_id = cas1_3_app.id     
                left join cas_2_applications cas2_app on de.application_id = cas2_app.id
+               left join cas3_bookings cas3_booking on de.booking_id = cas3_booking.id
+               left join cas3_premises cas3_premises on cas3_booking.premises_id = cas3_premises.id
                where
                   de.service = :service_name and
                   (de.crn = :crn

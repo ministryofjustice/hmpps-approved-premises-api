@@ -21,6 +21,10 @@ class CAS3BookingCancelledEventDetailsFactory : Factory<CAS3BookingCancelledEven
   private var cancelledAt: Yielded<LocalDate?> = { LocalDate.now().randomDateBefore(14) }
   private var cancelledBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
+  fun withPersonReference(personReference: PersonReference) = apply {
+    this.personReference = { personReference }
+  }
+
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {
     this.personReference = { PersonReferenceFactory().apply(configuration).produce() }
   }
