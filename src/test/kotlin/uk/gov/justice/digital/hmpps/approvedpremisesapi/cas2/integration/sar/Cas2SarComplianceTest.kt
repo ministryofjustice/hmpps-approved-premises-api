@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.ExternalUserFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2HdcSarTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
@@ -29,10 +28,10 @@ import java.util.UUID
  * once for the whole app, since all four CAS services share one DB and one
  * template file.
  *
- * This class verifies CAS2V2's slice end-to-end against CAS2V2-specific fixtures
+ * This class verifies CAS2's slice end-to-end against CAS2-specific fixtures
  * via [CasSarFixtureAsserter].
  */
-class Cas2SarComplianceTest : Cas2HdcSarTestBase() {
+class Cas2SarComplianceTest : Cas2SarTestBase() {
 
   companion object {
     const val TEST_CRN = "X320743"

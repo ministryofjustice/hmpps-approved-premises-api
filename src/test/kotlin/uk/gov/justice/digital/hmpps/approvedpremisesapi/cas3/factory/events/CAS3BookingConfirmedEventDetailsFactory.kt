@@ -19,6 +19,10 @@ class CAS3BookingConfirmedEventDetailsFactory : Factory<CAS3BookingConfirmedEven
   private var applicationId: Yielded<UUID?> = { null }
   private var confirmedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
+  fun withPersonReference(personReference: PersonReference) = apply {
+    this.personReference = { personReference }
+  }
+
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {
     this.personReference = { PersonReferenceFactory().apply(configuration).produce() }
   }

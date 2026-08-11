@@ -5,12 +5,13 @@ import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar.Cas2SarTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcSubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
-class Cas2HdcSubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
+class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
   @Autowired
   lateinit var cas2HdcSubjectAccessRequestService: Cas2HdcSubjectAccessRequestService

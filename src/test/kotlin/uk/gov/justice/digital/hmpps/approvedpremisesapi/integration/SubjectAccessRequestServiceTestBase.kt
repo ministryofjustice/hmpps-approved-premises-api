@@ -163,6 +163,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     )
 
     return cas3BookingEntityFactory.produceAndPersist {
+      withId(UUID.fromString("82f972cc-9e74-4a8c-b398-becb4c14b4c4"))
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber)
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
@@ -253,8 +254,9 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     userId: UUID?,
     type: DomainEventType,
     serviceName: ServiceName = ServiceName.approvedPremises,
+    bookingId: UUID? = null,
   ) = domainEventEntity(
-    params = DomainEventBuilderParams(offender, applicationId, assessmentId, userId, serviceName),
+    params = DomainEventBuilderParams(offender, applicationId, assessmentId, userId, serviceName, bookingId),
     type = type,
   )
 
@@ -283,6 +285,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
         MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),
       ),
     )
+    withBookingId(params.bookingId)
   }
 
   data class DomainEventBuilderParams(
@@ -291,6 +294,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     val assessmentId: UUID,
     val userId: UUID?,
     val serviceName: ServiceName,
+    val bookingId: UUID? = null,
   )
 
   fun probationRegionEntity(
