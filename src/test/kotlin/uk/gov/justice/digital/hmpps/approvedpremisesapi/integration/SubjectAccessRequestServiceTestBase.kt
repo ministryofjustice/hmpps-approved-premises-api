@@ -222,19 +222,25 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       RiskWithStatus(status = RiskStatus.NotFound),
     ).produce()
 
-  fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String =
-    """
+  fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?, embeddedBooking: Boolean = true): String = """
       {
         "crn": "${domainEvent.crn}",
         "type": "${domainEvent.type}",
         "occurred_at": "$ALLOCATED_AT",
         "created_at": "$CREATED_AT",
         "data": ${domainEvent.data},
-        "triggered_by_username": ${user?.let {"\"${it.deliusUsername}\""} ?: "null"},
+        "triggered_by_username": ${user?.let { "\"${it.deliusUsername}\"" } ?: "null"},
         "noms_number": "${domainEvent.nomsNumber}",
-        "application_submitted_at": "$SUBMITTED_AT"
-      }
-    """.trimIndent()
+        "application_submitted_at": "$SUBMITTED_AT"""" +
+    if (embeddedBooking) {
+      """,
+        "cas3_booking_premises_name": null,
+        "cas3_booking_arrival_date": null
+            """
+    } else {
+      ""
+    } +
+    " }".trimIndent()
 
   fun domainEventsMetadataJson(domainEvent: DomainEventEntity): String =
     """
