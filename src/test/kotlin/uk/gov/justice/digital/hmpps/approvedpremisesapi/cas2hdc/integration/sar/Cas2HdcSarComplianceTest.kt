@@ -24,7 +24,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * Per-service SAR compliance test for CAS2.
+ * Per-service SAR compliance test for CAS2 HDC.
  *
  * Cross-service SAR infrastructure (Flyway schema, JPA entity snapshot, template
  * endpoint smoke tests) lives in `SarIntegrationTest` — they only need to run
@@ -84,15 +84,6 @@ class Cas2HdcSarComplianceTest : Cas2SarTestBase() {
     val user = cas2NomisUserEntity(Cas2ServiceOrigin.HDC, name = TEST_NOMIS_USER_NAME)
     val assessor = cas2ExternalUserEntity(name = TEST_EXTERNAL_USER_NAME)
     val application = cas2ApplicationEntity(
-      offenderDetails,
-      user,
-      Cas2ServiceOrigin.HDC,
-      referringPrisonCode = TEST_REFERRING_PRISON_CODE,
-      telephoneNumber = TEST_TELEPHONE_NUMBER,
-      data = CAS2_APPLICATION_DATA,
-      document = "null",
-    )
-    cas2ApplicationEntity(
       offenderDetails,
       user,
       Cas2ServiceOrigin.HDC,
