@@ -733,7 +733,7 @@
                 <tr>
                     <td class="data-column-30">Occurred at</td>
                     <td class="data-column-30">Triggered by</td>
-                    <td class="data-column-30">For Application Created On</td>
+                    <td class="data-column-30">For Application Submitted On</td>
                 </tr>
                 <tr>
                     <td>{{ optionalValue (formatDate occurred_at) }}</td>
@@ -1639,266 +1639,157 @@
         <h3>Domain Events</h3>
         {{#DomainEvents}}
 
-            {{#if (eq type "CAS3_BOOKING_PROVISIONALLY_MADE")}}
-                <h4>Booking Provisionally Made</h4>
+            <h4>
+            {{#if (eq type "CAS3_REFERRAL_SUBMITTED")}}Referral Submitted{{/if}}
+            {{#if (eq type "CAS3_BOOKING_PROVISIONALLY_MADE")}}Booking Provisionally Made{{/if}}
+            {{#if (eq type "CAS3_BOOKING_CONFIRMED")}}Booking Confirmed{{/if}}
+            {{#if (eq type "CAS3_BOOKING_CANCELLED")}}Booking Cancelled{{/if}}
+            {{#if (eq type "CAS3_BOOKING_CANCELLED_UPDATED")}}Booking Cancelled Updated{{/if}}
+            {{#if (eq type "CAS3_PERSON_ARRIVED")}}Person Arrived{{/if}}
+            {{#if (eq type "CAS3_PERSON_ARRIVED_UPDATED")}}Person Arrived Updated{{/if}}
+            {{#if (eq type "CAS3_PERSON_DEPARTED")}}Person Departed{{/if}}
+            {{#if (eq type "CAS3_PERSON_DEPARTURE_UPDATED")}}Person Departure Updated{{/if}}
+            </h4>
+
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Occurred at</td>
+                    <td class="data-column-30">Triggered by</td>
+                    <td class="data-column-30">For Application Submitted On</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue (formatDate occurred_at) }}</td>
+                    <td>{{#triggered_by_username}}{{getUserLastName .}}{{/triggered_by_username}}</td>
+                    <td>{{ optionalValue (formatDate application_submitted_at) }}</td>
+                </tr>
+            </table>
+
+            {{#if (eq type "CAS3_BOOKING_PROVISIONALLY_MADE") }}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Booked by</td>
-                        <td class="data-column-30">Booked by probation region code</td>
+                        <td class="data-column-30">Premises Name</td>
                         <td class="data-column-30">Expected arrival at</td>
+                        <td class="data-column-30"></td>
                     </tr>
                     <tr>
-                        <td>{{ getUserLastName data.eventDetails.bookedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.bookedBy.probationRegionCode }}</td>
+                        <td>{{ optionalValue cas3_booking_premises_name }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.expectedArrivedAt) }}</td>
+                        <td></td>
                     </tr>
-                </table>
-                <table>
-                    <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
                 </table>
             {{/if}}
 
             {{#if (eq type "CAS3_BOOKING_CONFIRMED")}}
-                <h4>Booking Confirmed</h4>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Confirmed by</td>
-                        <td class="data-column-30">Confirmed by probation region code</td>
-                        <td class="data-column-30">Expected arrived at</td>
+                        <td class="data-column-30">Premises Name</td>
+                        <td class="data-column-30">Expected arrival at</td>
+                        <td></td>
                     </tr>
                     <tr>
-                        <td>{{ getUserLastName data.eventDetails.confirmedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.confirmedBy.probationRegionCode }}</td>
+                        <td>{{ optionalValue cas3_booking_premises_name }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.expectedArrivedAt) }}</td>
+                        <td></td>
                     </tr>
-                </table>
-                <table>
-                    <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
                 </table>
             {{/if}}
 
-            {{#if (eq type "CAS3_BOOKING_CANCELLED")}}
-                <h4>Booking Cancelled</h4>
+            {{#if (eq type "CAS3_BOOKING_CANCELLED") }}
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Cancelled by</td>
-                        <td class="data-column-30">Cancelled by probation region code</td>
-                        <td class="data-column-30">Cancelled at</td>
+                        <td class="data-column-30">Premises Name</td>
+                        <td class="data-column-30">Expected arrival at</td>
+                        <td></td>
                     </tr>
                     <tr>
-                        <td>{{ getUserLastName data.eventDetails.cancelledBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.cancelledBy.probationRegionCode }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.cancelledAt) }}</td>
+                        <td>{{ optionalValue cas3_booking_premises_name }}</td>
+                        <td>{{ optionalValue (formatDate cas3_booking_arrival_date) }}</td>
+                        <td></td>
                     </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>Cancellation reason</td><td>{{ optionalValue data.eventDetails.cancellationReason }}</td></tr>
-                    <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
                 </table>
             {{/if}}
 
             {{#if (eq type "CAS3_BOOKING_CANCELLED_UPDATED")}}
-                <h4>Booking Cancelled Updated</h4>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-30">Cancelled by</td>
-                        <td class="data-column-30">Cancelled by probation region code</td>
-                        <td class="data-column-30">Cancelled at</td>
+                        <td class="data-column-30">Premises Name</td>
+                        <td class="data-column-30">Expected arrival at</td>
+                        <td></td>
                     </tr>
                     <tr>
-                        <td>{{ getUserLastName data.eventDetails.cancelledBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.cancelledBy.probationRegionCode }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.cancelledAt) }}</td>
+                        <td>{{ optionalValue cas3_booking_premises_name }}</td>
+                        <td>{{ optionalValue (formatDate cas3_booking_arrival_date) }}</td>
+                        <td></td>
                     </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>Cancellation reason</td><td>{{ optionalValue data.eventDetails.cancellationReason }}</td></tr>
-                    <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
                 </table>
             {{/if}}
 
             {{#if (eq type "CAS3_PERSON_ARRIVED")}}
-                <h4>Person Arrived</h4>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Recorded by</td>
-                        <td class="data-column-25">Recorded by probation region code</td>
-                        <td class="data-column-25">Arrived at</td>
-                        <td class="data-column-25">Expected departure on</td>
+                        <td class="data-column-30">Premises Name</td>
+                        <td class="data-column-30">Arrived at</td>
+                        <td class="data-column-30">Expected departure on</td>
                     </tr>
                     <tr>
-                        <td>{{ getUserLastName data.eventDetails.recordedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.recordedBy.probationRegionCode }}</td>
+                        <td>{{ optionalValue cas3_booking_premises_name }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.arrivedAt) }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.expectedDepartureOn) }}</td>
                     </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-20">Premises address line 1</td>
-                        <td class="data-column-20">Premises address line 2</td>
-                        <td class="data-column-20">Premises town</td>
-                        <td class="data-column-20">Premises region</td>
-                        <td class="data-column-20">Premises postcode</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.premises.addressLine1 }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.addressLine2 }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.town }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.region }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.postcode }}</td>
-                    </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
                 </table>
             {{/if}}
 
             {{#if (eq type "CAS3_PERSON_ARRIVED_UPDATED")}}
-                <h4>Person Arrived Updated</h4>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Recorded by</td>
-                        <td class="data-column-25">Recorded by probation region code</td>
-                        <td class="data-column-25">Arrived at</td>
-                        <td class="data-column-25">Expected departure on</td>
+                        <td class="data-column-30">Premises Name</td>
+                        <td class="data-column-30">Arrived at</td>
+                        <td class="data-column-30">Expected departure on</td>
                     </tr>
                     <tr>
-                        <td>{{ getUserLastName data.eventDetails.recordedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.recordedBy.probationRegionCode }}</td>
+                        <td>{{ optionalValue cas3_booking_premises_name }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.arrivedAt) }}</td>
                         <td>{{ optionalValue (formatDate data.eventDetails.expectedDepartureOn) }}</td>
                     </tr>
                 </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-20">Premises address line 1</td>
-                        <td class="data-column-20">Premises address line 2</td>
-                        <td class="data-column-20">Premises town</td>
-                        <td class="data-column-20">Premises region</td>
-                        <td class="data-column-20">Premises postcode</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.premises.addressLine1 }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.addressLine2 }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.town }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.region }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.postcode }}</td>
-                    </tr>
-                </table>
-                <table class="summary-list">
-                    <tr><td class="data-column-75">Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
-                </table>
             {{/if}}
 
             {{#if (eq type "CAS3_PERSON_DEPARTED")}}
-                <h4>Person Departed</h4>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Reason</td>
-                        <td class="data-column-75">Reason detail</td>
+                        <td class="data-column-30">Premises Name</td>
+                        <td class="data-column-30">Reason</td>
+                        <td class="data-column-30">Reason detail</td>
                     </tr>
                     <tr>
+                        <td>{{ optionalValue cas3_booking_premises_name }}</td>
                         <td>{{ optionalValue data.eventDetails.reason }}</td>
                         <td>{{ optionalValue data.eventDetails.reasonDetail }}</td>
                     </tr>
                 </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Recorded by</td>
-                        <td class="data-column-25">Recorded by probation region code</td>
-                        <td class="data-column-25">Premises address line 1</td>
-                        <td class="data-column-25">Premises address line 2</td>
-                    </tr>
-                    <tr>
-                        <td>{{ getUserLastName data.eventDetails.recordedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.recordedBy.probationRegionCode }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.addressLine1 }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.addressLine2 }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Premises town</td>
-                        <td class="data-column-25">Premises region</td>
-                        <td class="data-column-25">Premises postcode</td>
-                        <td class="data-column-25">Departed at</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.premises.town }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.region }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.postcode }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.departedAt) }}</td>
-                    </tr>
-                </table>
+
                 <table class="summary-list">
                     <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
                 </table>
             {{/if}}
 
             {{#if (eq type "CAS3_PERSON_DEPARTURE_UPDATED")}}
-                <h4>Person Departure Updated</h4>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Reason</td>
-                        <td class="data-column-75">Reason detail</td>
+                        <td class="data-column-30">Premises Name</td>
+                        <td class="data-column-30">Reason</td>
+                        <td class="data-column-30">Reason detail</td>
                     </tr>
                     <tr>
+                        <td>{{ optionalValue cas3_booking_premises_name }}</td>
                         <td>{{ optionalValue data.eventDetails.reason }}</td>
                         <td>{{ optionalValue data.eventDetails.reasonDetail }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Recorded by</td>
-                        <td class="data-column-25">Recorded by probation region code</td>
-                        <td class="data-column-25">Premises address line 1</td>
-                        <td class="data-column-25">Premises address line 2</td>
-                    </tr>
-                    <tr>
-                        <td>{{ getUserLastName data.eventDetails.recordedBy.username }}</td>
-                        <td>{{ optionalValue data.eventDetails.recordedBy.probationRegionCode }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.addressLine1 }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.addressLine2 }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Premises town</td>
-                        <td class="data-column-25">Premises region</td>
-                        <td class="data-column-25">Premises postcode</td>
-                        <td class="data-column-25">Departed at</td>
-                    </tr>
-                    <tr>
-                        <td>{{ optionalValue data.eventDetails.premises.town }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.region }}</td>
-                        <td>{{ optionalValue data.eventDetails.premises.postcode }}</td>
-                        <td>{{ optionalValue (formatDate data.eventDetails.departedAt) }}</td>
                     </tr>
                 </table>
                 <table class="summary-list">
                     <tr><td>Notes</td><td>{{ optionalValue data.eventDetails.notes }}</td></tr>
                 </table>
             {{/if}}
-
-            {{#if (eq type "CAS3_REFERRAL_SUBMITTED")}}
-                <h4>Referral Submitted</h4>
-            {{/if}}
-
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-25">Created at</td>
-                    <td class="data-column-25">Trigger source</td>
-                    <td class="data-column-25">Triggered by user</td>
-                    <td class="data-column-25">Occurred at</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue trigger_source }}</td>
-                    <td>{{ getUserLastName triggered_by_user }}</td>
-                    <td>{{ optionalValue (formatDate occurred_at) }}</td>
-                </tr>
-            </table>
 
         {{/DomainEvents}}
         {{^DomainEvents}}

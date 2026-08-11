@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -20,7 +20,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-open class Cas2HdcSarTestBase : SubjectAccessRequestServiceTestBase() {
+open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   companion object {
     const val CAS2_DATA_PATH = "db/seed/dev+test/cas2_application_data"
