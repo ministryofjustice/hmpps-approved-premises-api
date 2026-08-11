@@ -156,14 +156,6 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       createdByUser = createdByUser,
       applicantUserName = TEST_APPLICANT_NAME,
       data = CAS1_APPLICATION_DATA,
-      document = "null",
-    )
-    approvedPremisesApplicationEntity(
-      offenderDetails,
-      caseManagerName = TEST_CASE_MANAGER_NAME,
-      createdByUser = createdByUser,
-      applicantUserName = TEST_APPLICANT_NAME,
-      data = CAS1_APPLICATION_DATA,
       document = CAS1_APPLICATION_DOCUMENT,
     )
     val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, "null")
