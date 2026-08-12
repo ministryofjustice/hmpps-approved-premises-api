@@ -17,8 +17,6 @@ class Cas2SubjectAccessRequestService(
       cas2v2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
     val assessmentsJson = cas2v2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
     val domainEventsJson = cas2v2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2V2")
-    val domainEventsMetaDataJson =
-      cas2v2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2V2")
 
     if (listOf(
         applicationsJson,
@@ -27,7 +25,6 @@ class Cas2SubjectAccessRequestService(
         statusUpdateDetailsJson,
         assessmentsJson,
         domainEventsJson,
-        domainEventsMetaDataJson,
 
       ).all { it == null }
     ) {
@@ -41,8 +38,7 @@ class Cas2SubjectAccessRequestService(
          "Assessments": ${ assessmentsJson ?: "[]"},
          "StatusUpdates": ${ statusUpdatesJson ?: "[]"},
          "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventsMetaDataJson ?: "[]"}
+         "DomainEvents": ${ domainEventsJson ?: "[]"}
       }
     """.trimIndent()
 

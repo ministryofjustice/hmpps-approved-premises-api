@@ -60,8 +60,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Bookings": [],
         "BookingExtensions": [],
         "Cancellations": [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
       }
     """.trimIndent()
 
@@ -86,8 +85,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Bookings": [],
         "BookingExtensions": [],
         "Cancellations": [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
       }
     """.trimIndent()
 
@@ -115,8 +113,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Bookings": [],
         "BookingExtensions": [],
         "Cancellations": [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
       }
     """.trimIndent()
 
@@ -144,8 +141,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Bookings": [${bookingsJson(booking)}],
         "BookingExtensions": [],
         "Cancellations": [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
     }
     """.trimIndent()
 
@@ -174,8 +170,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Bookings": [${bookingsJson(booking)}],
         "BookingExtensions": [${bookingExtensionJson(bookingExtension)}],
         "Cancellations": [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
     }
     """.trimIndent()
 
@@ -203,8 +198,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "Bookings": [${bookingsJson(booking)}],
       "BookingExtensions": [],
       "Cancellations": [${cancellationJson(cancellation)}],
-      "DomainEvents": [],
-      "DomainEventsMetadata": []
+      "DomainEvents": []
     }
     """.trimIndent()
 
@@ -231,8 +225,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Bookings": [],
         "BookingExtensions": [],
         "Cancellations": [],
-        "DomainEvents": [${domainEventJson(domainEvent,user)}],
-        "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
+        "DomainEvents": [${domainEventJson(domainEvent,user)}]
       }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -243,8 +236,6 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     assessmentReferralHistoryNoteUser: AssessmentReferralHistoryUserNoteEntity,
   ) = """
     {
-      "crn": "${assessmentReferralHistoryNoteSystem.assessment.application.crn}",
-      "noms_number": "${assessmentReferralHistoryNoteSystem.assessment.application.nomsNumber}",
       "message": "${assessmentReferralHistoryNoteSystem.message}",
       "created_at": "$CREATED_AT",
       "created_by_user": "${assessmentReferralHistoryNoteSystem.createdByUser.name}",
@@ -252,8 +243,6 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "system_note_type": "${assessmentReferralHistoryNoteSystem.type}"
     },
     { 
-      "crn": "${assessmentReferralHistoryNoteUser.assessment.application.crn}",
-      "noms_number": "${assessmentReferralHistoryNoteUser.assessment.application.nomsNumber}",
       "message": "${assessmentReferralHistoryNoteUser.message}",
       "created_at": "$CREATED_AT",
       "created_by_user": "${assessmentReferralHistoryNoteUser.createdByUser.name}",
@@ -289,7 +278,6 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     """
       {
          "crn": "${assessment.application.crn}",
-         "noms_number": "${assessment.application.nomsNumber}",
          "assessor_name": "${assessment.allocatedToUser?.name}",
          "data": $DATA_JSON_SIMPLE,
          "document": $DOCUMENT_JSON_SIMPLE,

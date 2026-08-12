@@ -17,7 +17,6 @@ class Cas3SubjectAccessRequestService(
     val bookingExtensionsJson = cas3SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
     val cancellationsJson = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate)
     val domainEventsJson = cas3SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS3")
-    val domainEventsMetaDataJson = cas3SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS3")
 
     if (listOf(
         temporaryAccommodationApplicationsJson,
@@ -27,7 +26,6 @@ class Cas3SubjectAccessRequestService(
         bookingExtensionsJson,
         cancellationsJson,
         domainEventsJson,
-        domainEventsMetaDataJson,
       ).all { it == null }
     ) {
       return null
@@ -41,8 +39,7 @@ class Cas3SubjectAccessRequestService(
          "Bookings": ${ bookingsJson ?: "[]"},
          "BookingExtensions": ${ bookingExtensionsJson ?: "[]"},
          "Cancellations": ${ cancellationsJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventsMetaDataJson ?: "[]"}
+         "DomainEvents": ${ domainEventsJson ?: "[]"}
       }
     """.trimIndent()
 

@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar.Cas1SarComplianceTest.Companion.TEST_APPLICATION_CREATED_BY_USER_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
@@ -77,10 +78,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
   protected fun spaceBookingsJson(booking: Cas1SpaceBookingEntity): String =
     """
       {
-         "crn": "${booking.crn}",
          "noms_number":  ${if (booking.application != null) "\"${booking.application!!.nomsNumber}\"" else "null"},
-         "canonical_arrival_date": ${if (booking.canonicalArrivalDate != null) "\"${booking.canonicalArrivalDate}\"" else null},
-         "canonical_departure_date": ${if (booking.canonicalDepartureDate != null) "\"${booking.canonicalDepartureDate}\"" else null},
          "expected_arrival_date": ${if (booking.expectedArrivalDate != null) "\"${booking.expectedArrivalDate}\"" else null},
          "expected_departure_date": ${if (booking.expectedDepartureDate != null) "\"${booking.expectedDepartureDate}\"" else null},
          "actual_arrival_date": ${if (booking.actualArrivalDate != null) "\"${booking.actualArrivalDate}\"" else null},
@@ -220,7 +218,9 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     data: String = DATA_JSON_SIMPLE,
     document: String = DOCUMENT_JSON_SIMPLE,
   ): ApprovedPremisesApplicationEntity {
-    val user = createdByUser ?: userEntity()
+    val user = createdByUser ?: userEntity(
+      username = TEST_APPLICATION_CREATED_BY_USER_NAME,
+    )
     val applicantUserDetails = cas1ApplicationUserDetailsEntity(applicantUserName)
     val caseManagerUserDetails = cas1CaseManagerUserDetailsEntity(caseManagerName)
     return approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -243,7 +243,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
       withIsEmergencyApplication(true)
       withTargetLocation(null)
       withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
-      withInmateInOutStatusOnSubmission(null)
+      withInmateInOutStatusOnSubmission("OUT")
       withSentenceType(SENTENCE_TYPE_CUSTODIAL)
       withNoticeType(Cas1ApplicationTimelinessCategory.emergency)
       withApType(ApprovedPremisesType.NORMAL)

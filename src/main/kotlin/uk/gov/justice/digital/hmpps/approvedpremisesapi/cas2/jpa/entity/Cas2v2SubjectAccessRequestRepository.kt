@@ -197,12 +197,10 @@ class Cas2v2SubjectAccessRequestRepository(
       """
            select json_agg(domain_events) as json from ( 
                select 
-                 de.crn,
                  de."type",
                  de.occurred_at,
                  de.created_at,
                  de."data",
-                 de.noms_number,
                  cas2_app.submitted_at as application_submitted_at,
                  u.username as triggered_by_username
                from

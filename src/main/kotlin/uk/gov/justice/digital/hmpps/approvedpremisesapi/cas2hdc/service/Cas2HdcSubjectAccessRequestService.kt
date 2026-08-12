@@ -19,8 +19,6 @@ class Cas2HdcSubjectAccessRequestService(
       cas2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
     val assessmentsJson = cas2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
     val domainEventsJson = cas2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2")
-    val domainEventsMetaDataJson =
-      cas2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2")
 
     if (listOf(
         applicationsJson,
@@ -29,7 +27,6 @@ class Cas2HdcSubjectAccessRequestService(
         statusUpdateDetailsJson,
         assessmentsJson,
         domainEventsJson,
-        domainEventsMetaDataJson,
 
       ).all { it == null }
     ) {
@@ -44,7 +41,6 @@ class Cas2HdcSubjectAccessRequestService(
          "StatusUpdates": ${ statusUpdatesJson ?: "[]"},
          "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"},
          "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventsMetaDataJson ?: "[]"}
       }
     """.trimIndent()
 
