@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResultValidatedScope.Companion.NDELIUS_MAX_POSTCODE_LENGTH
@@ -54,7 +53,7 @@ class Cas3PremisesService(
     val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
     if (premises == null) return CasResult.NotFound("Cas3Premises", premisesId.toString())
     premises.postcode = premises.postcode.trim()
-    if (!cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id)) return CasResult.Unauthorised()
+    if (!cas3UserAccessService.currentUserCanViewOrUpdatePremises(premises.probationDeliveryUnit.probationRegion.id)) return CasResult.Unauthorised()
     return CasResult.Success(premises)
   }
   fun getPremises(premisesId: UUID): Cas3PremisesEntity? = cas3PremisesRepository.findByIdOrNull(premisesId)
@@ -143,6 +142,7 @@ class Cas3PremisesService(
     return success(cas3PremisesRepository.save(premises))
   }
 
+  @SuppressWarnings("ReturnCount")
   fun updatePremises(
     premisesId: UUID,
     reference: String,
@@ -151,7 +151,6 @@ class Cas3PremisesService(
     town: String?,
     postcode: String,
     localAuthorityAreaId: UUID?,
-    probationRegionId: UUID,
     characteristicIds: List<UUID>,
     notes: String?,
     probationDeliveryUnitId: UUID,
@@ -160,14 +159,21 @@ class Cas3PremisesService(
     val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
       ?: return CasResult.NotFound("Cas3Premises", premisesId.toString())
 
+    val probationDeliveryUnit = probationDeliveryUnitRepository.findByIdOrNull(probationDeliveryUnitId)
+      ?: return CasResult.NotFound("ProbationDeliveryUnit", probationDeliveryUnitId.toString())
+
+    if (!cas3UserAccessService.currentUserCanViewOrUpdatePremises(premises.probationDeliveryUnit.probationRegion.id) ||
+      !cas3UserAccessService.currentUserCanViewOrUpdatePremises(probationDeliveryUnit.probationRegion.id)
+    ) {
+      return CasResult.Unauthorised()
+    }
+
     val localAuthorityArea = localAuthorityAreaId?.let { localAuthorityAreaRepository.findByIdOrNull(it) }
-    val probationDeliveryUnit =
-      probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
 
     val trimmedPostcode = postcode.trim()
 
     validatePremises(
-      probationDeliveryUnit?.probationRegion,
+      probationDeliveryUnit.probationRegion,
       localAuthorityAreaId,
       localAuthorityArea,
       probationDeliveryUnit,
@@ -194,7 +200,7 @@ class Cas3PremisesService(
         premises.localAuthorityArea = localAuthorityArea
         premises.characteristics = validatedPremisesCharacteristics.toMutableList()
         premises.notes = notes.orEmpty()
-        premises.probationDeliveryUnit = probationDeliveryUnit!!
+        premises.probationDeliveryUnit = probationDeliveryUnit
         premises.turnaroundWorkingDays = turnaroundWorkingDays ?: 2
         premises.lastUpdatedAt = OffsetDateTime.now()
       }

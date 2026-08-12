@@ -103,18 +103,18 @@ class Cas3UserAccessServiceTest {
 
     @Test
     fun `currentUserCanViewPremises returns false if the user does not have the CAS3_ASSESSOR role`() {
-      assertThat(cas3UserAccessService.currentUserCanViewPremises(user.probationRegion.id)).isFalse
+      assertThat(cas3UserAccessService.currentUserCanViewOrUpdatePremises(user.probationRegion.id)).isFalse
     }
 
     @Test
     fun `currentUserCanViewPremises returns true if the given premises is a Cas3Premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-      assertThat(cas3UserAccessService.currentUserCanViewPremises(user.probationRegion.id)).isTrue
+      assertThat(cas3UserAccessService.currentUserCanViewOrUpdatePremises(user.probationRegion.id)).isTrue
     }
 
     @Test
     fun `cas3UserAccessService returns false if the user is not in the correct probation region`() {
-      assertThat(cas3UserAccessService.currentUserCanViewPremises(UUID.randomUUID())).isFalse
+      assertThat(cas3UserAccessService.currentUserCanViewOrUpdatePremises(UUID.randomUUID())).isFalse
     }
   }
 }

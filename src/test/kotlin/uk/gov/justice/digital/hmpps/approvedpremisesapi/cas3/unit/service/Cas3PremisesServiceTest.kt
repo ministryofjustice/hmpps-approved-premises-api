@@ -80,7 +80,7 @@ class Cas3PremisesServiceTest {
     fun `returns CasResult-Forbidden when user cannot access premises`() {
       val premises = Cas3PremisesEntityFactory().withDefaults().produce()
       every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
-      every { cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id) } returns false
+      every { cas3UserAccessService.currentUserCanViewOrUpdatePremises(premises.probationDeliveryUnit.probationRegion.id) } returns false
 
       val result = cas3PremisesService.getValidatedPremises(premises.id)
 
@@ -91,7 +91,7 @@ class Cas3PremisesServiceTest {
     fun `returns CasResult-Success when user can access premises`() {
       val premises = Cas3PremisesEntityFactory().withDefaults().withPostcode("DY7 9EY ").produce()
       every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
-      every { cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id) } returns true
+      every { cas3UserAccessService.currentUserCanViewOrUpdatePremises(premises.probationDeliveryUnit.probationRegion.id) } returns true
 
       val result = cas3PremisesService.getValidatedPremises(premises.id)
 
@@ -116,10 +116,11 @@ class Cas3PremisesServiceTest {
     @BeforeEach
     fun setup() {
       every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
+      every { cas3UserAccessService.currentUserCanViewOrUpdatePremises(probationRegion.id) } returns true
       every { cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(any(), any()) } returns false
       every { cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitIdAndIdNot(any(), any(), any()) } returns false
       every { localAuthorityAreaRepository.findByIdOrNull(laa.id) } returns laa
-      every { probationDeliveryUnitRepository.findByIdAndProbationRegionId(pdu.id, probationRegion.id) } returns pdu
+      every { probationDeliveryUnitRepository.findByIdOrNull(pdu.id) } returns pdu
       every { cas3PremisesCharacteristicRepository.findActiveCharacteristicsByIdIn(listOf(cas3PremisesCharacteristic.id)) } returns mutableListOf(
         cas3PremisesCharacteristic,
       )
@@ -139,7 +140,6 @@ class Cas3PremisesServiceTest {
         town = "asd3",
         postcode = " asd4bdh6 ",
         localAuthorityAreaId = laa.id,
-        probationRegionId = pdu.probationRegion.id,
         probationDeliveryUnitId = pdu.id,
         characteristicIds = listOf(cas3PremisesCharacteristic.id),
         notes = "some new notes",
@@ -175,7 +175,7 @@ class Cas3PremisesServiceTest {
       verify(exactly = 1) { cas3PremisesRepository.findByIdOrNull(premises.id) }
       verify(exactly = 1) { localAuthorityAreaRepository.findByIdOrNull(laa.id) }
       verify(exactly = 1) {
-        probationDeliveryUnitRepository.findByIdAndProbationRegionId(pdu.id, pdu.probationRegion.id)
+        probationDeliveryUnitRepository.findByIdOrNull(pdu.id)
       }
       verify(exactly = 1) {
         cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitIdAndIdNot(updatedName, probationDeliveryUnitId = pdu.id, id = premises.id)
@@ -185,7 +185,6 @@ class Cas3PremisesServiceTest {
     @Test
     fun `has validation errors when incorrect values are used`() {
       every { localAuthorityAreaRepository.findByIdOrNull(any()) } returns null
-      every { probationDeliveryUnitRepository.findByIdAndProbationRegionId(any(), any()) } returns null
       every { cas3PremisesCharacteristicRepository.findActiveCharacteristicsByIdIn(any()) } returns mutableListOf()
 
       val characteristicId = UUID.randomUUID()
@@ -198,7 +197,6 @@ class Cas3PremisesServiceTest {
         town = "",
         postcode = "",
         localAuthorityAreaId = UUID.randomUUID(),
-        probationRegionId = UUID.randomUUID(),
         probationDeliveryUnitId = pdu.id,
         characteristicIds = mutableListOf(characteristicId),
         notes = null,
@@ -210,11 +208,9 @@ class Cas3PremisesServiceTest {
         .hasMessage("$.address", "empty")
         .hasMessage("$.postcode", "empty")
         .hasMessage("$.localAuthorityAreaId", "doesNotExist")
-        .hasMessage("$.probationRegionId", "doesNotExist")
-        .hasMessage("$.probationDeliveryUnitId", "doesNotExist")
         .hasMessage("$.premisesCharacteristics[$characteristicId]", "doesNotExist")
         .hasMessage("$.turnaroundWorkingDays", "isNotAPositiveInteger")
-        .withNumberOfMessages(8)
+        .withNumberOfMessages(6)
 
       verify(exactly = 0) { cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(any(), any()) }
     }
@@ -238,7 +234,6 @@ class Cas3PremisesServiceTest {
         town = "",
         postcode = "asd4",
         localAuthorityAreaId = laa.id,
-        probationRegionId = pdu.probationRegion.id,
         probationDeliveryUnitId = pdu.id,
         characteristicIds = listOf(cas3PremisesCharacteristic.id),
         notes = null,
@@ -260,7 +255,6 @@ class Cas3PremisesServiceTest {
         town = premises.town,
         postcode = " abcde1234 ",
         localAuthorityAreaId = laa.id,
-        probationRegionId = pdu.probationRegion.id,
         probationDeliveryUnitId = pdu.id,
         characteristicIds = listOf(cas3PremisesCharacteristic.id),
         notes = null,
@@ -274,8 +268,8 @@ class Cas3PremisesServiceTest {
 
     @Test
     fun `returns Not Found when premises does not exist`() {
-      every { cas3PremisesRepository.findByIdOrNull(any()) } returns null
       val invalidId = UUID.randomUUID()
+      every { cas3PremisesRepository.findByIdOrNull(invalidId) } returns null
       val result = cas3PremisesService.updatePremises(
         premisesId = invalidId,
         reference = "",
@@ -284,7 +278,6 @@ class Cas3PremisesServiceTest {
         town = "",
         postcode = "",
         localAuthorityAreaId = UUID.randomUUID(),
-        probationRegionId = UUID.randomUUID(),
         probationDeliveryUnitId = UUID.randomUUID(),
         characteristicIds = mutableListOf(),
         notes = null,
@@ -292,6 +285,79 @@ class Cas3PremisesServiceTest {
       )
 
       assertThatCasResult(result).isNotFound("Cas3Premises", invalidId)
+    }
+
+    @Test
+    fun `returns Unauthorised when the current user cannot view the premises' probation region`() {
+      every { cas3UserAccessService.currentUserCanViewOrUpdatePremises(probationRegion.id) } returns false
+
+      val result = cas3PremisesService.updatePremises(
+        premisesId = premises.id,
+        reference = "updatedName",
+        addressLine1 = "asd1",
+        addressLine2 = "asd2",
+        town = "asd3",
+        postcode = "asd4",
+        localAuthorityAreaId = laa.id,
+        probationDeliveryUnitId = pdu.id,
+        characteristicIds = listOf(cas3PremisesCharacteristic.id),
+        notes = "some new notes",
+        turnaroundWorkingDays = 9,
+      )
+
+      assertThatCasResult(result).isUnauthorised()
+
+      verify(exactly = 1) { cas3PremisesRepository.findByIdOrNull(premises.id) }
+      verify(exactly = 0) { cas3PremisesRepository.save(any()) }
+    }
+
+    @Test
+    fun `returns Not Found when the target probation delivery unit does not exist`() {
+      val missingPduId = UUID.randomUUID()
+      every { probationDeliveryUnitRepository.findByIdOrNull(missingPduId) } returns null
+
+      val result = cas3PremisesService.updatePremises(
+        premisesId = premises.id,
+        reference = "updatedName",
+        addressLine1 = "asd1",
+        addressLine2 = "asd2",
+        town = "asd3",
+        postcode = "asd4",
+        localAuthorityAreaId = laa.id,
+        probationDeliveryUnitId = missingPduId,
+        characteristicIds = listOf(cas3PremisesCharacteristic.id),
+        notes = "some new notes",
+        turnaroundWorkingDays = 9,
+      )
+
+      assertThatCasResult(result).isNotFound("ProbationDeliveryUnit", missingPduId)
+
+      verify(exactly = 0) { cas3PremisesRepository.save(any()) }
+    }
+
+    @Test
+    fun `returns Unauthorised when the current user cannot access the target probation delivery unit's region`() {
+      val otherPdu = ProbationDeliveryUnitEntityFactory().withDefaults().produce()
+      every { probationDeliveryUnitRepository.findByIdOrNull(otherPdu.id) } returns otherPdu
+      every { cas3UserAccessService.currentUserCanViewOrUpdatePremises(otherPdu.probationRegion.id) } returns false
+
+      val result = cas3PremisesService.updatePremises(
+        premisesId = premises.id,
+        reference = "updatedName",
+        addressLine1 = "asd1",
+        addressLine2 = "asd2",
+        town = "asd3",
+        postcode = "asd4",
+        localAuthorityAreaId = laa.id,
+        probationDeliveryUnitId = otherPdu.id,
+        characteristicIds = listOf(cas3PremisesCharacteristic.id),
+        notes = "some new notes",
+        turnaroundWorkingDays = 9,
+      )
+
+      assertThatCasResult(result).isUnauthorised()
+
+      verify(exactly = 0) { cas3PremisesRepository.save(any()) }
     }
   }
 

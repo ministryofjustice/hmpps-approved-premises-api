@@ -229,7 +229,7 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Update premises returns 200 OK with correct body`() {
-      givenAUser { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(user.probationRegion)
         val newCharacteristic = createCharacteristics().first()
         val updatedPremises = buildUpdatedPremises(premises.probationDeliveryUnit, listOf(newCharacteristic.id))
@@ -272,7 +272,7 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Update premises is idempotent`() {
-      givenAUser { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(user.probationRegion)
 
         val result = doPutRequest(
@@ -352,6 +352,43 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
           .expectStatus()
           .isNotFound
           .withNotFoundMessage("No Cas3Premises with an ID of $id could be found")
+      }
+    }
+
+    @Test
+    fun `Update premises returns 403 when a user attempts to update premises owned by another region by supplying their own region in the body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userA, _ ->
+        givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userB, userBJwt ->
+          val regionAPremises = givenACas3Premises(userA.probationRegion)
+
+          val updatedPremises = buildUpdatedPremises(userB.probationDeliveryUnit!!)
+          assertThat(updatedPremises.probationRegionId).isEqualTo(userB.probationRegion.id)
+
+          doPutRequest(userBJwt, regionAPremises.id, updatedPremises)
+            .expectStatus()
+            .isForbidden
+            .withForbiddenMessage()
+
+          val unchanged = cas3PremisesRepository.findById(regionAPremises.id).get()
+          assertThat(unchanged.name).isEqualTo(regionAPremises.name)
+          assertThat(unchanged.probationDeliveryUnit.id).isEqualTo(regionAPremises.probationDeliveryUnit.id)
+        }
+      }
+    }
+
+    @Test
+    fun `Update premises returns 404 when the probation delivery unit is not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+        val missingPduId = UUID.randomUUID()
+        val updatedPremises = buildUpdatedPremises(premises.probationDeliveryUnit).copy(
+          probationDeliveryUnitId = missingPduId,
+        )
+
+        doPutRequest(jwt, premises.id, updatedPremises)
+          .expectStatus()
+          .isNotFound
+          .withNotFoundMessage("No ProbationDeliveryUnit with an ID of $missingPduId could be found")
       }
     }
 

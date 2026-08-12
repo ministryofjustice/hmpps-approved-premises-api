@@ -91,10 +91,6 @@ class Cas3v2PremisesController(
     @PathVariable premisesId: UUID,
     @RequestBody body: Cas3UpdatePremises,
   ): ResponseEntity<Cas3Premises> {
-    if (!cas3UserAccessService.currentUserCanAccessRegion(body.probationRegionId)) {
-      throw ForbiddenProblem()
-    }
-
     val premises = cas3PremisesService.updatePremises(
       premisesId = premisesId,
       addressLine1 = body.addressLine1,
@@ -102,7 +98,6 @@ class Cas3v2PremisesController(
       town = body.town,
       postcode = body.postcode,
       localAuthorityAreaId = body.localAuthorityAreaId,
-      probationRegionId = body.probationRegionId,
       characteristicIds = body.characteristicIds,
       notes = body.notes,
       probationDeliveryUnitId = body.probationDeliveryUnitId,
