@@ -1,8 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ReferenceDataCas1Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -27,7 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 
-@Service
+@Cas1Controller
+@Tag(name = "Reference Data")
 class Cas1ReferenceDataController(
   private val cas1OutOfServiceBedReasonTransformer: Cas1OutOfServiceBedReasonTransformer,
   private val cas1OutOfServiceBedReasonRepository: Cas1OutOfServiceBedReasonRepository,
@@ -42,9 +50,21 @@ class Cas1ReferenceDataController(
   private val changeRequestReasonRepository: Cas1ChangeRequestReasonRepository,
   private val changeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
   private val userService: UserService,
-) : ReferenceDataCas1Delegate {
+) {
 
-  override fun getChangeRequestReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
+  @Operation(
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NamedId::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/reference-data/change-request-reasons/{changeRequestType}"],
+    produces = ["application/json"],
+  )
+  fun getChangeRequestReasons(
+    @Parameter(schema = Schema(allowableValues = ["placementAppeal", "placementExtension", "plannedTransfer"]))
+    @PathVariable changeRequestType: Cas1ChangeRequestType,
+  ): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
     changeRequestReasonRepository.findByChangeRequestTypeAndArchivedIsFalse(
       when (changeRequestType) {
         Cas1ChangeRequestType.PLACEMENT_APPEAL -> ChangeRequestType.PLACEMENT_APPEAL
@@ -54,7 +74,19 @@ class Cas1ReferenceDataController(
     ).map { NamedId(it.id, it.code) },
   )
 
-  override fun getChangeRequestRejectionReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
+  @Operation(
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NamedId::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/reference-data/change-request-rejection-reasons/{changeRequestType}"],
+    produces = ["application/json"],
+  )
+  fun getChangeRequestRejectionReasons(
+    @Parameter(schema = Schema(allowableValues = ["placementAppeal", "placementExtension", "plannedTransfer"]))
+    @PathVariable changeRequestType: Cas1ChangeRequestType,
+  ): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
     changeRequestRejectionReasonRepository.findByChangeRequestTypeAndArchivedIsFalse(
       when (changeRequestType) {
         Cas1ChangeRequestType.PLACEMENT_APPEAL -> ChangeRequestType.PLACEMENT_APPEAL
@@ -64,7 +96,17 @@ class Cas1ReferenceDataController(
     ).map { NamedId(it.id, it.code) },
   )
 
-  override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
+  @Operation(
+    summary = "Lists all reasons for beds going out of service",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBedReason::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/reference-data/out-of-service-bed-reasons"],
+    produces = ["application/json"],
+  )
+  fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
     val user = userService.getUserForRequest()
 
     return ResponseEntity.ok(
@@ -76,22 +118,62 @@ class Cas1ReferenceDataController(
     )
   }
 
-  override fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> = ResponseEntity.ok(
+  @Operation(
+    summary = "Lists all CRU Management Areas",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1CruManagementArea::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/reference-data/cru-management-areas"],
+    produces = ["application/json"],
+  )
+  fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> = ResponseEntity.ok(
     cas1CruManagementAreaRepository.findAll()
       .map { cas1CruManagementAreaTransformer.transformJpaToApi(it) },
   )
 
-  override fun getDepartureReasons(): ResponseEntity<List<DepartureReason>> = ResponseEntity.ok(
+  @Operation(
+    summary = "Lists all active departure reasons",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = DepartureReason::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/reference-data/departure-reasons"],
+    produces = ["application/json"],
+  )
+  fun getDepartureReasons(): ResponseEntity<List<DepartureReason>> = ResponseEntity.ok(
     departureReasonRepository.findActiveForCas1()
       .map { departureReasonTransformer.transformJpaToApi(it) },
   )
 
-  override fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> = ResponseEntity.ok(
+  @Operation(
+    summary = "Lists all active move-on categories",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = MoveOnCategory::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/reference-data/move-on-categories"],
+    produces = ["application/json"],
+  )
+  fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> = ResponseEntity.ok(
     moveOnCategoryRepository.findActiveForCas1()
       .map(moveOnCategoryTransformer::transformJpaToApi),
   )
 
-  override fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> = ResponseEntity.ok(
+  @Operation(
+    summary = "Lists all active non-arrivals reasons",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NonArrivalReason::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/reference-data/non-arrival-reasons"],
+    produces = ["application/json"],
+  )
+  fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> = ResponseEntity.ok(
     nonArrivalReasonRepository.findAllActiveReasons()
       .map(nonArrivalReasonTransformer::transformJpaToApi),
   )

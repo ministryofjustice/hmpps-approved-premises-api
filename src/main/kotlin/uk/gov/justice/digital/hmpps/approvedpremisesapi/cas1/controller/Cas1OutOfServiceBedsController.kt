@@ -1,11 +1,24 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.OutOfServiceBedsCas1Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewOutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewOutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBed
@@ -26,22 +39,34 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.time.LocalDate
 import java.util.UUID
 
-@Service
+@Cas1Controller
+@Tag(name = "out-of-service beds")
 class Cas1OutOfServiceBedsController(
   private val userAccessService: Cas1UserAccessService,
   private val premisesService: Cas1PremisesService,
   private val outOfServiceBedService: Cas1OutOfServiceBedService,
   private val outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer,
   private val outOfServiceBedCancellationTransformer: Cas1OutOfServiceBedCancellationTransformer,
-) : OutOfServiceBedsCas1Delegate {
-  override fun getOutOfServiceBeds(
-    temporality: List<Temporality>?,
-    premisesId: UUID?,
-    apAreaId: UUID?,
-    sortDirection: SortDirection?,
-    sortBy: Cas1OutOfServiceBedSortField?,
-    page: Int?,
-    perPage: Int?,
+) {
+
+  @Operation(
+    summary = "Lists all Out-Of-Service Beds entries",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBed::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/out-of-service-beds"],
+    produces = ["application/json"],
+  )
+  fun getOutOfServiceBeds(
+    @RequestParam temporality: List<Temporality>?,
+    @RequestParam premisesId: UUID?,
+    @RequestParam apAreaId: UUID?,
+    @RequestParam sortDirection: SortDirection?,
+    @RequestParam sortBy: Cas1OutOfServiceBedSortField?,
+    @RequestParam page: Int?,
+    @RequestParam perPage: Int?,
   ): ResponseEntity<List<Cas1OutOfServiceBed>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS)
 
@@ -63,7 +88,20 @@ class Cas1OutOfServiceBedsController(
       .body(outOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi))
   }
 
-  override fun getOutOfServiceBedsForPremises(premisesId: UUID): ResponseEntity<List<Cas1OutOfServiceBed>> {
+  @Operation(
+    summary = "Lists all Out-Of-Service Beds entries for the Premises",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBed::class)))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/premises/{premisesId}/out-of-service-beds"],
+    produces = ["application/json"],
+  )
+  fun getOutOfServiceBedsForPremises(
+    @Parameter(description = "ID of the premises to show out-of-service beds for")
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<List<Cas1OutOfServiceBed>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS)
 
     tryGetApprovedPremises(premisesId)
@@ -73,10 +111,26 @@ class Cas1OutOfServiceBedsController(
     return ResponseEntity.ok(outOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi))
   }
 
-  override fun cancelOutOfServiceBed(
-    premisesId: UUID,
-    outOfServiceBedId: UUID,
-    body: Cas1NewOutOfServiceBedCancellation,
+  @Operation(
+    summary = "Posts a cancellation to a specified out-of-service bed",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBedCancellation::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or out-of-service bed ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @PostMapping(
+    value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}/cancellations"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun cancelOutOfServiceBed(
+    @Parameter(description = "ID of the premises the cancellation is related to")
+    @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the out-of-service bed")
+    @PathVariable outOfServiceBedId: UUID,
+    @Parameter(description = "details of the cancellation")
+    @RequestBody body: Cas1NewOutOfServiceBedCancellation,
   ): ResponseEntity<Cas1OutOfServiceBedCancellation> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL)
 
@@ -99,9 +153,22 @@ class Cas1OutOfServiceBedsController(
     )
   }
 
-  override fun getOutOfServiceBed(
-    premisesId: UUID,
-    outOfServiceBedId: UUID,
+  @Operation(
+    summary = "Returns a specific out-of-service bed for a premises",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises or out-of-service bed ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}"],
+    produces = ["application/json"],
+  )
+  fun getOutOfServiceBed(
+    @Parameter(description = "ID of the premises the out-of-service bed is related to")
+    @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the out-of-service bed")
+    @PathVariable outOfServiceBedId: UUID,
   ): ResponseEntity<Cas1OutOfServiceBed> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS)
 
@@ -113,10 +180,26 @@ class Cas1OutOfServiceBedsController(
     return ResponseEntity.ok(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed))
   }
 
-  override fun updateOutOfServiceBed(
-    premisesId: UUID,
-    outOfServiceBedId: UUID,
-    body: UpdateCas1OutOfServiceBed,
+  @Operation(
+    summary = "Updates an out-of-service bed for a premises",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @PutMapping(
+    value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun updateOutOfServiceBed(
+    @Parameter(description = "ID of the premises the out-of-service bed is related to")
+    @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the out-of-service bed")
+    @PathVariable outOfServiceBedId: UUID,
+    @Parameter(description = "details of the out-of-service bed")
+    @RequestBody body: UpdateCas1OutOfServiceBed,
   ): ResponseEntity<Cas1OutOfServiceBed> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE)
 
@@ -141,9 +224,24 @@ class Cas1OutOfServiceBedsController(
     )
   }
 
-  override fun createOutOfServiceBed(
-    premisesId: UUID,
-    body: Cas1NewOutOfServiceBed,
+  @Operation(
+    summary = "Posts an out-of-service bed to a specified approved premises",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @PostMapping(
+    value = ["/premises/{premisesId}/out-of-service-beds"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun createOutOfServiceBed(
+    @Parameter(description = "ID of the premises the out-of-service bed is related to")
+    @PathVariable premisesId: UUID,
+    @Parameter(description = "details of the out-of-service bed")
+    @RequestBody body: Cas1NewOutOfServiceBed,
   ): ResponseEntity<Cas1OutOfServiceBed> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE)
 

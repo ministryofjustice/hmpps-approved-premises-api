@@ -30,7 +30,6 @@
     <ID>SwallowedException:SeedService.kt:SeedService$exception: Exception</ID>
     <ID>ThrowsCount:AbstractUsersSeedJob.kt:AbstractUsersSeedJob$override fun processRow</ID>
     <ID>ThrowsCount:Cas1PlacementApplicationsController.kt:Cas1PlacementApplicationsController$override fun placementApplicationsIdWithdrawPost: ResponseEntity&lt;PlacementApplication&gt;</ID>
-    <ID>ThrowsCount:Cas1ReportsController.kt:Cas1ReportsController$@SuppressWarnings("CyclomaticComplexMethod") override fun getReportByName: ResponseEntity&lt;StreamingResponseBody&gt;</ID>
     <ID>ThrowsCount:UsersBasicSeedJob.kt:UsersBasicSeedJob$@SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught") override fun processRow</ID>
     <ID>TooGenericExceptionCaught:BaseHMPPSClient.kt:BaseHMPPSClient$exception: Exception</ID>
     <ID>TooGenericExceptionCaught:DeserializationValidationService.kt:e: Exception</ID>
