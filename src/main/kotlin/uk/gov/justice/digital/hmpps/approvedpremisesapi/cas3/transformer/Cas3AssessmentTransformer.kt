@@ -96,7 +96,7 @@ class Cas3AssessmentTransformer(
       applicationStatus = application.getStatus(),
       assessmentStatus = a.deriveAssessmentStatus(),
       type = ServiceType.CAS3,
-      referralRejectionReason = a.referralRejectionReason?.name ?: a.rejectionRationale,
+      referralRejectionReason = a.referralRejectionReason?.name ?: a.rejectionRationale?.takeUnless { it == "default" },
       referralRejectionReasonDetail = a.referralRejectionReasonDetail,
       localAuthorityArea = application.dutyToReferLocalAuthorityAreaName,
       pdu = application.probationDeliveryUnit?.name,
