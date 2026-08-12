@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
@@ -37,6 +38,7 @@ class Cas1ExternalApplicationService(
           Cas1PlacementHistory(
             dateApplied = rfp.statusSetDate,
             requestForPlacementStatus = rfp.status,
+            withdrawalReason = rfp.withdrawalReason,
             placementStatus = null,
             premises = null,
           ),
@@ -58,6 +60,7 @@ class Cas1ExternalApplicationService(
           Cas1PlacementHistory(
             dateApplied = requireNotNull(placement.statusSetDate),
             requestForPlacementStatus = rfp.status,
+            withdrawalReason = rfp.withdrawalReason,
             placementStatus = placement.status,
             premises = premises,
           )
@@ -115,5 +118,6 @@ class Cas1ExternalApplicationService(
     val requestForPlacementStatus: RequestForPlacementStatus,
     val placementStatus: Cas1SpaceBookingStatus?,
     val premises: Cas1ExternalPremisesDto?,
+    val withdrawalReason: WithdrawPlacementRequestReason?,
   )
 }

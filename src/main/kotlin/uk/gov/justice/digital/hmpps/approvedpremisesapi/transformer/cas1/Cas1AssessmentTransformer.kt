@@ -99,6 +99,7 @@ class Cas1AssessmentTransformer(
       placementStatus = null,
       requestForPlacementStatus = null,
       uiUrl = cas1ApplicationUrlTemplate.replace("#id", entity.application.id.toString()),
+      withdrawalReason = null,
     )
 
     return placementHistories.map {
@@ -107,6 +108,7 @@ class Cas1AssessmentTransformer(
         placementAddress = toPlacementAddress(it.premises),
         placementStatus = it.placementStatus,
         requestForPlacementStatus = it.requestForPlacementStatus,
+        withdrawalReason = it.withdrawalReason,
       )
     }.ifEmpty { listOf(referralHistory) }
   }

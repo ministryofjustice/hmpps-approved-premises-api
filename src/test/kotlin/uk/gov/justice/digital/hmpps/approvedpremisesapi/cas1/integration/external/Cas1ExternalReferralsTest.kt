@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -72,7 +74,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
           val assessment2 = createCas1Assessment(crn, user, AssessmentDecision.REJECTED, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
           val assessment3 = createCas1Assessment(crn, user, AssessmentDecision.ACCEPTED, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
           val assessment4 = createCas1Assessment(crn, user, null, user, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
-          val assessment5 = createCas1Assessment(crn, user, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
+          val assessment5 = createCas1Assessment(crn, user, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises, withdrawalReason = WithdrawPlacementRequestReason.noCapacity)
 
           val expectedReferrals = listOf(
             Cas1ReferralHistory(
@@ -89,6 +91,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               placementStatus = Cas1SpaceBookingStatus.ARRIVED,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
               uiUrl = "http://frontend/applications/${assessment1.application.id}",
+              withdrawalReason = null,
             ),
             Cas1ReferralHistory(
               id = assessment2.id,
@@ -104,6 +107,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               placementStatus = Cas1SpaceBookingStatus.ARRIVED,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
               uiUrl = "http://frontend/applications/${assessment2.application.id}",
+              withdrawalReason = null,
             ),
             Cas1ReferralHistory(
               id = assessment3.id,
@@ -119,6 +123,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               placementStatus = Cas1SpaceBookingStatus.ARRIVED,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
               uiUrl = "http://frontend/applications/${assessment3.application.id}",
+              withdrawalReason = null,
             ),
             Cas1ReferralHistory(
               id = assessment4.id,
@@ -134,6 +139,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               placementStatus = Cas1SpaceBookingStatus.ARRIVED,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
               uiUrl = "http://frontend/applications/${assessment4.application.id}",
+              withdrawalReason = null,
             ),
             Cas1ReferralHistory(
               id = assessment5.id,
@@ -149,6 +155,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               placementStatus = Cas1SpaceBookingStatus.ARRIVED,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
               uiUrl = "http://frontend/applications/${assessment5.application.id}",
+              withdrawalReason = WithdrawPlacementRequestReason.noCapacity,
             ),
           )
 
@@ -223,6 +230,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
     apArea: ApAreaEntity? = null,
     cruManagementArea: Cas1CruManagementAreaEntity? = null,
     premises: ApprovedPremisesEntity? = null,
+    withdrawalReason: WithdrawPlacementRequestReason? = null
   ): ApprovedPremisesAssessmentEntity {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
@@ -253,6 +261,9 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
         withCreatedAt(OffsetDateTime.now())
         withExpectedArrival(LocalDate.now())
         withDuration(7)
+        if (withdrawalReason != null) {
+          withWithdrawalReason(PlacementRequestWithdrawalReason.valueOf(withdrawalReason))
+        }
       }
       cas1SpaceBookingEntityFactory.produceAndPersist {
         withPremises(premises)

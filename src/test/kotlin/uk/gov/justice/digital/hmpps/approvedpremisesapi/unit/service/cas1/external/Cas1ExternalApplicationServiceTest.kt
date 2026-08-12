@@ -96,24 +96,28 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement2.status,
             placementStatus = null,
             premises = null,
+            withdrawalReason = null,
           ),
           Cas1ExternalApplicationService.Cas1PlacementHistory(
             dateApplied = requestForPlacement4.statusSetDate,
             requestForPlacementStatus = requestForPlacement4.status,
             placementStatus = null,
             premises = null,
+            withdrawalReason = null,
           ),
           Cas1ExternalApplicationService.Cas1PlacementHistory(
             dateApplied = requestForPlacement1.statusSetDate,
             requestForPlacementStatus = requestForPlacement1.status,
             placementStatus = null,
             premises = null,
+            withdrawalReason = null,
           ),
           Cas1ExternalApplicationService.Cas1PlacementHistory(
             dateApplied = requestForPlacement3.statusSetDate,
             requestForPlacementStatus = requestForPlacement3.status,
             placementStatus = null,
             premises = null,
+            withdrawalReason = null,
           ),
         ),
       )
@@ -236,6 +240,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement2.status,
             placementStatus = placement8.status,
             premises = null,
+            withdrawalReason = null,
           ),
           // placement10 (+2 days)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -243,6 +248,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement2.status,
             placementStatus = placement10.status,
             premises = null,
+            withdrawalReason = null,
           ),
           // placement9 (+1 day)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -250,6 +256,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement2.status,
             placementStatus = placement9.status,
             premises = null,
+            withdrawalReason = null,
           ),
           // placement7 (0 days)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -264,6 +271,7 @@ class Cas1ExternalApplicationServiceTest {
               town = premisesEntity.town,
               postcode = premisesEntity.postcode,
             ),
+            withdrawalReason = null,
           ),
           // placement1 (-1)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -271,6 +279,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement1.status,
             placementStatus = placement1.status,
             premises = null,
+            withdrawalReason = null,
           ),
           // rfp4 (no placements) (-2)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -278,6 +287,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement4.status,
             placementStatus = null,
             premises = null,
+            withdrawalReason = null,
           ),
           // placement2 (-3)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -285,6 +295,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement1.status,
             placementStatus = placement2.status,
             premises = null,
+            withdrawalReason = null,
           ),
           // placement3 (-4)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -292,6 +303,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement1.status,
             placementStatus = placement3.status,
             premises = null,
+            withdrawalReason = null,
           ),
           // placement4 (-10)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -299,6 +311,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement3.status,
             placementStatus = placement4.status,
             premises = null,
+            withdrawalReason = null,
           ),
           // placement6 (-15)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -306,6 +319,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement3.status,
             placementStatus = placement6.status,
             premises = null,
+            withdrawalReason = null,
           ),
           // placement5 (-20)
           Cas1ExternalApplicationService.Cas1PlacementHistory(
@@ -313,6 +327,7 @@ class Cas1ExternalApplicationServiceTest {
             requestForPlacementStatus = requestForPlacement3.status,
             placementStatus = placement5.status,
             premises = null,
+            withdrawalReason = null,
           ),
         ),
       )
