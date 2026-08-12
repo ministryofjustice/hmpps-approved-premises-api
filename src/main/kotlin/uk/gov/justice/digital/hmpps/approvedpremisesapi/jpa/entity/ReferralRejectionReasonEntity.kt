@@ -12,6 +12,10 @@ import java.util.UUID
 
 @Repository
 interface ReferralRejectionReasonRepository : JpaRepository<ReferralRejectionReasonEntity, UUID> {
+  companion object Constants {
+    const val DEFAULT_NAME = "default"
+  }
+
   @Query("SELECT rr FROM ReferralRejectionReasonEntity rr WHERE rr.name = :name AND rr.isActive = true")
   fun findByNameAndActive(name: String): ReferralRejectionReasonEntity?
 
@@ -29,5 +33,7 @@ data class ReferralRejectionReasonEntity(
   val name: String,
   val isActive: Boolean,
 ) {
+  fun isDefault() = name == ReferralRejectionReasonRepository.DEFAULT_NAME
+
   override fun toString() = "ReferralRejectionReasonEntity:$id"
 }

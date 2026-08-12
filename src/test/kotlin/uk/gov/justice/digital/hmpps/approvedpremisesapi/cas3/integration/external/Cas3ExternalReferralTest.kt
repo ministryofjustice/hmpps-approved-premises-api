@@ -68,6 +68,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
           val assessment3 = createAssessment(user, AssessmentDecision.ACCEPTED, OffsetDateTime.now(), premises = premises)
           val assessment4 = createAssessment(user, null, null, user, premises = premises)
           val assessment5 = createAssessment(user, premises = premises)
+          val assessment6 = createAssessment(user, AssessmentDecision.REJECTED, premises = premises, rejectionRationale = "default")
 
           val expectedReferrals = listOf(
             Cas3ReferralHistory(
@@ -150,6 +151,22 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               bookingStatus = Cas3BookingStatus.provisional,
               uiUrl = "http://frontend.cas3/referrals/${assessment5.application.id}/full",
             ),
+            Cas3ReferralHistory(
+              id = assessment6.id,
+              applicationId = assessment6.application.id,
+              date = assessment6.createdAt.toLocalDate(),
+              applicationStatus = ApplicationStatus.submitted,
+              assessmentStatus = assessment6.deriveAssessmentStatus(),
+              type = ServiceType.CAS3,
+              referralRejectionReason = null,
+              referralRejectionReasonDetail = null,
+              localAuthorityArea = (assessment6.application as TemporaryAccommodationApplicationEntity).dutyToReferLocalAuthorityAreaName,
+              pdu = (assessment6.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
+              referredBy = createStaffDto(user),
+              placementAddress = "10 Test Street, London, SW1A 1AA",
+              bookingStatus = Cas3BookingStatus.provisional,
+              uiUrl = "http://frontend.cas3/referrals/${assessment6.application.id}/full",
+            ),
           )
 
           val response = webTestClient.get()
@@ -180,6 +197,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
     premises: Cas3PremisesEntity? = null,
     referralRejectionReason: String? = null,
     referralRejectionReasonDetail: String? = null,
+    rejectionRationale: String? = null,
   ): TemporaryAccommodationAssessmentEntity {
     val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
@@ -193,6 +211,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
       withDecision(decision)
       withCompletedAt(completedAt)
       withAllocatedToUser(allocated)
+      withRejectionRationale(rejectionRationale)
       if (referralRejectionReason != null) withReferralRejectionReason(referralRejectionReasonEntityFactory.produceAndPersist { withName(referralRejectionReason) })
       if (referralRejectionReasonDetail != null) withReferralRejectionReasonDetail(referralRejectionReasonDetail)
     }

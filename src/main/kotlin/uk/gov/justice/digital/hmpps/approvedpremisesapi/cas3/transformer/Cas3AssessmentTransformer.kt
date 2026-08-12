@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Tem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -96,7 +97,7 @@ class Cas3AssessmentTransformer(
       applicationStatus = application.getStatus(),
       assessmentStatus = a.deriveAssessmentStatus(),
       type = ServiceType.CAS3,
-      referralRejectionReason = a.referralRejectionReason?.name ?: a.rejectionRationale,
+      referralRejectionReason = a.referralRejectionReason?.takeUnless { it.isDefault() }?.name ?: a.rejectionRationale?.takeUnless { it == ReferralRejectionReasonRepository.DEFAULT_NAME },
       referralRejectionReasonDetail = a.referralRejectionReasonDetail,
       localAuthorityArea = application.dutyToReferLocalAuthorityAreaName,
       pdu = application.probationDeliveryUnit?.name,
