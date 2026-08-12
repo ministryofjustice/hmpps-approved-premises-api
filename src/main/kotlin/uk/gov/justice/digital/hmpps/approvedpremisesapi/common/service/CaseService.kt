@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service
 
+import org.hibernate.exception.ConstraintViolationException
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Propagation
-import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.CaseTiers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.BackfillCasesJob
@@ -20,8 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_INCLUDE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
-import java.time.OffsetDateTime
-import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
 /**
@@ -46,8 +45,13 @@ class CaseService(
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val featureFlagService: FeatureFlagService,
   private val sentryService: SentryService,
+  private val casePersistenceService: CasePersistenceService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  companion object {
+    private const val CASES_CRN_UNIQUE_CONSTRAINT = "cas1_offenders_crn"
+  }
 
   private val includeTierV3: Boolean
     get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_INCLUDE_TIER_V3)
@@ -55,17 +59,36 @@ class CaseService(
   private val useTierV3: Boolean
     get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  /**
+   * Each persistence operation runs in its own transaction so concurrent
+   * case creation can be handled safely. If another request inserts the
+   * same case first, the database unique constraint rejects the duplicate
+   * insert, after which the existing row is read and returned.
+   */
   fun ensureCaseExists(crn: String): CaseDto {
     val normalizedCrn = crn.uppercase()
     val caseSummary = getCaseSummary(normalizedCrn)
     val tiers = fetchAvailableTiers(normalizedCrn)
 
-    val caseEntity = caseRepository.findByCrn(caseSummary.crn.uppercase())
-      ?.updateFrom(caseSummary, tiers)
-      ?: newCaseEntity(caseSummary, tiers)
+    val existingCase = casePersistenceService.updateIfExist(normalizedCrn, caseSummary, tiers)
+    if (existingCase != null) {
+      return existingCase.toDto()
+    } else {
+      return try {
+        casePersistenceService.createCase(caseSummary, tiers).toDto()
+      } catch (e: DataIntegrityViolationException) {
+        if (!isCrnDuplicateException(e)) {
+          throw e
+        }
 
-    return caseRepository.saveAndFlush(caseEntity).toDto()
+        log.warn(
+          "Failed to create case for CRN $normalizedCrn; " +
+            "case may have been created concurrently.",
+          e,
+        )
+        casePersistenceService.getCase(normalizedCrn)?.toDto() ?: throw e
+      }
+    }
   }
 
   fun reviseTier(crn: String): Boolean {
@@ -113,39 +136,10 @@ class CaseService(
     return cases
   }
 
-  private data class CaseTiers(
-    val v2: Tier?,
-    val v3: Tier?,
-  )
-
   private fun fetchAvailableTiers(crn: String) = CaseTiers(
     v2 = fetchTierOrNull(crn, TierVersion.V2),
     v3 = if (includeTierV3) fetchTierOrNull(crn, TierVersion.V3) else null,
   )
-
-  private fun CaseEntity.updateFrom(caseSummary: CaseSummary, tiers: CaseTiers): CaseEntity = apply {
-    name = caseSummary.buildName()
-    nomsNumber = caseSummary.nomsId
-    if (tiers.v2 != null) {
-      tierV2 = tiers.v2
-    }
-    if (tiers.v3 != null) {
-      tierV3 = tiers.v3
-    }
-  }
-
-  private fun newCaseEntity(caseSummary: CaseSummary, tiers: CaseTiers) = CaseEntity(
-    id = UUID.randomUUID(),
-    crn = caseSummary.crn.uppercase(),
-    createdAt = OffsetDateTime.now(),
-    lastUpdatedAt = OffsetDateTime.now(),
-    name = caseSummary.buildName(),
-    nomsNumber = caseSummary.nomsId,
-    tierV2 = tiers.v2,
-    tierV3 = tiers.v3,
-  )
-
-  private fun CaseSummary.buildName() = "${name.forename} ${name.surname}".uppercase().trim()
 
   private fun CaseEntity.toDto() = CaseDto(
     crn = crn,
@@ -191,6 +185,12 @@ class CaseService(
   private fun alertCaseNotFound(crn: String) {
     sentryService.captureException(CaseNotFound("Case with CRN $crn not found"))
   }
+
+  private fun isCrnDuplicateException(
+    e: DataIntegrityViolationException,
+  ): Boolean = generateSequence<Throwable>(e) { it.cause }
+    .filterIsInstance<ConstraintViolationException>()
+    .any { it.constraintName == CASES_CRN_UNIQUE_CONSTRAINT }
 
   class CaseNotFound(message: String) : Exception(message)
 }
