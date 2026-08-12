@@ -301,6 +301,7 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
           .withDeliusEventNumber("1")
           .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
           .withCancelledAt(Instant.parse(CREATED_AT))
+          .withCancelledAtDate(LocalDate.of(2025,1,2))
           .withCancelledBy(staticStaffMember())
           .withCancellationRecordedAt(Instant.parse(CREATED_AT))
           .withPremises(staticPremises())
