@@ -18,7 +18,6 @@ class Cas1SubjectAccessRequestService(
 
     val apSpaceBookingsJson = cas1SubjectAccessRequestRepository.spaceBookings(crn, nomsNumber, startDate, endDate)
     val domainEventsJson = cas1SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate)
-    val domainEventMetaDataJson = cas1SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate)
 
     val placementApplicationsJson = cas1SubjectAccessRequestRepository.placementApplications(crn, nomsNumber, startDate, endDate)
     val placementRequestsJson = cas1SubjectAccessRequestRepository.placementRequests(crn, nomsNumber, startDate, endDate)
@@ -35,7 +34,6 @@ class Cas1SubjectAccessRequestService(
         apAssessmentClarificationNotesJson,
         apSpaceBookingsJson,
         domainEventsJson,
-        domainEventMetaDataJson,
         placementApplicationsJson,
         placementRequestsJson,
         placementRequirementsJson,
@@ -62,8 +60,7 @@ class Cas1SubjectAccessRequestService(
          "PlacementRequirements": ${ placementRequirementsJson ?: "[]"},
          "PlacementRequirementCriteria": ${ placementRequirementCriteriaJson ?: "[]"},
          "BookingNotMades": ${ bookingNotMadesJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventMetaDataJson ?: "[]"}
+         "DomainEvents": ${ domainEventsJson ?: "[]"}
       }
     """.trimIndent()
 

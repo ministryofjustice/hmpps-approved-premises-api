@@ -74,7 +74,6 @@ class CAS3SubjectAccessRequestRepository(
     from (
           select
               b.crn,
-              b.noms_number,
               b.arrival_date,
               b.departure_date,
               b.original_arrival_date,
@@ -108,7 +107,6 @@ class CAS3SubjectAccessRequestRepository(
         from (
               select
                 app.crn,
-                app.noms_number,
                 u."name" as assessor_name,
                 assess."data" ,
                 assess."document",
@@ -156,8 +154,6 @@ class CAS3SubjectAccessRequestRepository(
       select json_agg(referral_notes) as json 
       from ( 
         select
-            app.crn,
-            app.noms_number,
             arhn.message,
             arhn.created_at,
             u."name" as created_by_user,
@@ -187,6 +183,85 @@ class CAS3SubjectAccessRequestRepository(
       """.trimIndent(),
       MapSqlParameterSource()
         .addSarParameters(crn, nomsNumber, startDate, endDate),
+    )
+    return toJsonString(result)
+  }
+
+  fun bookingExtensions(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+  ): String? {
+    var result = jdbcTemplate.queryForMap(
+      """
+        select json_agg(booking_ext) as json 
+        from (
+      select
+            e.previous_departure_date,
+            e.new_departure_date,
+            e.notes,
+            e.created_at
+        from
+            cas3_extensions e
+        join cas3_bookings b on
+            b.id = e.booking_id
+        left join applications a on
+            a.id = b.application_id
+        left join offline_applications oa on
+            oa.id = b.offline_application_id
+      where
+        (b.crn = :crn
+          or b.noms_number = :noms_number )
+      and (:start_date::date is null or b.created_at >= :start_date)
+      and (:end_date::date is null or b.created_at <= :end_date)
+        )booking_ext
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ),
+    )
+    return toJsonString(result)
+  }
+
+  fun cancellations(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+  ): String? {
+    var result = jdbcTemplate.queryForMap(
+      """
+          select json_agg(cancellation) as json
+          from (
+              select
+                  c.notes,
+                  c."date" as cancellation_date,
+                  cr."name" as cancellation_reason,
+                  c.other_reason,
+                  c.created_at
+              from
+                  cas3_cancellations c
+                  inner join cas3_bookings b on
+                      b.id = c.booking_id
+                  inner join cancellation_reasons cr on
+                      c.cancellation_reason_id = cr.id
+              where
+                  (b.crn = :crn
+                      or b.noms_number = :noms_number )
+                and (:start_date::date is null or b.created_at >= :start_date)
+                and (:end_date::date is null or b.created_at <= :end_date)        
+          ) cancellation
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ),
     )
     return toJsonString(result)
   }
