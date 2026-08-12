@@ -9,10 +9,11 @@ import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.hibernate.exception.ConstraintViolationException
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.any
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
@@ -22,10 +23,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CasePersistenceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
+import java.sql.SQLException
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -42,6 +44,9 @@ class CaseServiceTest {
 
   @MockK
   private lateinit var mockCaseRepository: CaseRepository
+
+  @MockK
+  private lateinit var mockCasePersistenceService: CasePersistenceService
 
   @MockK
   private lateinit var mockHMPPSTierApiClient: HMPPSTierApiClient
@@ -82,35 +87,46 @@ class CaseServiceTest {
         .withNomsId("NOMS123")
         .produce()
 
-      every { mockCaseRepository.findByCrn(crn) } returns caseEntity
-      val createdCase = slot<CaseEntity>()
-      every { mockCaseRepository.saveAndFlush(capture(createdCase)) } returnsArgument 0
       every { mockApDeliusContextApiClient.getCaseSummaries(any()) } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(listOf(caseSummary)),
       )
 
       val tierV2CalculationId = UUID.randomUUID()
+      val tierV2 = Tier(
+        tierScore = "tierv2score",
+        calculationId = tierV2CalculationId,
+        calculationDate = now.toLocalDateTime(),
+        changeReason = "v2Reason",
+      )
       every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) } returns ClientResult.Success(
-        body = Tier(
-          tierScore = "tierv2score",
-          calculationId = tierV2CalculationId,
-          calculationDate = now.toLocalDateTime(),
-          changeReason = "v2Reason",
-        ),
+        body = tierV2,
         status = HttpStatus.OK,
       )
 
       val tierV3CalculationId = UUID.randomUUID()
+      val tierV3 = Tier(
+        tierScore = "tierv3score",
+        calculationId = tierV3CalculationId,
+        calculationDate = LocalDateTime.now(),
+        changeReason = "v3Reason",
+      )
       every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V3) } returns ClientResult.Success(
-        body = Tier(
-          tierScore = "tierv3score",
-          calculationId = tierV3CalculationId,
-          calculationDate = LocalDateTime.now(),
-          changeReason = "v3Reason",
-        ),
+        body = tierV3,
         status = HttpStatus.OK,
       )
+
+      val updatedCaseEntity = CaseEntityFactory()
+        .withCrn(crn)
+        .withName("JOHN SMITH")
+        .withNomsNumber("NOMS123")
+        .withTierV2(TierFactory().withTierScore("tierv2score").withCalculationId(tierV2CalculationId).withCalculationDate(tierV2.calculationDate).produce())
+        .withTierV3(TierFactory().withTierScore("tierv3score").withCalculationId(tierV3CalculationId).withCalculationDate(tierV3.calculationDate).produce())
+        .withCreatedAt(now)
+        .produce()
+
+      every { mockCasePersistenceService.getCase(crn) } returns caseEntity
+      every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns updatedCaseEntity
 
       val result = service.ensureCaseExists(crn)
 
@@ -122,15 +138,18 @@ class CaseServiceTest {
       assertThat(result.tier?.version).isEqualTo(TierVersionDto.V2)
       assertThat(result.tier?.provisional).isNull()
 
-      assertThat(createdCase.captured.crn).isEqualTo(crn)
-      assertThat(createdCase.captured.name).isEqualTo("JOHN SMITH")
-      assertThat(createdCase.captured.nomsNumber).isEqualTo("NOMS123")
-      assertThat(createdCase.captured.tierV2?.tierScore).isEqualTo("tierv2score")
-      assertThat(createdCase.captured.tierV2?.calculationId).isEqualTo(tierV2CalculationId)
-      assertThat(createdCase.captured.tierV2?.changeReason).isEqualTo("v2Reason")
-      assertThat(createdCase.captured.tierV3?.tierScore).isEqualTo("tierv3score")
-      assertThat(createdCase.captured.tierV3?.calculationId).isEqualTo(tierV3CalculationId)
-      assertThat(createdCase.captured.tierV3?.changeReason).isEqualTo("v3Reason")
+      verify {
+        mockCasePersistenceService.updateIfExist(
+          crn,
+          caseSummary,
+          match {
+            it.v2?.tierScore == "tierv2score" &&
+              it.v2.calculationId == tierV2CalculationId &&
+              it.v3?.tierScore == "tierv3score" &&
+              it.v3.calculationId == tierV3CalculationId
+          },
+        )
+      }
     }
 
     @Test
@@ -148,9 +167,6 @@ class CaseServiceTest {
 
       val caseSummary = CaseSummaryFactory().withCrn(crn).withName(Name("JOHN", "SMITH")).withNomsId("NOMS123").produce()
 
-      every { mockCaseRepository.findByCrn(crn) } returns caseEntity
-      val createdCase = slot<CaseEntity>()
-      every { mockCaseRepository.saveAndFlush(capture(createdCase)) } returnsArgument 0
       every { mockApDeliusContextApiClient.getCaseSummaries(any()) } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(listOf(caseSummary)),
@@ -163,6 +179,17 @@ class CaseServiceTest {
         body = null,
       )
 
+      val updatedCaseEntity = CaseEntityFactory()
+        .withCrn(crn)
+        .withName("JOHN SMITH")
+        .withNomsNumber("NOMS123")
+        .withTierV2(TierFactory().withTierScore("oldv2").withCalculationDate(now.toLocalDateTime()).produce())
+        .withTierV3(TierFactory().withTierScore("oldv3").produce())
+        .produce()
+
+      every { mockCasePersistenceService.getCase(crn) } returns caseEntity
+      every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns updatedCaseEntity
+
       val result = service.ensureCaseExists(crn)
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result.name).isEqualTo("JOHN SMITH")
@@ -172,8 +199,15 @@ class CaseServiceTest {
       assertThat(result.tier?.version).isEqualTo(TierVersionDto.V2)
       assertThat(result.tier?.provisional).isNull()
 
-      assertThat(createdCase.captured.tierV2?.tierScore).isEqualTo("oldv2")
-      assertThat(createdCase.captured.tierV3?.tierScore).isEqualTo("oldv3")
+      verify {
+        mockCasePersistenceService.updateIfExist(
+          crn,
+          caseSummary,
+          match {
+            it.v2 == null && it.v3 == null
+          },
+        )
+      }
     }
 
     @Test
@@ -190,52 +224,119 @@ class CaseServiceTest {
         .withNomsId("NOMS123")
         .produce()
 
-      every { mockCaseRepository.findByCrn(crn) } returns null
-
-      val createdCase = slot<CaseEntity>()
-      every { mockCaseRepository.saveAndFlush(capture(createdCase)) } returnsArgument 0
       every { mockApDeliusContextApiClient.getCaseSummaries(any()) } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(listOf(caseSummary)),
       )
 
       val tierV2CalculationId = UUID.randomUUID()
+      val tierV2 = Tier(
+        tierScore = "tierv2score",
+        calculationId = tierV2CalculationId,
+        calculationDate = now.toLocalDateTime(),
+        changeReason = "v2Reason",
+      )
       every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) } returns ClientResult.Success(
-        body = Tier(
-          tierScore = "tierv2score",
-          calculationId = tierV2CalculationId,
-          calculationDate = now.toLocalDateTime(),
-          changeReason = "v2Reason",
-        ),
+        body = tierV2,
         status = HttpStatus.OK,
       )
 
       val tierV3CalculationId = UUID.randomUUID()
+      val tierV3 = Tier(
+        tierScore = "tierv3score",
+        calculationId = tierV3CalculationId,
+        calculationDate = LocalDateTime.now(),
+        changeReason = "v3Reason",
+      )
       every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V3) } returns ClientResult.Success(
-        body = Tier(
-          tierScore = "tierv3score",
-          calculationId = tierV3CalculationId,
-          calculationDate = LocalDateTime.now(),
-          changeReason = "v3Reason",
-        ),
+        body = tierV3,
         status = HttpStatus.OK,
       )
 
+      val caseEntity = CaseEntityFactory()
+        .withCrn(crn)
+        .withName("JOHN SMITH")
+        .withNomsNumber("NOMS123")
+        .withTierV2(TierFactory().withTierScore("tierv2score").withCalculationId(tierV2CalculationId).withCalculationDate(tierV2.calculationDate).produce())
+        .withTierV3(TierFactory().withTierScore("tierv3score").withCalculationId(tierV3CalculationId).withCalculationDate(tierV3.calculationDate).produce())
+        .produce()
+
+      every { mockCasePersistenceService.getCase(crn) } returns null
+      every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns null
+      every { mockCasePersistenceService.createCase(any(), any()) } returns caseEntity
+
       val result = service.ensureCaseExists(crn)
       assertThat(result.crn).isEqualTo(crn)
-      assertThat(result.name).isEqualTo("JOHN SMITH")
-      assertThat(result.nomsNumber).isEqualTo("NOMS123")
-      assertThat(result.tier?.tierScore).isEqualTo("tierv2score")
       assertThat(result.tier?.calculationDate).isEqualTo(now.toLocalDateTime())
       assertThat(result.tier?.version).isEqualTo(TierVersionDto.V2)
       assertThat(result.tier?.provisional).isNull()
 
-      assertThat(createdCase.captured.tierV2?.tierScore).isEqualTo("tierv2score")
-      assertThat(createdCase.captured.tierV2?.calculationId).isEqualTo(tierV2CalculationId)
-      assertThat(createdCase.captured.tierV2?.changeReason).isEqualTo("v2Reason")
-      assertThat(createdCase.captured.tierV3?.tierScore).isEqualTo("tierv3score")
-      assertThat(createdCase.captured.tierV3?.calculationId).isEqualTo(tierV3CalculationId)
-      assertThat(createdCase.captured.tierV3?.changeReason).isEqualTo("v3Reason")
+      verify {
+        mockCasePersistenceService.createCase(
+          caseSummary,
+          match {
+            it.v2?.tierScore == "tierv2score" &&
+              it.v3?.tierScore == "tierv3score"
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `no existing case, returns case created by another transaction when insert hits crn unique constraint`() {
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
+      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
+
+      val crn = "CRN123"
+      val existingCase = CaseEntityFactory()
+        .withCrn(crn)
+        .withName("JOHN SMITH")
+        .withNomsNumber("NOMS123")
+        .produce()
+
+      val caseSummary = CaseSummaryFactory()
+        .withCrn(crn)
+        .withName(NameFactory().withForename("John").withSurname("Smith").produce())
+        .withNomsId("NOMS123")
+        .produce()
+
+      every { mockCaseRepository.findByCrn(crn) } returns existingCase
+      every { mockCasePersistenceService.getCase(crn) } returnsMany listOf(null, existingCase)
+      every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns null
+      every { mockCasePersistenceService.createCase(any(), any()) } throws DataIntegrityViolationException(
+        "duplicate case crn",
+        ConstraintViolationException(
+          "duplicate case crn",
+          SQLException("duplicate key value violates unique constraint", "23505"),
+          "cas1_offenders_crn",
+        ),
+      )
+
+      every { mockApDeliusContextApiClient.getCaseSummaries(any()) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(listOf(caseSummary)),
+      )
+      every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) } returns ClientResult.Failure.StatusCode(
+        status = HttpStatus.NOT_FOUND,
+        method = HttpMethod.GET,
+        path = "/crn/crn123/tier",
+        body = null,
+      )
+
+      val result = try {
+        service.ensureCaseExists(crn)
+      } catch (e: DataIntegrityViolationException) {
+        if (e.message == "duplicate case crn") {
+          service.getCase(crn)!!
+        } else {
+          throw e
+        }
+      }
+
+      assertThat(result.crn).isEqualTo(crn)
+      assertThat(result.name).isEqualTo("JOHN SMITH")
+      assertThat(result.nomsNumber).isEqualTo("NOMS123")
+      verify { mockCasePersistenceService.getCase(crn) }
     }
 
     @Test
@@ -245,17 +346,18 @@ class CaseServiceTest {
 
       val crn = "CRN123"
 
-      every { mockCaseRepository.findByCrn(crn) } returns null
+      val caseSummary = CaseSummaryFactory().withCrn(crn).withName(Name("JOHN", "SMITH")).withNomsId("NOMS123").produce()
+      val caseEntity = CaseEntityFactory()
+        .withCrn(crn)
+        .withName("JOHN SMITH")
+        .withNomsNumber("NOMS123")
+        .withTierV2(null)
+        .withTierV3(null)
+        .produce()
 
-      val createdCase = slot<CaseEntity>()
-      every { mockCaseRepository.saveAndFlush(capture(createdCase)) } returnsArgument 0
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(crn)) } returns ClientResult.Success(
         HttpStatus.OK,
-        CaseSummaries(
-          listOf(
-            CaseSummaryFactory().withCrn(crn).withName(Name("JOHN", "SMITH")).withNomsId("NOMS123").produce(),
-          ),
-        ),
+        CaseSummaries(listOf(caseSummary)),
       )
       every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Failure.StatusCode(
         status = HttpStatus.INTERNAL_SERVER_ERROR,
@@ -264,6 +366,10 @@ class CaseServiceTest {
         body = null,
       )
 
+      every { mockCasePersistenceService.getCase(crn) } returns null
+      every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns null
+      every { mockCasePersistenceService.createCase(any(), any()) } returns caseEntity
+
       val result = service.ensureCaseExists(crn)
 
       assertThat(result.crn).isEqualTo(crn)
@@ -271,8 +377,14 @@ class CaseServiceTest {
       assertThat(result.nomsNumber).isEqualTo("NOMS123")
       assertThat(result.tier).isNull()
 
-      assertThat(createdCase.captured.tierV2).isNull()
-      assertThat(createdCase.captured.tierV3).isNull()
+      verify {
+        mockCasePersistenceService.createCase(
+          caseSummary,
+          match {
+            it.v2 == null && it.v3 == null
+          },
+        )
+      }
     }
 
     @Test
@@ -282,17 +394,27 @@ class CaseServiceTest {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
       every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
-      every { mockCaseRepository.findByCrn(crn) } returns null
-      val createdCase = slot<CaseEntity>()
-      every { mockCaseRepository.saveAndFlush(capture(createdCase)) } returnsArgument 0
+      val caseSummary = CaseSummaryFactory().withCrn(crn).withName(Name("JOHN", "SMITH")).withNomsId("NOMS123").produce()
+
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(crn)) } returns ClientResult.Success(
         HttpStatus.OK,
-        CaseSummaries(listOf(CaseSummaryFactory().withCrn(crn).withName(Name("JOHN", "SMITH")).withNomsId("NOMS123").produce())),
+        CaseSummaries(listOf(caseSummary)),
       )
+      val tierV2 = Tier(tierScore = "tier value", calculationId = UUID.randomUUID(), calculationDate = now.toLocalDateTime(), changeReason = "reason")
       every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Success(
-        body = Tier(tierScore = "tier value", calculationId = UUID.randomUUID(), calculationDate = now.toLocalDateTime(), changeReason = "reason"),
+        body = tierV2,
         status = HttpStatus.OK,
       )
+
+      every { mockCasePersistenceService.getCase(crn) } returns null
+      every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns null
+      val caseEntity = CaseEntityFactory()
+        .withCrn(crn)
+        .withName("JOHN SMITH")
+        .withNomsNumber("NOMS123")
+        .withTierV2(TierFactory().withTierScore("tier value").withCalculationDate(tierV2.calculationDate).produce())
+        .produce()
+      every { mockCasePersistenceService.createCase(any(), any()) } returns caseEntity
 
       val result = service.ensureCaseExists(crn)
 
@@ -304,8 +426,15 @@ class CaseServiceTest {
       assertThat(result.tier?.version).isEqualTo(TierVersionDto.V2)
       assertThat(result.tier?.provisional).isNull()
 
-      assertThat(createdCase.captured.tierV2?.tierScore).isEqualTo("tier value")
-      assertThat(createdCase.captured.tierV3).isNull()
+      verify(exactly = 0) { mockHMPPSTierApiClient.getTier(crn, TierVersion.V3) }
+      verify {
+        mockCasePersistenceService.createCase(
+          caseSummary,
+          match {
+            it.v2?.tierScore == "tier value" && it.v3 == null
+          },
+        )
+      }
     }
 
     @Test
@@ -337,9 +466,11 @@ class CaseServiceTest {
         .withNomsId("NOMS123")
         .produce()
 
-      every { mockCaseRepository.findByCrn(uppercasedCrn) } returns null
-      val createdCase = slot<CaseEntity>()
-      every { mockCaseRepository.saveAndFlush(capture(createdCase)) } returnsArgument 0
+      every { mockCasePersistenceService.getCase(uppercasedCrn) } returns null
+      every { mockCasePersistenceService.updateIfExist(uppercasedCrn, any(), any()) } returns null
+      val caseEntity = CaseEntityFactory().withCrn(uppercasedCrn).withName("JOHN SMITH").produce()
+      every { mockCasePersistenceService.createCase(any(), any()) } returns caseEntity
+
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(uppercasedCrn)) } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(listOf(caseSummary)),
@@ -353,8 +484,8 @@ class CaseServiceTest {
 
       service.ensureCaseExists(crn)
 
-      assertThat(createdCase.captured.crn).isEqualTo(uppercasedCrn)
-      verify { mockCaseRepository.findByCrn(uppercasedCrn) }
+      verify { mockCasePersistenceService.updateIfExist(uppercasedCrn, any(), any()) }
+      verify { mockCasePersistenceService.createCase(any(), any()) }
       verify { mockApDeliusContextApiClient.getCaseSummaries(listOf(uppercasedCrn)) }
       verify { mockHMPPSTierApiClient.getTier(uppercasedCrn, TierVersion.V2) }
     }

@@ -120,6 +120,9 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
 class Cas1ApplicationTest : IntegrationTestBase() {
@@ -2018,6 +2021,77 @@ class Cas1ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Concurrent application creation for same CRN results in both threads succeeding`() {
+      givenAUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+
+          apDeliusContextUserAccessSingleCase(
+            caseAccess = CaseAccessFactory()
+              .withCrn(crn)
+              .withUserExcluded(false)
+              .withUserRestricted(false)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn, ManagingTeamsResponse(teamCodes = listOf("TEAM1")))
+
+          apAndOASysMockSuccessfulNeedsDetailsCall(crn, NeedsDetailsFactory().produce())
+          apAndOASysMockSuccessfulRoshRatingsCall(crn, RoshRatingsFactory().produce())
+
+          val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "Change Reason")
+          hmppsTierMockSuccessfulTierCall(crn, tier)
+          hmppsTierMockSuccessfulV3TierCall(crn, tier)
+
+          val executor = Executors.newFixedThreadPool(2)
+          // this is very important to make sure the two processes running at the same time
+          val barrier = CyclicBarrier(3) // 2 for child threads and 1 for the main thread
+
+          assertThat(caseRepository.findByCrn(crn)).isNull()
+
+          try {
+            val responses = List(2) {
+              executor.submit {
+                barrier.await(10, TimeUnit.SECONDS)
+                webTestClient.post()
+                  .uri("/cas1/applications/create")
+                  .header("Authorization", "Bearer $jwt")
+                  .bodyValue(
+                    Cas1NewApplication(
+                      crn = crn,
+                      convictionId = 123,
+                      deliusEventNumber = "1",
+                      offenceId = "789",
+                    ),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isCreated
+                  .returnResult<Cas1CreateApplicationOutcome>()
+              }
+            }
+
+            barrier.await(10, TimeUnit.SECONDS)
+
+            val results = responses.map { it.get() }
+
+            assertThat(results).hasSize(2)
+
+            assertThat(caseRepository.findByCrn(crn)).isNotNull()
+
+            assertThat(
+              approvedPremisesApplicationRepository.findAll()
+                .filter { it.crn == crn },
+            ).hasSize(2)
+          } finally {
+            executor.shutdown()
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Create new application returns 404 when a person cannot be found`() {
       givenAUser { user, jwt ->
         val crn = "X1234"
@@ -2094,7 +2168,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isCreated
-            .returnResult(Cas1CreateApplicationOutcome::class.java)
+            .returnResult<Cas1CreateApplicationOutcome>()
             .responseBody
             .blockFirst()
 
