@@ -7,6 +7,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason.noCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
@@ -74,7 +75,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
           val assessment2 = createCas1Assessment(crn, user, AssessmentDecision.REJECTED, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
           val assessment3 = createCas1Assessment(crn, user, AssessmentDecision.ACCEPTED, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
           val assessment4 = createCas1Assessment(crn, user, null, user, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
-          val assessment5 = createCas1Assessment(crn, user, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises, withdrawalReason = WithdrawPlacementRequestReason.noCapacity)
+          val assessment5 = createCas1Assessment(crn, user, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises, withdrawalReason = noCapacity)
 
           val expectedReferrals = listOf(
             Cas1ReferralHistory(
@@ -151,11 +152,11 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
               referredBy = createStaffDto(assessment5.application.createdByUser),
-              placementAddress = "10 Test Street, London, SW1A 1AA",
-              placementStatus = Cas1SpaceBookingStatus.ARRIVED,
-              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              placementAddress = null,
+              placementStatus = null,
+              requestForPlacementStatus = RequestForPlacementStatus.requestWithdrawn,
               uiUrl = "http://frontend/applications/${assessment5.application.id}",
-              withdrawalReason = WithdrawPlacementRequestReason.noCapacity,
+              withdrawalReason = noCapacity,
             ),
           )
 
@@ -230,7 +231,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
     apArea: ApAreaEntity? = null,
     cruManagementArea: Cas1CruManagementAreaEntity? = null,
     premises: ApprovedPremisesEntity? = null,
-    withdrawalReason: WithdrawPlacementRequestReason? = null
+    withdrawalReason: WithdrawPlacementRequestReason? = null,
   ): ApprovedPremisesAssessmentEntity {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
@@ -262,18 +263,21 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
         withExpectedArrival(LocalDate.now())
         withDuration(7)
         if (withdrawalReason != null) {
+          withIsWithdrawn(true)
           withWithdrawalReason(PlacementRequestWithdrawalReason.valueOf(withdrawalReason))
         }
       }
-      cas1SpaceBookingEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withApplication(application)
-        withPlacementRequest(placementRequest)
-        withCreatedBy(user)
-        withCrn(crn)
-        withExpectedArrivalDate(LocalDate.now())
-        withExpectedDepartureDate(LocalDate.now().plusDays(7))
-        withActualArrivalDate(LocalDate.now())
+      if (withdrawalReason == null) {
+        cas1SpaceBookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withApplication(application)
+          withPlacementRequest(placementRequest)
+          withCreatedBy(user)
+          withCrn(crn)
+          withExpectedArrivalDate(LocalDate.now())
+          withExpectedDepartureDate(LocalDate.now().plusDays(7))
+          withActualArrivalDate(LocalDate.now())
+        }
       }
     }
 
