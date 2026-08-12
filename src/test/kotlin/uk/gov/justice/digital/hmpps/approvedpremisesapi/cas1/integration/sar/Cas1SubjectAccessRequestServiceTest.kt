@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -74,8 +73,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
         "BookingNotMades" : [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
     }
     """.trimIndent()
 
@@ -99,7 +97,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     val expectedJson = """
     {
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
-        "ApplicationTimeline": [${approvedPremisesApplicationTimelineNotesJson(timelineNotes, offender)}],
+        "ApplicationTimeline": [${approvedPremisesApplicationTimelineNotesJson(timelineNotes)}],
         "Assessments": [],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
@@ -110,8 +108,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
         "BookingNotMades" : [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
     }
     """.trimIndent()
 
@@ -137,7 +134,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     {
         "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(offenderDetails, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
@@ -147,8 +144,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
         "BookingNotMades" : [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
     }
     """
     assertJsonEquals(expectedJson, result)
@@ -170,9 +166,8 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     {
        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
        "ApplicationTimeline" :[],
-       "Assessments": [${approvedPremisesAssessmentJson(offenderDetails, assessment)}],
+       "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
        "AssessmentClarificationNotes": [${approvedPremisesAssessmentClarificationNoteJson(
-      offenderDetails,
       clarificationNote,
     )}],
        "SpaceBookings": [],
@@ -183,8 +178,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
        "PlacementRequirements": [],
        "PlacementRequirementCriteria" : [],
        "BookingNotMades" : [],
-       "DomainEvents": [],
-       "DomainEventsMetadata": []
+       "DomainEvents": []
     }
     """.trimIndent()
 
@@ -235,8 +229,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "PlacementRequirements": [],
       "PlacementRequirementCriteria" : [],
       "BookingNotMades" : [],
-      "DomainEvents": [],
-      "DomainEventsMetadata": []
+      "DomainEvents": []
     }
     """.trimIndent()
 
@@ -269,15 +262,14 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "Assessments": [],
       "AssessmentClarificationNotes": [],
       "SpaceBookings":  [ ${spaceBookingsJson(booking)} ],
-      "OfflineApplications": [${offlineApplicationForSpaceBookingJson(booking)}],
+      "OfflineApplications": [${offlineApplicationForSpaceBookingJson()}],
       "Appeals": [],
       "PlacementApplications": [],
       "PlacementRequests": [],
       "PlacementRequirements": [],
       "PlacementRequirementCriteria" : [],
       "BookingNotMades" : [],
-      "DomainEvents": [],
-      "DomainEventsMetadata": []
+      "DomainEvents": []
     }
     """.trimIndent()
 
@@ -300,7 +292,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     {        
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
@@ -310,8 +302,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
         "BookingNotMades" : [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
     }
     """.trimIndent()
 
@@ -343,8 +334,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "PlacementRequirements": [],
       "PlacementRequirementCriteria" : [],
       "BookingNotMades" : [],
-      "DomainEvents": [],
-      "DomainEventsMetadata": []
+      "DomainEvents": []
     }
     """.trimIndent()
 
@@ -368,7 +358,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     {   
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
         "AssessmentClarificationNotes": [],
         "OfflineApplications":  [],    
         "SpaceBookings":  [],    
@@ -378,8 +368,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequirements": [${placementRequirementJson(placementRequest.placementRequirements)}],
         "PlacementRequirementCriteria" : [${placementRequirementCriteriaJson(placementRequest.placementRequirements)}],
         "BookingNotMades" : [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
+        "DomainEvents": []
     }
     """.trimIndent()
 
@@ -404,7 +393,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     {
       "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
       "ApplicationTimeline" :[],
-      "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
+      "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
       "AssessmentClarificationNotes": [],
       "SpaceBookings":  [],    
       "OfflineApplications":  [],    
@@ -414,8 +403,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "PlacementRequirements": [${placementRequirementJson(placementRequest.placementRequirements)}],
       "PlacementRequirementCriteria" : [${placementRequirementCriteriaJson(placementRequest.placementRequirements)}],
       "BookingNotMades": [${bookingsNotMadeJson(bookingNotMade)}],
-      "DomainEvents": [],
-      "DomainEventsMetadata": []
+      "DomainEvents": []
     }
     """.trimIndent()
 
@@ -438,7 +426,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       {
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],    
@@ -448,8 +436,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
         "BookingNotMades": [],
-        "DomainEvents": [${domainEventJson(domainEvent,user)}],
-        "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
+        "DomainEvents": [${domainEventJson(domainEvent,user)}]
       }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -458,19 +445,13 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   private fun placementRequirementCriteriaJson(placementRequirements: PlacementRequirementsEntity): String =
     """
       {
-          "crn": "${placementRequirements.application.crn}",
-          "noms_number": "${placementRequirements.application.nomsNumber}",
           "criteria_name": "${placementRequirements.desirableCriteria[0].name}",
           "property_name": "${placementRequirements.desirableCriteria[0].propertyName}",
-          "is_active": ${placementRequirements.desirableCriteria[0].isActive},
           "criteria_type": "DESIRABLE"
       },
       {
-          "crn": "${placementRequirements.application.crn}",
-          "noms_number": "${placementRequirements.application.nomsNumber}",
           "criteria_name": "${placementRequirements.essentialCriteria[0].name}",
           "property_name": "${placementRequirements.essentialCriteria[0].propertyName}",
-          "is_active": ${placementRequirements.essentialCriteria[0].isActive},
           "criteria_type": "ESSENTIAL"
       }
     """.trimIndent()
@@ -478,8 +459,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   private fun placementRequirementJson(placementRequirement: PlacementRequirementsEntity): String =
     """
       {
-        "crn": "${placementRequirement.application.crn}",
-        "noms_number": "${placementRequirement.application.nomsNumber}",
         "ap_type": "${placementRequirement.apType.name}",
         "outcode": "${placementRequirement.postcodeDistrict.outcode}",
         "radius": ${placementRequirement.radius},
@@ -490,8 +469,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   private fun approvedPremisesPlacementRequestsJson(placementRequest: PlacementRequestEntity): String =
     """
       {
-        "crn": "${placementRequest.application.crn}",
-        "noms_number": "${placementRequest.application.nomsNumber}",
         "expected_arrival": "$arrivedAtDateOnly",
         "duration": ${placementRequest.duration},
         "created_at": "$CREATED_AT",
@@ -505,10 +482,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   private fun approvedPremisesPlacementApplicationsJson(placementApplication: PlacementApplicationEntity): String =
     """
       {
-        "crn": "${placementApplication.application.crn}",
-        "noms_number": "${placementApplication.application.nomsNumber}",
         "document": $DOCUMENT_JSON_SIMPLE,
-        "data": $DATA_JSON_SIMPLE,
         "created_at": "$CREATED_AT_NO_TZ",
         "submitted_at": "$SUBMITTED_AT_NO_TZ" ,
         "allocated_at": null,
@@ -534,8 +508,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   private fun appealsJson(appeal: AppealEntity): String =
     """
       {
-          "crn": "${appeal.application.crn}" ,
-          "noms_number": "${appeal.application.nomsNumber}", 
           "appeal_date": "$APPEAL_DATE_ONLY",
           "appeal_detail": "${appeal.appealDetail}",
           "decision" : "${appeal.decision}",
@@ -551,18 +523,13 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   ): String = """
         {
            "name": "$NAME",
-           "crn": "${offenderDetails.otherIds.crn}",
            "noms_number": "${offenderDetails.otherIds.nomsNumber}",
            "document": $DOCUMENT_JSON_SIMPLE,
-           "data": $DATA_JSON_SIMPLE,
            "created_at": "$CREATED_AT",
            "submitted_at": "$SUBMITTED_AT",
-           "created_by_user": "${application.createdByUser.name}",
-           "application_user_name": "${application.applicantUserDetails?.name}",
+           "application_user_name": "${application.createdByUser.deliusUsername}",
            "event_number": "$EVENT_NUMBER",
            "is_womens_application": false,
-           "offence_id": "$OFFENCE_ID",
-           "conviction_id": $CONVICTION_ID,
            "risk_ratings": ${risksJson()}, 
            "release_type": "$RELEASE_TYPE_CONDITIONAL",
            "arrival_date": "$ARRIVED_AT",
@@ -572,7 +539,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
            "is_emergency_application": true,
            "target_location": null,
            "status": "${ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT}",
-           "inmate_in_out_status_on_submission": null,
+           "inmate_in_out_status_on_submission": "OUT",
            "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
            "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
            "ap_type": "${ApprovedPremisesType.NORMAL}",
@@ -587,12 +554,9 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
 
   private fun approvedPremisesApplicationTimelineNotesJson(
     timelineNote: ApplicationTimelineNoteEntity,
-    offender: OffenderDetailSummary,
   ): String =
     """
       {
-          "crn":"${offender.otherIds.crn}",
-          "noms_number":"${offender.otherIds.nomsNumber}",
           "body":"${timelineNote.body}",
           "created_at":"$CREATED_AT_NO_TZ",
           "user_name":"${timelineNote.createdBy?.name}"
@@ -600,16 +564,12 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     """.trimIndent()
 
   private fun approvedPremisesAssessmentJson(
-    offenderDetails: OffenderDetailSummary,
     assessment: ApprovedPremisesAssessmentEntity,
   ): String =
     """
       {
-         "crn":"${offenderDetails.otherIds.crn}",
-         "noms_number":"${offenderDetails.otherIds.nomsNumber}",
          "assessor_name":"${assessment.allocatedToUser?.name}",
          "document":$DOCUMENT_JSON_SIMPLE,
-         "data": $DATA_JSON_SIMPLE,
          "created_at":"$CREATED_AT",
          "allocated_at":"$ALLOCATED_AT",
          "submitted_at":"$SUBMITTED_AT",
@@ -626,13 +586,10 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     """.trimIndent()
 
   private fun approvedPremisesAssessmentClarificationNoteJson(
-    offenderDetails: OffenderDetailSummary,
     clarificationNote: AssessmentClarificationNoteEntity,
   ): String =
     """
       {
-        "crn": "${offenderDetails.otherIds.crn}",
-        "noms_number": "${offenderDetails.otherIds.nomsNumber}",
         "created_at": "$CREATED_AT",
         "query": "${clarificationNote.query}",
         "response": "${clarificationNote.response}",
@@ -644,18 +601,14 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   private fun bookingsNotMadeJson(bookingNotMade: BookingNotMadeEntity): String =
     """
       {
-        "crn": "${bookingNotMade.placementRequest.application.crn}",
-        "noms_number": "${bookingNotMade.placementRequest.application.nomsNumber}",
         "created_at": "$CREATED_AT_NO_TZ",
         "notes": "${bookingNotMade.notes}"
       }
     """.trimIndent()
 
-  private fun offlineApplicationForSpaceBookingJson(booking: Cas1SpaceBookingEntity) =
+  private fun offlineApplicationForSpaceBookingJson() =
     """
       {
-        "crn": "${booking.crn}",
-        "noms_number": ${if (booking.application?.nomsNumber != null) "\"${booking.application?.nomsNumber}\"" else null},
         "created_at":"$CREATED_AT"
       }
     """.trimIndent()

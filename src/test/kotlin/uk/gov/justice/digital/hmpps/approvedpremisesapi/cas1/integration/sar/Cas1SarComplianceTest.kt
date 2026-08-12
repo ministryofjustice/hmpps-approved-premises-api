@@ -158,15 +158,16 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       data = CAS1_APPLICATION_DATA,
       document = CAS1_APPLICATION_DOCUMENT,
     )
-    val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, "null")
-    approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
+
+    offlineApplicationEntity(offenderDetails)
+
+    val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
 
     applicationTimelineNoteEntity(application)
     approvedPremisesAssessmentClarificationNoteEntity(assessment)
     appealEntity(application, assessment)
 
-    val placementApplication = placementApplicationEntity(application, "null", CAS1_PLACEMENT_APPLICATION_DATA)
-    placementApplicationEntity(application, CAS1_PLACEMENT_APPLICATION_DOCUMENT, CAS1_PLACEMENT_APPLICATION_DATA)
+    val placementApplication = placementApplicationEntity(application, CAS1_PLACEMENT_APPLICATION_DOCUMENT, CAS1_PLACEMENT_APPLICATION_DATA)
     val placementRequirements = placementRequirementEntity(
       application,
       assessment,
@@ -301,7 +302,7 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
           .withDeliusEventNumber("1")
           .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
           .withCancelledAt(Instant.parse(CREATED_AT))
-          .withCancelledAtDate(LocalDate.of(2025,1,2))
+          .withCancelledAtDate(LocalDate.of(2025, 1, 2))
           .withCancelledBy(staticStaffMember())
           .withCancellationRecordedAt(Instant.parse(CREATED_AT))
           .withPremises(staticPremises())

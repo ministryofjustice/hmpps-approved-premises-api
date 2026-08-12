@@ -57,8 +57,7 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Assessments": [],
       "StatusUpdates": [],
       "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
+      "DomainEvents":  []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -88,8 +87,7 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [],
       "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
+      "DomainEvents":  []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -121,8 +119,7 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [],
       "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
+      "DomainEvents":  []
 
    }
     """.trimIndent()
@@ -157,8 +154,7 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
       "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
+      "DomainEvents":  []
       
    }
     """.trimIndent()
@@ -194,8 +190,7 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
       "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents": [${domainEventJson(domainEvent, null)}],
-      "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
+      "DomainEvents": [${domainEventJson(domainEvent, null)}]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
