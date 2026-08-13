@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -22,12 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CasePersistenceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
@@ -59,6 +58,9 @@ class CaseServiceTest {
 
   @RelaxedMockK
   private lateinit var mockSentryService: SentryService
+
+  @MockK
+  private lateinit var mockTierService: TierService
 
   @InjectMockKs
   private lateinit var service: CaseService
@@ -93,28 +95,24 @@ class CaseServiceTest {
       )
 
       val tierV2CalculationId = UUID.randomUUID()
-      val tierV2 = Tier(
-        tierScore = "tierv2score",
-        calculationId = tierV2CalculationId,
-        calculationDate = now.toLocalDateTime(),
-        changeReason = "v2Reason",
-      )
-      every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) } returns ClientResult.Success(
-        body = tierV2,
-        status = HttpStatus.OK,
-      )
+      val tierV2 = TierFactory()
+        .withTierScore("tierv2score")
+        .withCalculationId(tierV2CalculationId)
+        .withCalculationDate(now.toLocalDateTime())
+        .withChangeReason("v2Reason")
+        .withVersion(TierVersion.V2)
+        .produce()
+      every { mockTierService.fetchTierOrNull(crn, TierVersion.V2) } returns tierV2
 
       val tierV3CalculationId = UUID.randomUUID()
-      val tierV3 = Tier(
-        tierScore = "tierv3score",
-        calculationId = tierV3CalculationId,
-        calculationDate = LocalDateTime.now(),
-        changeReason = "v3Reason",
-      )
-      every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V3) } returns ClientResult.Success(
-        body = tierV3,
-        status = HttpStatus.OK,
-      )
+      val tierV3 = TierFactory()
+        .withTierScore("tierv3score")
+        .withCalculationId(tierV3CalculationId)
+        .withCalculationDate(LocalDateTime.now())
+        .withChangeReason("v3Reason")
+        .withVersion(TierVersion.V3)
+        .produce()
+      every { mockTierService.fetchTierOrNull(crn, TierVersion.V3) } returns tierV3
 
       val updatedCaseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -172,12 +170,7 @@ class CaseServiceTest {
         CaseSummaries(listOf(caseSummary)),
       )
 
-      every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Failure.StatusCode(
-        status = HttpStatus.INTERNAL_SERVER_ERROR,
-        method = HttpMethod.GET,
-        path = "/crn/crn123/tier",
-        body = null,
-      )
+      every { mockTierService.fetchTierOrNull(crn, any()) } returns null
 
       val updatedCaseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -230,28 +223,24 @@ class CaseServiceTest {
       )
 
       val tierV2CalculationId = UUID.randomUUID()
-      val tierV2 = Tier(
-        tierScore = "tierv2score",
-        calculationId = tierV2CalculationId,
-        calculationDate = now.toLocalDateTime(),
-        changeReason = "v2Reason",
-      )
-      every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) } returns ClientResult.Success(
-        body = tierV2,
-        status = HttpStatus.OK,
-      )
+      val tierV2 = TierFactory()
+        .withTierScore("tierv2score")
+        .withCalculationId(tierV2CalculationId)
+        .withCalculationDate(now.toLocalDateTime())
+        .withChangeReason("v2Reason")
+        .withVersion(TierVersion.V2)
+        .produce()
+      every { mockTierService.fetchTierOrNull(crn, TierVersion.V2) } returns tierV2
 
       val tierV3CalculationId = UUID.randomUUID()
-      val tierV3 = Tier(
-        tierScore = "tierv3score",
-        calculationId = tierV3CalculationId,
-        calculationDate = LocalDateTime.now(),
-        changeReason = "v3Reason",
-      )
-      every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V3) } returns ClientResult.Success(
-        body = tierV3,
-        status = HttpStatus.OK,
-      )
+      val tierV3 = TierFactory()
+        .withTierScore("tierv3score")
+        .withCalculationId(tierV3CalculationId)
+        .withCalculationDate(LocalDateTime.now())
+        .withChangeReason("v3Reason")
+        .withVersion(TierVersion.V3)
+        .produce()
+      every { mockTierService.fetchTierOrNull(crn, TierVersion.V3) } returns tierV3
 
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -316,12 +305,7 @@ class CaseServiceTest {
         HttpStatus.OK,
         CaseSummaries(listOf(caseSummary)),
       )
-      every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) } returns ClientResult.Failure.StatusCode(
-        status = HttpStatus.NOT_FOUND,
-        method = HttpMethod.GET,
-        path = "/crn/crn123/tier",
-        body = null,
-      )
+      every { mockTierService.fetchTierOrNull(crn, TierVersion.V2) } returns null
 
       val result = try {
         service.ensureCaseExists(crn)
@@ -359,12 +343,7 @@ class CaseServiceTest {
         HttpStatus.OK,
         CaseSummaries(listOf(caseSummary)),
       )
-      every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Failure.StatusCode(
-        status = HttpStatus.INTERNAL_SERVER_ERROR,
-        method = HttpMethod.GET,
-        path = "/crn/crn123/tier",
-        body = null,
-      )
+      every { mockTierService.fetchTierOrNull(crn, any()) } returns null
 
       every { mockCasePersistenceService.getCase(crn) } returns null
       every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns null
@@ -400,11 +379,14 @@ class CaseServiceTest {
         HttpStatus.OK,
         CaseSummaries(listOf(caseSummary)),
       )
-      val tierV2 = Tier(tierScore = "tier value", calculationId = UUID.randomUUID(), calculationDate = now.toLocalDateTime(), changeReason = "reason")
-      every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Success(
-        body = tierV2,
-        status = HttpStatus.OK,
-      )
+      val tierV2 = TierFactory()
+        .withTierScore("tier value")
+        .withCalculationId(UUID.randomUUID())
+        .withCalculationDate(now.toLocalDateTime())
+        .withChangeReason("reason")
+        .withVersion(TierVersion.V2)
+        .produce()
+      every { mockTierService.fetchTierOrNull(crn, any()) } returns tierV2
 
       every { mockCasePersistenceService.getCase(crn) } returns null
       every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns null
@@ -426,7 +408,7 @@ class CaseServiceTest {
       assertThat(result.tier?.version).isEqualTo(TierVersionDto.V2)
       assertThat(result.tier?.provisional).isNull()
 
-      verify(exactly = 0) { mockHMPPSTierApiClient.getTier(crn, TierVersion.V3) }
+      verify(exactly = 0) { mockTierService.fetchTierOrNull(crn, TierVersion.V3) }
       verify {
         mockCasePersistenceService.createCase(
           caseSummary,
@@ -476,18 +458,14 @@ class CaseServiceTest {
         CaseSummaries(listOf(caseSummary)),
       )
 
-      every { mockHMPPSTierApiClient.getTier(uppercasedCrn, any()) } returns ClientResult.Failure.Other(
-        HttpMethod.GET,
-        "/tier",
-        RuntimeException("Fail"),
-      )
+      every { mockTierService.fetchTierOrNull(uppercasedCrn, any()) } returns null
 
       service.ensureCaseExists(crn)
 
       verify { mockCasePersistenceService.updateIfExist(uppercasedCrn, any(), any()) }
       verify { mockCasePersistenceService.createCase(any(), any()) }
       verify { mockApDeliusContextApiClient.getCaseSummaries(listOf(uppercasedCrn)) }
-      verify { mockHMPPSTierApiClient.getTier(uppercasedCrn, TierVersion.V2) }
+      verify { mockTierService.fetchTierOrNull(uppercasedCrn, TierVersion.V2) }
     }
   }
 
@@ -504,20 +482,20 @@ class CaseServiceTest {
 
       every { mockCaseRepository.findByCrn(crn) } returns caseEntity
       every { mockCaseRepository.save(any()) } returns caseEntity
-      every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) } returns ClientResult.Success(
-        body = Tier(tierScore = "V2_NEW", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "reason"),
-        status = HttpStatus.OK,
-      )
-      every { mockHMPPSTierApiClient.getTier(crn, TierVersion.V3) } returns ClientResult.Success(
-        body = Tier(tierScore = "V3_NEW", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "reason"),
-        status = HttpStatus.OK,
-      )
+      every { mockTierService.fetchTierOrError(crn, TierVersion.V2) } returns TierFactory()
+        .withTierScore("V2_NEW")
+        .withVersion(TierVersion.V2)
+        .produce()
+      every { mockTierService.fetchTierOrError(crn, TierVersion.V3) } returns TierFactory()
+        .withTierScore("V3_NEW")
+        .withVersion(TierVersion.V3)
+        .produce()
 
       val result = service.reviseTier(crn)
 
       assertThat(result).isTrue()
-      verify { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) }
-      verify { mockHMPPSTierApiClient.getTier(crn, TierVersion.V3) }
+      verify { mockTierService.fetchTierOrError(crn, TierVersion.V2) }
+      verify { mockTierService.fetchTierOrError(crn, TierVersion.V3) }
       verify {
         mockCaseRepository.save(
           match {
@@ -538,16 +516,16 @@ class CaseServiceTest {
 
       every { mockCaseRepository.findByCrn(crn) } returns caseEntity
       every { mockCaseRepository.save(any()) } returns caseEntity
-      every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Success(
-        body = Tier(tierScore = "V2_NEW", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "reason"),
-        status = HttpStatus.OK,
-      )
+      every { mockTierService.fetchTierOrError(crn, any()) } returns TierFactory()
+        .withTierScore("V2_NEW")
+        .withVersion(TierVersion.V2)
+        .produce()
 
       val result = service.reviseTier(crn)
 
       assertThat(result).isTrue()
-      verify { mockHMPPSTierApiClient.getTier(crn, TierVersion.V2) }
-      verify(exactly = 0) { mockHMPPSTierApiClient.getTier(any(), TierVersion.V3) }
+      verify { mockTierService.fetchTierOrError(crn, TierVersion.V2) }
+      verify(exactly = 0) { mockTierService.fetchTierOrError(any(), TierVersion.V3) }
       verify {
         mockCaseRepository.save(
           match {
@@ -575,12 +553,7 @@ class CaseServiceTest {
       val caseEntity = CaseEntityFactory().withCrn(crn).produce()
 
       every { mockCaseRepository.findByCrn(crn) } returns caseEntity
-      every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Failure.StatusCode(
-        status = HttpStatus.INTERNAL_SERVER_ERROR,
-        method = HttpMethod.GET,
-        path = "/crn/crn123/tier",
-        body = null,
-      )
+      every { mockTierService.fetchTierOrError(crn, any()) } throws RuntimeException("error")
 
       assertThatThrownBy {
         service.reviseTier(crn)
@@ -595,19 +568,14 @@ class CaseServiceTest {
       val caseEntity = CaseEntityFactory().withCrn(uppercasedCrn).produce()
 
       every { mockCaseRepository.findByCrn(uppercasedCrn) } returns caseEntity
-      every { mockHMPPSTierApiClient.getTier(uppercasedCrn, any()) } returns ClientResult.Failure.StatusCode(
-        status = HttpStatus.INTERNAL_SERVER_ERROR,
-        method = HttpMethod.GET,
-        path = "/crn/$uppercasedCrn/tier",
-        body = null,
-      )
+      every { mockTierService.fetchTierOrError(uppercasedCrn, any()) } throws RuntimeException("error")
 
       assertThatThrownBy {
         service.reviseTier(crn)
       }.isInstanceOf(RuntimeException::class.java)
 
       verify { mockCaseRepository.findByCrn(uppercasedCrn) }
-      verify { mockHMPPSTierApiClient.getTier(uppercasedCrn, TierVersion.V2) }
+      verify { mockTierService.fetchTierOrError(uppercasedCrn, TierVersion.V2) }
     }
   }
 

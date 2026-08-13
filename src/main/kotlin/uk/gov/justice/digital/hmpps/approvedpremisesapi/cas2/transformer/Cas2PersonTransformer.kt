@@ -4,12 +4,13 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 
 @Component
 class Cas2PersonTransformer {
 
-  fun transformCaseSummaryToFullPerson(caseSummary: CaseSummary): FullPerson = FullPerson(
+  fun transformCaseSummaryToFullPerson(caseSummary: CaseSummary, tier: TierDto?): FullPerson = FullPerson(
     name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
     dateOfBirth = caseSummary.dateOfBirth,
     sex = caseSummary.gender ?: "Unknown",
@@ -19,6 +20,6 @@ class Cas2PersonTransformer {
     nomsNumber = caseSummary.nomsId,
     pncNumber = caseSummary.pnc,
     nationality = caseSummary.profile?.nationality ?: "Unknown",
-    tier = null,
+    tier = tier,
   )
 }
