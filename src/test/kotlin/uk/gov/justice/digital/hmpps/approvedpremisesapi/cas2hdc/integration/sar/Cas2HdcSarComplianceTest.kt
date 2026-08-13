@@ -50,8 +50,8 @@ class Cas2HdcSarComplianceTest : Cas2SarTestBase() {
 
     const val EXPECTED_API_RESPONSE_PATH = "/sar/cas2-hdc-expected-api-response.json"
     const val EXPECTED_REPORT_PATH = "/sar/cas2-hdc-expected-report.html"
-    const val GENERATED_API_RESPONSE_FILENAME = "cas2-hdc-sar-api-response.json.log"
-    const val GENERATED_REPORT_FILENAME = "cas2-hdc-sar-report.html.log"
+    const val GENERATED_API_RESPONSE_FILENAME = "cas2-hdc-expected-api-response.json.log"
+    const val GENERATED_REPORT_FILENAME = "cas2-hdc-expected-report.html.log"
   }
 
   private val asserter by lazy {
