@@ -81,7 +81,11 @@ class Cas1ExternalApplicationTransformer(
     )
   }
 
-  private fun getCancellationReason(placement: Cas1SpaceBookingShortSummary?): String? = if (placement?.cancellation?.reason?.name == CancellationReasonRepository.CAS1_OTHER_NAME) placement.cancellation.reasonNotes else placement?.cancellation?.reason?.name
+  private fun getCancellationReason(placement: Cas1SpaceBookingShortSummary?): String? = if (placement?.cancellation?.reason?.name == CancellationReasonRepository.CAS1_OTHER_NAME) {
+    placement.cancellation.reasonNotes
+  } else {
+    placement?.cancellation?.reason?.name
+  }
 
   fun transformToCas1SuitableApplication(
     application: ApprovedPremisesApplicationEntity,
