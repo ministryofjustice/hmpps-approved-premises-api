@@ -108,7 +108,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   protected fun bookingsJson(booking: Cas3BookingEntity): String =
     """
       {
-         "crn": "${booking.crn}",
          "arrival_date": "${booking.arrivalDate}",
          "departure_date": "${booking.departureDate}",
          "original_arrival_date": "${booking.originalArrivalDate}",

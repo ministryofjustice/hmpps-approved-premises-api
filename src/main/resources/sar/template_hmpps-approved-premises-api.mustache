@@ -1244,44 +1244,21 @@
     {{#CAS3}}
     <h2>Temporary Accommodation</h2>
 
-        <h3>Booking Extensions</h3>
-        {{#BookingExtensions}}
-            <h4>Booking Extension</h4>
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-25">New departure date</td>
-                    <td class="data-column-25">Previous departure date</td>
-                    <td class="data-column-25">Created at</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue (formatDate new_departure_date) }}</td>
-                    <td>{{ optionalValue (formatDate previous_departure_date) }}</td>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                </tr>
-            </table>
-            <table class="summary-list">
-                <tr><td>Notes</td><td>{{ optionalValue notes }}</td></tr>
-            </table>
-        {{/BookingExtensions}}
-        {{^BookingExtensions}}
-            <p>No Data Held</p>
-        {{/BookingExtensions}}
-
         <h3>Applications</h3>
         {{#Applications}}
             <h4>Application</h4>
             <table class="data-table">
                 <tr>
                     <td class="data-column-25">Probation Delivery Unit</td>
-                    <td class="data-column-25">Offence id</td>
                     <td class="data-column-25">Offender name</td>
                     <td class="data-column-25">Submitted at</td>
+                    <td class="data-column-25">Event Number</td>
                 </tr>
                 <tr>
                     <td>{{ optionalValue pdu }}</td>
-                    <td>{{ optionalValue offence_id }}</td>
                     <td>{{ optionalValue offender_name }}</td>
                     <td>{{ optionalValue (formatDate submitted_at) }}</td>
+                    <td>{{ optionalValue event_number }}</td>
                 </tr>
             </table>
             <table class="data-table">
@@ -1452,31 +1429,6 @@
             <p>No Data Held</p>
         {{/Applications}}
 
-        <h3>Assessment Referral History Notes</h3>
-        {{#AssessmentReferralHistoryNotes}}
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-30">Created at</td>
-                    <td class="data-column-30">Note type</td>
-                    <td class="data-column-30">System noted type</td>
-                    <td class="data-column-30">Created by user</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue note_type }}</td>
-                    <td>{{ optionalValue system_note_type }}</td>
-                    <td>{{ optionalValue created_by_user }}</td>
-                </tr>
-            </table>
-            <table class="summary-list">
-                <tr><td>Message</td><td>{{ optionalValue message }}</td></tr>
-            </table>
-            <br/>
-        {{/AssessmentReferralHistoryNotes}}
-        {{^AssessmentReferralHistoryNotes}}
-            <p>No Data Held</p>
-        {{/AssessmentReferralHistoryNotes}}
-
         <h3>Bookings</h3>
         {{#Bookings}}
             <h4>Booking</h4>
@@ -1520,6 +1472,29 @@
         {{^Bookings}}
             <p>No Data Held</p>
         {{/Bookings}}
+
+        <h3>Booking Extensions</h3>
+        {{#BookingExtensions}}
+            <h4>Booking Extension</h4>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">New departure date</td>
+                    <td class="data-column-25">Previous departure date</td>
+                    <td class="data-column-25">Created at</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue (formatDate new_departure_date) }}</td>
+                    <td>{{ optionalValue (formatDate previous_departure_date) }}</td>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                </tr>
+            </table>
+            <table class="summary-list">
+                <tr><td>Notes</td><td>{{ optionalValue notes }}</td></tr>
+            </table>
+        {{/BookingExtensions}}
+        {{^BookingExtensions}}
+            <p>No Data Held</p>
+        {{/BookingExtensions}}
 
         <h3>Assessments</h3>
         {{#Assessments}}
@@ -1590,6 +1565,31 @@
         {{^Assessments}}
             <p>No Data Held</p>
         {{/Assessments}}
+
+        <h3>Assessment Referral History Notes</h3>
+        {{#AssessmentReferralHistoryNotes}}
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Note type</td>
+                    <td class="data-column-30">System noted type</td>
+                    <td class="data-column-30">Created by user</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ optionalValue note_type }}</td>
+                    <td>{{ optionalValue system_note_type }}</td>
+                    <td>{{ optionalValue created_by_user }}</td>
+                </tr>
+            </table>
+            <table class="summary-list">
+                <tr><td>Message</td><td>{{ optionalValue message }}</td></tr>
+            </table>
+            <br/>
+        {{/AssessmentReferralHistoryNotes}}
+        {{^AssessmentReferralHistoryNotes}}
+            <p>No Data Held</p>
+        {{/AssessmentReferralHistoryNotes}}
 
         <h3>Cancellations</h3>
         {{#Cancellations}}

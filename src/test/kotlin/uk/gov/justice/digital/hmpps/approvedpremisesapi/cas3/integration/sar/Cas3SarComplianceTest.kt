@@ -3,11 +3,32 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.CAS3BookingCancelledEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.CAS3BookingConfirmedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.CAS3BookingProvisionallyMadeEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.CAS3PersonArrivedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.CAS3PersonDepartedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.PersonReferenceFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.PremisesFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingConfirmedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingProvisionallyMadeEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonArrivedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonDepartedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 
 /**
  * Per-service SAR compliance test for CAS3.
@@ -20,6 +41,7 @@ import java.time.LocalDate
  * This class verifies CAS3's slice end-to-end against CAS3-specific fixtures
  * via [CasSarFixtureAsserter].
  */
+@SuppressWarnings("LongMethod")
 class Cas3SarComplianceTest : Cas3SarTestBase() {
 
   companion object {
@@ -78,6 +100,7 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     val assessor = userEntityFactory.produceAndPersist {
       withName(TEST_ASSESSOR_NAME)
       withProbationRegion(givenAProbationRegion())
+      withDeliusUsername("ASSESOR_USERNAME")
     }
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(
       offenderDetails,
@@ -101,8 +124,278 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     )
     bookingExtensionEntity(booking)
     cancellationEntity(booking)
-    domainEventEntity(offenderDetails, temporaryAccommodationApplication.id, temporaryAccommodationAssessment.id, user.id, DomainEventType.CAS3_REFERRAL_SUBMITTED, ServiceName.temporaryAccommodation)
+    setupDomainEvents(offenderDetails, temporaryAccommodationApplication, temporaryAccommodationAssessment, assessor, booking)
   }
+
+  private fun setupDomainEvents(
+    offenderDetails: OffenderDetailSummary,
+    application: TemporaryAccommodationApplicationEntity,
+    assessment: AssessmentEntity,
+    assessor: UserEntity,
+    booking: Cas3BookingEntity,
+  ) {
+    val domainEventCommon = DomainEventBuilderParams(
+      offenderDetails,
+      application.id,
+      assessment.id,
+      assessor.id,
+      ServiceName.temporaryAccommodation,
+      bookingId = booking.id,
+    )
+
+    domainEventEntity(domainEventCommon, DomainEventType.CAS3_REFERRAL_SUBMITTED)
+
+    domainEventEntity(
+      domainEventCommon,
+      DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE,
+      CAS3BookingProvisionallyMadeEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.bookingProvisionallyMade,
+        eventDetails =
+        CAS3BookingProvisionallyMadeEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(booking.id)
+          .withPersonReference(
+            PersonReferenceFactory().withCrn(TEST_CRN).withNoms(
+              TEST_NOMS_NUMBER,
+            ).produce(),
+          )
+          .withPremisesId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookedBy(staticStaffMember())
+          .withExpectedArrivedAt(Instant.parse("2025-01-01T00:00:00Z"))
+          .withNotes("")
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      domainEventCommon,
+      DomainEventType.CAS3_BOOKING_CONFIRMED,
+
+      CAS3BookingConfirmedEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.bookingConfirmed,
+        eventDetails =
+        CAS3BookingConfirmedEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(
+            PersonReferenceFactory().withCrn(TEST_CRN).withNoms(
+              TEST_NOMS_NUMBER,
+            ).produce(),
+          )
+          .withPremisesId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withConfirmedBy(staticStaffMember())
+          .withExpectedArrivedAt(Instant.parse("2025-01-01T00:00:00Z"))
+          .withNotes("")
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      domainEventCommon,
+      DomainEventType.CAS3_BOOKING_CANCELLED,
+      CAS3BookingCancelledEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.bookingCancelled,
+        eventDetails =
+        CAS3BookingCancelledEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(
+            PersonReferenceFactory().withCrn(TEST_CRN).withNoms(
+              TEST_NOMS_NUMBER,
+            ).produce(),
+          )
+          .withPremisesId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withCancellationReason("reason")
+          .withCancelledAt(LocalDate.parse("2025-01-01"))
+          .withCancelledBy(staticStaffMember())
+          .withNotes("")
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      domainEventCommon,
+      DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED,
+      CAS3BookingCancelledEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.bookingCancelledUpdated,
+        eventDetails =
+        CAS3BookingCancelledEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(
+            PersonReferenceFactory().withCrn(TEST_CRN).withNoms(
+              TEST_NOMS_NUMBER,
+            ).produce(),
+          )
+          .withPremisesId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withCancellationReason("reason")
+          .withCancelledAt(LocalDate.parse("2025-01-01"))
+          .withCancelledBy(staticStaffMember())
+          .withNotes("")
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      domainEventCommon,
+      DomainEventType.CAS3_PERSON_ARRIVED,
+
+      CAS3PersonArrivedEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.personArrived,
+        eventDetails =
+        CAS3PersonArrivedEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(
+            PersonReferenceFactory().withCrn(TEST_CRN).withNoms(
+              TEST_NOMS_NUMBER,
+            ).produce(),
+          )
+          .withPremisesId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPremises(
+            PremisesFactory()
+              .withAddressLine1("address line1")
+              .withPostcode("postcode")
+              .withRegion("region")
+              .produce(),
+          )
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withArrivedAt(Instant.parse("2025-01-01T00:00:00Z"))
+          .withExpectedDepartureOn(LocalDate.parse("2025-01-02"))
+          .withDeliusEventNumber("1")
+          .withNotes("notes")
+          .withRecordedBy(staticStaffMember())
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      domainEventCommon,
+      DomainEventType.CAS3_PERSON_ARRIVED_UPDATED,
+
+      CAS3PersonArrivedEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.personArrivedUpdated,
+        eventDetails =
+        CAS3PersonArrivedEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(
+            PersonReferenceFactory().withCrn(TEST_CRN).withNoms(
+              TEST_NOMS_NUMBER,
+            ).produce(),
+          )
+          .withPremisesId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPremises(
+            PremisesFactory()
+              .withAddressLine1("address line1")
+              .withPostcode("postcode")
+              .withRegion("region")
+              .produce(),
+          )
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withArrivedAt(Instant.parse("2025-01-01T00:00:00Z"))
+          .withExpectedDepartureOn(LocalDate.parse("2025-01-02"))
+          .withDeliusEventNumber("1")
+          .withNotes("notes")
+          .withRecordedBy(staticStaffMember())
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      domainEventCommon,
+      DomainEventType.CAS3_PERSON_DEPARTED,
+
+      CAS3PersonDepartedEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.personDeparted,
+        eventDetails =
+        CAS3PersonDepartedEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(
+            PersonReferenceFactory().withCrn(TEST_CRN).withNoms(
+              TEST_NOMS_NUMBER,
+            ).produce(),
+          )
+          .withPremisesId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPremises(
+            PremisesFactory()
+              .withAddressLine1("address line1")
+              .withPostcode("postcode")
+              .withRegion("region")
+              .produce(),
+          )
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withDepartedAt(Instant.parse("2025-01-01T00:00:00Z"))
+          .withReason("reason")
+          .withReasonDetail("reason detail")
+          .withDeliusEventNumber("1")
+          .withNotes("notes")
+          .withRecordedBy(staticStaffMember())
+          .produce(),
+      ),
+    )
+
+    domainEventEntity(
+      domainEventCommon,
+      DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED,
+
+      CAS3PersonDepartedEvent(
+        id = UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"),
+        timestamp = Instant.parse("2021-07-31T00:00:00.00Z"),
+        eventType = EventType.personDepartureUpdated,
+        eventDetails =
+        CAS3PersonDepartedEventDetailsFactory()
+          .withApplicationId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPersonReference(
+            PersonReferenceFactory().withCrn(TEST_CRN).withNoms(
+              TEST_NOMS_NUMBER,
+            ).produce(),
+          )
+          .withPremisesId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withPremises(
+            PremisesFactory()
+              .withAddressLine1("address line1")
+              .withPostcode("postcode")
+              .withRegion("region")
+              .produce(),
+          )
+          .withBookingId(UUID.fromString("72f972cc-9e74-4a8c-b398-becb4c14b4c4"))
+          .withDepartedAt(Instant.parse("2025-01-01T00:00:00Z"))
+          .withReason("reason")
+          .withReasonDetail("reason detail")
+          .withDeliusEventNumber("1")
+          .withNotes("notes")
+          .withRecordedBy(staticStaffMember())
+          .produce(),
+      ),
+    )
+  }
+
+  private fun staticStaffMember() = StaffMemberFactory()
+    .withStaffCode("code")
+    .withUsername("username")
+    .withProbationRegionCode("region")
+    .produce()
 
   @Test
   fun `CAS3 SAR API should return expected data`() {

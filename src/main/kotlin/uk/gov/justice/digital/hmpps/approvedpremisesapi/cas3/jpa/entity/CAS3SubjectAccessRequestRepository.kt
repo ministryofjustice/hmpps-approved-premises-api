@@ -12,14 +12,11 @@ class CAS3SubjectAccessRequestRepository(
   jdbcTemplate: NamedParameterJdbcTemplate,
 ) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
 
-  fun temporaryAccommodationApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
+  fun cas3Applications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
      select json_agg(applications) as json from ( 
         select
-             a.crn,
-             a.noms_number,
-             a."data",
              taa."name" as offender_name,
              a."document",
              a.created_at,
@@ -67,13 +64,12 @@ class CAS3SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun temporaryAccommodationBookings(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
+  fun cas3Bookings(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
     select json_agg(booking) as json
     from (
           select
-              b.crn,
               b.arrival_date,
               b.departure_date,
               b.original_arrival_date,
@@ -100,16 +96,13 @@ class CAS3SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun temporaryAccommodationAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
+  fun cas3Assessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
         select json_agg(assessments) as json 
         from (
               select
-                app.crn,
                 u."name" as assessor_name,
-                assess."data" ,
-                assess."document",
                 assess.created_at,
                 assess.allocated_at,
                 assess.submitted_at,
