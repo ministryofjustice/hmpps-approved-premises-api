@@ -6,13 +6,11 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.CaseTiers
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.BackfillCasesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
@@ -21,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_INCLUDE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
 /**
  * CAS maintains a local copy of NDelius Case data, allowing us to perform queries
@@ -42,7 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as
 class CaseService(
   private val caseRepository: CaseRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val hmppsTierApiClient: HMPPSTierApiClient,
+  private val tierService: TierService,
   private val featureFlagService: FeatureFlagService,
   private val sentryService: SentryService,
   private val casePersistenceService: CasePersistenceService,
@@ -95,11 +92,11 @@ class CaseService(
     val normalizedCrn = crn.uppercase()
     val case = caseRepository.findByCrn(normalizedCrn) ?: return false
 
-    case.tierV2 = fetchTierOrError(normalizedCrn, TierVersion.V2)
+    case.tierV2 = tierService.fetchTierOrError(normalizedCrn, TierVersion.V2)
     log.info("Have updated tierV2 for $normalizedCrn to $case.tierV2")
 
     if (includeTierV3) {
-      case.tierV3 = fetchTierOrError(normalizedCrn, TierVersion.V3)
+      case.tierV3 = tierService.fetchTierOrError(normalizedCrn, TierVersion.V3)
       log.info("Have updated tierV3 for $normalizedCrn to $case.tierV3")
     }
     caseRepository.save(case)
@@ -137,8 +134,8 @@ class CaseService(
   }
 
   private fun fetchAvailableTiers(crn: String) = CaseTiers(
-    v2 = fetchTierOrNull(crn, TierVersion.V2),
-    v3 = if (includeTierV3) fetchTierOrNull(crn, TierVersion.V3) else null,
+    v2 = tierService.fetchTierOrNull(crn, TierVersion.V2),
+    v3 = if (includeTierV3) tierService.fetchTierOrNull(crn, TierVersion.V3) else null,
   )
 
   private fun CaseEntity.toDto() = CaseDto(
@@ -153,25 +150,6 @@ class CaseService(
       tierV2?.toDto()
     },
   )
-
-  private fun UpstreamTier.toTier(tierVersion: TierVersion) = Tier(
-    tierScore = tierScore,
-    calculationId = calculationId,
-    calculationDate = calculationDate,
-    changeReason = changeReason,
-    provisional = provisional,
-    version = tierVersion,
-  )
-
-  private fun fetchTierOrNull(crn: String, version: TierVersion) = when (val response = hmppsTierApiClient.getTier(crn, version)) {
-    is ClientResult.Success -> response.body.toTier(version)
-    is ClientResult.Failure -> null
-  }
-
-  private fun fetchTierOrError(crn: String, version: TierVersion) = when (val response = hmppsTierApiClient.getTier(crn, version)) {
-    is ClientResult.Success -> response.body.toTier(version)
-    is ClientResult.Failure -> throw response.toException()
-  }
 
   private fun getCaseSummary(crn: String): CaseSummary = when (
     val caseSummariesResponse = apDeliusContextApiClient.getCaseSummaries(listOf(crn))

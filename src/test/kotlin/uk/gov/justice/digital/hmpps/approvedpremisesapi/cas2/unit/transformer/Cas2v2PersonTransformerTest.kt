@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 
@@ -29,13 +30,15 @@ class Cas2v2PersonTransformerTest {
       )
       .produce()
 
-    val fullPerson: FullPerson = cas2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary)
+    val tier = TierDtoFactory().withTierScore("V2").produce()
+
+    val fullPerson: FullPerson = cas2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary, tier)
     assertThat(fullPerson.crn).isEqualTo(caseSummary.crn)
     assertThat(fullPerson.nomsNumber).isEqualTo(caseSummary.nomsId)
     assertThat(fullPerson.status).isEqualTo(PersonStatus.unknown)
     assertThat(fullPerson.name).isEqualTo("John Smith")
     assertThat(fullPerson.type).isEqualTo(PersonType.fullPerson)
     assertThat(fullPerson.nationality).isEqualTo(nationality)
-    assertThat(fullPerson.tier).isNull()
+    assertThat(fullPerson.tier).isEqualTo(tier)
   }
 }

@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 
 @Service
 @Suppress(
@@ -20,6 +21,7 @@ class Cas2OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val cas2PersonTransformer: Cas2PersonTransformer,
+  private val tierService: TierService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -53,7 +55,7 @@ class Cas2OffenderService(
     return when (caseSummary.currentRestriction) {
       false -> Cas2v2OffenderSearchResult.Success.Full(
         nomisIdOrCrn = nomisIdOrCrn,
-        person = cas2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
+        person = cas2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary, tierService.getTier(caseSummary.crn)),
       )
 
       else -> Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn)

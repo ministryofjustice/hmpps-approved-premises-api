@@ -19,8 +19,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -29,6 +31,7 @@ class Cas2v2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val mockTierService = mockk<TierService>()
 
   private val cas2PersonTransformer = Cas2PersonTransformer()
 
@@ -36,6 +39,7 @@ class Cas2v2OffenderServiceTest {
     mockPrisonsApiClient,
     mockApDeliusContextApiClient,
     cas2PersonTransformer,
+    mockTierService,
   )
 
   @Nested
@@ -66,6 +70,8 @@ class Cas2v2OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
+
+      every { mockTierService.getTier(crn) } returns null
 
       val inmateDetail = InmateDetailFactory()
         .withOffenderNo(nomsNumber)
@@ -100,6 +106,44 @@ class Cas2v2OffenderServiceTest {
     }
 
     @Test
+    fun `returns Full Person when Probation Offender Search and Prison API returns a matching offender and populates tier`() {
+      val crn = "ABC123"
+      val tier = TierDtoFactory().withTierScore("A2").produce()
+
+      val offenderDetails = CaseSummaryFactory().withCrn(crn).withNomsId(nomsNumber).produce()
+
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
+        ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
+
+      every { mockTierService.getTier(crn) } returns tier
+
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .withAssignedLivingUnit(
+          AssignedLivingUnit(
+            agencyId = "my-prison",
+            agencyName = "My Prison",
+            locationId = 6,
+            description = "",
+          ),
+        )
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = inmateDetail,
+      )
+
+      val result = cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
+
+      assertThat(result is Cas2v2OffenderSearchResult.Success.Full).isTrue
+      result as Cas2v2OffenderSearchResult.Success.Full
+      assertThat(result.person.crn).isEqualTo(crn)
+      assertThat(result.person.nomsNumber).isEqualTo(offenderDetails.nomsId)
+      assertThat(result.person.tier).isEqualTo(tier)
+    }
+
+    @Test
     fun `returns Full Person when Probation Offender Search and Prison API returns a matching offender`() {
       val crn = "ABC123"
 
@@ -107,6 +151,8 @@ class Cas2v2OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
+
+      every { mockTierService.getTier(crn) } returns null
 
       val inmateDetail = InmateDetailFactory()
         .withOffenderNo(nomsNumber)
@@ -263,6 +309,8 @@ class Cas2v2OffenderServiceTest {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))
       } returns ClientResult.Success(HttpStatus.OK, caseSummaries)
 
+      every { mockTierService.getTier(crn) } returns null
+
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
         HttpStatus.OK,
         InmateDetailFactory().produce(),
@@ -317,6 +365,8 @@ class Cas2v2OffenderServiceTest {
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))
       } returns ClientResult.Success(HttpStatus.OK, caseSummaries)
+
+      every { mockTierService.getTier(crn) } returns null
 
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
         HttpStatus.OK,
