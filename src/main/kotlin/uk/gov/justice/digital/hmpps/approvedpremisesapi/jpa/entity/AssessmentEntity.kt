@@ -31,6 +31,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
 
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
@@ -413,9 +414,9 @@ enum class DomainAssessmentSummaryStatus {
   UNALLOCATED,
 }
 
-enum class AssessmentDecision {
-  ACCEPTED,
-  REJECTED,
+enum class AssessmentDecision(val apiValue: AssessmentDecisionApi) {
+  ACCEPTED(AssessmentDecisionApi.accepted),
+  REJECTED(AssessmentDecisionApi.rejected),
 }
 
 @Repository

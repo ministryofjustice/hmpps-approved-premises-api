@@ -37,7 +37,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as AssessmentDecisionJpa
 
 class Cas1ExternalApplicationsTest : IntegrationTestBase() {
@@ -73,13 +72,14 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `Get suitable application returns ok`() {
+      val assessmentDecisionJpa = AssessmentDecisionJpa.ACCEPTED
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           givenAnAssessmentForApprovedPremises(
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecisionJpa.ACCEPTED,
+            decision = assessmentDecisionJpa,
           ) { assessment, application ->
 
             application.status = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED
@@ -159,7 +159,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
+                decision = assessmentDecisionJpa.apiValue,
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
@@ -208,13 +208,14 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `Get suitable rejected application returns ok`() {
+      val assessmentDecisionJpa = AssessmentDecisionJpa.REJECTED
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           givenAnAssessmentForApprovedPremises(
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecisionJpa.REJECTED,
+            decision = assessmentDecisionJpa,
           ) { assessment, application ->
 
             assessment.rejectionRationale = "NO SPACE"
@@ -240,7 +241,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
+                decision = assessmentDecisionJpa.apiValue,
                 rejectionRationale = assessment.rejectionRationale,
               ),
               requestForPlacement = null,
@@ -266,13 +267,14 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `Get suitable application returns ok and placement is rejected`() {
+      val assessmentDecisionJpa = AssessmentDecisionJpa.ACCEPTED
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           givenAnAssessmentForApprovedPremises(
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecisionJpa.ACCEPTED,
+            decision = assessmentDecisionJpa,
           ) { assessment, application ->
 
             application.status = ApprovedPremisesApplicationStatus.REJECTED
@@ -326,7 +328,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
+                decision = assessmentDecisionJpa.apiValue,
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
@@ -362,13 +364,14 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `Get suitable application with placement application withdrawn returns ok`() {
+      val assessmentDecisionJpa = AssessmentDecisionJpa.ACCEPTED
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           givenAnAssessmentForApprovedPremises(
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecisionJpa.ACCEPTED,
+            decision = assessmentDecisionJpa,
           ) { assessment, application ->
 
             application.status = ApprovedPremisesApplicationStatus.WITHDRAWN
@@ -473,7 +476,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
+                decision = assessmentDecisionJpa.apiValue,
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
@@ -522,13 +525,14 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
     @Test
     fun `Get suitable application with placement request withdrawn returns ok`() {
+      val assessmentDecisionJpa = AssessmentDecisionJpa.ACCEPTED
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           givenAnAssessmentForApprovedPremises(
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecisionJpa.ACCEPTED,
+            decision = assessmentDecisionJpa,
           ) { assessment, application ->
 
             application.status = ApprovedPremisesApplicationStatus.WITHDRAWN
@@ -614,7 +618,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
+                decision = assessmentDecisionJpa.apiValue,
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
