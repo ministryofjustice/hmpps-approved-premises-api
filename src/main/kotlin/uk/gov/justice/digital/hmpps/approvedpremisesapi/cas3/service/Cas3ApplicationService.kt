@@ -126,7 +126,7 @@ class Cas3ApplicationService(
     return validatedCasResult {
       val caseSummary =
         when (
-          val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy())
+          val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy(), includeTier = false)
         ) {
           is PersonSummaryInfoResult.NotFound -> return@validatedCasResult "$.crn" hasSingleValidationError "doesNotExist"
           is PersonSummaryInfoResult.Success.Restricted ->

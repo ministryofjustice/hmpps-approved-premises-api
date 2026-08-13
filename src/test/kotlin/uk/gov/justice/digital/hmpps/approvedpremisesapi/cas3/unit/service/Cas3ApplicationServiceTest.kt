@@ -1017,7 +1017,7 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.NotFound(crn)
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy(), includeTier = false) } returns PersonSummaryInfoResult.NotFound(crn)
 
       val result = cas3ApplicationService.createApplication(
         crn,
@@ -1054,7 +1054,7 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Restricted(crn, "noms123", TierDtoFactory().produce())
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy(), includeTier = false) } returns PersonSummaryInfoResult.Success.Restricted(crn, "noms123", TierDtoFactory().produce())
 
       val result = cas3ApplicationService.createApplication(
         crn,
@@ -1091,7 +1091,7 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy(), includeTier = false) } returns PersonSummaryInfoResult.Success.Full(
         crn = crn,
         summary = CaseSummaryFactory().produce(),
         tier = TierDtoFactory().produce(),
@@ -1135,7 +1135,7 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy(), includeTier = false) } returns PersonSummaryInfoResult.Success.Full(
         crn = crn,
         summary = CaseSummaryFactory()
           .withName(NameFactory().withForename("John").withSurname("Jonson").produce())
@@ -1223,7 +1223,7 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy(), includeTier = false) } returns PersonSummaryInfoResult.Success.Full(
         crn = crn,
         summary = CaseSummaryFactory().produce(),
         tier = TierDtoFactory().produce(),
@@ -1305,7 +1305,7 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy(), includeTier = false) } returns PersonSummaryInfoResult.Success.Full(
         crn = crn,
         summary = CaseSummaryFactory().produce(),
         tier = TierDtoFactory().produce(),
@@ -1388,7 +1388,7 @@ class Cas3ApplicationServiceTest {
         )
       }
 
-      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy()) } returns PersonSummaryInfoResult.Success.Full(
+      every { mockOffenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy(), includeTier = false) } returns PersonSummaryInfoResult.Success.Full(
         crn = crn,
         summary = CaseSummaryFactory().produce(),
         tier = TierDtoFactory().produce(),

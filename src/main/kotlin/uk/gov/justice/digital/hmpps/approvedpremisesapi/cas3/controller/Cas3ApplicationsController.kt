@@ -83,7 +83,7 @@ class Cas3ApplicationsController(
     val user = userService.getUserForRequest()
 
     val personInfo =
-      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.cas3LaoStrategy())) {
+      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.cas3LaoStrategy(), includeTier = false)) {
         is PersonInfoResult.NotFound -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
