@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar.Cas2SarTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcSubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
@@ -190,9 +191,16 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
       "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents": [${domainEventJson(domainEvent, null)}]
+      "DomainEvents": [${domainEventJson(domainEvent)}]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
   }
+
+  fun domainEventJson(domainEvent: DomainEventEntity): String = """
+      {
+        "type": "${domainEvent.type}",
+        "occurred_at": "$ALLOCATED_AT",
+        "created_at": "$CREATED_AT" }
+  """.trimIndent()
 }

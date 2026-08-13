@@ -7,9 +7,43 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SubjectAccess
 import java.time.LocalDateTime
 
 @Repository
-class Cas2SubjectAccessRequestRepository(
+class Cas2HdcSubjectAccessRequestRepository(
   jdbcTemplate: NamedParameterJdbcTemplate,
 ) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
+
+  override fun domainEvents(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+    serviceName: String,
+  ): String? {
+    val result = jdbcTemplate.queryForMap(
+      """
+           select json_agg(domain_events) as json from ( 
+               select 
+                 de."type",
+                 de.occurred_at,
+                 de.created_at
+               from
+                     domain_events de 
+               left join users u on 
+                     u.id = de.triggered_by_user_id
+               where
+                  de.service = :service_name and
+                  (de.crn = :crn
+                        or de.noms_number = :noms_number )
+               and (:start_date::date is null or de.created_at >= :start_date)
+               and (:end_date::date is null or de.created_at <= :end_date) 
+               order by de.created_at
+           ) domain_events
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate)
+        .addValue("service_name", serviceName),
+    )
+    return toJsonString(result)
+  }
 
   fun getApplicationsJson(
     crn: String?,
@@ -23,9 +57,6 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(applications) as json
       from ( 
         select
-        	ca.crn,
-        	ca.noms_number,
-        	ca."data",
         	ca."document",
         	cu."name" as created_by_user,
         	ca.created_at,
@@ -37,7 +68,6 @@ class Cas2SubjectAccessRequestRepository(
         	ca.conditional_release_date,
         	ca.abandoned_at,
           ca.application_origin,
-          ca.service_origin,
           CAST( ca.bail_hearing_date as DATE) 
         from
         	cas_2_applications ca
@@ -69,8 +99,6 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(assessments) as json
       from(
           select
-          	ca.crn,
-          	ca.noms_number,
           	caa.created_at,
           	caa.assessor_name,
           	caa.nacro_referral_id
@@ -105,8 +133,6 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(application_notes) as json 
       from (
           select
-          	ca.crn,
-          	ca.noms_number,
           	case 
           		when can.created_by_cas2_user_id is not null then cu."name"
           		else 'unknown'
@@ -140,8 +166,6 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(application_status_updates) as json 
       from (
           select
-              ca.crn,
-              ca.noms_number, 
               u."name" as assessor_name,
               u.external_type as assessor_origin,
               to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
@@ -177,8 +201,6 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(application_status_update_details) as json 
       from (
         select
-        	ca. crn,
-        	ca. noms_number, 
         	csu."label" as status_label,
         	csud."label" as detail_label,
         	to_char(csud.created_at , 'YYYY-MM-DD HH24:MI:SS') as created_at 

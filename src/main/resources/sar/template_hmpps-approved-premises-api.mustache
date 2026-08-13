@@ -964,25 +964,6 @@
     {{#CAS2-HDC}}
     <h2>Short term accommodation</h2>
 
-        <h3>Status update details</h3>
-        {{#StatusUpdateDetails}}
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-30">Status Label</td>
-                    <td class="data-column-30">Created at</td>
-                    <td class="data-column-30">Detail Label</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue status_label }}</td>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue detail_label }}</td>
-                </tr>
-            </table>
-        {{/StatusUpdateDetails}}
-        {{^StatusUpdateDetails}}
-            <p>No Data Held</p>
-        {{/StatusUpdateDetails}}
-
         <h3>Applications</h3>
         {{#Applications}}
             <h4>Application</h4>
@@ -1062,6 +1043,25 @@
             <p>No Data Held</p>
         {{/StatusUpdates}}
 
+        <h3>Status update details</h3>
+        {{#StatusUpdateDetails}}
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Status Label</td>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Detail Label</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue status_label }}</td>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ optionalValue detail_label }}</td>
+                </tr>
+            </table>
+        {{/StatusUpdateDetails}}
+        {{^StatusUpdateDetails}}
+            <p>No Data Held</p>
+        {{/StatusUpdateDetails}}
+
         <h3>Application Notes</h3>
         {{#ApplicationNotes}}
             <br/>
@@ -1102,25 +1102,6 @@
 
     {{#CAS2}}
         <h2>Bail accommodation</h2>
-
-        <h3>Status update details</h3>
-        {{#StatusUpdateDetails}}
-            <table class="data-table">
-                <tr>
-                    <td class="data-column-30">Status Label</td>
-                    <td class="data-column-30">Created at</td>
-                    <td class="data-column-30">Detail Label</td>
-                </tr>
-                <tr>
-                    <td>{{ optionalValue status_label }}</td>
-                    <td>{{ optionalValue (formatDate created_at) }}</td>
-                    <td>{{ optionalValue detail_label }}</td>
-                </tr>
-            </table>
-        {{/StatusUpdateDetails}}
-        {{^StatusUpdateDetails}}
-            <p>No Data Held</p>
-        {{/StatusUpdateDetails}}
 
         <h3>Applications</h3>
         {{#Applications}}
@@ -1202,6 +1183,25 @@
         {{^StatusUpdates}}
             <p>No Data Held</p>
         {{/StatusUpdates}}
+
+        <h3>Status update details</h3>
+        {{#StatusUpdateDetails}}
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Status Label</td>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Detail Label</td>
+                </tr>
+                <tr>
+                    <td>{{ optionalValue status_label }}</td>
+                    <td>{{ optionalValue (formatDate created_at) }}</td>
+                    <td>{{ optionalValue detail_label }}</td>
+                </tr>
+            </table>
+        {{/StatusUpdateDetails}}
+        {{^StatusUpdateDetails}}
+            <p>No Data Held</p>
+        {{/StatusUpdateDetails}}
 
         <h3>Application Notes</h3>
         {{#ApplicationNotes}}

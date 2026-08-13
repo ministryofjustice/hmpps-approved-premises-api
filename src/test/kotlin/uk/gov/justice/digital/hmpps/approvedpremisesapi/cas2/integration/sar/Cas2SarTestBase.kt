@@ -35,8 +35,6 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun cas2StatusUpdateDetails(statusUpdateDetail: Cas2StatusUpdateDetailEntity): String = """
     {
-        "crn": "${statusUpdateDetail.statusUpdate.application.crn}",
-        "noms_number": "${statusUpdateDetail.statusUpdate.application.nomsNumber}", 
         "status_label": "${statusUpdateDetail.statusUpdate.label}",
         "detail_label": "${statusUpdateDetail.label}",
         "created_at": "${statusUpdateDetail.createdAt!!.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}"
@@ -45,8 +43,6 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun cas2StatusUpdatesJson(statusUpdate: Cas2StatusUpdateEntity): String = """
     {
-      	"crn": "${statusUpdate.application.crn}",
-      	"noms_number": "${statusUpdate.application.nomsNumber}", 
       	"assessor_name": "${statusUpdate.assessor.name}",
         ${if (statusUpdate.application.serviceOrigin == Cas2ServiceOrigin.HDC) "\"assessor_origin\": \"${statusUpdate.assessor.externalType}\"," else ""}
       	"created_at": "${statusUpdate.createdAt.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
@@ -57,8 +53,6 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
-      "crn": "${applicationNotes.application.crn}",
-      "noms_number": "${applicationNotes.application.nomsNumber}",
       "created_by_user": "${applicationNotes.createdByUser.name}",
       "body": "${applicationNotes.body}"
   }
@@ -66,20 +60,15 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun cas2AssessmentsJson(assessment: Cas2AssessmentEntity): String = """
     {
-        "crn": "${assessment.application.crn}",
-        "noms_number": "${assessment.application.nomsNumber}",
         "created_at": "$CREATED_AT",
         "assessor_name": "${assessment.assessorName}",
-        "nacro_referral_id": "${assessment.nacroReferralId}"${if (assessment.serviceOrigin == Cas2ServiceOrigin.BAIL) ",\n        \"service_origin\": \"${assessment.serviceOrigin}\"" else ""}
+        "nacro_referral_id": "${assessment.nacroReferralId}"
     }
   """.trimIndent()
 
   protected fun cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
 {
-  "crn": "${application.crn}",
-  "noms_number": "${application.nomsNumber}",
   "document": ${application.document},
-  "data": ${application.data},
   "created_by_user": "${application.createdByUser.name}",
   "created_at": "$CREATED_AT",
   "submitted_at": "$SUBMITTED_AT",
@@ -90,7 +79,6 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
   "conditional_release_date": "$arrivedAtDateOnly",
   "abandoned_at": null,
   "application_origin": "${application.applicationOrigin}",
-  "service_origin": "${application.serviceOrigin}",
   "bail_hearing_date": ${if (application.serviceOrigin == Cas2ServiceOrigin.BAIL) "\"${application.bailHearingDate}\"" else "null"}
   ${
     if (application.serviceOrigin == Cas2ServiceOrigin.BAIL) {
