@@ -160,6 +160,13 @@ class CaseService(
     is ClientResult.Failure -> caseSummariesResponse.throwException()
   }
 
+  /**
+   * This alert is a temporary measure whilst we introduce tiers across the
+   * service. The intention is to help us detect if there are any routes in
+   * the system where tier is required but a case does not yet exist for the CRN
+   *
+   * These paths may be legitimate (in which case a tier should not be requested)
+   */
   private fun alertCaseNotFound(crn: String) {
     sentryService.captureException(CaseNotFound("Case with CRN $crn not found"))
   }
