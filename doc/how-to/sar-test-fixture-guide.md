@@ -36,25 +36,18 @@ Change the provided test class name depending on which template you are trying t
 
 The tests are configured to save the actual output to `.log` files in the `src/test/resources/` directory (not in the `sar/` subdirectory) to avoid overwriting the source of truth until it's ready e.g.
 
-- `cas1-sar-api-response.json.log`
-- `cas1-sar-report.html.log`
+- `cas1-expected-api-response.json.log`
+- `cas1-expected-report.html.log`
 
 ### 3. Update the expected fixtures
 
 Once you have verified that the generated `.log` files contain the correct and expected data, copy them over the existing expected fixtures in `src/test/resources/sar/`.
 
-**Example for CAS3:**
-
-```bash
-cp src/test/resources/cas3-sar-api-response.json.log src/test/resources/sar/cas3-expected-api-response.json 
-&& cp src/test/resources/cas3-sar-report.html.log src/test/resources/sar/cas3-expected-report.html
-```
-
 **Example for CAS1:**
 
 ```bash
-cp src/test/resources/cas1-sar-api-response.json.log src/test/resources/sar/cas1-expected-api-response.json
-cp src/test/resources/cas1-sar-report.html.log src/test/resources/sar/cas1-expected-report.html
+cp src/test/resources/cas1-expected-api-response.json.log src/test/resources/sar/cas1-expected-api-response.json
+cp src/test/resources/cas1-expected-report.html.log src/test/resources/sar/cas1-expected-report.html
 ```
 
 ## Template Modifications
