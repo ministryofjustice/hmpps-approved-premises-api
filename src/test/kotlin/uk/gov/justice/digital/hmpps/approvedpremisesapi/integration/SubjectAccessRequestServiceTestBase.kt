@@ -267,23 +267,17 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       ),
     ).produce()
 
-  fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?, embeddedBooking: Boolean = true): String = """
+  fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String = """
       {
         "type": "${domainEvent.type}",
         "occurred_at": "$ALLOCATED_AT",
         "created_at": "$CREATED_AT",
         "data": ${domainEvent.data},
         "triggered_by_username": ${user?.let { "\"${it.deliusUsername}\"" } ?: "null"},
-        "application_submitted_at": "$SUBMITTED_AT"""" +
-    if (embeddedBooking) {
-      """,
+        "application_submitted_at": "$SUBMITTED_AT",
         "cas3_booking_premises_name": null,
-        "cas3_booking_arrival_date": null
-            """
-    } else {
-      ""
-    } +
-    " }".trimIndent()
+        "cas3_booking_arrival_date": null }
+  """.trimIndent()
 
   fun domainEventEntity(
     offender: OffenderDetailSummary,
