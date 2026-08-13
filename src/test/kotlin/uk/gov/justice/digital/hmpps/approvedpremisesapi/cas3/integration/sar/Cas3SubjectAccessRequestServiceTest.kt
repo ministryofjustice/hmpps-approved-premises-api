@@ -277,10 +277,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   ): String =
     """
       {
-         "crn": "${assessment.application.crn}",
          "assessor_name": "${assessment.allocatedToUser?.name}",
-         "data": $DATA_JSON_SIMPLE,
-         "document": $DOCUMENT_JSON_SIMPLE,
          "created_at": "$CREATED_AT",
          "allocated_at": "$ALLOCATED_AT",
          "submitted_at": "$SUBMITTED_AT",
@@ -303,9 +300,6 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   ): String =
     """
     {
-        "crn": "${temporaryAccommodationApplication.crn}",
-        "noms_number": "${temporaryAccommodationApplication.nomsNumber}",
-        "data": $DATA_JSON_SIMPLE,
         "offender_name": "${temporaryAccommodationApplication.name}",
         "document": ${temporaryAccommodationApplication.document},
         "created_at": "$CREATED_AT",
