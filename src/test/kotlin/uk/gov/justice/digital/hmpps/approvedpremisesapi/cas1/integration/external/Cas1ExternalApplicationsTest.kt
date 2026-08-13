@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -38,6 +37,8 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as AssessmentDecisionJpa
 
 class Cas1ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
@@ -78,7 +79,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecision.ACCEPTED,
+            decision = AssessmentDecisionJpa.ACCEPTED,
           ) { assessment, application ->
 
             application.status = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED
@@ -158,7 +159,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = assessment.decision,
+                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
@@ -213,7 +214,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecision.REJECTED,
+            decision = AssessmentDecisionJpa.REJECTED,
           ) { assessment, application ->
 
             assessment.rejectionRationale = "NO SPACE"
@@ -239,7 +240,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = assessment.decision,
+                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
                 rejectionRationale = assessment.rejectionRationale,
               ),
               requestForPlacement = null,
@@ -271,7 +272,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecision.ACCEPTED,
+            decision = AssessmentDecisionJpa.ACCEPTED,
           ) { assessment, application ->
 
             application.status = ApprovedPremisesApplicationStatus.REJECTED
@@ -325,7 +326,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = assessment.decision,
+                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
@@ -367,7 +368,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecision.ACCEPTED,
+            decision = AssessmentDecisionJpa.ACCEPTED,
           ) { assessment, application ->
 
             application.status = ApprovedPremisesApplicationStatus.WITHDRAWN
@@ -472,7 +473,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = assessment.decision,
+                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(
@@ -527,7 +528,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             allocatedToUser = null,
             createdByUser = user,
             submittedAt = assessmentSubmittedAt,
-            decision = AssessmentDecision.ACCEPTED,
+            decision = AssessmentDecisionJpa.ACCEPTED,
           ) { assessment, application ->
 
             application.status = ApprovedPremisesApplicationStatus.WITHDRAWN
@@ -613,7 +614,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 id = application.id,
               ),
               assessment = Cas1ExternalAssessmentDto(
-                decision = assessment.decision,
+                decision = AssessmentDecisionApi.forValue(assessment.decision.toString()),
                 rejectionRationale = null,
               ),
               requestForPlacement = Cas1ExternalRequestForPlacementDto(

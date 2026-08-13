@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
@@ -80,7 +81,7 @@ class Cas1ExternalApplicationTransformer(
     )
   }
 
-  private fun getCancellationReason(placement: Cas1SpaceBookingShortSummary?): String? = if (placement?.cancellation?.reason?.name == "Other") placement.cancellation.reasonNotes else placement?.cancellation?.reason?.name
+  private fun getCancellationReason(placement: Cas1SpaceBookingShortSummary?): String? = if (placement?.cancellation?.reason?.name == CancellationReasonRepository.CAS1_OTHER_NAME) placement.cancellation.reasonNotes else placement?.cancellation?.reason?.name
 
   fun transformToCas1SuitableApplication(
     application: ApprovedPremisesApplicationEntity,
@@ -117,7 +118,7 @@ class Cas1ExternalApplicationTransformer(
   private fun transformToAssessment(
     latestAssessment: AssessmentEntity,
   ) = Cas1ExternalAssessmentDto(
-    decision = latestAssessment.decision,
+    decision = cas1AssessmentTransformer.transformJpaDecisionToApi(latestAssessment.decision),
     rejectionRationale = latestAssessment.rejectionRationale,
   )
 }

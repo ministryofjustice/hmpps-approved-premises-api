@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
@@ -51,6 +50,8 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.stream.Stream
 import kotlin.collections.emptyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as AssessmentDecisionJpa
 
 @SuppressWarnings("UnusedPrivateProperty")
 @ExtendWith(MockKExtension::class)
@@ -1167,12 +1168,12 @@ class Cas1ExternalApplicationServiceTest {
       createdAt = applicationEntity.createdAt,
       createdBy = transformToStaffDto(applicationEntity.createdByUser),
       submittedAt = applicationEntity.submittedAt,
-      expiresAt = if (applicationEntity.getLatestAssessment()?.decision == AssessmentDecision.ACCEPTED) applicationEntity.getLatestAssessment()?.submittedAt?.toLocalDate()?.plusDays(365) else null,
+      expiresAt = if (applicationEntity.getLatestAssessment()?.decision == AssessmentDecisionJpa.ACCEPTED) applicationEntity.getLatestAssessment()?.submittedAt?.toLocalDate()?.plusDays(365) else null,
       status = applicationEntity.status,
       id = applicationEntity.id,
     ),
     assessment = Cas1ExternalAssessmentDto(
-      decision = applicationEntity.getLatestAssessment()?.decision,
+      decision = AssessmentDecisionApi.valueOf(applicationEntity.getLatestAssessment()?.decision?.name ?: ""),
       rejectionRationale = applicationEntity.getLatestAssessment()?.rejectionRationale,
     ),
     placementHistory = emptyList(),

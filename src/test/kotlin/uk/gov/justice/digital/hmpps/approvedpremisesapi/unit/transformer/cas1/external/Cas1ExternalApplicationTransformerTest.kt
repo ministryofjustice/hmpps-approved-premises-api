@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingShortSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacementFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
@@ -38,6 +37,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as AssessmentDecisionJpa
 
 class Cas1ExternalApplicationTransformerTest {
   private val cas1ApplicationUrlTemplate: String = "http://localhost:3000/applications/#id"
@@ -89,7 +90,7 @@ class Cas1ExternalApplicationTransformerTest {
         .produce()
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withDefaults()
-        .withDecision(AssessmentDecision.ACCEPTED)
+        .withDecision(AssessmentDecisionJpa.ACCEPTED)
         .withApplication(application)
         .withRejectionRationale("Great")
         .withSubmittedAt(OffsetDateTime.now())
@@ -131,7 +132,7 @@ class Cas1ExternalApplicationTransformerTest {
           id = application.id,
         ),
         assessment = Cas1ExternalAssessmentDto(
-          decision = assessment.decision,
+          decision = AssessmentDecisionApi.accepted,
           rejectionRationale = assessment.rejectionRationale,
         ),
         requestForPlacement = suitablePlacementPair.requestForPlacement,
@@ -143,6 +144,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
 
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns userStaff
+      every { mockCas1AssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecisionApi.accepted
       every { mockCas1ApplicationTransformer.getApplicationExpiresAt(application) } returns assessment.submittedAt?.toLocalDate()?.plusDays(365)
 
       val result = cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, suitablePlacementPair, emptyList())
@@ -172,7 +174,7 @@ class Cas1ExternalApplicationTransformerTest {
         .produce()
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withDefaults()
-        .withDecision(AssessmentDecision.ACCEPTED)
+        .withDecision(AssessmentDecisionJpa.ACCEPTED)
         .withApplication(application)
         .withRejectionRationale("Great")
         .withSubmittedAt(OffsetDateTime.now())
@@ -193,7 +195,7 @@ class Cas1ExternalApplicationTransformerTest {
           id = application.id,
         ),
         assessment = Cas1ExternalAssessmentDto(
-          decision = assessment.decision,
+          decision = AssessmentDecisionApi.accepted,
           rejectionRationale = assessment.rejectionRationale,
         ),
         requestForPlacementStatus = null,
@@ -205,6 +207,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
 
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns userStaff
+      every { mockCas1AssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecisionApi.accepted
       every { mockCas1ApplicationTransformer.getApplicationExpiresAt(application) } returns assessment.submittedAt?.toLocalDate()?.plusDays(365)
 
       val result = cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, null, emptyList())
