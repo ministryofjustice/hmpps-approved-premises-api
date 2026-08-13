@@ -86,8 +86,8 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
 
     const val EXPECTED_API_RESPONSE_PATH = "/sar/cas1-expected-api-response.json"
     const val EXPECTED_REPORT_PATH = "/sar/cas1-expected-report.html"
-    const val GENERATED_API_RESPONSE_FILENAME = "cas1-sar-api-response.json.log"
-    const val GENERATED_REPORT_FILENAME = "cas1-sar-report.html.log"
+    const val GENERATED_API_RESPONSE_FILENAME = "cas1-expected-api-response.json.log"
+    const val GENERATED_REPORT_FILENAME = "cas1-expected-report.html.log"
   }
 
   private val asserter by lazy {
