@@ -112,6 +112,8 @@ open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
       withPrisonReleaseTypes("ANY")
       withPrisonNameAtReferral("HMP Birmingham")
       withProbationDeliveryUnit(probationDeliveryUnitEntity(user, name = probationDeliveryUnitName))
+      withIsConcerningSexualBehaviour(false)
+      withDutyToReferOutcome("pending")
     }
   }
 }
