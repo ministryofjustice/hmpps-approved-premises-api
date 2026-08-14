@@ -143,6 +143,8 @@ class Cas3BookingService(
       return@validatedCasResult fieldValidationError
     }
 
+    caseService.ensureCaseExists(crn)
+
     val personResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)
     val offenderName = personResult.getPersonName()
 
@@ -177,8 +179,6 @@ class Cas3BookingService(
         offenderName = offenderName,
       ),
     )
-
-    caseService.ensureCaseExists(crn)
 
     val turnaround = cas3TurnaroundRepository.save(
       Cas3TurnaroundEntity(

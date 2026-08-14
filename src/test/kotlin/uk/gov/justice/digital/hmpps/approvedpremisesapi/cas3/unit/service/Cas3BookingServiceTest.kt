@@ -1087,6 +1087,8 @@ class Cas3BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
+
       assertThatExceptionOfType(RuntimeException::class.java)
         .isThrownBy {
           cas3BookingService.createBooking(
@@ -1128,7 +1130,7 @@ class Cas3BookingServiceTest {
         )
       }
 
-      verify(exactly = 0) {
+      verify(exactly = 1) {
         mockCaseService.ensureCaseExists(crn)
       }
     }
