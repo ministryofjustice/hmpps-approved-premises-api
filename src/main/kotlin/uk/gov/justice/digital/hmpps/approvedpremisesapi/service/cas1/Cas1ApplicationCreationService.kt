@@ -333,6 +333,15 @@ class Cas1ApplicationCreationService(
       return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
     }
 
+    if (
+      submitApplication.requestedPlacementPeriod != null &&
+      submitApplication.duration != submitApplication.requestedPlacementPeriod.duration
+    ) {
+      return CasResult.GeneralValidationError(
+        "The requested placement period duration must match the duration specified in the application.",
+      )
+    }
+
     return null
   }
 

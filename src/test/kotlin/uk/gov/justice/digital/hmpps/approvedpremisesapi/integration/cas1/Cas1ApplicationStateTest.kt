@@ -494,6 +494,8 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
           sentenceType = SentenceTypeOption.nonStatutory,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
+          duration = 10,
+          requestedPlacementPeriod = null,
         ),
       )
       .exchange()
