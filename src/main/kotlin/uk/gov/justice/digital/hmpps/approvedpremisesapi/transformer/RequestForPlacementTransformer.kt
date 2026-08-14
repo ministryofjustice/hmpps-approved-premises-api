@@ -13,17 +13,31 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import java.time.LocalDate
 
 @Component
 class RequestForPlacementTransformer(
   private val jsonMapper: JsonMapper,
+  private val cas1AssessmentTransformer: Cas1AssessmentTransformer,
 ) {
   fun transformPlacementApplicationEntityToApi(
     placementApplicationEntity: PlacementApplicationEntity,
     canBeDirectlyWithdrawn: Boolean,
   ): RequestForPlacement {
     val statusAndWhen = placementApplicationEntity.deriveStatus()
+    val requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = placementApplicationEntity.expectedArrival!!,
+      arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
+      duration = placementApplicationEntity.requestedDuration!!,
+    )
+    val authorisedPlacementPeriod = placementApplicationEntity.authorisedDuration?.let {
+      Cas1RequestedPlacementPeriod(
+        arrival = placementApplicationEntity.expectedArrival!!,
+        arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
+        duration = it,
+      )
+    }
     return RequestForPlacement(
       id = placementApplicationEntity.id,
       createdByUserId = placementApplicationEntity.createdByUser.id,
@@ -35,18 +49,8 @@ class RequestForPlacementTransformer(
         RequestForPlacementType.manual
       },
       placementDates = listOf(placementApplicationEntity.placementDates()!!.toApiType()),
-      requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-        arrival = placementApplicationEntity.expectedArrival!!,
-        arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
-        duration = placementApplicationEntity.requestedDuration!!,
-      ),
-      authorisedPlacementPeriod = placementApplicationEntity.authorisedDuration?.let {
-        Cas1RequestedPlacementPeriod(
-          arrival = placementApplicationEntity.expectedArrival!!,
-          arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
-          duration = it,
-        )
-      },
+      requestedPlacementPeriod = requestedPlacementPeriod,
+      authorisedPlacementPeriod = authorisedPlacementPeriod,
       submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
       requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
       document = placementApplicationEntity.document?.let(jsonMapper::readTree),
@@ -57,8 +61,13 @@ class RequestForPlacementTransformer(
       sentenceType = placementApplicationEntity.sentenceType?.let { SentenceTypeOption.valueOf(it) },
       releaseType = placementApplicationEntity.releaseType?.apiType,
       situation = placementApplicationEntity.situation?.let { SituationOption.valueOf(it) },
+      decision = placementApplicationEntity.decision,
+      submittedBy = cas1AssessmentTransformer.transformToStaffDto(placementApplicationEntity.createdByUser),
+      canonicalPlacementPeriod = getCanonicalPlacementPeriod(authorisedPlacementPeriod, requestedPlacementPeriod),
     )
   }
+
+  private fun getCanonicalPlacementPeriod(authorisedPlacementPeriod: Cas1RequestedPlacementPeriod?, requestedPlacementPeriod: Cas1RequestedPlacementPeriod) = authorisedPlacementPeriod ?: requestedPlacementPeriod
 
   /**
    * This should only be used for placement requests for the application's arrival date.
@@ -78,23 +87,24 @@ class RequestForPlacementTransformer(
 
     val application = placementRequestEntity.application
     val statusAndWhen = placementRequestEntity.deriveStatus()
-
+    val requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = placementRequestEntity.expectedArrival,
+      arrivalFlexible = null,
+      duration = placementRequestEntity.duration,
+    )
+    val authorisedPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = placementRequestEntity.expectedArrival,
+      arrivalFlexible = null,
+      duration = placementRequestEntity.duration,
+    )
     return RequestForPlacement(
       id = placementRequestEntity.id,
       createdByUserId = placementRequestEntity.application.createdByUser.id,
       createdAt = placementRequestEntity.createdAt.toInstant(),
       isWithdrawn = placementRequestEntity.isWithdrawn,
       type = RequestForPlacementType.automatic,
-      requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-        arrival = placementRequestEntity.expectedArrival,
-        arrivalFlexible = null,
-        duration = placementRequestEntity.duration,
-      ),
-      authorisedPlacementPeriod = Cas1RequestedPlacementPeriod(
-        arrival = placementRequestEntity.expectedArrival,
-        arrivalFlexible = null,
-        duration = placementRequestEntity.duration,
-      ),
+      requestedPlacementPeriod = requestedPlacementPeriod,
+      authorisedPlacementPeriod = authorisedPlacementPeriod,
       placementDates = listOf(
         PlacementDates(
           expectedArrival = placementRequestEntity.expectedArrival,
@@ -111,6 +121,9 @@ class RequestForPlacementTransformer(
       sentenceType = application.sentenceType?.let { SentenceTypeOption.valueOf(it) },
       releaseType = application.releaseType?.apiType,
       situation = application.situation?.let { SituationOption.valueOf(it) },
+      decision = PlacementApplicationDecision.ACCEPTED,
+      submittedBy = cas1AssessmentTransformer.transformToStaffDto(application.createdByUser),
+      canonicalPlacementPeriod = getCanonicalPlacementPeriod(authorisedPlacementPeriod, requestedPlacementPeriod),
     )
   }
 

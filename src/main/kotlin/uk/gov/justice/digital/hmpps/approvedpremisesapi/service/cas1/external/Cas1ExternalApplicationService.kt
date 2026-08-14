@@ -1,18 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalApplicationTransformer
 import java.time.LocalDate
 import java.util.UUID
 
@@ -22,47 +22,38 @@ class Cas1ExternalApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
   private val cas1PremisesService: Cas1PremisesService,
-  @Value($$"${url-templates.frontend.application}") private val cas1ApplicationUrlTemplate: String,
+  private val transformer: Cas1ExternalApplicationTransformer,
 ) {
 
   private val mostSuitableApplication = compareBy<ApprovedPremisesApplicationEntity> { suitableStatusesAsc[it.status] }
     .thenBy { it.submittedAt ?: it.createdAt }
 
-  fun getPlacementHistories(applicationId: UUID): List<Cas1PlacementHistory> {
+  fun getPlacementPairs(applicationId: UUID): List<Cas1PlacementPairDto> {
     val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, requestingUser = null) as CasResult.Success).value
 
     return rfps.flatMap { rfp ->
+      val withdrawalDate = if (rfp.isWithdrawn) cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(rfp) else null
 
       if (rfp.placements.isEmpty()) {
+        val rejectionReason = if (rfp.decision == PlacementApplicationDecision.REJECTED) cas1RequestForPlacementService.getRequestForPlacementRejectionReason(rfp) else null
+
         listOf(
-          Cas1PlacementHistory(
-            dateApplied = rfp.statusSetDate,
-            requestForPlacementStatus = rfp.status,
-            withdrawalReason = rfp.withdrawalReason,
-            placementStatus = null,
-            premises = null,
+          transformer.transformToCas1PlacementPair(
+            rfp = rfp,
+            rejectionReason = rejectionReason,
+            withdrawalDate = withdrawalDate,
           ),
         )
       } else {
         rfp.placements.map { placement ->
-          val premises = cas1PremisesService.findPremisesById(placement.premises.id)
-            ?.let {
-              Cas1ExternalPremisesDto(
-                startDate = placement.actualArrivalDate ?: placement.expectedArrivalDate,
-                endDate = placement.actualDepartureDate ?: placement.expectedDepartureDate,
-                postcode = it.postcode,
-                addressLine1 = it.addressLine1,
-                addressLine2 = it.addressLine2,
-                town = it.town,
-              )
-            }
+          val premisesEntity = cas1PremisesService.findPremisesById(placement.premises.id)
 
-          Cas1PlacementHistory(
-            dateApplied = requireNotNull(placement.statusSetDate),
-            requestForPlacementStatus = rfp.status,
-            withdrawalReason = rfp.withdrawalReason,
-            placementStatus = placement.status,
-            premises = premises,
+          transformer.transformToCas1PlacementPair(
+            rfp = rfp,
+            rejectionReason = null,
+            withdrawalDate = withdrawalDate,
+            placement = placement,
+            premises = premisesEntity,
           )
         }
       }
@@ -72,29 +63,32 @@ class Cas1ExternalApplicationService(
   fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
     .maxWithOrNull(mostSuitableApplication)
     ?.let { application ->
-
-      val placementHistories = getPlacementHistories(application.id)
+      val placementPairs = getPlacementPairs(application.id)
 
       val today = LocalDate.now()
 
-      val suitablePlacement =
-        placementHistories.lastOrNull { it.dateApplied >= today }
-          ?: placementHistories.firstOrNull { it.dateApplied < today }
+      val pastPairs = placementPairs
+        .filter { it.dateApplied < today }
+        .sortedByDescending { it.dateApplied }
 
-      Cas1SuitableApplication(
-        id = application.id,
-        applicationStatus = application.status,
-        requestForPlacementStatus = suitablePlacement?.requestForPlacementStatus,
-        placementStatus = suitablePlacement?.placementStatus,
-        premises = suitablePlacement?.premises,
-        uiUrl = cas1ApplicationUrlTemplate.replace("#id", application.id.toString()),
+      val suitablePlacementPair = placementPairs
+        .lastOrNull { it.dateApplied >= today }
+        ?: pastPairs.firstOrNull()
+
+      val placementHistory = pastPairs
+        .filterNot { it == suitablePlacementPair }
+
+      transformer.transformToCas1SuitableApplication(
+        application = application,
+        suitablePlacementPair = suitablePlacementPair,
+        placementHistory = placementHistory,
       )
     }
 
   fun getCurrentPremisesByCrn(crn: String): Cas1ExternalPremisesDto? = approvedPremisesApplicationRepository.findByCrn(crn)
     .sortedWith(mostSuitableApplication).firstNotNullOfOrNull { application ->
-      getPlacementHistories(application.id)
-        .firstOrNull { it.placementStatus == Cas1SpaceBookingStatus.ARRIVED }?.premises
+      getPlacementPairs(application.id)
+        .firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
     }
 
   @SuppressWarnings("MagicNumber")
@@ -111,13 +105,5 @@ class Cas1ExternalApplicationService(
     ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST to 9,
     ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT to 10,
     ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to 11,
-  )
-
-  data class Cas1PlacementHistory(
-    val dateApplied: LocalDate,
-    val requestForPlacementStatus: RequestForPlacementStatus,
-    val placementStatus: Cas1SpaceBookingStatus?,
-    val premises: Cas1ExternalPremisesDto?,
-    val withdrawalReason: WithdrawPlacementRequestReason?,
   )
 }

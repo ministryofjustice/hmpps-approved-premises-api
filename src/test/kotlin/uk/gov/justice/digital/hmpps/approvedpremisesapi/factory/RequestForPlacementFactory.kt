@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.Instant
 import java.time.LocalDate
@@ -28,6 +30,20 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
   private var releaseType: Yielded<ReleaseTypeOption?> = { null }
   private var createdByUserId: Yielded<UUID> = { UUID.randomUUID() }
   private var canBeDirectlyWithdrawn: Yielded<Boolean> = { false }
+  private var requestedPlacementPeriod: Yielded<Cas1RequestedPlacementPeriod> = {
+    Cas1RequestedPlacementPeriod(
+      arrival = LocalDate.now(),
+      arrivalFlexible = null,
+      duration = 14,
+    )
+  }
+  private var canonicalPlacementPeriod: Yielded<Cas1RequestedPlacementPeriod> = {
+    Cas1RequestedPlacementPeriod(
+      arrival = LocalDate.now(),
+      arrivalFlexible = null,
+      duration = 14,
+    )
+  }
   private var type: Yielded<RequestForPlacementType> = { RequestForPlacementType.automatic }
   private var placementDates: Yielded<List<PlacementDates>> = {
     listOf(
@@ -37,16 +53,12 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
       ),
     )
   }
-  private var requestedPlacementPeriod: Yielded<Cas1RequestedPlacementPeriod> = {
-    Cas1RequestedPlacementPeriod(
-      arrival = LocalDate.now(),
-      arrivalFlexible = null,
-      duration = 14,
-    )
-  }
+
   private var authorisedPlacementPeriod: Yielded<Cas1RequestedPlacementPeriod?> = { null }
   private var status: Yielded<RequestForPlacementStatus> = { RequestForPlacementStatus.placementBooked }
   private var statusSetDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var submittedBy: Yielded<Cas1StaffDto?> = { null }
+  private var decision: Yielded<PlacementApplicationDecision?> = { null }
   private var requestReviewedAt: Yielded<Instant?> = { null }
   private var placements: Yielded<List<Cas1SpaceBookingShortSummary>> = { emptyList() }
   private var situation: Yielded<SituationOption?> = { null }
@@ -57,6 +69,10 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
 
   fun withStatus(status: RequestForPlacementStatus) = apply {
     this.status = { status }
+  }
+
+  fun withSubmittedBy(submittedBy: Cas1StaffDto?) = apply {
+    this.submittedBy = { submittedBy }
   }
 
   fun withStatusSetDate(statusSetDate: LocalDate) = apply {
@@ -79,12 +95,20 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     this.requestedPlacementPeriod = { requestedPlacementPeriod }
   }
 
+  fun withCanonicalPlacementPeriod(canonicalPlacementPeriod: Cas1RequestedPlacementPeriod) = apply {
+    this.canonicalPlacementPeriod = { canonicalPlacementPeriod }
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
 
   fun withDocument(document: String?) = apply {
     this.document = { document }
+  }
+
+  fun withDecision(decision: PlacementApplicationDecision?) = apply {
+    this.decision = { decision }
   }
 
   fun withCreatedAt(createdAt: Instant) = apply {
@@ -143,5 +167,8 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     requestReviewedAt = this.requestReviewedAt(),
     situation = this.situation(),
     placements = this.placements(),
+    submittedBy = this.submittedBy(),
+    decision = this.decision(),
+    canonicalPlacementPeriod = this.canonicalPlacementPeriod(),
   )
 }
