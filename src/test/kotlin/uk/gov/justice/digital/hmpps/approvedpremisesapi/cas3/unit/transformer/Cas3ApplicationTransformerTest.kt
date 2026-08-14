@@ -12,10 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Cancell
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPreviousBookingCancellationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPreviousBookingDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.PreviousBookingCancellationDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.PreviousBookingDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
@@ -113,7 +114,11 @@ class Cas3ApplicationTransformerTest {
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedByName = application.createdByUser.name,
+      applicationSubmittedBy = Cas3StaffDto(
+        application.createdByUser.name,
+        application.createdByUser.deliusUsername,
+        application.createdByUser.deliusStaffCode,
+      ),
       applicationRejectedReason = null,
       assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
       bookingStatus = null,
@@ -159,7 +164,11 @@ class Cas3ApplicationTransformerTest {
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedByName = application.createdByUser.name,
+      applicationSubmittedBy = Cas3StaffDto(
+        application.createdByUser.name,
+        application.createdByUser.deliusUsername,
+        application.createdByUser.deliusStaffCode,
+      ),
       applicationRejectedReason = "Rejected reason",
       assessmentStatus = TemporaryAccommodationAssessmentStatus.rejected,
       bookingStatus = null,
@@ -206,13 +215,17 @@ class Cas3ApplicationTransformerTest {
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedByName = application.createdByUser.name,
+      applicationSubmittedBy = Cas3StaffDto(
+        application.createdByUser.name,
+        application.createdByUser.deliusUsername,
+        application.createdByUser.deliusStaffCode,
+      ),
       applicationRejectedReason = null,
       assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
       bookingStatus = Cas3BookingStatus.arrived,
       bookingProvisionalOfferSentDate = null,
       previousBookings = emptyList(),
-      premises = Cas3ExternalPremisesDto(
+      premises = Cas3ExternalLatestBookingDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
         name = premises.name,
@@ -261,13 +274,17 @@ class Cas3ApplicationTransformerTest {
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedByName = application.createdByUser.name,
+      applicationSubmittedBy = Cas3StaffDto(
+        application.createdByUser.name,
+        application.createdByUser.deliusUsername,
+        application.createdByUser.deliusStaffCode,
+      ),
       applicationRejectedReason = null,
       assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
       bookingStatus = Cas3BookingStatus.provisional,
       bookingProvisionalOfferSentDate = booking.createdAt.toLocalDate(),
       previousBookings = emptyList(),
-      premises = Cas3ExternalPremisesDto(
+      premises = Cas3ExternalLatestBookingDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
         name = premises.name,
@@ -325,13 +342,17 @@ class Cas3ApplicationTransformerTest {
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedByName = application.createdByUser.name,
+      applicationSubmittedBy = Cas3StaffDto(
+        application.createdByUser.name,
+        application.createdByUser.deliusUsername,
+        application.createdByUser.deliusStaffCode,
+      ),
       applicationRejectedReason = null,
       assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
       bookingStatus = Cas3BookingStatus.arrived,
       bookingProvisionalOfferSentDate = null,
-      previousBookings = listOf(PreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null)),
-      premises = Cas3ExternalPremisesDto(
+      previousBookings = listOf(Cas3ExternalPreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null)),
+      premises = Cas3ExternalLatestBookingDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
         name = premises.name,
@@ -405,22 +426,26 @@ class Cas3ApplicationTransformerTest {
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedByName = application.createdByUser.name,
+      applicationSubmittedBy = Cas3StaffDto(
+        application.createdByUser.name,
+        application.createdByUser.deliusUsername,
+        application.createdByUser.deliusStaffCode,
+      ),
       applicationRejectedReason = null,
       assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
       bookingStatus = Cas3BookingStatus.arrived,
       bookingProvisionalOfferSentDate = null,
       previousBookings = listOf(
-        PreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null),
-        PreviousBookingDto(
+        Cas3ExternalPreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null),
+        Cas3ExternalPreviousBookingDto(
           bookingStatus = Cas3BookingStatus.cancelled,
-          cancellation = PreviousBookingCancellationDto(
+          cancellation = Cas3ExternalPreviousBookingCancellationDto(
             cancellationDate = cancellation.createdAt.toLocalDate(),
             cancellationReason = cancellation.reason.name,
           ),
         ),
       ),
-      premises = Cas3ExternalPremisesDto(
+      premises = Cas3ExternalLatestBookingDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
         name = premises.name,

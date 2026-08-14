@@ -10,17 +10,17 @@ data class Cas3SuitableApplication(
   val id: UUID,
   val applicationStatus: ApplicationStatus,
   val applicationSubmittedDate: LocalDate?,
-  val applicationSubmittedByName: String?,
+  val applicationSubmittedBy: Cas3StaffDto,
   val applicationRejectedReason: String?,
   val assessmentStatus: TemporaryAccommodationAssessmentStatus?,
   val bookingStatus: Cas3BookingStatus?,
   val bookingProvisionalOfferSentDate: LocalDate?,
-  val previousBookings: List<PreviousBookingDto>?,
-  val premises: Cas3ExternalPremisesDto?,
+  val previousBookings: List<Cas3ExternalPreviousBookingDto>?,
+  val premises: Cas3ExternalLatestBookingDto?,
   val uiUrl: String,
 )
 
-data class Cas3ExternalPremisesDto(
+data class Cas3ExternalLatestBookingDto(
   val startDate: LocalDate?,
   val endDate: LocalDate?,
   val name: String?,
@@ -30,12 +30,12 @@ data class Cas3ExternalPremisesDto(
   val postcode: String,
 )
 
-data class PreviousBookingDto(
+data class Cas3ExternalPreviousBookingDto(
   val bookingStatus: Cas3BookingStatus?,
-  val cancellation: PreviousBookingCancellationDto?,
+  val cancellation: Cas3ExternalPreviousBookingCancellationDto?,
 )
 
-data class PreviousBookingCancellationDto(
+data class Cas3ExternalPreviousBookingCancellationDto(
   val cancellationDate: LocalDate?,
   val cancellationReason: String?,
 )

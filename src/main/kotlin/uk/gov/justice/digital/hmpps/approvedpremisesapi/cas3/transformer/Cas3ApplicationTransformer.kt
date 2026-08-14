@@ -7,16 +7,18 @@ import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPreviousBookingCancellationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPreviousBookingDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.PreviousBookingCancellationDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.PreviousBookingDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -30,26 +32,27 @@ class Cas3ApplicationTransformer(
   @Value($$"${url-templates.frontend.cas3.referral-full}") private val cas3ApplicationFullUrlTemplate: String,
 ) {
   fun transformToCas3SuitableApplication(application: TemporaryAccommodationApplicationEntity, bookings: List<Cas3BookingEntity>?): Cas3SuitableApplication {
-    val firstBooking = bookings?.firstOrNull()
+    val latestBooking = bookings?.firstOrNull()
+    val latestAssessment = application.getLatestAssessment()
 
     return Cas3SuitableApplication(
       id = application.id,
       applicationStatus = application.getStatus(),
       applicationSubmittedDate = application.submittedAt?.toLocalDate(),
-      applicationSubmittedByName = application.createdByUser.name,
-      applicationRejectedReason = application.getLatestAssessment()?.referralRejectionReason?.name,
-      assessmentStatus = application.getLatestAssessment()?.deriveAssessmentStatus(),
-      bookingStatus = firstBooking?.status,
-      bookingProvisionalOfferSentDate = if (firstBooking?.status == Cas3BookingStatus.provisional) firstBooking.createdAt.toLocalDate() else null,
+      applicationSubmittedBy = transformToStaffDto(application.createdByUser),
+      applicationRejectedReason = latestAssessment?.referralRejectionReason?.name,
+      assessmentStatus = latestAssessment?.deriveAssessmentStatus(),
+      bookingStatus = latestBooking?.status,
+      bookingProvisionalOfferSentDate = if (latestBooking?.status == Cas3BookingStatus.provisional) latestBooking.createdAt.toLocalDate() else null,
       previousBookings = bookings?.drop(1)?.map { transformToPreviousBookingDto(it) },
-      premises = firstBooking?.premises?.let {
-        transformToCas3PremisesSummary(firstBooking)
+      premises = latestBooking?.premises?.let {
+        transformToCas3PremisesSummary(latestBooking)
       },
       uiUrl = cas3ApplicationFullUrlTemplate.replace("#applicationId", application.id.toString()),
     )
   }
 
-  fun transformToCas3PremisesSummary(booking: Cas3BookingEntity) = Cas3ExternalPremisesDto(
+  fun transformToCas3PremisesSummary(booking: Cas3BookingEntity) = Cas3ExternalLatestBookingDto(
     startDate = booking.arrivalDate,
     endDate = booking.departureDate,
     name = booking.premises.name,
@@ -117,10 +120,10 @@ class Cas3ApplicationTransformer(
     null -> null
   }
 
-  private fun transformToPreviousBookingDto(bookingEntity: Cas3BookingEntity): PreviousBookingDto = PreviousBookingDto(
+  private fun transformToPreviousBookingDto(bookingEntity: Cas3BookingEntity): Cas3ExternalPreviousBookingDto = Cas3ExternalPreviousBookingDto(
     bookingStatus = bookingEntity.status,
     cancellation = if (bookingEntity.isCancelled) {
-      PreviousBookingCancellationDto(
+      Cas3ExternalPreviousBookingCancellationDto(
         cancellationDate = bookingEntity.cancellation?.createdAt?.toLocalDate(),
         cancellationReason = bookingEntity.cancellation?.reason?.name,
       )
@@ -128,4 +131,6 @@ class Cas3ApplicationTransformer(
       null
     },
   )
+
+  private fun transformToStaffDto(user: UserEntity) = Cas3StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 }

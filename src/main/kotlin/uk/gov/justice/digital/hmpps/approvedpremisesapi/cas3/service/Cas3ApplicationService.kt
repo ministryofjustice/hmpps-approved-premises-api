@@ -5,7 +5,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
@@ -64,7 +64,7 @@ class Cas3ApplicationService(
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
-  fun getCurrentPremisesByCrn(crn: String): Cas3ExternalPremisesDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
+  fun getCurrentPremisesByCrn(crn: String): Cas3ExternalLatestBookingDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
     .firstNotNullOfOrNull { application ->
       cas3BookingService.getLatestArrivedBooking(application.id)
         ?.let { transformer.transformToCas3PremisesSummary(it) }
@@ -83,7 +83,7 @@ class Cas3ApplicationService(
     ?.let {
       transformer.transformToCas3SuitableApplication(
         application = it,
-        bookings = cas3BookingRepository.findAllCas3BookingEntity(it.id),
+        bookings = cas3BookingRepository.findAllBookingEntityCreatedAtDesc(it.id),
       )
     }
 

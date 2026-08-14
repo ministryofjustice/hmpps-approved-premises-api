@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
 
@@ -28,7 +28,7 @@ class Cas3ExternalApplicationsController(
   @GetMapping("/cases/{crn}/premises/current")
   fun getCurrentPremisesByCrn(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas3ExternalPremisesDto> = cas3ApplicationService.getCurrentPremisesByCrn(crn)
+  ): ResponseEntity<Cas3ExternalLatestBookingDto> = cas3ApplicationService.getCurrentPremisesByCrn(crn)
     ?.let { ResponseEntity.ok(it) }
     ?: ResponseEntity.notFound().build()
 }
