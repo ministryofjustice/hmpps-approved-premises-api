@@ -676,6 +676,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         caseManagerIsNotApplicant = false,
         apType = ApType.pipe,
         noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        duration = 10,
+        requestedPlacementPeriod = null,
       ),
     )
 

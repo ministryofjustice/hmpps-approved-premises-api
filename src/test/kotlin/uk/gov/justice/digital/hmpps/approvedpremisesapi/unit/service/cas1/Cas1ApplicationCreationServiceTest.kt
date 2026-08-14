@@ -738,6 +738,8 @@ class Cas1ApplicationCreationServiceTest {
       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
       caseManagerIsNotApplicant = false,
       apType = ApType.normal,
+      duration = 10,
+      requestedPlacementPeriod = null,
     )
 
     @BeforeEach
@@ -791,7 +793,10 @@ class Cas1ApplicationCreationServiceTest {
 
       val result = applicationService.submitApplication(
         applicationId,
-        defaultSubmitApprovedPremisesApplication,
+        defaultSubmitApprovedPremisesApplication.copy(
+          duration = 10,
+          requestedPlacementPeriod = null,
+        ),
         user,
         apAreaId = UUID.randomUUID(),
       )
@@ -816,12 +821,77 @@ class Cas1ApplicationCreationServiceTest {
 
       val result = applicationService.submitApplication(
         applicationId,
-        defaultSubmitApprovedPremisesApplication,
+        defaultSubmitApprovedPremisesApplication.copy(
+          duration = 10,
+          requestedPlacementPeriod = null,
+        ),
         user,
         apAreaId = UUID.randomUUID(),
       )
 
       assertThatCasResult(result).isGeneralValidationError("Only an application with the 'STARTED' status can be submitted")
+    }
+
+    @Test
+    fun `Returns GeneralValidationError when duration does not match requestedPlacementPeriod duration`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockLockableApplicationRepository.acquirePessimisticLock(applicationId) } returns LockableApplicationEntity(applicationId)
+
+      val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
+        duration = 10,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.now(),
+          duration = 11,
+          arrivalFlexible = null,
+        ),
+      )
+
+      val result = applicationService.submitApplication(
+        applicationId,
+        submitApplication,
+        user,
+        apAreaId = apArea.id,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("The requested placement period duration must match the duration specified in the application.")
+    }
+
+    @Test
+    fun `Returns success when duration matches requestedPlacementPeriod duration`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockCas1ApplicationUserDetailsRepository.save(any()) } returns Cas1ApplicationUserDetailsEntityFactory().produce()
+      every { mockCas1ApplicationDomainEventService.applicationSubmitted(any(), any(), any()) } just Runs
+      setupMocksForSuccess(application)
+
+      val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
+        duration = 10,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.now(),
+          duration = 10,
+          arrivalFlexible = null,
+        ),
+      )
+
+      val result = applicationService.submitApplication(
+        applicationId,
+        submitApplication,
+        user,
+        apAreaId = apArea.id,
+      )
+
+      assertThatCasResult(result).isSuccess()
     }
 
     @Test
@@ -845,13 +915,17 @@ class Cas1ApplicationCreationServiceTest {
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
+        duration = 10,
       )
 
       every { mockJsonMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
       val result = applicationService.submitApplication(
         applicationId,
-        defaultSubmitApprovedPremisesApplication,
+        defaultSubmitApprovedPremisesApplication.copy(
+          duration = 10,
+          requestedPlacementPeriod = null,
+        ),
         user,
         apAreaId = UUID.randomUUID(),
       )
@@ -880,6 +954,7 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
         noticeType = Cas1ApplicationTimelinessCategory.standard,
+        duration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1030,6 +1105,7 @@ class Cas1ApplicationCreationServiceTest {
           LocalDate.now().plusMonths(7)
         },
         noticeType = null,
+        duration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1107,6 +1183,7 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
         arrivalDate = LocalDate.now().plusMonths(7),
         noticeType = null,
+        duration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1183,6 +1260,7 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+        duration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1263,6 +1341,7 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = false,
         caseManagerUserDetails = null,
+        duration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1341,6 +1420,7 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerIsNotApplicant = false,
         caseManagerUserDetails = null,
         noticeType = Cas1ApplicationTimelinessCategory.standard,
+        duration = 25,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
           arrival = LocalDate.of(2023, 2, 1),
           duration = 25,

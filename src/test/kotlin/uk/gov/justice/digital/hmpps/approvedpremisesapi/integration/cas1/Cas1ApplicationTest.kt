@@ -2561,6 +2561,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
             licenseExpiryDate = LocalDate.of(2026, 12, 1),
+            duration = 52,
             requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
               arrival = LocalDate.of(2031, 5, 6),
               duration = 52,
@@ -2618,6 +2619,58 @@ class Cas1ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Submit application returns 400 when duration does not match requestedPlacementPeriod duration`() {
+      val (submittingUser, jwt) = givenAUser()
+
+      val (offenderDetails, _) = givenAnOffender()
+
+      val applicationId = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withCreatedByUser(submittingUser)
+      }.id
+
+      apDeliusContextMockSuccessfulCaseDetailCall(
+        offenderDetails.otherIds.crn,
+        CaseDetailFactory().produce(),
+      )
+
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+      webTestClient.post()
+        .uri("/cas1/applications/$applicationId/submission")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          SubmitApprovedPremisesApplication(
+            noticeType = Cas1ApplicationTimelinessCategory.standard,
+            apType = ApType.normal,
+            translatedDocument = {},
+            isWomensApplication = false,
+            targetLocation = "SW1A 1AA",
+            releaseType = ReleaseTypeOption.licence,
+            sentenceType = SentenceTypeOption.nonStatutory,
+            type = "CAS1",
+            applicantUserDetails = Cas1ApplicationUserDetails(
+              "applicantName",
+              "applicantEmail",
+              "applicationTelephone",
+            ),
+            caseManagerIsNotApplicant = false,
+            duration = 10,
+            requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+              arrival = LocalDate.now(),
+              duration = 11,
+              arrivalFlexible = null,
+            ),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("The requested placement period duration must match the duration specified in the application.")
+    }
+
+    @Test
     fun `Submit womens application does not auto allocate the assessment, sends emails and raises domain events`() {
       val (submittingUser, jwt) = givenAUser(
         probationRegion = givenAProbationRegion(
@@ -2672,6 +2725,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             ),
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
+            duration = 10,
+            requestedPlacementPeriod = null,
           ),
         )
         .exchange()
@@ -2782,6 +2837,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             ),
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
+            duration = 10,
+            requestedPlacementPeriod = null,
           ),
         )
         .exchange()
@@ -2879,6 +2936,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             apAreaId = overriddenApArea.id,
             applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
             caseManagerIsNotApplicant = false,
+            duration = 10,
+            requestedPlacementPeriod = null,
           ),
         )
         .exchange()
@@ -2960,6 +3019,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             apAreaId = overriddenApArea.id,
             applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
             caseManagerIsNotApplicant = false,
+            duration = 10,
+            requestedPlacementPeriod = null,
           ),
         )
         .exchange()
@@ -3050,6 +3111,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
                       type = "CAS1",
                       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
                       caseManagerIsNotApplicant = false,
+                      duration = 10,
+                      requestedPlacementPeriod = null,
                     ),
                   )
                   .exchange()

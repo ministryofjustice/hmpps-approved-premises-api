@@ -20,7 +20,7 @@ data class SubmitApprovedPremisesApplication(
   @Deprecated(message = "Use requestedPlacementPeriod.arrival instead")
   val arrivalDate: java.time.LocalDate? = null,
   @Schema(description = "The default duration for any request for placement linked to this application. This will be provided even if requestedPlacementPeriod is null")
-  val duration: Int? = null,
+  val duration: Int,
   @Schema(description = "If the user's ap area id is incorrect, they can optionally override it for the application")
   val apAreaId: java.util.UUID? = null,
   val applicantUserDetails: Cas1ApplicationUserDetails? = null,
