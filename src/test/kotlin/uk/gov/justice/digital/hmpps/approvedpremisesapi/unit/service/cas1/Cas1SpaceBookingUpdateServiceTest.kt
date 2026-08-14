@@ -19,9 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1Charact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService.UpdateBookingDetails
@@ -36,7 +36,7 @@ import java.util.UUID
 class Cas1SpaceBookingUpdateServiceTest {
   private val cas1PremisesService = mockk<Cas1PremisesService>()
   private val spaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
-  private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
+  private val cas1BookingDomainEventService = mockk<Cas1SpaceBookingDomainEventService>()
   private val cas1BookingEmailService = mockk<Cas1BookingEmailService>()
   private val clock = ClockConfiguration.FixedClock()
 

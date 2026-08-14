@@ -44,7 +44,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 @Service
-class Cas1BookingDomainEventService(
+class Cas1SpaceBookingDomainEventService(
   val domainEventService: Cas1DomainEventService,
   val offenderService: OffenderService,
   val apDeliusContextApiClient: ApDeliusContextApiClient,
