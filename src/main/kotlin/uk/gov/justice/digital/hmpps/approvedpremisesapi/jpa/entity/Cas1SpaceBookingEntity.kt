@@ -631,7 +631,7 @@ data class Cas1SpaceBookingEntity(
    */
   @Deprecated(
     "This was added for change request functionality, but never used. " +
-      "Instead, a transfer is indicated by a value being set in [transferType]",
+      "Instead, a transfer is indicated by a value being set in [transferReason]",
   )
   @Enumerated(EnumType.STRING)
   var transferType: TransferType? = null,

@@ -12,15 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import java.time.LocalDate
 
-class Cas1BookingManagementEmailServiceTest {
+class Cas1SpaceBookingManagementEmailServiceTest {
 
   private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
-  private val service = Cas1BookingManagementEmailService(mockEmailNotificationService)
+  private val service = Cas1SpaceBookingManagementEmailService(mockEmailNotificationService)
 
   companion object TestConstants {
     const val CRU_MANAGEMENT_AREA_EMAIL = "apAreaEmail@test.com"

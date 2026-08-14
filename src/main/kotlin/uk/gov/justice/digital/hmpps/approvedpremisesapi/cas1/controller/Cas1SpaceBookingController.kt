@@ -51,9 +51,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateType
@@ -86,7 +86,7 @@ class Cas1SpaceBookingController(
   private val cas1TimelineService: Cas1TimelineService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
-  private val cas1BookingManagementService: Cas1BookingManagementService,
+  private val cas1BookingManagementService: Cas1SpaceBookingManagementService,
   private val offenderDetailService: OffenderDetailService,
 ) {
 

@@ -30,7 +30,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class Cas1BookingManagementService(
+class Cas1SpaceBookingManagementService(
   private val cas1PremisesService: Cas1PremisesService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService,

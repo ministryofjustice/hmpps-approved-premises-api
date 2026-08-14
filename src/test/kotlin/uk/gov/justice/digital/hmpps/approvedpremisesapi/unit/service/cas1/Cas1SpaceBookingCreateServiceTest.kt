@@ -20,13 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -38,7 +38,7 @@ class Cas1SpaceBookingCreateServiceTest {
   private val cas1PremisesService = mockk<Cas1PremisesService>()
   private val placementRequestService = mockk<Cas1PlacementRequestService>()
   private val spaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
-  private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
+  private val cas1BookingDomainEventService = mockk<Cas1SpaceBookingDomainEventService>()
   private val cas1BookingEmailService = mockk<Cas1BookingEmailService>()
   private val cas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val cas1outOfServiceBedRepository = mockk<Cas1OutOfServiceBedRepository>()

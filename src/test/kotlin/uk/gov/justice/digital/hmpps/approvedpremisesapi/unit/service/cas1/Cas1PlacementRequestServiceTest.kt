@@ -38,10 +38,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
@@ -62,7 +62,7 @@ class Cas1PlacementRequestServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
-  private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
+  private val cas1BookingDomainEventService = mockk<Cas1SpaceBookingDomainEventService>()
   private val offenderService = mockk<OffenderService>()
   private val featureFlagService = mockk<FeatureFlagService>()
 

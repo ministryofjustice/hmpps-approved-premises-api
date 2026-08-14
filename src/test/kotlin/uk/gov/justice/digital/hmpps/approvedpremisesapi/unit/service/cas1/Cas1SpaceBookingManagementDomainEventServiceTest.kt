@@ -48,7 +48,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-class Cas1BookingManagementDomainEventServiceTest {
+class Cas1SpaceBookingManagementDomainEventServiceTest {
 
   @MockK
   lateinit var apDeliusContextApiClient: ApDeliusContextApiClient

@@ -70,7 +70,7 @@ import kotlin.collections.toSet
 class Cas1SpaceBookingService(
   private val cas1PremisesService: Cas1PremisesService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
-  private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
+  private val cas1BookingDomainEventService: Cas1SpaceBookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val cancellationReasonRepository: CancellationReasonRepository,
