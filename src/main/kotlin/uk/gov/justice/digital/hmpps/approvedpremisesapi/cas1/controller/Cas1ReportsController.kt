@@ -1,9 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.core.io.Resource
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ReportsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.ContentType
@@ -24,24 +35,44 @@ import java.time.temporal.ChronoUnit
 private const val MONTH_MAX = 12
 private const val MONTH_MIN = 1
 
-@Service
+@Cas1Controller
+@Tag(name = "Reports")
 class Cas1ReportsController(
   private val cas1ReportService: Cas1ReportService,
   private val userAccessService: Cas1UserAccessService,
-) : ReportsCas1Delegate {
+) {
 
   companion object {
     val TIMESTAMP_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuuMMdd_HHmm")
   }
 
-  @SuppressWarnings("CyclomaticComplexMethod")
-  override fun getReportByName(
+  @Operation(
+    summary = "Returns a spreadsheet of all data metrics for the 'reportName'.",
+    responses = [
+      ApiResponse(responseCode = "200", description = "Successfully retrieved the report", content = [Content(schema = Schema(implementation = Resource::class))]),
+    ],
+  )
+  @GetMapping(
+    value = ["/reports/{reportName}"],
+    produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+  )
+  @SuppressWarnings("CyclomaticComplexMethod", "ThrowsCount")
+  fun getReportByName(
+    @Parameter(
+      description = "Validates user for this service has access to the report",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader("X-Service-Name")
     xServiceName: ServiceName,
-    reportName: Cas1ReportName,
-    year: Int?,
-    month: Int?,
-    startDate: LocalDate?,
-    endDate: LocalDate?,
+    @Parameter(
+      description = "Name of the report to download",
+    )
+    @PathVariable reportName: Cas1ReportName,
+    @RequestParam year: Int?,
+    @RequestParam month: Int?,
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate?,
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate?,
   ): ResponseEntity<StreamingResponseBody> {
     if (xServiceName !== ServiceName.approvedPremises) {
       throw NotAllowedProblem("This endpoint only supports CAS1")
