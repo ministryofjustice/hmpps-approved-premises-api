@@ -365,6 +365,19 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
 
 ---
 
+## Subject Access Requests
+
+* We implement endpoints to retrieve data and templates to generate a subject
+  access request for a given CRN/NOMS number. 
+* General documentation on how this is tested is provided by `doc/how-to/sar-test-fixture-guide.md`
+* There are automatic checks in the build process to ensure the user is prompted 
+  to review/revise the SAR template whenever a change to the database model is made
+* We should also consider if the SAR template needs updating when a new domain 
+  event type is added. At a minimum, a human-readable version of the domain
+  event type will need adding into the template
+
+---
+
 ## Feature flags
 
 * Feature flags are Spring config driven (`feature-flags.*` in
