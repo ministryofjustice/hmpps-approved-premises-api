@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
@@ -16,6 +17,7 @@ data class Cas3SuitableApplication(
   val bookingStatus: Cas3BookingStatus?,
   val bookingProvisionalOfferSentDate: LocalDate?,
   val previousBookings: List<Cas3ExternalPreviousBookingDto>?,
+  @Schema(description = "This is the most recent booking for the application, could arguably be named 'latestBooking' or 'mostRecentBooking' but 'premises' is the name used in SAS.")
   val premises: Cas3ExternalLatestBookingDto?,
   val uiUrl: String,
 )
