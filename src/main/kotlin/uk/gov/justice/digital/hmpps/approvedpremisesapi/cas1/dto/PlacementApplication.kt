@@ -26,6 +26,5 @@ data class PlacementApplication(
   val data: Any? = null,
   val document: Any? = null,
   val withdrawalReason: WithdrawPlacementRequestReason? = null,
-  @Schema(deprecated = true, description = "please use requestedPlacementPeriod, authorisedPlacementPeriod instead")
   val dates: PlacementDates? = null,
 )
