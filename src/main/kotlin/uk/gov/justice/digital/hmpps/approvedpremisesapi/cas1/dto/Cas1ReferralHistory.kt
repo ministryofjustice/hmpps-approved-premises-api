@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import java.time.LocalDate
 import java.util.UUID
@@ -20,4 +21,5 @@ data class Cas1ReferralHistory(
   val placementAddress: String?,
   val placementStatus: Cas1SpaceBookingStatus?,
   val uiUrl: String,
+  val withdrawalReason: WithdrawPlacementRequestReason?,
 )
