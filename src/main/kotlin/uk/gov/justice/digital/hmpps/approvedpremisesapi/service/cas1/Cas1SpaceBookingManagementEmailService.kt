@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
 
 @Service
-class Cas1BookingManagementEmailService(
+class Cas1SpaceBookingManagementEmailService(
   private val emailNotifier: Cas1EmailNotifier,
 ) {
   @EventListener

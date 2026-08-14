@@ -38,8 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Rele
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEventWithPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
@@ -53,7 +53,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade as BookingMadeModel
 
-class Cas1BookingDomainEventServiceTest {
+class Cas1SpaceBookingDomainEventServiceTest {
 
   private val domainEventService = mockk<Cas1DomainEventService>()
   private val offenderService = mockk<OffenderService>()
@@ -62,7 +62,7 @@ class Cas1BookingDomainEventServiceTest {
 
   private val personTierDto = TierDtoFactory().produce()
 
-  val service = Cas1BookingDomainEventService(
+  val service = Cas1SpaceBookingDomainEventService(
     domainEventService,
     offenderService,
     apDeliusContextApiClient,

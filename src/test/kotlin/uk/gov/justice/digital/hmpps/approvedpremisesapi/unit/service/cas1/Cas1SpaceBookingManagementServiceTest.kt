@@ -42,11 +42,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringEventPublisher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -58,7 +58,7 @@ import java.util.UUID
 import java.util.stream.Stream
 
 @ExtendWith(MockKExtension::class)
-class Cas1BookingManagementServiceTest {
+class Cas1SpaceBookingManagementServiceTest {
 
   @MockK
   lateinit var cas1PremisesService: Cas1PremisesService
@@ -94,7 +94,7 @@ class Cas1BookingManagementServiceTest {
   lateinit var springEventPublisher: SpringEventPublisher
 
   @InjectMockKs
-  lateinit var service: Cas1BookingManagementService
+  lateinit var service: Cas1SpaceBookingManagementService
 
   companion object {
     const val CRN: String = "CRN1"

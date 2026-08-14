@@ -23,20 +23,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CRN
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CRU_MANAGEMENT_AREA_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PLACEMENT_APPLICATION_CREATOR_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_NAME
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.REGION_NAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1SpaceBookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1SpaceBookingEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1SpaceBookingEmailServiceTest.TestConstants.CRN
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1SpaceBookingEmailServiceTest.TestConstants.CRU_MANAGEMENT_AREA_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1SpaceBookingEmailServiceTest.TestConstants.PLACEMENT_APPLICATION_CREATOR_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1SpaceBookingEmailServiceTest.TestConstants.PREMISES_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1SpaceBookingEmailServiceTest.TestConstants.PREMISES_NAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1SpaceBookingEmailServiceTest.TestConstants.REGION_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-class Cas1BookingEmailServiceTest {
+class Cas1SpaceBookingEmailServiceTest {
 
   private object TestConstants {
     const val CRU_MANAGEMENT_AREA_EMAIL = "apAreaEmail@test.com"

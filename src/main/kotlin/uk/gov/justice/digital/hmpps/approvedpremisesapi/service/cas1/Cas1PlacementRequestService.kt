@@ -47,7 +47,7 @@ class Cas1PlacementRequestService(
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
-  private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
+  private val cas1BookingDomainEventService: Cas1SpaceBookingDomainEventService,
   private val offenderService: OffenderService,
   private val featureFlagService: FeatureFlagService,
   private val clock: Clock,
