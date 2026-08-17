@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -43,7 +43,7 @@ class Cas1ApplicationDomainEventService(
   private val offenderRisksService: OffenderRisksService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val domainEventTransformer: DomainEventTransformer,
-  private val caseService: CaseService,
+  private val tierService: TierService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   private val clock: Clock,
 ) {
@@ -202,7 +202,7 @@ class Cas1ApplicationDomainEventService(
     submittedAt = Instant.now(clock),
     submittedBy = getApplicationSubmittedSubmittedBy(staffDetails, caseDetail),
     sentenceLengthInMonths = null,
-    personTier = caseService.getCase(application.crn)?.tier?.toEventTier(),
+    personTier = tierService.getTier(application.crn)?.toEventTier(),
   )
 
   private fun getApplicationSubmittedSubmittedBy(

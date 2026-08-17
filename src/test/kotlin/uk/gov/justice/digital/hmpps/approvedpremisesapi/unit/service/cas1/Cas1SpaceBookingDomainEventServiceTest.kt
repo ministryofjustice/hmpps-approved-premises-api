@@ -18,13 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOptio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
@@ -58,7 +57,7 @@ class Cas1SpaceBookingDomainEventServiceTest {
   private val domainEventService = mockk<Cas1DomainEventService>()
   private val offenderService = mockk<OffenderService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val caseService = mockk<CaseService>()
+  private val mockTierService = mockk<TierService>()
 
   private val personTierDto = TierDtoFactory().produce()
 
@@ -66,7 +65,7 @@ class Cas1SpaceBookingDomainEventServiceTest {
     domainEventService,
     offenderService,
     apDeliusContextApiClient,
-    caseService,
+    mockTierService,
     UrlTemplate("http://frontend/applications/#id"),
   )
 
@@ -640,7 +639,7 @@ class Cas1SpaceBookingDomainEventServiceTest {
       tier = null,
     )
     every {
-      caseService.getCase(crn)
-    } returns CaseDtoFactory().withCrn(crn).withTier(personTierDto).produce()
+      mockTierService.getTier(crn)
+    } returns personTierDto
   }
 }

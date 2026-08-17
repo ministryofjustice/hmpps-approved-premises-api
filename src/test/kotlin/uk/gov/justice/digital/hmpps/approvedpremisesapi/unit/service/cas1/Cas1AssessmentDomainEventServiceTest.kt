@@ -23,13 +23,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -58,12 +58,12 @@ class Cas1AssessmentDomainEventServiceTest {
 
   private val domainEventService = mockk<Cas1DomainEventService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val caseService = mockk<CaseService>()
+  private val tierService = mockk<TierService>()
 
   val service = Cas1AssessmentDomainEventService(
     domainEventService,
     apDeliusContextApiClient,
-    caseService,
+    tierService,
     Clock.systemDefaultZone(),
     UrlTemplate("http://frontend/applications/#id"),
     UrlTemplate("http://frontend/assessments/#id"),
@@ -212,7 +212,7 @@ class Cas1AssessmentDomainEventServiceTest {
 
       val application = assessment.application as ApprovedPremisesApplicationEntity
       val offenderDetails = OffenderDetailsSummaryFactory().produce()
-      val caseDto = CaseDtoFactory().withCrn(application.crn).produce()
+      val tierDto = TierDtoFactory().produce()
       val staffUserDetails = StaffDetailFactory.staffDetail(
         probationArea = uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea(
           code = "N26",
@@ -232,7 +232,7 @@ class Cas1AssessmentDomainEventServiceTest {
       )
       every { domainEventService.save(any()) } just Runs
 
-      every { caseService.getCase(application.crn) } returns caseDto
+      every { tierService.getTier(application.crn) } returns tierDto
 
       service.assessmentAccepted(application, assessment, offenderDetails, placementDates, apType, user)
 
@@ -274,7 +274,7 @@ class Cas1AssessmentDomainEventServiceTest {
       assertThat(eventDetails.assessedBy).isEqualTo(expectedAssessor)
       assertThat(eventDetails.decision).isEqualTo("ACCEPTED")
       assertThat(eventDetails.decisionRationale).isNull()
-      assertThat(eventDetails.personTier).isEqualTo(caseDto.tier!!.toEventTier())
+      assertThat(eventDetails.personTier).isEqualTo(tierDto.toEventTier())
       assertThat(domainEvent.metadata).containsEntry(MetaDataName.CAS1_REQUESTED_AP_TYPE, "NORMAL")
     }
   }
@@ -318,8 +318,8 @@ class Cas1AssessmentDomainEventServiceTest {
         .withCrn(assessment.application.crn)
         .produce()
 
-      val caseDto = CaseDtoFactory().withCrn(application.crn).produce()
-      every { caseService.getCase(application.crn) } returns caseDto
+      val tierDto = TierDtoFactory().produce()
+      every { tierService.getTier(application.crn) } returns tierDto
 
       val staffUserDetails = StaffDetailFactory.staffDetail(code = "N26")
 
@@ -382,7 +382,7 @@ class Cas1AssessmentDomainEventServiceTest {
       )
       assertThat(data.decision).isEqualTo("REJECTED")
       assertThat(data.decisionRationale).isEqualTo("reasoning")
-      assertThat(data.personTier).isEqualTo(caseDto.tier!!.toEventTier())
+      assertThat(data.personTier).isEqualTo(tierDto.toEventTier())
     }
   }
 
