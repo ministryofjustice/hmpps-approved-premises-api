@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ExternalPreviousBookingCancellationDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ExternalPreviousBookingDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -54,8 +57,17 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
+            applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+            applicationSubmittedBy = Cas3StaffDto(
+              application.createdByUser.name,
+              application.createdByUser.deliusUsername,
+              application.createdByUser.deliusStaffCode,
+            ),
+            applicationRejectedReason = null,
             assessmentStatus = null,
             bookingStatus = null,
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = emptyList(),
             premises = null,
             uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
           )
@@ -89,8 +101,75 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.inProgress,
-            null,
+            applicationSubmittedDate = application.submittedAt?.toLocalDate(),
+            applicationSubmittedBy = Cas3StaffDto(
+              application.createdByUser.name,
+              application.createdByUser.deliusUsername,
+              application.createdByUser.deliusStaffCode,
+            ),
+            applicationRejectedReason = null,
+            assessmentStatus = null,
             bookingStatus = null,
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = emptyList(),
+            premises = null,
+            uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
+          )
+
+          val response = webTestClient.get()
+            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody<Cas3SuitableApplication>()
+            .returnResult()
+            .responseBody
+
+          Assertions.assertThat(response).isEqualTo(suitableApplication)
+        }
+      }
+    }
+
+    @Test
+    fun `Get suitable application returns rejected assessment status`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+            withProbationDeliveryUnit(probationDeliveryUnitFactory.produceAndPersist { withProbationRegion(user.probationRegion) })
+          }
+
+          val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withCrn(crn)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withReferralRejectionReason(referralRejectionReasonEntityFactory.produceAndPersist())
+          }
+
+          val suitableApplication = Cas3SuitableApplication(
+            id = application.id,
+            applicationStatus = ApplicationStatus.submitted,
+            applicationSubmittedDate = application.submittedAt?.toLocalDate(),
+            applicationSubmittedBy = Cas3StaffDto(
+              application.createdByUser.name,
+              application.createdByUser.deliusUsername,
+              application.createdByUser.deliusStaffCode,
+            ),
+            applicationRejectedReason = assessment.referralRejectionReason!!.name,
+            assessmentStatus = assessment.deriveAssessmentStatus(),
+            bookingStatus = null,
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = emptyList(),
             premises = null,
             uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
           )
@@ -143,11 +222,206 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
+            applicationSubmittedDate = application.submittedAt?.toLocalDate(),
+            applicationSubmittedBy = Cas3StaffDto(
+              application.createdByUser.name,
+              application.createdByUser.deliusUsername,
+              application.createdByUser.deliusStaffCode,
+            ),
+            applicationRejectedReason = null,
             assessmentStatus = null,
             bookingStatus = Cas3BookingStatus.confirmed,
-            premises = Cas3ExternalPremisesDto(
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = emptyList(),
+            premises = Cas3ExternalLatestBookingDto(
               startDate = booking.arrivalDate,
               endDate = booking.departureDate,
+              name = premises.name,
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+            ),
+            uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
+          )
+
+          val response = webTestClient.get()
+            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody<Cas3SuitableApplication>()
+            .returnResult()
+            .responseBody
+
+          Assertions.assertThat(response).isEqualTo(suitableApplication)
+        }
+      }
+    }
+
+    @Test
+    fun `Get suitable application returns provisional booking status`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+            withProbationDeliveryUnit(probationDeliveryUnitFactory.produceAndPersist { withProbationRegion(user.probationRegion) })
+          }
+
+          val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withCrn(crn)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+            withCrn(crn)
+            withArrivalDate(LocalDate.now())
+            withDepartureDate(LocalDate.now().plusDays(7))
+            withStatus(Cas3BookingStatus.provisional)
+          }
+
+          val suitableApplication = Cas3SuitableApplication(
+            id = application.id,
+            applicationStatus = ApplicationStatus.submitted,
+            applicationSubmittedDate = application.submittedAt?.toLocalDate(),
+            applicationSubmittedBy = Cas3StaffDto(
+              application.createdByUser.name,
+              application.createdByUser.deliusUsername,
+              application.createdByUser.deliusStaffCode,
+            ),
+            applicationRejectedReason = null,
+            assessmentStatus = null,
+            bookingStatus = Cas3BookingStatus.provisional,
+            bookingProvisionalOfferSentDate = booking.createdAt.toLocalDate(),
+            previousBookings = emptyList(),
+            premises = Cas3ExternalLatestBookingDto(
+              startDate = booking.arrivalDate,
+              endDate = booking.departureDate,
+              name = premises.name,
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+            ),
+            uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
+          )
+
+          val response = webTestClient.get()
+            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody<Cas3SuitableApplication>()
+            .returnResult()
+            .responseBody
+
+          Assertions.assertThat(response).isEqualTo(suitableApplication)
+        }
+      }
+    }
+
+    @Test
+    fun `Get suitable application returns previous bookings`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+            withProbationDeliveryUnit(probationDeliveryUnitFactory.produceAndPersist { withProbationRegion(user.probationRegion) })
+          }
+
+          val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withCrn(crn)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          val latestBooking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+            withCrn(crn)
+            withArrivalDate(LocalDate.now())
+            withDepartureDate(LocalDate.now().plusDays(7))
+            withStatus(Cas3BookingStatus.confirmed)
+            withCreatedAt(OffsetDateTime.now().minusDays(1))
+          }
+
+          val olderClosedBookingEntity = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+            withCrn(crn)
+            withArrivalDate(LocalDate.now().minusDays(14))
+            withDepartureDate(LocalDate.now().minusDays(7))
+            withStatus(Cas3BookingStatus.closed)
+            withCreatedAt(OffsetDateTime.now().minusDays(2))
+          }
+
+          val olderCancelledBookingEntity = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+            withCrn(crn)
+            withArrivalDate(LocalDate.now().minusDays(21))
+            withDepartureDate(LocalDate.now().minusDays(14))
+            withStatus(Cas3BookingStatus.cancelled)
+            withCreatedAt(OffsetDateTime.now().minusDays(3))
+          }
+
+          val olderCancelledBookingCancellation = cas3CancellationEntityFactory.produceAndPersist {
+            withBooking(olderCancelledBookingEntity)
+            withReason(cancellationReasonEntityFactory.produceAndPersist())
+            withCreatedAt(OffsetDateTime.now().minusDays(3))
+          }
+
+          val olderClosedBookingDto = Cas3ExternalPreviousBookingDtoFactory()
+            .withBookingStatus(Cas3BookingStatus.closed)
+            .withCancellation(null)
+            .produce()
+
+          val olderCancelledBookingDto = Cas3ExternalPreviousBookingDtoFactory()
+            .withBookingStatus(Cas3BookingStatus.cancelled)
+            .withCancellation(
+              Cas3ExternalPreviousBookingCancellationDtoFactory()
+                .withCancellationDate(olderCancelledBookingCancellation.createdAt.toLocalDate())
+                .withCancellationReason(olderCancelledBookingCancellation.reason.name)
+                .produce(),
+            )
+            .produce()
+
+          val suitableApplication = Cas3SuitableApplication(
+            id = application.id,
+            applicationStatus = ApplicationStatus.submitted,
+            applicationSubmittedDate = application.submittedAt?.toLocalDate(),
+            applicationSubmittedBy = Cas3StaffDto(
+              application.createdByUser.name,
+              application.createdByUser.deliusUsername,
+              application.createdByUser.deliusStaffCode,
+            ),
+            applicationRejectedReason = null,
+            assessmentStatus = null,
+            bookingStatus = Cas3BookingStatus.confirmed,
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = listOf(olderClosedBookingDto, olderCancelledBookingDto),
+            premises = Cas3ExternalLatestBookingDto(
+              startDate = latestBooking.arrivalDate,
+              endDate = latestBooking.departureDate,
               name = premises.name,
               addressLine1 = premises.addressLine1,
               addressLine2 = premises.addressLine2,
@@ -270,7 +544,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withStatus(Cas3BookingStatus.arrived)
           }
 
-          val currentPremises = Cas3ExternalPremisesDto(
+          val currentPremises = Cas3ExternalLatestBookingDto(
             startDate = booking.arrivalDate,
             endDate = booking.departureDate,
             name = premises.name,
@@ -286,7 +560,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody<Cas3ExternalPremisesDto>()
+            .expectBody<Cas3ExternalLatestBookingDto>()
             .returnResult()
             .responseBody
 
