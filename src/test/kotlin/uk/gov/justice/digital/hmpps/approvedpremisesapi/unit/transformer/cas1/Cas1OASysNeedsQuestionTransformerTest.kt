@@ -288,7 +288,6 @@ class Cas1OASysNeedsQuestionTransformerTest {
       )
     }
 
-
     @Test
     fun `If health is not selected, do not return question`() {
       val result = transformer.transformToOASysQuestions(
