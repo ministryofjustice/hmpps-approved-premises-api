@@ -208,7 +208,7 @@ interface Cas3BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     "SELECT * FROM cas3_bookings WHERE application_id = :applicationId ORDER BY created_at DESC",
     nativeQuery = true,
   )
-  fun findAllCas3BookingEntity(
+  fun findAllBookingEntityCreatedAtDesc(
     applicationId: UUID,
   ): List<Cas3BookingEntity>
 
