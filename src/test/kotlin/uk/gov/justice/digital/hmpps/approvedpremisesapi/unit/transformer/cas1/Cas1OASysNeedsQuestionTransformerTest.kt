@@ -288,6 +288,29 @@ class Cas1OASysNeedsQuestionTransformerTest {
       )
     }
 
+
+    @Test
+    fun `If health is not selected, do not return question`() {
+      val result = transformer.transformToOASysQuestions(
+        needsDetails = NeedsDetailsFactory().produce(),
+        healthDetails = HealthDetailsFactory()
+          .withGeneralHealth(
+            generalHealth = true,
+            generalHealthSpecify = "health answer",
+          )
+          .produce(),
+        sectionsToInclude = emptyList(),
+      )
+
+      assertThat(result).doesNotContain(
+        OASysQuestion(
+          questionNumber = "13.1",
+          label = "General Health - Any physical or mental health conditions",
+          answer = "health answer",
+        ),
+      )
+    }
+
     @Test
     fun `If linked to harm is true, always return question`() {
       val needsDetails = NeedsDetailsFactory()
