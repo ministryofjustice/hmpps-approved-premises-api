@@ -1545,7 +1545,7 @@ class Cas1AssessmentServiceTest {
       every { approvedPremisesAssessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { cas1AssessmentDomainEventService.assessmentRejected(any(), any(), any(), any()) } just Runs
-      every { cas1AssessmentEmailServiceMock.assessmentRejected(any()) } just Runs
+      every { cas1AssessmentEmailServiceMock.assessmentRejected(any(), any()) } just Runs
 
       val caseSummary =
         CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce()
@@ -1594,7 +1594,7 @@ class Cas1AssessmentServiceTest {
       }
 
       verify(exactly = 1) {
-        cas1AssessmentEmailServiceMock.assessmentRejected(application)
+        cas1AssessmentEmailServiceMock.assessmentRejected(application, null)
       }
     }
   }

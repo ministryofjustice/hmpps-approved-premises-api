@@ -279,6 +279,7 @@ class Cas1AssessmentsController(
         cas1AssessmentRejection.agreeWithShortNoticeReason,
         cas1AssessmentRejection.agreeWithShortNoticeReasonComments,
         cas1AssessmentRejection.reasonForLateApplication,
+        cas1AssessmentRejection.rejectionReason,
       )
 
     extractEntityFromCasResult(assessmentAuthResult)

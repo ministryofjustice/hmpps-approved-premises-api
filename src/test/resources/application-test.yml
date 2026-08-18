@@ -156,6 +156,8 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   cas1-ui:
     base-url: http://localhost:#WIREMOCK_PORT
+  cas2v2-ui:
+    base-url: http://localhost:#WIREMOCK_PORT
 
 prison-case-notes:
   lookback-days: 365
@@ -277,4 +279,5 @@ refresh-inmate-details-cache:
 feature-flags:
   cas1-disable-overbooking-summary: false
   isr-email-changes-enabled: true
+  isr-cas1-email-changes-enabled: true
   include-tier-v3: true

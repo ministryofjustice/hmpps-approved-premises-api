@@ -2,25 +2,31 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejectionReasonDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormattedHourOfDay
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service
 class Cas1AssessmentEmailService(
   private val emailNotifier: Cas1EmailNotifier,
   private val workingDayService: WorkingDayService,
+  private val featureFlagService: FeatureFlagService,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
+  @Value("\${services.cas2v2-ui.base-url}") private val cas2Url: String,
 ) {
 
   fun assessmentAllocated(
@@ -79,20 +85,47 @@ class Cas1AssessmentEmailService(
     }
   }
 
-  fun assessmentRejected(application: ApprovedPremisesApplicationEntity) {
+  fun assessmentRejected(
+    application: ApprovedPremisesApplicationEntity,
+    rejectionReason: Cas1AssessmentRejectionReasonDto? = null,
+  ) {
     application.createdByUser.email?.let { email ->
+      val timeApplicationReceived = application.submittedAt?.format(DateTimeFormatter.ofPattern("HH:mm"))
+      val dateApplicationReceived = application.submittedAt?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = Cas1NotifyTemplates.ASSESSMENT_REJECTED,
+        templateId = getAssessmentRejectionTemplate(rejectionReason),
         personalisation = mapOf(
           "name" to application.createdByUser.name,
           "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
           "crn" to application.crn,
+          "timeApplicationReceived" to timeApplicationReceived,
+          "dateApplicationReceived" to dateApplicationReceived,
+          "cas2Url" to cas2Url,
         ),
         application = application,
       )
     }
   }
+
+  private fun getAssessmentRejectionTemplate(rejectionReason: Cas1AssessmentRejectionReasonDto?): String {
+    val useAlternativeAccommodationTemplate =
+      isAlternativeAccommodationRejectionReason(rejectionReason) &&
+        featureFlagService.getBooleanFlag(FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES)
+
+    return if (useAlternativeAccommodationTemplate) {
+      Cas1NotifyTemplates.ASSESSMENT_REJECTED_ALTERNATIVE_ACCOMMODATION
+    } else {
+      Cas1NotifyTemplates.ASSESSMENT_REJECTED
+    }
+  }
+
+  private fun isAlternativeAccommodationRejectionReason(rejectionReason: Cas1AssessmentRejectionReasonDto?) = rejectionReason in setOf(
+    Cas1AssessmentRejectionReasonDto.accommodationNeedOnly,
+    Cas1AssessmentRejectionReasonDto.notNecessaryOrProportionate,
+    Cas1AssessmentRejectionReasonDto.riskCanBeManagedOtherWay,
+  )
 
   fun appealedAssessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, application: ApprovedPremisesApplicationEntity) {
     allocatedUser.email?.let { email ->

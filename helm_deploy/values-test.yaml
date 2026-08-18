@@ -35,6 +35,7 @@ generic-service:
     SERVICES_LICENCE-API_BASE-URL: https://create-and-vary-a-licence-api-dev.hmpps.service.justice.gov.uk
     SERVICES_HEALTH-AND-MEDICATION-API_BASE-URL: https://health-and-medication-api-dev.hmpps.service.justice.gov.uk
     SERVICES_CAS1-UI_BASE-URL: https://approved-premises-test.hmpps.service.justice.gov.uk
+    SERVICES_CAS2V2-UI_BASE-URL: https://community-accommodation-tier-2-bail-test.hmpps.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/test,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
     SENTRY_ENVIRONMENT: test
@@ -107,6 +108,7 @@ generic-service:
     FEATURE-FLAGS_CAS2-OASYS-USE-NEW-QUESTIONS: true
     FEATURE-FLAGS_CAS3-REPORTS-WITH-NEW-BEDSPACE-MODEL-TABLES-ENABLED: true
     FEATURE-FLAGS_ISR-EMAIL-CHANGES-ENABLED: true
+    FEATURE-FLAGS_ISR-CAS1-EMAIL-CHANGES-ENABLED: true
     FEATURE-FLAGS_INCLUDE-TIER-V3: true
 
   namespace_secrets:
