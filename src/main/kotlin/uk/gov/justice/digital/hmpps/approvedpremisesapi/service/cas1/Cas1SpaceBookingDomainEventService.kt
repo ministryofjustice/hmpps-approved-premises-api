@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Sp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -48,7 +48,7 @@ class Cas1SpaceBookingDomainEventService(
   val domainEventService: Cas1DomainEventService,
   val offenderService: OffenderService,
   val apDeliusContextApiClient: ApDeliusContextApiClient,
-  val caseService: CaseService,
+  val tierService: TierService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
@@ -277,7 +277,7 @@ class Cas1SpaceBookingDomainEventService(
           transferredFrom = transferredFrom?.toEventTransferInfo(),
           transferReason = bookingInfo.transferReason,
           additionalInformation = bookingInfo.additionalInformation,
-          personTier = caseService.getCase(crn)?.tier?.toEventTier(),
+          personTier = tierService.getTier(crn)?.toEventTier(),
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),

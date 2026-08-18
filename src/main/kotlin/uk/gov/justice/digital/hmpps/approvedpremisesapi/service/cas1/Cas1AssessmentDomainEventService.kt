@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
@@ -35,7 +35,7 @@ import java.util.UUID
 class Cas1AssessmentDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val caseService: CaseService,
+  private val tierService: TierService,
   private val clock: Clock,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
@@ -184,7 +184,7 @@ class Cas1AssessmentDomainEventService(
           decision = assessment.decision.toString(),
           decisionRationale = assessment.rejectionRationale,
           arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
-          personTier = caseService.getCase(application.crn)?.tier?.toEventTier(),
+          personTier = tierService.getTier(application.crn)?.toEventTier(),
         ),
         metadata = mapOf(
           MetaDataName.CAS1_REQUESTED_AP_TYPE to apType.asApprovedPremisesType().name,
@@ -241,7 +241,7 @@ class Cas1AssessmentDomainEventService(
           decision = assessment.decision.toString(),
           decisionRationale = assessment.rejectionRationale,
           arrivalDate = null,
-          personTier = caseService.getCase(application.crn)?.tier?.toEventTier(),
+          personTier = tierService.getTier(application.crn)?.toEventTier(),
         ),
         schemaVersion = 2,
       ),

@@ -32,4 +32,5 @@ data class PersonDeparted(
   @get:JsonProperty("legacyReasonCode", required = true) val legacyReasonCode: String,
 
   @get:JsonProperty("destination", required = true) val destination: PersonDepartedDestination,
+  val personTier: EventTier? = null,
 ) : Cas1DomainEventPayload

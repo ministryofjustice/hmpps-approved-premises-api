@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.St
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
@@ -46,6 +48,7 @@ class Cas1SpaceBookingManagementDomainEventService(
   val offenderService: OffenderService,
   private val cas1SpaceBookingManagementConfig: Cas1SpaceBookingManagementDomainEventServiceConfig,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val tierService: TierService,
 ) {
 
   data class ArrivalInfo(
@@ -97,6 +100,7 @@ class Cas1SpaceBookingManagementDomainEventService(
             expectedDepartureOn = updatedCas1SpaceBooking.expectedDepartureDate,
             notes = null,
             recordedBy = recordedByStaffDetails.toStaffMember(),
+            personTier = tierService.getTier(updatedCas1SpaceBooking.crn)?.toEventTier(),
           ),
         ),
       ),
@@ -209,6 +213,7 @@ class Cas1SpaceBookingManagementDomainEventService(
                 id = moveOnCategory.id,
               ),
             ),
+            personTier = tierService.getTier(departedCas1SpaceBooking.crn)?.toEventTier(),
           ),
         ),
       ),

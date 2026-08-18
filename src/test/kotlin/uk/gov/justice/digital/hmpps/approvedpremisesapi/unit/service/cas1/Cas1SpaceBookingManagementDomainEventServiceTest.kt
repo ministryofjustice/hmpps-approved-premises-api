@@ -20,6 +20,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -60,10 +63,15 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
   lateinit var offenderService: OffenderService
 
   @MockK
+  lateinit var tierService: TierService
+
+  @MockK
   lateinit var cas1SpaceBookingManagementDomainEventServiceConfig: Cas1SpaceBookingManagementDomainEventServiceConfig
 
   @InjectMockKs
   lateinit var service: Cas1SpaceBookingManagementDomainEventService
+
+  private val tierDto = TierDtoFactory().produce()
 
   companion object Constants {
     const val DELIUS_EVENT_NUMBER = "52"
@@ -127,6 +135,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
         HttpStatus.OK,
         recordedByStaffDetails,
       )
+
+      every { tierService.getTier(any()) } returns tierDto
     }
 
     @Test
@@ -176,6 +186,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(data.recordedBy.username).isEqualTo(recordedByStaffDetails.username)
       assertThat(data.recordedBy.forenames).isEqualTo(recordedByStaffDetails.name.forenames())
       assertThat(data.recordedBy.surname).isEqualTo(recordedByStaffDetails.name.surname)
+      assertThat(data.personTier).isEqualTo(tierDto.toEventTier())
     }
 
     @Test
@@ -281,6 +292,8 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
         HttpStatus.OK,
         recordedByStaffDetails,
       )
+
+      every { tierService.getTier(any()) } returns tierDto
     }
 
     @Test
@@ -338,6 +351,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventEventDetails.recordedBy.username).isEqualTo(recordedByStaffDetails.username)
       assertThat(domainEventEventDetails.recordedBy.forenames).isEqualTo(recordedByStaffDetails.name.forenames())
       assertThat(domainEventEventDetails.recordedBy.surname).isEqualTo(recordedByStaffDetails.name.surname)
+      assertThat(domainEventEventDetails.personTier).isEqualTo(tierDto.toEventTier())
     }
 
     @Test
