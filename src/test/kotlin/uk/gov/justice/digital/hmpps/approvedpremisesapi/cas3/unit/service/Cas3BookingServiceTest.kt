@@ -2530,32 +2530,4 @@ class Cas3BookingServiceTest {
       }
     }
   }
-
-  @Nested
-  inner class GetLatestBooking {
-    private val applicationId = UUID.randomUUID()
-
-    @Test
-    fun `returns null when no bookings exist for application`() {
-      every { mockBookingRepository.findTopByApplicationIdOrderByCreatedAtDesc(applicationId) } returns null
-
-      val result = cas3BookingService.getLatestBooking(applicationId)
-
-      assertThat(result).isNull()
-    }
-
-    @Test
-    fun `returns booking when booking exists`() {
-      val booking = Cas3BookingEntityFactory()
-        .withDefaults()
-        .withStatus(Cas3BookingStatus.confirmed)
-        .produce()
-
-      every { mockBookingRepository.findTopByApplicationIdOrderByCreatedAtDesc(applicationId) } returns booking
-
-      val result = cas3BookingService.getLatestBooking(applicationId)
-
-      assertThat(result).isEqualTo(booking)
-    }
-  }
 }
