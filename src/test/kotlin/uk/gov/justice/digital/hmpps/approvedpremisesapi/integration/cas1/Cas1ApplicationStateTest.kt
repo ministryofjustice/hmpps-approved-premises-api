@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
@@ -470,11 +471,6 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   private fun submitApplication(hasArrival: Boolean = true) {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     application.data = "{\"data\": \"something\"}"
-    val arrivalDate = if (hasArrival) {
-      LocalDate.now().plusMonths(7)
-    } else {
-      null
-    }
 
     realApplicationRepository.save(application)
 
@@ -490,12 +486,15 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
-          arrivalDate = arrivalDate,
           sentenceType = SentenceTypeOption.nonStatutory,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
           duration = 10,
-          requestedPlacementPeriod = null,
+          requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.now().plusMonths(7),
+            arrivalFlexible = false,
+            duration = 10,
+          ),
         ),
       )
       .exchange()

@@ -705,7 +705,6 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       application.id,
       jwt,
       SubmitApprovedPremisesApplication(
-        arrivalDate = arrivalDateOnApplication,
         translatedDocument = {},
         isWomensApplication = false,
         isEmergencyApplication = false,
@@ -719,7 +718,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
         duration = 52,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-          arrival = LocalDate.of(2031, 5, 6),
+          arrival = arrivalDateOnApplication ?: LocalDate.of(2031, 5, 6),
           duration = 52,
           arrivalFlexible = null,
         ),

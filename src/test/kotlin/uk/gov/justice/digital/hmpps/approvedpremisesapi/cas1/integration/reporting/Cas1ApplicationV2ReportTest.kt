@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
@@ -624,7 +625,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.referrer_username).isEqualTo("USER2")
       assertThat(row.referrer_name).isEqualTo("App Licant")
       assertThat(row.target_location).isEqualTo("location2")
-      assertThat(row.standard_rfp_arrival_date).isNull()
+      assertThat(row.standard_rfp_arrival_date).isEqualTo(LocalDate.now().toString())
       assertThat(row.application_submission_date).isEqualTo("2020-02-29T11:25:00Z")
       assertThat(row.application_timeliness_status).isEqualTo("shortNotice")
       assertThat(row.applicant_reason_for_late_application).isNull()
@@ -925,10 +926,13 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         apType = apType,
         noticeType = timelinessCategory,
         apAreaId = apArea.id,
-        arrivalDate = arrivalDate,
         situation = situation,
         duration = 10,
-        requestedPlacementPeriod = null,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = arrivalDate ?: LocalDate.now(),
+          arrivalFlexible = false,
+          duration = 10,
+        ),
       ),
     )
 

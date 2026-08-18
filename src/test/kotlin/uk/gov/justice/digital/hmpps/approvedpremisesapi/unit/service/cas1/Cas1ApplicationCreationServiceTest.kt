@@ -1038,8 +1038,12 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerIsNotApplicant = false,
         caseManagerUserDetails = null,
         noticeType = Cas1ApplicationTimelinessCategory.standard,
-        arrivalDate = LocalDate.of(2023, 2, 1),
         duration = 25,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.of(2023, 2, 1),
+          duration = 25,
+          arrivalFlexible = false,
+        ),
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1099,13 +1103,17 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
-          LocalDate.now().plusDays(10)
-        } else {
-          LocalDate.now().plusMonths(7)
-        },
         noticeType = null,
         duration = 10,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+            LocalDate.now().plusDays(10)
+          } else {
+            LocalDate.now().plusMonths(7)
+          },
+          arrivalFlexible = false,
+          duration = 10,
+        ),
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1181,7 +1189,6 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        arrivalDate = LocalDate.now().plusMonths(7),
         noticeType = null,
         duration = 10,
       )
