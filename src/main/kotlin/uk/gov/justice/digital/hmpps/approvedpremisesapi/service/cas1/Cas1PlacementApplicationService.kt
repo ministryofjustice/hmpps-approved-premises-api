@@ -291,6 +291,8 @@ class Cas1PlacementApplicationService(
       WithdrawableEntityType.SpaceBooking -> throw InternalServerErrorProblem("Withdrawing a SpaceBooking should not cascade to PlacementApplications")
     }
 
+    placementApplication.withdrawalOccurredAt = OffsetDateTime.now(clock)
+
     val savedApplication = placementApplicationRepository.save(placementApplication)
 
     cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(

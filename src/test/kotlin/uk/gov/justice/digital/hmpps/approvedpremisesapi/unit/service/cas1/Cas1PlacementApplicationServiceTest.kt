@@ -1020,6 +1020,7 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(entity.decision).isEqualTo(null)
       assertThat(entity.decisionMadeAt).isEqualTo(submittedTimeStamp)
       assertThat(entity.isWithdrawn).isEqualTo(true)
+      assertThat(entity.withdrawalOccurredAt).isWithinTheLastMinute()
 
       val placementApplicationAfterWithdrawn = placementApplication
       placementApplicationAfterWithdrawn.isWithdrawn = true

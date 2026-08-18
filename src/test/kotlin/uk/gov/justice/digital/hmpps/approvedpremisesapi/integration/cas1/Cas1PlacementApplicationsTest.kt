@@ -1231,6 +1231,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
           assertThat(updatedPlacementApplication.isWithdrawn).isTrue()
+          assertThat(updatedPlacementApplication.withdrawalOccurredAt).isNotNull()
         }
       }
     }

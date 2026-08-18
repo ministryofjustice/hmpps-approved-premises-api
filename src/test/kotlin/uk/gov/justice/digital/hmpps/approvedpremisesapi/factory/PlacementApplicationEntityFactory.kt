@@ -28,6 +28,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var decision: Yielded<PlacementApplicationDecision?> = { null }
   private var decisionMadeAt: Yielded<OffsetDateTime?> = { null }
   private var decisionSummary: Yielded<String?> = { null }
+  private var withdrawalOccurredAt: Yielded<OffsetDateTime?> = { null }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var placementType: Yielded<PlacementType?> = { null }
   private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
@@ -97,6 +98,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.decisionSummary = { decisionSummary }
   }
 
+  fun withWithdrawalOccurredAt(withdrawalOccurredAt: OffsetDateTime?) = apply {
+    this.withdrawalOccurredAt = { withdrawalOccurredAt }
+  }
+
   fun withReallocatedAt(reallocatedAt: OffsetDateTime?) = apply {
     this.reallocatedAt = { reallocatedAt }
   }
@@ -163,6 +168,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     decision = this.decision(),
     decisionMadeAt = this.decisionMadeAt(),
     decisionSummary = this.decisionSummary(),
+    withdrawalOccurredAt = this.withdrawalOccurredAt(),
     placementType = this.placementType(),
     automatic = this.automatic(),
     placementRequest = this.placementRequest(),
