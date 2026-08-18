@@ -1,0 +1,112 @@
+domain,table,entity,column,sql_type,kotlin_type,nullable,key,enum_values,relationship,notes
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,revision_type,text,Cas1OutOfServiceBedRevisionType,no,,INITIAL|UPDATE,,
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,start_date,date,LocalDate,no,,,,inclusive
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,end_date,date,LocalDate,no,,,,inclusive
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,reference_number,text,String?,yes,,,,determined by reason.referenceType
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,notes,text,String?,yes,,,,
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,out_of_service_bed_reason_id,uuid,UUID,no,FK,,ManyToOne -> cas1_out_of_service_bed_reasons,
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,out_of_service_bed_id,uuid,UUID,no,FK,,ManyToOne -> cas1_out_of_service_beds,
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,created_by_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
+cas1,cas1_out_of_service_bed_revisions,Cas1OutOfServiceBedRevisionEntity,change_type,bigint,Long,no,,,,packed bitfield of change types
+cas1,cas_1_application_user_details,Cas1ApplicationUserDetailsEntity,id,uuid,UUID,no,PK,,,
+cas1,cas_1_application_user_details,Cas1ApplicationUserDetailsEntity,name,text,String,no,,,,
+cas1,cas_1_application_user_details,Cas1ApplicationUserDetailsEntity,email,text,String?,yes,,,,
+cas1,cas_1_application_user_details,Cas1ApplicationUserDetailsEntity,telephone_number,text,String?,yes,,,,
+cas1,cas1_out_of_service_bed_reasons,Cas1OutOfServiceBedReasonEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_out_of_service_bed_reasons,Cas1OutOfServiceBedReasonEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_out_of_service_bed_reasons,Cas1OutOfServiceBedReasonEntity,name,text,String,no,,,,
+cas1,cas1_out_of_service_bed_reasons,Cas1OutOfServiceBedReasonEntity,is_active,boolean,Boolean,no,,,,
+cas1,cas1_out_of_service_bed_reasons,Cas1OutOfServiceBedReasonEntity,reference_type,text,Cas1OutOfServiceBedReasonEntityReferenceType,no,,CRN|WORK_ORDER,,
+cas1,cas1_out_of_service_beds,Cas1OutOfServiceBedEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_out_of_service_beds,Cas1OutOfServiceBedEntity,premises_id,uuid,UUID,no,FK,,ManyToOne -> premises,
+cas1,cas1_out_of_service_beds,Cas1OutOfServiceBedEntity,bed_id,uuid,UUID,no,FK,,ManyToOne -> beds,
+cas1,cas1_out_of_service_beds,Cas1OutOfServiceBedEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,premises_id,uuid,UUID,no,FK,,ManyToOne -> premises,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,approved_premises_application_id,uuid,UUID?,yes,FK,,ManyToOne -> approved_premises_applications,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,offline_application_id,uuid,UUID?,yes,FK,,OneToOne -> offline_applications,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,placement_request_id,uuid,UUID?,yes,FK,,ManyToOne -> placement_requests,null for legacy/migrated
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,created_by_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,null for migrated bookings
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,expected_arrival_date,date,LocalDate,no,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,expected_departure_date,date,LocalDate,no,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,actual_arrival_date,date,LocalDate?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,actual_arrival_time,time,LocalTime?,yes,,,,may be null from delius imports
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,actual_departure_date,date,LocalDate?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,actual_departure_time,time,LocalTime?,yes,,,,may be null from delius imports
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,canonical_arrival_date,date,LocalDate,no,,,,for occupancy calc
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,canonical_departure_date,date,LocalDate,no,,,,for occupancy calc
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,crn,text,String,no,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,key_worker_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,migrating from staffCode/Name
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,key_worker_staff_code,text,String?,yes,,,,legacy
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,key_worker_name,text,String?,yes,,,,legacy
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,key_worker_assigned_at,timestamptz,Instant?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,departure_reason_id,uuid,UUID?,yes,FK,,ManyToOne -> departure_reasons,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,departure_move_on_category_id,uuid,UUID?,yes,FK,,ManyToOne -> move_on_categories,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,departure_notes,text,String?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,cancellation_occurred_at,date,LocalDate?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,cancellation_recorded_at,timestamptz,Instant?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,cancellation_reason_id,uuid,UUID?,yes,FK,,ManyToOne -> cancellation_reasons,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,cancellation_reason_notes,text,String?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,non_arrival_confirmed_at,timestamptz,Instant?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,non_arrival_reason_id,uuid,UUID?,yes,FK,,ManyToOne -> non_arrival_reasons,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,non_arrival_notes,text,String?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,delius_event_number,text,String?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,migrated_management_info_from,text,ManagementInfoSource?,yes,,DELIUS|LEGACY_CAS_1,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,delius_id,text,String?,yes,,,,delius referral id for support
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,transferred_from,uuid,UUID?,yes,FK,,OneToOne -> cas1_space_bookings,deprecated; use transfer_type
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,transfer_type,text,TransferType?,yes,,PLANNED|EMERGENCY,,deprecated
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,transfer_reason,text,TransferReason?,yes,,TransferReason,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,additional_information,text,String?,yes,,,,
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,version,bigint,Long,no,,,,@Version optimistic lock
+cas1,cas1_out_of_service_bed_cancellations,Cas1OutOfServiceBedCancellationEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_out_of_service_bed_cancellations,Cas1OutOfServiceBedCancellationEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_out_of_service_bed_cancellations,Cas1OutOfServiceBedCancellationEntity,notes,text,String?,yes,,,,
+cas1,cas1_out_of_service_bed_cancellations,Cas1OutOfServiceBedCancellationEntity,out_of_service_bed_id,uuid,UUID,no,FK,,OneToOne -> cas1_out_of_service_beds,
+cas1,cas1_cru_management_areas,Cas1CruManagementAreaEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_cru_management_areas,Cas1CruManagementAreaEntity,name,text,String,no,,,,
+cas1,cas1_cru_management_areas,Cas1CruManagementAreaEntity,email_address,text,String?,yes,,,,
+cas1,cas1_cru_management_areas,Cas1CruManagementAreaEntity,notify_reply_to_email_id,text,String?,yes,,,,
+cas1,cas1_change_request_rejection_reasons,Cas1ChangeRequestRejectionReasonEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_change_request_rejection_reasons,Cas1ChangeRequestRejectionReasonEntity,code,text,String,no,,,,
+cas1,cas1_change_request_rejection_reasons,Cas1ChangeRequestRejectionReasonEntity,change_request_type,text,ChangeRequestType,no,,PLACEMENT_APPEAL|PLACEMENT_EXTENSION|PLANNED_TRANSFER,,
+cas1,cas1_change_request_rejection_reasons,Cas1ChangeRequestRejectionReasonEntity,archived,boolean,Boolean,no,,,,read-only
+cas1,cas1_key_worker_staff_code_lookup,Cas1KeyWorkerStaffCodeLookupEntity,staff_code_1,text,String,no,PK,,,
+cas1,cas1_key_worker_staff_code_lookup,Cas1KeyWorkerStaffCodeLookupEntity,staff_code_2,text,String,no,,,,maps staff_code_1 to staff_code_2
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,id,uuid,UUID,no,PK,,,DEPRECATED: developed but never used
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,placement_request_id,uuid,UUID,no,FK,,ManyToOne -> placement_requests,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,cas1_space_booking_id,uuid,UUID,no,FK,,ManyToOne -> cas1_space_bookings,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,type,text,ChangeRequestType,no,,PLACEMENT_APPEAL|PLACEMENT_EXTENSION|PLANNED_TRANSFER,,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,request_json,text,String,no,,,,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,cas1_change_request_reason_id,uuid,UUID,no,FK,,ManyToOne -> cas1_change_request_reasons,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,decision_json,text,String?,yes,,,,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,decision,text,ChangeRequestDecision?,yes,,APPROVED|REJECTED,,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,cas1_change_request_rejection_reason_id,uuid,UUID?,yes,FK,,ManyToOne -> cas1_change_request_rejection_reasons,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,decision_made_by_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,resolved,boolean,Boolean,no,,,,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,resolved_at,timestamptz,OffsetDateTime?,yes,,,,
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,updated_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_change_requests,Cas1ChangeRequestEntity,version,bigint,Long,no,,,,@Version optimistic lock
+cas1,cas1_offenders,Cas1OffenderEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_offenders,Cas1OffenderEntity,crn,text,String,no,,,,
+cas1,cas1_offenders,Cas1OffenderEntity,noms_number,text,String?,yes,,,,
+cas1,cas1_offenders,Cas1OffenderEntity,name,text,String,no,,,,search only; use OffenderService for display (LAO)
+cas1,cas1_offenders,Cas1OffenderEntity,tier,text,String?,yes,,,,
+cas1,cas1_offenders,Cas1OffenderEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_offenders,Cas1OffenderEntity,last_updated_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_offenders,Cas1OffenderEntity,version,bigint,Long,no,,,,@Version optimistic lock
+cas1,cas1_change_request_reasons,Cas1ChangeRequestReasonEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_change_request_reasons,Cas1ChangeRequestReasonEntity,code,text,String,no,,,,
+cas1,cas1_change_request_reasons,Cas1ChangeRequestReasonEntity,change_request_type,text,ChangeRequestType,no,,PLACEMENT_APPEAL|PLACEMENT_EXTENSION|PLANNED_TRANSFER,,
+cas1,cas1_change_request_reasons,Cas1ChangeRequestReasonEntity,archived,boolean,Boolean,no,,,,read-only
+cas1,cas1_premises_local_restrictions,Cas1PremisesLocalRestrictionEntity,id,uuid,UUID,no,PK,,,
+cas1,cas1_premises_local_restrictions,Cas1PremisesLocalRestrictionEntity,description,text,String,no,,,,
+cas1,cas1_premises_local_restrictions,Cas1PremisesLocalRestrictionEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
+cas1,cas1_premises_local_restrictions,Cas1PremisesLocalRestrictionEntity,created_by_user_id,uuid,UUID,no,,,,
+cas1,cas1_premises_local_restrictions,Cas1PremisesLocalRestrictionEntity,approved_premises_id,uuid,UUID,no,,,,premises restriction applies to
+cas1,cas1_premises_local_restrictions,Cas1PremisesLocalRestrictionEntity,archived,boolean,Boolean,no,,,,default false
+cas1,cas1_form_data,Cas1FormDataEntity,id,text,String,no,PK,,,
+cas1,cas1_form_data,Cas1FormDataEntity,value,text,String,no,,,,JSON form data

@@ -1,0 +1,57 @@
+%%{init: {'flowchart': {'direction': 'LR'}}}%%
+erDiagram
+    users ||--o{ applications : creates
+    users ||--o{ user_role_assignments : has
+    users ||--o{ user_qualification_assignments : has
+    probation_regions ||--o{ users : contains
+    probation_delivery_units ||--o{ users : contains
+    ap_areas ||--o{ users : contains
+    cas1_cru_management_areas ||--o{ users : manages
+    ap_areas ||--o{ probation_regions : contains
+    probation_regions ||--o{ probation_delivery_units : contains
+    probation_regions ||--o{ premises : owns
+
+    applications ||--|| approved_premises_applications : "subtype (joined)"
+    applications ||--|| temporary_accommodation_applications : "subtype (joined)"
+    applications ||--o{ assessments : has
+    applications ||--o{ appeals : has
+    assessments ||--|| approved_premises_assessments : "subtype (joined)"
+    assessments ||--|| temporary_accommodation_assessments : "subtype (joined)"
+    assessments ||--o{ assessment_clarification_notes : has
+    assessments ||--o{ assessment_referral_history_notes : has
+    assessment_referral_history_notes ||--|| assessment_referral_history_user_notes : "subtype"
+    assessment_referral_history_notes ||--|| assessment_referral_history_system_notes : "subtype"
+
+    premises ||--|| approved_premises : "subtype (joined)"
+    premises ||--|| temporary_accommodation_premises : "subtype (joined)"
+    premises ||--o{ bookings : has
+    premises ||--o{ rooms : has
+    local_authority_areas ||--o{ premises : covers
+    rooms ||--o{ beds : has
+
+    bookings ||--o{ arrivals : has
+    bookings ||--o{ departures : has
+    bookings ||--o{ cancellations : has
+    bookings ||--o{ extensions : has
+    bookings ||--o{ date_changes : has
+    bookings ||--o| non_arrivals : has
+    beds ||--o{ bookings : "booked in"
+
+    approved_premises_applications ||--o{ placement_requests : has
+    approved_premises_applications ||--o{ placement_applications : has
+    approved_premises_applications ||--o{ approved_premises_application_team_codes : has
+    placement_requests ||--|| placement_applications : "links to"
+    placement_requirements ||--o{ placement_requests : constrains
+    placement_requests ||--o{ booking_not_mades : has
+    postcode_districts ||--o{ placement_requirements : locates
+    placement_requirements ||--o{ placement_requirements_essential_criteria : "essential"
+    placement_requirements ||--o{ placement_requirements_desirable_criteria : "desirable"
+    characteristics ||--o{ placement_requirements_essential_criteria : "essential"
+    characteristics ||--o{ placement_requirements_desirable_criteria : "desirable"
+
+    departure_reasons ||--o{ departures : categorises
+    move_on_categories ||--o{ departures : categorises
+    destination_providers ||--o{ departures : targets
+    cancellation_reasons ||--o{ cancellations : categorises
+    non_arrival_reasons ||--o{ non_arrivals : categorises
+    referral_rejection_reasons ||--o{ temporary_accommodation_assessments : categorises
