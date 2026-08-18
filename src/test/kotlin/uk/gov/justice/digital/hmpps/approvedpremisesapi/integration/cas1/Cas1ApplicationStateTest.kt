@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarifi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejectionReasonDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBooking
@@ -308,7 +309,13 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     webTestClient.post()
       .uri("/cas1/assessments/${assessment.id}/rejection")
       .header("Authorization", "Bearer $jwt")
-      .bodyValue(Cas1AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "reasoning"))
+      .bodyValue(
+        Cas1AssessmentRejection(
+          document = mapOf("document" to "value"),
+          rejectionRationale = "reasoning",
+          rejectionReason = Cas1AssessmentRejectionReasonDto.riskToCommunity,
+        ),
+      )
       .exchange()
       .expectStatus()
       .isOk

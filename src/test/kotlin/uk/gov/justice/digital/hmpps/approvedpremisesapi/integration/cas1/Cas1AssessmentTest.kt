@@ -1468,7 +1468,13 @@ class Cas1AssessmentTest : IntegrationTestBase() {
     fun `Reject assessment without JWT returns 401`() {
       webTestClient.post()
         .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/rejection")
-        .bodyValue(Cas1AssessmentRejection(document = "{}", rejectionRationale = "reasoning"))
+        .bodyValue(
+          Cas1AssessmentRejection(
+            document = "{}",
+            rejectionRationale = "reasoning",
+            rejectionReason = Cas1AssessmentRejectionReasonDto.riskToCommunity,
+          ),
+        )
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -1681,6 +1687,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               Cas1AssessmentRejection(
                 document = mapOf("document" to "value"),
                 rejectionRationale = "reasoning",
+                rejectionReason = Cas1AssessmentRejectionReasonDto.insufficientContingencyPlan,
               ),
             )
             .exchange()
