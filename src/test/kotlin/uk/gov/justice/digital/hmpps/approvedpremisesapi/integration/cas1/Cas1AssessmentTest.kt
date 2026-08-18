@@ -1682,6 +1682,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               Cas1AssessmentRejection(
                 document = mapOf("document" to "value"),
                 rejectionRationale = "reasoning",
+                rejectionReason = Cas1AssessmentRejectionReasonDto.insufficientContingencyPlan,
               ),
             )
             .exchange()

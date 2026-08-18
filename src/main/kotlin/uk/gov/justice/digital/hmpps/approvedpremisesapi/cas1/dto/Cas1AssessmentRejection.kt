@@ -11,7 +11,7 @@ data class Cas1AssessmentRejection(
   @get:JsonProperty("rejectionRationale", required = true) val rejectionRationale: String,
 
   @get:Schema(description = "An enumeration for the reason the assessment was rejected. This can reliably drive behaviour, such as which email is sent when an application is rejected.")
-  @get:JsonProperty("rejectionReason") val rejectionReason: Cas1AssessmentRejectionReasonDto? = null,
+  @get:JsonProperty("rejectionReason", required = true) val rejectionReason: Cas1AssessmentRejectionReasonDto,
 
   @get:JsonProperty("agreeWithShortNoticeReason") val agreeWithShortNoticeReason: Boolean? = null,
 
