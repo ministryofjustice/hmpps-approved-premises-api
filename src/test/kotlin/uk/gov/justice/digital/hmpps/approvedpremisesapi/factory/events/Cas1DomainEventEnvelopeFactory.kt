@@ -14,6 +14,10 @@ class Cas1DomainEventEnvelopeFactory<T : Cas1DomainEventPayload> : Factory<Cas1D
   private var type: Yielded<EventType> = { EventType.plannedTransferRequestCreated }
   private var details: Yielded<T> = { PlacementChangeRequestCreatedFactory().produce() as T }
 
+  fun withId(id: UUID) = apply { this.id = { id } }
+
+  fun withTimestamp(timestamp: Instant) = apply { this.timestamp = { timestamp } }
+
   fun withDetails(details: T) = apply { this.details = { details } }
 
   override fun produce() = Cas1DomainEventEnvelope<T>(

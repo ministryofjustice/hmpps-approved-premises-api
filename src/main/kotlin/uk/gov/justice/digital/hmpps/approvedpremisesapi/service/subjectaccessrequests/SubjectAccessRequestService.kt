@@ -21,21 +21,21 @@ class SubjectAccessRequestService(
 ) : HmppsPrisonProbationSubjectAccessRequestService {
 
   fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val approvedPremises = cas1SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
-    val temporaryAccommodation = cas3SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
-    val shortTermAccommodation = cas2HdcSubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
-    val bailAccommodation = cas2SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
+    val cas1 = cas1SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
+    val cas2hdc = cas2HdcSubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
+    val cas2 = cas2SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
+    val cas3 = cas3SubjectAccessRequestService.getSarResult(crn, nomsNumber, startDate, endDate)
 
-    if (listOf(approvedPremises, temporaryAccommodation, shortTermAccommodation, bailAccommodation).all { it == null }) {
+    if (listOfNotNull(cas1, cas3, cas2hdc, cas2).isEmpty()) {
       return null
     }
 
     return """
       {
-         "ApprovedPremises": ${ approvedPremises ?: "[]"},
-         "TemporaryAccommodation": ${ temporaryAccommodation ?: "[]"},
-         "ShortTermAccommodation": ${ shortTermAccommodation ?: "[]"},
-         "BailAccommodation": ${ bailAccommodation ?: "[]"}
+         "CAS1": ${ cas1 ?: "[]"},
+         "CAS2-HDC": ${ cas2hdc ?: "[]"},
+         "CAS2": ${ cas2 ?: "[]"},
+         "CAS3": ${ cas3 ?: "[]"}
       }
     """.trimIndent()
   }

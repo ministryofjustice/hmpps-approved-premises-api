@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2SubjectAccessRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2HdcSarTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
-class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
+class Cas2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
   @Autowired
   lateinit var cas2SubjectAccessRequestService: Cas2SubjectAccessRequestService
@@ -63,8 +63,7 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Assessments": [],
       "StatusUpdates": [],
       "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
+      "DomainEvents":  []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -94,8 +93,7 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [],
       "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
+      "DomainEvents":  []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -127,8 +125,7 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [],
       "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
+      "DomainEvents":  []
 
    }
     """.trimIndent()
@@ -163,8 +160,7 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
       "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
+      "DomainEvents":  []
       
    }
     """.trimIndent()
@@ -181,7 +177,14 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
     val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
-    val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, DomainEventType.CAS2_APPLICATION_SUBMITTED, ServiceName.cas2v2)
+    val domainEvent = domainEventEntity(
+      offenderDetails,
+      application.id,
+      assessment.id,
+      null,
+      DomainEventType.CAS2_APPLICATION_SUBMITTED,
+      ServiceName.cas2v2,
+    )
 
     val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
@@ -199,10 +202,16 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
       "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents": [${domainEventJson(domainEvent, null)}],
-      "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
+      "DomainEvents": [${domainEventJson(domainEvent)}]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
   }
+
+  fun domainEventJson(domainEvent: DomainEventEntity): String = """
+      {
+        "type": "${domainEvent.type}",
+        "occurred_at": "$ALLOCATED_AT",
+        "created_at": "$CREATED_AT" }
+  """.trimIndent()
 }

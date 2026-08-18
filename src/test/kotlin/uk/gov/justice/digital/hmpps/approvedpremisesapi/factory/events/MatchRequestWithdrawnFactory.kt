@@ -35,6 +35,10 @@ class MatchRequestWithdrawnFactory : Factory<MatchRequestWithdrawn> {
     this.applicationUrl = { applicationUrl }
   }
 
+  fun withMatchRequestId(matchRequestId: UUID) = apply {
+    this.matchRequestId = { matchRequestId }
+  }
+
   fun withPersonReference(personReference: PersonReference) = apply {
     this.personReference = { personReference }
   }
