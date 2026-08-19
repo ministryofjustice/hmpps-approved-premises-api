@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -16,9 +16,10 @@ class Cas2ApplicationStatusUpdateEmailService(
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: UrlTemplate,
 ) {
 
-  fun statusUpdate(cas2Application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
+  fun statusUpdate(assessment: Cas2AssessmentEntity, status: Cas2StatusUpdateEntity) {
+    val cas2Application = assessment.application
     val recipientEmailAddress = cas2Application.createdByUser.email ?: return
-    val submittedAt = requireNotNull(cas2Application.submittedAt) ?: return
+    val submittedAt = requireNotNull(cas2Application.submittedAt)
     val cohort = requireNotNull(cas2Application.cohort)
     val timeReceived = submittedAt.format(DateTimeFormatter.ofPattern("HH:mm"))
     val dateReceived = submittedAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
@@ -31,7 +32,7 @@ class Cas2ApplicationStatusUpdateEmailService(
       "crn" to cas2Application.crn,
       "timeApplicationReceived" to timeReceived,
       "dateApplicationReceived" to dateReceived,
-      "nacroReferenceId" to cas2Application.id.toString(),
+      "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(assessment),
       "viewSubmittedApplicationUrl" to applicationOverviewUrlTemplate
         .resolve("id", cas2Application.id.toString()),
     )
@@ -43,4 +44,7 @@ class Cas2ApplicationStatusUpdateEmailService(
       cas2Application = cas2Application,
     )
   }
+
+  private fun getNacroReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String = assessment.nacroReferralId
+    ?: "Unknown"
 }

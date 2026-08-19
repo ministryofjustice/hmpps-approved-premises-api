@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationStatusUpdateEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
@@ -42,6 +43,11 @@ class Cas2ApplicationStatusUpdateEmailServiceTest {
       .withCohort(Cas2Cohort.PRISON_BAIL)
       .produce()
 
+    val assessment = Cas2AssessmentEntityFactory()
+      .withApplication(application)
+      .withNacroReferralId("NACRO-REF1")
+      .produce()
+
     val status = Cas2StatusUpdateEntityFactory()
       .withApplication(application)
       .withAssessor(user)
@@ -49,7 +55,7 @@ class Cas2ApplicationStatusUpdateEmailServiceTest {
       .withCreatedAt(statusCreatedAt)
       .produce()
 
-    service.statusUpdate(application, status)
+    service.statusUpdate(assessment, status)
 
     verify(exactly = 1) {
       mockCas2EmailService.sendEmail(
@@ -63,7 +69,54 @@ class Cas2ApplicationStatusUpdateEmailServiceTest {
           "crn" to "CRN123",
           "timeApplicationReceived" to "16:07",
           "dateApplicationReceived" to "24/06/2024",
-          "nacroReferenceId" to applicationId.toString(),
+          "nacroReferenceId" to "NACRO-REF1",
+          "viewSubmittedApplicationUrl" to "http://frontend/applications/$applicationId",
+        ),
+        cas2Application = application,
+      )
+    }
+  }
+
+  @Test
+  fun `statusUpdate sends email with placeholder when Nacro reference id has not been added`() {
+    val applicationId = UUID.randomUUID()
+    val submittedAt = OffsetDateTime.parse("2024-06-24T16:07:00Z")
+    val statusCreatedAt = OffsetDateTime.parse("2024-06-25T10:30:00Z")
+
+    val application = Cas2ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withSubmittedAt(submittedAt)
+      .withCrn("CRN123")
+      .withCohort(Cas2Cohort.PRISON_BAIL)
+      .produce()
+
+    val assessment = Cas2AssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    val status = Cas2StatusUpdateEntityFactory()
+      .withApplication(application)
+      .withAssessor(user)
+      .withLabel("More information requested")
+      .withCreatedAt(statusCreatedAt)
+      .produce()
+
+    service.statusUpdate(assessment, status)
+
+    verify(exactly = 1) {
+      mockCas2EmailService.sendEmail(
+        recipientEmailAddress = user.email!!,
+        templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_STATUS_UPDATE,
+        personalisation = mapOf(
+          "applicationStatusChange" to "More information requested",
+          "dateStatusChanged" to "25 June 2024",
+          "timeStatusChanged" to "10:30am",
+          "cohort" to "Prison Bail",
+          "crn" to "CRN123",
+          "timeApplicationReceived" to "16:07",
+          "dateApplicationReceived" to "24/06/2024",
+          "nacroReferenceId" to "Unknown",
           "viewSubmittedApplicationUrl" to "http://frontend/applications/$applicationId",
         ),
         cas2Application = application,
@@ -82,12 +135,14 @@ class Cas2ApplicationStatusUpdateEmailServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
+    val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
+
     val status = Cas2StatusUpdateEntityFactory()
       .withApplication(application)
       .withAssessor(user)
       .produce()
 
-    service.statusUpdate(application, status)
+    service.statusUpdate(assessment, status)
 
     verify(exactly = 0) {
       mockCas2EmailService.sendEmail(any(), any(), any(), any())
@@ -101,13 +156,15 @@ class Cas2ApplicationStatusUpdateEmailServiceTest {
       .withSubmittedAt(null)
       .produce()
 
+    val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
+
     val status = Cas2StatusUpdateEntityFactory()
       .withApplication(application)
       .withAssessor(user)
       .produce()
 
     assertThatThrownBy {
-      service.statusUpdate(application, status)
+      service.statusUpdate(assessment, status)
     }.isInstanceOf(IllegalArgumentException::class.java)
 
     verify(exactly = 0) {
