@@ -91,7 +91,7 @@ class Cas1AssessmentTransformer(
       date = entity.submittedAt?.toLocalDate() ?: entity.createdAt.toLocalDate(),
       applicationStatus = application.status,
       type = ServiceType.CAS1,
-      referralRejectionReason = entity.rejectionRationale,
+      referralRejectionReason = null,
       localAuthorityArea = application.apArea?.name,
       pdu = application.cruManagementArea?.name,
       referredBy = transformToStaffDto(application.createdByUser),
@@ -109,6 +109,7 @@ class Cas1AssessmentTransformer(
         placementStatus = it.placement?.status,
         requestForPlacementStatus = it.requestForPlacement?.status,
         withdrawalReason = it.requestForPlacement?.withdrawalReason,
+        referralRejectionReason = it.requestForPlacement?.rejectionReason,
       )
     }.ifEmpty { listOf(referralHistory) }
   }
