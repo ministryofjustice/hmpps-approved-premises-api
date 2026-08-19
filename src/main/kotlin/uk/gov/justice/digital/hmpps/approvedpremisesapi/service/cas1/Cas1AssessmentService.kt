@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejectionReasonDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.PaginationMetadata
@@ -386,6 +387,7 @@ class Cas1AssessmentService(
     agreeWithShortNoticeReason: Boolean? = null,
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
+    rejectionReason: Cas1AssessmentRejectionReasonDto? = null,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
     lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
 
@@ -418,7 +420,7 @@ class Cas1AssessmentService(
       rejectingUser = rejectingUser,
     )
 
-    cas1AssessmentEmailService.assessmentRejected(application)
+    cas1AssessmentEmailService.assessmentRejected(application, rejectionReason)
 
     return CasResult.Success(savedAssessment)
   }

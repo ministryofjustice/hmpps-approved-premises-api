@@ -1490,6 +1490,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
+            withSubmittedAt(OffsetDateTime.now())
           }
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -1540,6 +1541,105 @@ class Cas1AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Reject assessment sends the alternative accommodation email when flag enabled and reason is applicable`() {
+      mockFeatureFlagService.setFlag("isr-cas1-email-changes-enabled", true)
+
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/rejection")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1AssessmentRejection(
+                document = mapOf("document" to "value"),
+                rejectionRationale = "reasoning",
+                rejectionReason = Cas1AssessmentRejectionReasonDto.accommodationNeedOnly,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+
+          emailAsserter.assertEmailsRequestedCount(1)
+          emailAsserter.assertEmailRequested(
+            application.createdByUser.email!!,
+            Cas1NotifyTemplates.ASSESSMENT_REJECTED_ALTERNATIVE_ACCOMMODATION,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Reject assessment sends the regular email when flag disabled even if reason is applicable`() {
+      mockFeatureFlagService.setFlag("isr-cas1-email-changes-enabled", false)
+
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/rejection")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1AssessmentRejection(
+                document = mapOf("document" to "value"),
+                rejectionRationale = "reasoning",
+                rejectionReason = Cas1AssessmentRejectionReasonDto.accommodationNeedOnly,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          emailAsserter.assertEmailsRequestedCount(1)
+          emailAsserter.assertEmailRequested(
+            application.createdByUser.email!!,
+            Cas1NotifyTemplates.ASSESSMENT_REJECTED,
+          )
+        }
+      }
+    }
+
+    @Test
     fun `Reject assessment with an outstanding clarification note sets the application status correctly`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(
@@ -1555,6 +1655,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
+            withSubmittedAt(OffsetDateTime.now())
           }
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

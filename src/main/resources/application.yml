@@ -228,6 +228,8 @@ services:
     base-url: http://localhost:8093
   cas1-ui:
     base-url: http://localhost:8094
+  cas2v2-ui:
+    base-url: http://localhost:3000
 
 hmpps:
   auth:
@@ -362,6 +364,7 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
+  isr-cas1-email-changes-enabled: false
 
 domain-events:
   listener:

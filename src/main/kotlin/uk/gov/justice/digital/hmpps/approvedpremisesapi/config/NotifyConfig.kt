@@ -32,6 +32,7 @@ object Cas1NotifyTemplates {
   const val ASSESSMENT_ALLOCATED = "2edd59f9-0013-4fbf-91df-7421518b447d"
   const val ASSESSMENT_DEALLOCATED = "331ce452-ea83-4f0c-aec0-5eafe85094f2"
   const val ASSESSMENT_REJECTED = "b3a98c60-8fe0-4450-8fd0-6430198ee43b"
+  const val ASSESSMENT_REJECTED_ALTERNATIVE_ACCOMMODATION = "a0d160fb-9187-4e26-8058-edce57549c5d"
   const val ASSESSMENT_WITHDRAWN_V2 = "a43968bd-ec69-46a4-bb6f-aacb8eb51cf3"
   const val BOOKING_AMENDED = "da50a791-fe7c-4bc3-b31f-62b88b62f2d6"
   const val BOOKING_MADE = "1e3d2ee2-250e-4755-af38-80d24cdc3480"
