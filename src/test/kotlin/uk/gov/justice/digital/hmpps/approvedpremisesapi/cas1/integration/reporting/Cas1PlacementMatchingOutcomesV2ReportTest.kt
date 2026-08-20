@@ -41,9 +41,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Per
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
@@ -249,8 +251,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       assertThat(row.first_match_attempt_date_time).isNull()
       assertThat(row.first_successful_match_attempt_date_time).isNull()
+      assertThat(row.first_successful_match_attempt_tier).isNull()
       assertThat(row.first_successful_match_attempt_premises_name).isNull()
       assertThat(row.last_successful_match_attempt_date_time).isNull()
+      assertThat(row.last_successful_match_attempt_tier).isNull()
       assertThat(row.last_successful_match_attempt_premises_name).isNull()
       assertThat(row.last_successful_match_placement_id).isNull()
     }
@@ -311,8 +315,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       assertThat(row.first_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
       assertThat(row.first_successful_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
+      assertThat(row.first_successful_match_attempt_tier).isEqualTo("A1")
       assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPMatched Premise")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
+      assertThat(row.last_successful_match_attempt_tier).isEqualTo("A1")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPMatched Premise")
       assertThat(row.last_successful_match_placement_id).isEqualTo(latestBookingId.toString())
     }
@@ -356,8 +362,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       assertThat(row.first_match_attempt_date_time).isEqualTo("2028-01-02T03:04:05Z")
       assertThat(row.first_successful_match_attempt_date_time).isNull()
+      assertThat(row.first_successful_match_attempt_tier).isNull()
       assertThat(row.first_successful_match_attempt_premises_name).isNull()
       assertThat(row.last_successful_match_attempt_date_time).isNull()
+      assertThat(row.last_successful_match_attempt_tier).isNull()
       assertThat(row.last_successful_match_attempt_premises_name).isNull()
     }
   }
@@ -406,8 +414,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       assertThat(row.first_match_attempt_date_time).isEqualTo("2028-02-03T04:05:07Z")
       assertThat(row.first_successful_match_attempt_date_time).isEqualTo("2030-02-03T04:05:06Z")
+      assertThat(row.first_successful_match_attempt_tier).isEqualTo("A1")
       assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPNotMatchedAndThenMatched premise")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-02-03T04:05:06Z")
+      assertThat(row.last_successful_match_attempt_tier).isEqualTo("A1")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPNotMatchedAndThenMatched premise")
       assertThat(row.last_successful_match_placement_id).isEqualTo(latestBookingId.toString())
     }
@@ -467,8 +477,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       assertThat(row.first_match_attempt_date_time).isEqualTo("2028-02-03T04:05:07Z")
       assertThat(row.first_successful_match_attempt_date_time).isEqualTo("2028-02-03T04:05:07Z")
+      assertThat(row.first_successful_match_attempt_tier).isEqualTo("A1")
       assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPMultipleTransfers premise 1")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2032-01-02T03:04:05Z")
+      assertThat(row.last_successful_match_attempt_tier).isEqualTo("A1")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPMultipleTransfers premise 3")
       assertThat(row.last_successful_match_placement_id).isEqualTo(latestBookingId.toString())
     }
@@ -520,8 +532,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       assertThat(row.first_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
       assertThat(row.first_successful_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
+      assertThat(row.first_successful_match_attempt_tier).isEqualTo("A1")
       assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("PlacementAppMatched Premise")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
+      assertThat(row.last_successful_match_attempt_tier).isEqualTo("A1")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("PlacementAppMatched Premise")
       assertThat(row.last_successful_match_placement_id).isEqualTo(latestBookingId.toString())
     }
@@ -532,7 +546,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
     fun createRequestForPlacement() {
       application = createSubmitAndAssessedApplication(
-        crn = "ROTLRFPMatched",
+        crn = "ROTLRFPMatchedBeforeReportingMonth",
         arrivalDateOnApplication = null,
       )
 
@@ -561,7 +575,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
     fun createRequestForPlacement() {
       application = createSubmitAndAssessedApplication(
-        crn = "ROTLRFPMatched",
+        crn = "ROTLRFPMatchedAfterReportingMonth",
         arrivalDateOnApplication = null,
       )
 
@@ -644,6 +658,14 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         withCrn(crn)
       },
     )
+
+    if (caseRepository.findByCrn(offenderDetails.otherIds.crn.uppercase()) == null) {
+      givenACase(
+        crn = offenderDetails.otherIds.crn,
+        tierV2 = TierFactory().withTierScore("A1").produce(),
+        tierV3 = TierFactory().withTierScore("A").produce(),
+      )
+    }
 
     apDeliusContextMockSuccessfulCaseDetailCall(
       crn,
@@ -856,5 +878,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val last_successful_match_attempt_date_time: String?,
     val last_successful_match_attempt_premises_name: String?,
     val last_successful_match_placement_id: String?,
+    val first_successful_match_attempt_tier: String?,
+    val last_successful_match_attempt_tier: String?,
   )
 }

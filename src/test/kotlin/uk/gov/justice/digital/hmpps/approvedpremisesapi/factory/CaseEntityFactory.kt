@@ -22,8 +22,8 @@ class CaseEntityFactory : Factory<CaseEntity> {
   private var version: Yielded<Long> = { 1L }
 
   fun withId(id: UUID) = apply { this.id = { id } }
-  fun withCrn(crn: String) = apply { this.crn = { crn } }
   fun withNomsNumber(nomsNumber: String?) = apply { this.nomsNumber = { nomsNumber } }
+  fun withCrn(crn: String) = apply { this.crn = { crn } }
   fun withName(name: String) = apply { this.name = { name } }
   fun withTierV2(tierV2: Tier?) = apply { this.tierV2 = { tierV2 } }
   fun withTierV3(tierV3: Tier?) = apply { this.tierV3 = { tierV3 } }

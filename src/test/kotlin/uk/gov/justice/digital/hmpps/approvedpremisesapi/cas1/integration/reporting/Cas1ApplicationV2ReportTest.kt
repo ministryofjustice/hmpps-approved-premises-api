@@ -41,9 +41,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -215,6 +217,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
   inner class AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn {
     lateinit var application: ApprovedPremisesApplicationEntity
+    val appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnCrn = "AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn"
 
     fun createApplication() {
       val (assessor1, assessor1Jwt) = givenAUser(
@@ -235,6 +238,14 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "Jeff", surname = "Jefferson"), deliusUsername = "ASSESSOR2"),
       )
 
+      if (caseRepository.findByCrn(appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnCrn.uppercase()) == null) {
+        givenACase(
+          crn = appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnCrn,
+          tierV2 = TierFactory().withTierScore("A1").produce(),
+          tierV3 = TierFactory().withTierScore("A").produce(),
+        )
+      }
+
       application = createAndSubmitApplication(
         applicantDetails = givenAUser(
           staffDetail = StaffDetailFactory.staffDetail(
@@ -245,7 +256,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         ),
         nomsNumber = "noms1",
         apType = ApType.normal,
-        crn = "AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn",
+        crn = appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnCrn,
         dateOfBirth = LocalDate.now().minusYears(25),
         gender = "male",
         tier = "C",
@@ -328,7 +339,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: ApplicationReportRow, shouldIncludePii: Boolean = true) {
       assertThat(row.application_id).isEqualTo(application.id.toString())
-      assertThat(row.crn).isEqualTo("AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn")
+      assertThat(row.crn).isEqualTo(appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnCrn)
       assertThat(row.noms).isEqualTo("noms1")
       assertThat(row.age_in_years).isEqualTo("25")
       assertThat(row.gender).isEqualTo("Male")
@@ -421,6 +432,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
       assertThat(row.application_withdrawal_date).isEqualTo("2021-12-25T02:00:00Z")
       assertThat(row.application_withdrawal_reason).isEqualTo("duplicate_application")
+      assertThat(row.application_tier_on_submission).isEqualTo("A1")
+      assertThat(row.initial_assessment_decision_tier).isEqualTo("A1")
+      assertThat(row.last_appealed_assessment_tier).isEqualTo("A1")
     }
   }
 
@@ -815,6 +829,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     val last_appealed_assessor_name: String?,
     val application_withdrawal_date: String?,
     val application_withdrawal_reason: String?,
+    val application_tier_on_submission: String?,
+    val initial_assessment_decision_tier: String?,
+    val last_appealed_assessment_tier: String?,
   )
 
   private fun createAndSubmitApplication(

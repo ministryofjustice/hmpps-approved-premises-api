@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -311,6 +312,23 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         withTransferReason(TransferReason.riskToResident)
         withAdditionalInformation("Some additional info")
       }
+
+      domainEventFactory.produceAndPersist {
+        withApplicationId(application.id)
+        withCas1SpaceBookingId(bookings[0].id)
+        withType(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+        withData(
+          """
+          {
+            "eventDetails": {
+              "personTier": {
+                "tierScore": "A1"
+              }
+            }
+          }
+          """.trimIndent(),
+        )
+      }
     }
 
     fun assertRow(row: PlacementReportRow) {
@@ -319,8 +337,14 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.expected_departure_date).isEqualTo("2024-05-10")
       assertThat(row.actual_arrival_date).isEqualTo("2024-02-07")
       assertThat(row.actual_arrival_time).isEqualTo("11:00:02")
+      if (row.placement_id == bookings[0].id.toString()) {
+        assertThat(row.actual_arrival_tier).isEqualTo("A1")
+      } else {
+        assertThat(row.actual_arrival_tier).isNull()
+      }
       assertThat(row.actual_departure_date).isEqualTo("2024-05-10")
       assertThat(row.actual_departure_time).isEqualTo("23:00")
+      assertThat(row.actual_departure_tier).isNull()
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isEqualTo("93")
@@ -397,6 +421,40 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         withNonArrivalReason(null)
         withNonArrivalNotes(null)
       }
+
+      domainEventFactory.produceAndPersist {
+        withApplicationId(application.id)
+        withCas1SpaceBookingId(booking.id)
+        withType(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+        withData(
+          """
+          {
+            "eventDetails": {
+              "personTier": {
+                "tierScore": "A1"
+              }
+            }
+          }
+          """.trimIndent(),
+        )
+      }
+
+      domainEventFactory.produceAndPersist {
+        withApplicationId(application.id)
+        withCas1SpaceBookingId(booking.id)
+        withType(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+        withData(
+          """
+          {
+            "eventDetails": {
+              "personTier": {
+                "tierScore": "B2"
+              }
+            }
+          }
+          """.trimIndent(),
+        )
+      }
     }
 
     fun assertRow(row: PlacementReportRow, includePii: Boolean) {
@@ -405,8 +463,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.expected_departure_date).isEqualTo("2024-02-01")
       assertThat(row.actual_arrival_date).isEqualTo("2024-01-07")
       assertThat(row.actual_arrival_time).isEqualTo("11:00:02")
+      assertThat(row.actual_arrival_tier).isEqualTo("A1")
       assertThat(row.actual_departure_date).isEqualTo("2024-02-01")
       assertThat(row.actual_departure_time).isEqualTo("23:00")
+      assertThat(row.actual_departure_tier).isEqualTo("B2")
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isEqualTo("25")
@@ -486,8 +546,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.expected_departure_date).isEqualTo("2024-05-01")
       assertThat(row.actual_arrival_date).isEqualTo(null)
       assertThat(row.actual_arrival_time).isEqualTo(null)
+      assertThat(row.actual_arrival_tier).isNull()
       assertThat(row.actual_departure_date).isEqualTo(null)
       assertThat(row.actual_departure_time).isEqualTo(null)
+      assertThat(row.actual_departure_tier).isNull()
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isNull()
@@ -566,8 +628,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.expected_departure_date).isEqualTo("2024-08-01")
       assertThat(row.actual_arrival_date).isEqualTo(null)
       assertThat(row.actual_arrival_time).isEqualTo(null)
+      assertThat(row.actual_arrival_tier).isNull()
       assertThat(row.actual_departure_date).isEqualTo(null)
       assertThat(row.actual_departure_time).isEqualTo(null)
+      assertThat(row.actual_departure_tier).isNull()
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isNull()
@@ -823,4 +887,6 @@ data class PlacementReportRow(
   val criteria: String?,
   val transfer_reason: String?,
   val additional_information: String?,
+  val actual_arrival_tier: String?,
+  val actual_departure_tier: String?,
 )
