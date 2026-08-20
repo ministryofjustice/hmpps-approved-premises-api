@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.Ba
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_INCLUDE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
@@ -49,9 +48,6 @@ class CaseService(
   companion object {
     private const val CASES_CRN_UNIQUE_CONSTRAINT = "cas1_offenders_crn"
   }
-
-  private val includeTierV3: Boolean
-    get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_INCLUDE_TIER_V3)
 
   private val useTierV3: Boolean
     get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
@@ -95,10 +91,8 @@ class CaseService(
     case.tierV2 = tierService.fetchTierOrError(normalizedCrn, TierVersion.V2)
     log.info("Have updated tierV2 for $normalizedCrn to $case.tierV2")
 
-    if (includeTierV3) {
-      case.tierV3 = tierService.fetchTierOrError(normalizedCrn, TierVersion.V3)
-      log.info("Have updated tierV3 for $normalizedCrn to $case.tierV3")
-    }
+    case.tierV3 = tierService.fetchTierOrError(normalizedCrn, TierVersion.V3)
+    log.info("Have updated tierV3 for $normalizedCrn to $case.tierV3")
     caseRepository.save(case)
     return true
   }
@@ -135,7 +129,7 @@ class CaseService(
 
   private fun fetchAvailableTiers(crn: String) = CaseTiers(
     v2 = tierService.fetchTierOrNull(crn, TierVersion.V2),
-    v3 = if (includeTierV3) tierService.fetchTierOrNull(crn, TierVersion.V3) else null,
+    v3 = tierService.fetchTierOrNull(crn, TierVersion.V3),
   )
 
   private fun CaseEntity.toDto() = CaseDto(

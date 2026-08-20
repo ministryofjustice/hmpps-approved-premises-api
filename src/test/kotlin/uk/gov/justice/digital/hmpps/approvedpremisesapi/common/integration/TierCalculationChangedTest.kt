@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulV3TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.LocalDateTime
@@ -45,48 +46,8 @@ class TierCalculationChangedTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `case exists, update tierV2, inbox event is PROCESSED`() {
-    mockFeatureFlagService.setFlag("include-tier-v3", false)
-
-    caseEntityFactory.produceAndPersist {
-      withCrn(CRN)
-      withTierV2(
-        TierFactory().withTierScore(OLD_TIER).produce(),
-      )
-      withTierV3(null)
-    }
-
-    hmppsTierMockSuccessfulTierCall(
-      CRN,
-      UpStreamTier(
-        tierScore = NEW_TIER,
-        calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.now(),
-        changeReason = "reason",
-      ),
-    )
-
-    publishTierEvent(CRN)
-
-    inboxAsserter.waitForPendingCount(1)
-
-    inboxEventDispatcher.process()
-
-    inboxAsserter.assertProcessedCount(1)
-
-    val caseEntity = caseRepository.findByCrn(CRN)
-
-    assertThat(caseEntity).isNotNull
-
-    assertThat(caseEntity!!.tierV2!!.tierScore).isEqualTo(NEW_TIER)
-    assertThat(caseEntity.tierV3).isNull()
-
-    assertThat(caseService.getCase(CRN)!!.tier!!.tierScore).isEqualTo(NEW_TIER)
-  }
-
-  @Test
   fun `case exists, update tierV2 and tierV3, inbox event is PROCESSED`() {
-    mockFeatureFlagService.setFlag("include-tier-v3", true)
+    mockFeatureFlagService.setFlag(FeatureFlagService.FEATURE_FLAG_USE_TIER_V3, false)
 
     caseEntityFactory.produceAndPersist {
       withCrn(CRN)
