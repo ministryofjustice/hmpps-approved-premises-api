@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
@@ -11,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -22,12 +25,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class Cas1ExternalReferralsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
@@ -45,7 +52,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
 
     @Test
     fun `Get all referrals without correct JWT authority returns 401`() {
-      givenAUser { user, jwt ->
+      givenAUser { _, jwt ->
         webTestClient.get()
           .uri("/cas1/external/referrals/$crn")
           .header("Authorization", "Bearer $jwt")
@@ -71,11 +78,11 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
           }
 
-          val assessment1 = createCas1Assessment(crn, user, AssessmentDecision.ACCEPTED, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
-          val assessment2 = createCas1Assessment(crn, user, AssessmentDecision.REJECTED, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
-          val assessment3 = createCas1Assessment(crn, user, AssessmentDecision.ACCEPTED, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
-          val assessment4 = createCas1Assessment(crn, user, null, user, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
-          val assessment5 = createCas1Assessment(crn, user, rejectionRationale = "Not suitable", apArea = apArea, cruManagementArea = cruManagementArea, premises = premises, withdrawalReason = noCapacity)
+          val assessment1 = createCas1Assessment(crn, user, AssessmentDecision.ACCEPTED, apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
+          val assessment2 = createCas1Assessment(crn, user, AssessmentDecision.REJECTED, apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
+          val assessment3 = createCas1Assessment(crn, user, AssessmentDecision.ACCEPTED, apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
+          val assessment4 = createCas1Assessment(crn, user, null, user, apArea = apArea, cruManagementArea = cruManagementArea, premises = premises)
+          val assessment5 = createCas1Assessment(crn, user, apArea = apArea, cruManagementArea = cruManagementArea, premises = premises, withdrawalReason = noCapacity)
 
           val expectedReferrals = listOf(
             Cas1ReferralHistory(
@@ -84,7 +91,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               date = assessment1.createdAt.toLocalDate(),
               applicationStatus = (assessment1.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
-              referralRejectionReason = "Not suitable",
+              referralRejectionReason = null,
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
               referredBy = createStaffDto(assessment1.application.createdByUser),
@@ -100,7 +107,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               date = assessment2.createdAt.toLocalDate(),
               applicationStatus = (assessment2.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
-              referralRejectionReason = "Not suitable",
+              referralRejectionReason = null,
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
               referredBy = createStaffDto(assessment2.application.createdByUser),
@@ -116,7 +123,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               date = assessment3.createdAt.toLocalDate(),
               applicationStatus = (assessment3.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
-              referralRejectionReason = "Not suitable",
+              referralRejectionReason = null,
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
               referredBy = createStaffDto(assessment3.application.createdByUser),
@@ -132,7 +139,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               date = assessment4.createdAt.toLocalDate(),
               applicationStatus = (assessment4.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
-              referralRejectionReason = "Not suitable",
+              referralRejectionReason = null,
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
               referredBy = createStaffDto(assessment4.application.createdByUser),
@@ -148,7 +155,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               date = assessment5.createdAt.toLocalDate(),
               applicationStatus = (assessment5.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
-              referralRejectionReason = "Not suitable",
+              referralRejectionReason = null,
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
               referredBy = createStaffDto(assessment5.application.createdByUser),
@@ -157,6 +164,91 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               requestForPlacementStatus = RequestForPlacementStatus.requestWithdrawn,
               uiUrl = "http://frontend/applications/${assessment5.application.id}",
               withdrawalReason = noCapacity,
+            ),
+          )
+
+          val response = webTestClient.get()
+            .uri("/cas1/external/referrals/$crn")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBodyList<Cas1ReferralHistory>()
+            .returnResult()
+            .responseBody
+
+          Assertions.assertThat(response).containsExactlyInAnyOrderElementsOf(expectedReferrals)
+        }
+      }
+    }
+
+    @Test
+    fun `Get referral with placement request rejected returns ok`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val apArea = givenAnApArea(name = "London AP Area")
+          val cruManagementArea = givenACas1CruManagementArea(name = "London CRU")
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(crn)
+            withCreatedByUser(user)
+            withApArea(apArea)
+            withCruManagementArea(cruManagementArea)
+          }
+
+          val placementApplication = placementApplicationFactory.produceAndPersist {
+            withApplication(application)
+            withDecision(PlacementApplicationDecision.REJECTED)
+            withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now())
+            withReallocatedAt(null)
+            withAuthorisedDuration(20)
+            withExpectedArrival(LocalDate.now().plusDays(10))
+            withRequestedDuration(10)
+            withDecisionMadeAt(OffsetDateTime.now())
+          }
+
+          val envelopedData = Cas1DomainEventEnvelope(
+            id = UUID.randomUUID(),
+            timestamp = Instant.now(),
+            eventType = EventType.requestForPlacementAssessed,
+            eventDetails = RequestForPlacementAssessedFactory()
+              .withPlacementApplicationId(placementApplication.id)
+              .withDecisionSummary("NO SPACE")
+              .withApplicationId(application.id)
+              .produce(),
+          )
+
+          domainEventFactory.produceAndPersist {
+            withData(jsonMapper.writeValueAsString(envelopedData))
+            withType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
+            withOccurredAt(OffsetDateTime.now().minusDays(6))
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAllocatedToUser(user)
+            withDecision(AssessmentDecision.ACCEPTED)
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          }
+
+          val expectedReferrals = listOf(
+            Cas1ReferralHistory(
+              id = assessment.id,
+              applicationId = application.id,
+              date = assessment.createdAt.toLocalDate(),
+              applicationStatus = application.status,
+              type = ServiceType.CAS1,
+              referralRejectionReason = "NO SPACE",
+              localAuthorityArea = apArea.name,
+              pdu = cruManagementArea.name,
+              referredBy = createStaffDto(application.createdByUser),
+              placementAddress = null,
+              placementStatus = null,
+              requestForPlacementStatus = RequestForPlacementStatus.requestRejected,
+              uiUrl = "http://frontend/applications/${application.id}",
+              withdrawalReason = null,
             ),
           )
 
@@ -227,7 +319,6 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
     user: UserEntity,
     decision: AssessmentDecision? = null,
     allocated: UserEntity? = null,
-    rejectionRationale: String? = null,
     apArea: ApAreaEntity? = null,
     cruManagementArea: Cas1CruManagementAreaEntity? = null,
     premises: ApprovedPremisesEntity? = null,
@@ -244,7 +335,6 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
       withApplication(application)
       withAllocatedToUser(allocated ?: user)
       withDecision(decision)
-      withRejectionRationale(rejectionRationale)
       withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }
     if (premises != null) {
