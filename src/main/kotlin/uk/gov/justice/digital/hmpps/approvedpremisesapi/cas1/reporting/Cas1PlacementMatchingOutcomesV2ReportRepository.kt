@@ -42,8 +42,10 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
         
         to_char(first_match_attempt_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as first_match_attempt_date_time,
         to_char(first_match_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as first_successful_match_attempt_date_time,
+        first_match_event.data ->'eventDetails' -> 'personTier' ->> 'tierScore' as first_successful_match_attempt_tier,
         first_match_event.data -> 'eventDetails' -> 'premises' ->> 'name' as first_successful_match_attempt_premises_name,
         to_char(latest_match_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as last_successful_match_attempt_date_time,
+        latest_match_event.data ->'eventDetails' -> 'personTier' ->> 'tierScore' as last_successful_match_attempt_tier,
         latest_match_event.data -> 'eventDetails' -> 'premises' ->> 'name' as last_successful_match_attempt_premises_name,
         CASE
           WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN  latest_match_event.data -> 'eventDetails' ->> 'bookingId'
