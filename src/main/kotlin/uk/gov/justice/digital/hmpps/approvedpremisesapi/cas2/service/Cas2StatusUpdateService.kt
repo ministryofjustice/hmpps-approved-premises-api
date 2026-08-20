@@ -106,7 +106,7 @@ class Cas2StatusUpdateService(
     }
 
     if (featureFlagService.getBooleanFlag("isr-email-changes-enabled")) {
-      cas2ApplicationStatusUpdateEmailService.statusUpdate(assessment.application, createdStatusUpdate)
+      cas2ApplicationStatusUpdateEmailService.statusUpdate(assessment, createdStatusUpdate)
     } else {
       sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
     }

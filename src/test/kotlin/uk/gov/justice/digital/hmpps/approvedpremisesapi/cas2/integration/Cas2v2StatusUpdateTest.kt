@@ -367,7 +367,7 @@ class Cas2v2StatusUpdateTest(
                   "crn" to application.crn,
                   "timeApplicationReceived" to application.submittedAt!!.format(DateTimeFormatter.ofPattern("HH:mm")),
                   "dateApplicationReceived" to application.submittedAt!!.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                  "nacroReferenceId" to application.id.toString(),
+                  "nacroReferenceId" to "Unknown",
                   "viewSubmittedApplicationUrl" to "http://localhost:3000/applications/${application.id}/overview",
                 ),
                 replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
