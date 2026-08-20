@@ -11,7 +11,6 @@ interface FeatureFlagService {
   fun getBooleanFlag(key: String): Boolean
 
   companion object {
-    const val FEATURE_FLAG_INCLUDE_TIER_V3: String = "include-tier-v3"
     const val FEATURE_FLAG_USE_TIER_V3: String = "use-tier-v3"
     const val FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES: String = "isr-cas1-email-changes-enabled"
   }

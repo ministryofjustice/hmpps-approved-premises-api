@@ -69,7 +69,6 @@ class CaseServiceTest {
   inner class EnsureCaseExists {
     @Test
     fun `existing case, update`() {
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
       every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
@@ -152,7 +151,6 @@ class CaseServiceTest {
 
     @Test
     fun `existing case, update, leaving tiers as current value if getting tiers fails`() {
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
       every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
@@ -205,7 +203,6 @@ class CaseServiceTest {
 
     @Test
     fun `no existing case, create new`() {
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
       every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
@@ -273,7 +270,6 @@ class CaseServiceTest {
 
     @Test
     fun `no existing case, returns case created by another transaction when insert hits crn unique constraint`() {
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
       every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
@@ -305,7 +301,7 @@ class CaseServiceTest {
         HttpStatus.OK,
         CaseSummaries(listOf(caseSummary)),
       )
-      every { mockTierService.fetchTierOrNull(crn, TierVersion.V2) } returns null
+      every { mockTierService.fetchTierOrNull(crn, any()) } returns null
 
       val result = try {
         service.ensureCaseExists(crn)
@@ -325,7 +321,6 @@ class CaseServiceTest {
 
     @Test
     fun `no existing case, create new, setting tiers to null if get tiers errors`() {
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
       every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
@@ -361,59 +356,6 @@ class CaseServiceTest {
           caseSummary,
           match {
             it.v2 == null && it.v3 == null
-          },
-        )
-      }
-    }
-
-    @Test
-    fun `no existing case, create new, dont include v3 tier if flag is disabled`() {
-      val crn = "CRN123"
-      val now = OffsetDateTime.now()
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
-      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
-
-      val caseSummary = CaseSummaryFactory().withCrn(crn).withName(Name("JOHN", "SMITH")).withNomsId("NOMS123").produce()
-
-      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(crn)) } returns ClientResult.Success(
-        HttpStatus.OK,
-        CaseSummaries(listOf(caseSummary)),
-      )
-      val tierV2 = TierFactory()
-        .withTierScore("tier value")
-        .withCalculationId(UUID.randomUUID())
-        .withCalculationDate(now.toLocalDateTime())
-        .withChangeReason("reason")
-        .withVersion(TierVersion.V2)
-        .produce()
-      every { mockTierService.fetchTierOrNull(crn, any()) } returns tierV2
-
-      every { mockCasePersistenceService.getCase(crn) } returns null
-      every { mockCasePersistenceService.updateIfExist(crn, any(), any()) } returns null
-      val caseEntity = CaseEntityFactory()
-        .withCrn(crn)
-        .withName("JOHN SMITH")
-        .withNomsNumber("NOMS123")
-        .withTierV2(TierFactory().withTierScore("tier value").withCalculationDate(tierV2.calculationDate).produce())
-        .produce()
-      every { mockCasePersistenceService.createCase(any(), any()) } returns caseEntity
-
-      val result = service.ensureCaseExists(crn)
-
-      assertThat(result.crn).isEqualTo(crn)
-      assertThat(result.name).isEqualTo("JOHN SMITH")
-      assertThat(result.nomsNumber).isEqualTo("NOMS123")
-      assertThat(result.tier?.tierScore).isEqualTo("tier value")
-      assertThat(result.tier?.calculationDate).isEqualTo(now.toLocalDateTime())
-      assertThat(result.tier?.version).isEqualTo(TierVersionDto.V2)
-      assertThat(result.tier?.provisional).isNull()
-
-      verify(exactly = 0) { mockTierService.fetchTierOrNull(crn, TierVersion.V3) }
-      verify {
-        mockCasePersistenceService.createCase(
-          caseSummary,
-          match {
-            it.v2?.tierScore == "tier value" && it.v3 == null
           },
         )
       }
@@ -472,9 +414,8 @@ class CaseServiceTest {
   @Nested
   inner class ReviseTier {
     @Test
-    fun `should update tierV2 and tierV3 when flag is enabled`() {
+    fun `should update tierV2 and tierV3`() {
       val crn = "CRN123"
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
 
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -506,39 +447,8 @@ class CaseServiceTest {
     }
 
     @Test
-    fun `should only update tierV2 when flag is disabled`() {
-      val crn = "CRN123"
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
-
-      val caseEntity = CaseEntityFactory()
-        .withCrn(crn)
-        .produce()
-
-      every { mockCaseRepository.findByCrn(crn) } returns caseEntity
-      every { mockCaseRepository.save(any()) } returns caseEntity
-      every { mockTierService.fetchTierOrError(crn, any()) } returns TierFactory()
-        .withTierScore("V2_NEW")
-        .withVersion(TierVersion.V2)
-        .produce()
-
-      val result = service.reviseTier(crn)
-
-      assertThat(result).isTrue()
-      verify { mockTierService.fetchTierOrError(crn, TierVersion.V2) }
-      verify(exactly = 0) { mockTierService.fetchTierOrError(any(), TierVersion.V3) }
-      verify {
-        mockCaseRepository.save(
-          match {
-            it.tierV2?.tierScore == "V2_NEW"
-          },
-        )
-      }
-    }
-
-    @Test
     fun `should return false if case does not exist`() {
       val crn = "CRN123"
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
       every { mockCaseRepository.findByCrn(crn) } returns null
 
       val result = service.reviseTier(crn)
@@ -549,7 +459,6 @@ class CaseServiceTest {
     @Test
     fun `should throw exception if fetch fails`() {
       val crn = "CRN123"
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
       val caseEntity = CaseEntityFactory().withCrn(crn).produce()
 
       every { mockCaseRepository.findByCrn(crn) } returns caseEntity
@@ -564,7 +473,6 @@ class CaseServiceTest {
     fun `should uppercase CRN when revising tier`() {
       val crn = "crn123"
       val uppercasedCrn = "CRN123"
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
       val caseEntity = CaseEntityFactory().withCrn(uppercasedCrn).produce()
 
       every { mockCaseRepository.findByCrn(uppercasedCrn) } returns caseEntity
@@ -600,7 +508,6 @@ class CaseServiceTest {
     @Test
     fun `if feature flag 'use-tier-v3' is false, should return tierV2`() {
       val crn = "CRN123"
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
       every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val tierV2 = TierFactory().withTierScore("V2").withVersion(TierVersion.V2).produce()
@@ -622,7 +529,6 @@ class CaseServiceTest {
     @Test
     fun `if feature flag 'use-tier-v3' is true, should return tierV3`() {
       val crn = "CRN123"
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
       every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns true
 
       val tierV2 = TierFactory().withTierScore("V2").withVersion(TierVersion.V2).produce()
