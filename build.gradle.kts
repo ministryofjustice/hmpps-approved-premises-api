@@ -87,7 +87,7 @@ dependencies {
   testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.8.0")
   // Used directly in our tests for JSON response assertions.
   // Also aligned with the approach used in the SAR team's tests.
-  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:5.1.1")
+  testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.2.0")
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
