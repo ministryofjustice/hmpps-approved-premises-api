@@ -27,13 +27,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementReportTest.Constants.REPORT_MONTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementReportTest.Constants.REPORT_YEAR
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -47,6 +50,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMock404TierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -63,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Char
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import java.io.StringReader
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.UUID
@@ -272,7 +278,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun createBooking() {
       application = createSubmitAndAssessedApplication(
-        crn = "CRNTest1",
+        crn = "CRNTEST1",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 5),
       )
 
@@ -288,29 +294,66 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         ),
       )
 
-      bookings = cas1SpaceBookingEntityFactory.produceAndPersistMultiple(2) {
-        withCrn("CRN")
-        withPremises(premises)
-        withPlacementRequest(application.placementRequests[0])
-        withApplication(application)
-        withCreatedBy(user)
-        withCanonicalArrivalDate(LocalDate.of(REPORT_YEAR, REPORT_MONTH, 7))
-        withCanonicalDepartureDate(LocalDate.of(2024, 5, 10))
-        withActualArrivalDate(LocalDate.of(2024, 2, 7))
-        withActualArrivalTime(LocalTime.of(11, 0, 2, 0))
-        withActualDepartureDate(LocalDate.of(2024, 5, 10))
-        withActualDepartureTime(LocalTime.of(23, 0, 0, 0))
-        withExpectedArrivalDate(LocalDate.of(2024, 2, 7))
-        withExpectedDepartureDate(LocalDate.of(2024, 5, 10))
-        withDepartureReason(null)
-        withDepartureNotes(null)
-        withMoveOnCategory(null)
-        withCriteria(criteria)
-        withNonArrivalReason(null)
-        withNonArrivalNotes(null)
-        withTransferReason(TransferReason.riskToResident)
-        withAdditionalInformation("Some additional info")
-      }
+      val (_, managerJwt) = givenAUser(
+        roles = listOf(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_FUTURE_MANAGER),
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "MANAGER1"),
+      )
+
+      hmppsTierMockSuccessfulTierCall(
+        "CRNTEST1",
+        Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = null),
+      )
+
+      val booking1 = cas1SimpleApiClient.spaceBookingForPlacementRequest(
+        integrationTestBase = this@Cas1PlacementReportTest,
+        placementRequestId = application.placementRequests[0].id,
+        managerJwt = managerJwt,
+        body = Cas1NewSpaceBooking(
+          arrivalDate = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 7),
+          departureDate = LocalDate.of(2024, 5, 10),
+          premisesId = premises.id,
+          characteristics = listOf(Cas1SpaceCharacteristic.isCatered, Cas1SpaceCharacteristic.isStepFreeDesignated),
+          transferReason = TransferReason.riskToResident,
+          additionalInformation = "Some additional info",
+        ),
+      )
+
+      cas1SimpleApiClient.recordArrival(
+        integrationTestBase = this@Cas1PlacementReportTest,
+        premisesId = premises.id,
+        bookingId = booking1.id,
+        arrivalDate = LocalDate.of(2024, 2, 7),
+        arrivalTime = LocalTime.of(11, 0, 2),
+      )
+
+      hmppsTierMock404TierCall("CRNTEST1")
+
+      val booking2 = cas1SimpleApiClient.spaceBookingForPlacementRequest(
+        integrationTestBase = this@Cas1PlacementReportTest,
+        placementRequestId = application.placementRequests[0].id,
+        managerJwt = managerJwt,
+        body = Cas1NewSpaceBooking(
+          arrivalDate = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 7),
+          departureDate = LocalDate.of(2024, 5, 10),
+          premisesId = premises.id,
+          characteristics = listOf(Cas1SpaceCharacteristic.isCatered, Cas1SpaceCharacteristic.isStepFreeDesignated),
+          transferReason = TransferReason.riskToResident,
+          additionalInformation = "Some additional info",
+        ),
+      )
+
+      cas1SimpleApiClient.recordArrival(
+        integrationTestBase = this@Cas1PlacementReportTest,
+        premisesId = premises.id,
+        bookingId = booking2.id,
+        arrivalDate = LocalDate.of(2024, 2, 7),
+        arrivalTime = LocalTime.of(11, 0, 2),
+      )
+
+      bookings = listOf(
+        cas1SpaceBookingRepository.findByIdOrNull(booking1.id)!!,
+        cas1SpaceBookingRepository.findByIdOrNull(booking2.id)!!,
+      )
     }
 
     fun assertRow(row: PlacementReportRow) {
@@ -319,11 +362,14 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.expected_departure_date).isEqualTo("2024-05-10")
       assertThat(row.actual_arrival_date).isEqualTo("2024-02-07")
       assertThat(row.actual_arrival_time).isEqualTo("11:00:02")
-      assertThat(row.actual_departure_date).isEqualTo("2024-05-10")
-      assertThat(row.actual_departure_time).isEqualTo("23:00")
+      if (row.placement_id == bookings[0].id.toString()) {
+        assertThat(row.actual_arrival_tier).isEqualTo("A1")
+      } else {
+        assertThat(row.actual_arrival_tier).isNull()
+      }
+      assertThat(row.actual_departure_tier).isNull()
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
-      assertThat(row.actual_duration_nights).isEqualTo("93")
       assertThat(row.expected_duration_nights).isEqualTo("93")
       assertThat(row.criteria?.split(", ")).containsExactlyInAnyOrder("isCatered", "isStepFreeDesignated")
       assertThat(row.departure_move_on_category).isNull()
@@ -345,9 +391,11 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
     lateinit var moveOnCategory: MoveOnCategoryEntity
     lateinit var departureReason: DepartureReasonEntity
 
+    val crn = "CRNTEST2"
+
     fun createBooking() {
       application = createSubmitAndAssessedApplication(
-        crn = "CRNTest2",
+        crn = crn,
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
       )
 
@@ -365,38 +413,70 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
       moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
         withName("Move on category")
+        withServiceScope("approved-premises")
+        withLegacyDeliusCategoryCode("MC1")
       }
 
       val departureReasonParent = departureReasonEntityFactory.produceAndPersist {
         withName("Parent Reason")
+        withServiceScope("approved-premises")
+        withLegacyDeliusCategoryCode("PR1")
       }
 
       departureReason = departureReasonEntityFactory.produceAndPersist {
         withName("Departed")
         withParentReason(departureReasonParent)
+        withServiceScope("approved-premises")
+        withLegacyDeliusCategoryCode("DR1")
       }
 
-      booking = cas1SpaceBookingEntityFactory.produceAndPersist {
-        withCrn("CRNTest2")
-        withPremises(premises)
-        withPlacementRequest(application.placementRequests[1])
-        withApplication(application)
-        withCreatedBy(user)
-        withCanonicalArrivalDate(LocalDate.of(2024, 1, 7))
-        withCanonicalDepartureDate(LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1))
-        withActualArrivalDate(LocalDate.of(2024, 1, 7))
-        withActualArrivalTime(LocalTime.of(11, 0, 2, 0))
-        withActualDepartureDate(LocalDate.of(2024, 2, 1))
-        withActualDepartureTime(LocalTime.of(23, 0, 0, 0))
-        withExpectedArrivalDate(LocalDate.of(2024, 1, 7))
-        withExpectedDepartureDate(LocalDate.of(2024, 2, 1))
-        withDepartureReason(departureReason)
-        withDepartureNotes("some departure notes")
-        withMoveOnCategory(moveOnCategory)
-        withCriteria(criteria)
-        withNonArrivalReason(null)
-        withNonArrivalNotes(null)
-      }
+      val (_, managerJwt) = givenAUser(
+        roles = listOf(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_FUTURE_MANAGER),
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "MANAGER2"),
+      )
+
+      val spaceBooking = cas1SimpleApiClient.spaceBookingForPlacementRequest(
+        integrationTestBase = this@Cas1PlacementReportTest,
+        placementRequestId = application.placementRequests[1].id,
+        managerJwt = managerJwt,
+        body = Cas1NewSpaceBooking(
+          arrivalDate = LocalDate.of(2024, 1, 7),
+          departureDate = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1),
+          premisesId = premises.id,
+          characteristics = listOf(Cas1SpaceCharacteristic.isCatered, Cas1SpaceCharacteristic.isStepFreeDesignated),
+        ),
+      )
+
+      hmppsTierMockSuccessfulTierCall(
+        crn,
+        Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = null),
+      )
+
+      cas1SimpleApiClient.recordArrival(
+        integrationTestBase = this@Cas1PlacementReportTest,
+        premisesId = premises.id,
+        bookingId = spaceBooking.id,
+        arrivalDate = LocalDate.of(2024, 1, 7),
+        arrivalTime = LocalTime.of(11, 0, 2),
+      )
+
+      hmppsTierMockSuccessfulTierCall(
+        crn,
+        Tier(tierScore = "B2", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = null),
+      )
+
+      cas1SimpleApiClient.recordDeparture(
+        integrationTestBase = this@Cas1PlacementReportTest,
+        premisesId = premises.id,
+        bookingId = spaceBooking.id,
+        departureDate = LocalDate.of(2024, 2, 1),
+        departureTime = LocalTime.of(23, 0),
+        reasonId = departureReason.id,
+        moveOnCategoryId = moveOnCategory.id,
+        notes = "some departure notes",
+      )
+
+      booking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
     }
 
     fun assertRow(row: PlacementReportRow, includePii: Boolean) {
@@ -405,8 +485,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.expected_departure_date).isEqualTo("2024-02-01")
       assertThat(row.actual_arrival_date).isEqualTo("2024-01-07")
       assertThat(row.actual_arrival_time).isEqualTo("11:00:02")
+      assertThat(row.actual_arrival_tier).isEqualTo("A1")
       assertThat(row.actual_departure_date).isEqualTo("2024-02-01")
       assertThat(row.actual_departure_time).isEqualTo("23:00")
+      assertThat(row.actual_departure_tier).isEqualTo("B2")
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isEqualTo("25")
@@ -486,8 +568,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.expected_departure_date).isEqualTo("2024-05-01")
       assertThat(row.actual_arrival_date).isEqualTo(null)
       assertThat(row.actual_arrival_time).isEqualTo(null)
+      assertThat(row.actual_arrival_tier).isNull()
       assertThat(row.actual_departure_date).isEqualTo(null)
       assertThat(row.actual_departure_time).isEqualTo(null)
+      assertThat(row.actual_departure_tier).isNull()
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isNull()
@@ -566,8 +650,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.expected_departure_date).isEqualTo("2024-08-01")
       assertThat(row.actual_arrival_date).isEqualTo(null)
       assertThat(row.actual_arrival_time).isEqualTo(null)
+      assertThat(row.actual_arrival_tier).isNull()
       assertThat(row.actual_departure_date).isEqualTo(null)
       assertThat(row.actual_departure_time).isEqualTo(null)
+      assertThat(row.actual_departure_tier).isNull()
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isNull()
@@ -823,4 +909,6 @@ data class PlacementReportRow(
   val criteria: String?,
   val transfer_reason: String?,
   val additional_information: String?,
+  val actual_arrival_tier: String?,
+  val actual_departure_tier: String?,
 )

@@ -20,6 +20,7 @@ class Cas1PlacementReportRepository(
             to_char(csb.expected_departure_date,'YYYY-MM-DD') AS expected_departure_date,
             to_char(csb.actual_arrival_date, 'YYYY-MM-DD') AS actual_arrival_date,
             to_char(csb.actual_arrival_time, 'HH24:MI:SS') AS actual_arrival_time,
+            arrival_event.data -> 'eventDetails' -> 'personTier' ->> 'tierScore' AS actual_arrival_tier,
             CASE
                 WHEN csb.actual_departure_date IS NOT NULL 
                 THEN COALESCE(csb.actual_departure_date - csb.actual_arrival_date, 0)
@@ -27,6 +28,7 @@ class Cas1PlacementReportRepository(
             END AS actual_duration_nights,
             to_char(csb.actual_departure_date, 'YYYY-MM-DD') AS actual_departure_date,
             to_char(csb.actual_departure_time, 'HH24:MI:SS') AS actual_departure_time,
+            departure_event.data -> 'eventDetails' -> 'personTier' ->> 'tierScore' AS actual_departure_tier,
             CASE
                 WHEN dr_parent.id IS NOT NULL
                 THEN dr_parent.name || ' - ' || dr.name
@@ -45,6 +47,10 @@ class Cas1PlacementReportRepository(
             matching.*
         FROM cas1_space_bookings csb
         INNER JOIN placement_matching_outcomes matching ON matching.placement_request_id = csb.placement_request_id
+        LEFT JOIN domain_events arrival_event ON arrival_event.type = 'APPROVED_PREMISES_PERSON_ARRIVED'
+            AND arrival_event.cas1_space_booking_id = csb.id
+        LEFT JOIN domain_events departure_event ON departure_event.type = 'APPROVED_PREMISES_PERSON_DEPARTED'
+            AND departure_event.cas1_space_booking_id = csb.id
         LEFT JOIN cas1_premises_base p ON p.id = csb.premises_id
         LEFT JOIN probation_regions pr ON pr.id = p.probation_region_id
         LEFT JOIN departure_reasons dr ON dr.id = csb.departure_reason_id
