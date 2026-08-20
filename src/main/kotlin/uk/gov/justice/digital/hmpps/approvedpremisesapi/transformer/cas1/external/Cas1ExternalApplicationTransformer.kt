@@ -94,12 +94,7 @@ class Cas1ExternalApplicationTransformer(
   ): Cas1SuitableApplication {
     val latestAssessment = application.getLatestAssessment()
     return Cas1SuitableApplication(
-      id = application.id,
       uiUrl = cas1ApplicationUrlTemplate.replace("#id", application.id.toString()),
-      applicationStatus = application.status,
-      requestForPlacementStatus = suitablePlacementPair?.requestForPlacement?.status,
-      placementStatus = suitablePlacementPair?.placement?.status,
-      premises = suitablePlacementPair?.placement?.premises,
       application = transformToApplication(application),
       assessment = latestAssessment?.let { transformToAssessment(it) },
       requestForPlacement = suitablePlacementPair?.requestForPlacement,

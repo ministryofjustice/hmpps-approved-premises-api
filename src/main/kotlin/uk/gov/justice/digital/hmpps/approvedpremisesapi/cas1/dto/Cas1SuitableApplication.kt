@@ -17,21 +17,6 @@ data class Cas1SuitableApplication(
   val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
   val placement: Cas1ExternalPlacementDto?,
   val placementHistory: List<Cas1PlacementPairDto>,
-
-  @Deprecated("This field will be removed once SAS is updated to use application.id")
-  val id: UUID,
-
-  @Deprecated("This field will be removed once SAS is updated to use application.status")
-  val applicationStatus: ApprovedPremisesApplicationStatus,
-
-  @Deprecated("This field will be removed once SAS is updated to use requestForPlacement.status")
-  val requestForPlacementStatus: RequestForPlacementStatus?,
-
-  @Deprecated("This field will be removed once SAS is updated to use placement.status")
-  val placementStatus: Cas1SpaceBookingStatus?,
-
-  @Deprecated("This field will be removed once SAS is updated to use placement.premises")
-  val premises: Cas1ExternalPremisesDto?,
 )
 
 @Schema(description = "Details about a placement, with it's associated request for placement")
