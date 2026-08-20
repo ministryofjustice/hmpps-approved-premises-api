@@ -120,9 +120,7 @@ class Cas1ExternalApplicationTransformerTest {
         dateApplied = LocalDate.now(),
       )
       val expected = Cas1SuitableApplication(
-        id = application.id,
         uiUrl = "http://localhost:3000/applications/${application.id}",
-        applicationStatus = application.status,
         application = Cas1ExternalApplicationDto(
           createdAt = application.createdAt,
           createdBy = userStaff,
@@ -136,10 +134,7 @@ class Cas1ExternalApplicationTransformerTest {
           rejectionRationale = assessment.rejectionRationale,
         ),
         requestForPlacement = suitablePlacementPair.requestForPlacement,
-        requestForPlacementStatus = suitablePlacementPair.requestForPlacement?.status,
-        placementStatus = suitablePlacementPair.placement?.status,
         placement = suitablePlacementPair.placement,
-        premises = premises,
         placementHistory = emptyList(),
       )
 
@@ -183,9 +178,7 @@ class Cas1ExternalApplicationTransformerTest {
       application.assessments.add(assessment)
 
       val expected = Cas1SuitableApplication(
-        id = application.id,
         uiUrl = "http://localhost:3000/applications/${application.id}",
-        applicationStatus = application.status,
         application = Cas1ExternalApplicationDto(
           createdAt = application.createdAt,
           createdBy = userStaff,
@@ -198,11 +191,8 @@ class Cas1ExternalApplicationTransformerTest {
           decision = AssessmentDecisionApi.accepted,
           rejectionRationale = assessment.rejectionRationale,
         ),
-        requestForPlacementStatus = null,
         requestForPlacement = null,
-        placementStatus = null,
         placement = null,
-        premises = null,
         placementHistory = emptyList(),
       )
 

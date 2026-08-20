@@ -137,18 +137,6 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             }
 
             val suitableApplication = Cas1SuitableApplication(
-              id = application.id,
-              applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
-              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
-              placementStatus = Cas1SpaceBookingStatus.UPCOMING,
-              premises = Cas1ExternalPremisesDto(
-                startDate = booking.expectedArrivalDate,
-                endDate = booking.expectedDepartureDate,
-                addressLine1 = premises.addressLine1,
-                addressLine2 = premises.addressLine2,
-                town = premises.town,
-                postcode = premises.postcode,
-              ),
               uiUrl = "http://frontend/applications/${application.id}",
               application = Cas1ExternalApplicationDto(
                 createdAt = application.createdAt,
@@ -226,11 +214,6 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             approvedPremisesApplicationRepository.save(application)
 
             val suitableApplication = Cas1SuitableApplication(
-              id = application.id,
-              applicationStatus = ApprovedPremisesApplicationStatus.REJECTED,
-              requestForPlacementStatus = null,
-              placementStatus = null,
-              premises = null,
               uiUrl = "http://frontend/applications/${application.id}",
               application = Cas1ExternalApplicationDto(
                 createdAt = application.createdAt,
@@ -313,11 +296,6 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             }
 
             val suitableApplication = Cas1SuitableApplication(
-              id = application.id,
-              applicationStatus = ApprovedPremisesApplicationStatus.REJECTED,
-              requestForPlacementStatus = RequestForPlacementStatus.requestRejected,
-              placementStatus = null,
-              premises = null,
               uiUrl = "http://frontend/applications/${application.id}",
               application = Cas1ExternalApplicationDto(
                 createdAt = application.createdAt,
@@ -454,18 +432,6 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             }
 
             val suitableApplication = Cas1SuitableApplication(
-              id = application.id,
-              applicationStatus = ApprovedPremisesApplicationStatus.WITHDRAWN,
-              requestForPlacementStatus = RequestForPlacementStatus.requestWithdrawn,
-              placementStatus = Cas1SpaceBookingStatus.CANCELLED,
-              premises = Cas1ExternalPremisesDto(
-                startDate = booking.expectedArrivalDate,
-                endDate = booking.expectedDepartureDate,
-                addressLine1 = premises.addressLine1,
-                addressLine2 = premises.addressLine2,
-                town = premises.town,
-                postcode = premises.postcode,
-              ),
               uiUrl = "http://frontend/applications/${application.id}",
               application = Cas1ExternalApplicationDto(
                 createdAt = application.createdAt,
@@ -596,18 +562,6 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             }
 
             val suitableApplication = Cas1SuitableApplication(
-              id = application.id,
-              applicationStatus = ApprovedPremisesApplicationStatus.WITHDRAWN,
-              requestForPlacementStatus = RequestForPlacementStatus.requestWithdrawn,
-              placementStatus = Cas1SpaceBookingStatus.UPCOMING,
-              premises = Cas1ExternalPremisesDto(
-                startDate = booking.expectedArrivalDate,
-                endDate = booking.expectedDepartureDate,
-                addressLine1 = premises.addressLine1,
-                addressLine2 = premises.addressLine2,
-                town = premises.town,
-                postcode = premises.postcode,
-              ),
               uiUrl = "http://frontend/applications/${application.id}",
               application = Cas1ExternalApplicationDto(
                 createdAt = application.createdAt,

@@ -1121,18 +1121,6 @@ class Cas1ExternalApplicationServiceTest {
     placement: Cas1SpaceBookingShortSummary? = null,
     premisesEntity: ApprovedPremisesEntity? = null,
   ) = Cas1SuitableApplication(
-    requestForPlacementStatus = requestForPlacement?.status,
-    placementStatus = placement?.status,
-    premises = premisesEntity?.let {
-      Cas1ExternalPremisesDto(
-        startDate = placement?.expectedArrivalDate,
-        endDate = placement?.expectedDepartureDate,
-        addressLine1 = it.addressLine1,
-        addressLine2 = it.addressLine2,
-        town = it.town,
-        postcode = it.postcode,
-      )
-    },
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
       decision = requestForPlacement?.decision?.apiValue,
       rejectionReason = null,
@@ -1160,9 +1148,7 @@ class Cas1ExternalApplicationServiceTest {
       },
       status = placement?.status,
     ),
-    id = applicationEntity.id,
     uiUrl = "http://localhost:3000/applications/${applicationEntity.id}",
-    applicationStatus = applicationEntity.status,
     application = Cas1ExternalApplicationDto(
       createdAt = applicationEntity.createdAt,
       createdBy = transformToStaffDto(applicationEntity.createdByUser),
