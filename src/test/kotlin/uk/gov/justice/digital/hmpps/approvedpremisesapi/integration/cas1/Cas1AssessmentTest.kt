@@ -13,7 +13,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1AwaitingResponse
@@ -1469,7 +1468,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
     fun `Reject assessment without JWT returns 401`() {
       webTestClient.post()
         .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/rejection")
-        .bodyValue(AssessmentRejection(document = "{}", rejectionRationale = "reasoning"))
+        .bodyValue(Cas1AssessmentRejection(document = "{}", rejectionRationale = "reasoning"))
         .exchange()
         .expectStatus()
         .isUnauthorized

@@ -14,10 +14,10 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -1141,7 +1141,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
     fun `Reject assessment without JWT returns 401`() {
       webTestClient.post()
         .uri("/cas3/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/rejection")
-        .bodyValue(AssessmentRejection(document = "{}", rejectionRationale = "reasoning"))
+        .bodyValue(Cas3AssessmentRejection(document = "{}", rejectionRationale = "reasoning"))
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -1168,7 +1168,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .uri("/cas3/assessments/${assessment.id}/rejection")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              AssessmentRejection(
+              Cas3AssessmentRejection(
                 document = mapOf("document" to "value"),
                 rejectionRationale = "reasoning",
                 referralRejectionReasonId = referralRejectionReasonId,
@@ -1221,7 +1221,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .uri("/cas3/assessments/${assessment.id}/rejection")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              AssessmentRejection(
+              Cas3AssessmentRejection(
                 document = mapOf("document" to "value"),
                 rejectionRationale = "reasoning",
                 referralRejectionReasonId = referralRejectionReasonId2,
@@ -1260,7 +1260,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .uri("/cas3/assessments/${assessment.id}/rejection")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              AssessmentRejection(
+              Cas3AssessmentRejection(
                 document = mapOf("document" to "value"),
                 rejectionRationale = "reasoning",
                 referralRejectionReasonId = referralRejectionReasonId,

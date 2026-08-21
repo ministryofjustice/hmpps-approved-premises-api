@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 import org.springframework.stereotype.Component
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
@@ -16,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewDeparture
@@ -145,7 +145,7 @@ class Cas1SimpleApiClient {
     integrationTestBase: IntegrationTestBase,
     assessmentId: UUID,
     assessorJwt: String,
-    body: AssessmentRejection,
+    body: Cas1AssessmentRejection,
   ) {
     integrationTestBase.webTestClient.post()
       .uri("/cas1/assessments/$assessmentId/rejection")

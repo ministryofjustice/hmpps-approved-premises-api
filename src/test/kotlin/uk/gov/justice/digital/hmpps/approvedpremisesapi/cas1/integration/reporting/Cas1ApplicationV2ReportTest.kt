@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
@@ -30,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.MappaDetail
@@ -1070,7 +1070,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       this,
       assessmentId,
       assessorJwt,
-      AssessmentRejection(
+      Cas1AssessmentRejection(
         document = mapOf("document" to "value"),
         rejectionRationale = rationale,
         agreeWithShortNoticeReason = agreeWithShortNoticeReason,
