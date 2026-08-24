@@ -6,9 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
@@ -35,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
@@ -98,10 +97,16 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
+    val application = givenAnApplication(
+      createdByUser = user,
+      crn = offenderDetails.otherIds.crn,
+      eventNumber = "1",
+    )
+
     this.offenderDetails = offenderDetails
     this.user1 = user
     this.jwt = jwt
-    this.applicationId = createApplication()
+    this.applicationId = application.id
 
     this.user2 = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)).first
   }
@@ -419,27 +424,6 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-  }
-
-  private fun createApplication(): UUID {
-    val result = webTestClient.post()
-      .uri("/cas1/applications")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewApplication(
-          crn = offenderDetails.otherIds.crn,
-          convictionId = 123,
-          deliusEventNumber = "1",
-          offenceId = "789",
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isCreated
-      .returnResult(ApprovedPremisesApplication::class.java)
-
-    val applicationResponse = result.responseBody.blockFirst() as ApprovedPremisesApplication
-    return applicationResponse.id
   }
 
   private fun setApplicationToInapplicable() {

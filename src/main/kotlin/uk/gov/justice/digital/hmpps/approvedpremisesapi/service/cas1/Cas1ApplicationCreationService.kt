@@ -10,18 +10,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CreateApplicationOutcome
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
@@ -52,8 +46,6 @@ class Cas1ApplicationCreationService(
   private val offenderRisksService: OffenderRisksService,
   private val cas1AssessmentService: Cas1AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
-  private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val jsonMapper: JsonMapper,
   private val apAreaRepository: ApAreaRepository,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
@@ -67,66 +59,6 @@ class Cas1ApplicationCreationService(
   private val caseService: CaseService,
   private val offenderDetailService: OffenderDetailService,
 ) {
-
-  @Transactional
-  fun createApprovedPremisesApplication(
-    offenderDetails: OffenderDetailSummary,
-    user: UserEntity,
-    convictionId: Long?,
-    deliusEventNumber: String?,
-    offenceId: String?,
-  ): CasResult<ApprovedPremisesApplicationEntity> = validatedCasResult {
-    val crn = offenderDetails.otherIds.crn
-
-    val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn)) {
-      is ClientResult.Success -> managingTeamsResult.body.teamCodes
-      is ClientResult.Failure -> managingTeamsResult.throwException()
-    }
-
-    if (convictionId == null) {
-      "$.convictionId" hasValidationError "empty"
-    }
-
-    if (deliusEventNumber == null) {
-      "$.deliusEventNumber" hasValidationError "empty"
-    }
-
-    if (offenceId == null) {
-      "$.offenceId" hasValidationError "empty"
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
-
-    val case = caseService.ensureCaseExists(crn)
-    val riskRatings = offenderRisksService.getPersonRisks(case)
-
-    val createdApplication = applicationRepository.saveAndFlush(
-      createApprovedPremisesApplicationEntity(
-        crn,
-        user,
-        convictionId,
-        deliusEventNumber,
-        offenceId,
-        riskRatings,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
-        name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}",
-      ),
-    )
-
-    managingTeamCodes.forEach {
-      createdApplication.teamCodes += applicationTeamCodeRepository.save(
-        ApplicationTeamCodeEntity(
-          id = UUID.randomUUID(),
-          application = createdApplication,
-          teamCode = it,
-        ),
-      )
-    }
-
-    return success(createdApplication)
-  }
 
   @Transactional
   fun createApplication(

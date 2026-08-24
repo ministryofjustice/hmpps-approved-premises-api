@@ -80,9 +80,9 @@ class Cas1DuplicateApplicationSeedJob(
 
     val createdByUser = sourceApplication.createdByUser
 
-    val newApplicationEntity = extractEntityFromCasResult(
-      cas1ApplicationCreationService.createApprovedPremisesApplication(
-        offenderDetails = personInfo.offenderDetailSummary,
+    val newApplication = extractEntityFromCasResult(
+      cas1ApplicationCreationService.createApplication(
+        crn = personInfo.offenderDetailSummary.otherIds.crn,
         user = createdByUser,
         convictionId = sourceApplication.convictionId,
         deliusEventNumber = sourceApplication.eventNumber,
@@ -91,7 +91,7 @@ class Cas1DuplicateApplicationSeedJob(
     )
 
     cas1ApplicationCreationService.updateApplication(
-      applicationId = newApplicationEntity.id,
+      applicationId = newApplication.applicationId,
       updateFields = Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
         isWomensApplication = sourceApplication.isWomensApplication,
         isEmergencyApplication = sourceApplication.isEmergencyApplication,
@@ -107,12 +107,12 @@ class Cas1DuplicateApplicationSeedJob(
     )
 
     cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(
-      applicationId = newApplicationEntity.id,
+      applicationId = newApplication.applicationId,
       note = "Application automatically created by Application Support by duplicating existing application ${sourceApplication.id}",
       user = null,
     )
 
-    log.info("Have duplicated application $applicationIdToDuplicate as ${newApplicationEntity.id}")
+    log.info("Have duplicated application $applicationIdToDuplicate as ${newApplication.applicationId}")
   }
 }
 

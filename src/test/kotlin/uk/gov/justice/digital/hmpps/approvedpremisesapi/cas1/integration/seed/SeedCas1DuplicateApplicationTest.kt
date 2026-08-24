@@ -6,19 +6,22 @@ import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1DuplicateApplicationSeedCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulV3TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedCas1DuplicateApplicationTest : SeedTestBase() {
@@ -38,12 +41,14 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
           withReleaseType(Cas1ReleaseType.licence)
         }
 
-        apDeliusContextMockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          ManagingTeamsResponse(
-            teamCodes = listOf("TEAM1"),
-          ),
+        val tier = Tier(
+          tierScore = "A1",
+          calculationId = UUID.randomUUID(),
+          calculationDate = LocalDateTime.now(),
+          changeReason = "Change Reason",
         )
+        hmppsTierMockSuccessfulTierCall(offenderDetails.otherIds.crn, tier)
+        hmppsTierMockSuccessfulV3TierCall(offenderDetails.otherIds.crn, tier)
 
         apAndOASysMockSuccessfulNeedsDetailsCall(
           offenderDetails.otherIds.crn,
@@ -82,8 +87,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
         assertThat(newApplication.eventNumber).isEqualTo(sourceApplication.eventNumber)
         assertThat(newApplication.offenceId).isEqualTo(sourceApplication.offenceId)
         assertThat(newApplication.nomsNumber).isEqualTo(sourceApplication.nomsNumber)
-        assertThat(newApplication.teamCodes).hasSize(1)
-        assertThat(newApplication.teamCodes.map { it.teamCode }).containsOnly("TEAM1")
+        assertThat(newApplication.teamCodes).isEmpty()
         assertThat(newApplication.placementRequests).isEmpty()
         assertThat(newApplication.releaseType).isEqualTo(sourceApplication.releaseType)
         assertThat(newApplication.sentenceType).isEqualTo(sourceApplication.sentenceType)
