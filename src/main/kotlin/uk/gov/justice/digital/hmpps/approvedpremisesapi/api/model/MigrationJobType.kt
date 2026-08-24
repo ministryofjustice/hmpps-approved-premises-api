@@ -20,6 +20,7 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   cas3FixWalesHptPremises("cas3_fix_wales_hpt_premises"),
   cas1BackfillApplicationDuration("cas1_backfill_application_duration"),
   cas1BackfillPlacementApplicationDecisionSummary("cas1_backfill_placement_application_decision_summary"),
+  cas1BackfillPlacementApplicationWithdrawalOccurredAt("cas1_backfill_placement_application_withdrawal_occurred_at"),
   cas1BackfillAutomaticPlacementApplications("cas1_backfill_automatic_placement_applications"),
   cas1CapacityPerformanceTest("cas1_capacity_performance_test"),
   updateCas3DomainEventArchiveUnarchiveTransaction("update_cas3_domain_event_archive_unarchive_transaction"),
