@@ -23,7 +23,6 @@ class Cas1SubjectAccessRequestService(
     val placementRequestsJson = cas1SubjectAccessRequestRepository.placementRequests(crn, nomsNumber, startDate, endDate)
     val placementRequirementsJson = cas1SubjectAccessRequestRepository.placementRequirements(crn, nomsNumber, startDate, endDate)
     val placementRequirementCriteriaJson = cas1SubjectAccessRequestRepository.placementRequirementsCriteria(crn, nomsNumber, startDate, endDate)
-    val offlineApplicationsJson = cas1SubjectAccessRequestRepository.offlineApplications(crn, nomsNumber, startDate, endDate)
     val bookingNotMadesJson = cas1SubjectAccessRequestRepository.bookingNotMades(crn, nomsNumber, startDate, endDate)
     val appealsJson = cas1SubjectAccessRequestRepository.appeals(crn, nomsNumber, startDate, endDate)
 
@@ -38,7 +37,6 @@ class Cas1SubjectAccessRequestService(
         placementRequestsJson,
         placementRequirementsJson,
         placementRequirementCriteriaJson,
-        offlineApplicationsJson,
         bookingNotMadesJson,
         appealsJson,
       ).all { it == null }
@@ -53,7 +51,6 @@ class Cas1SubjectAccessRequestService(
          "Assessments": ${ apAssessmentsJson ?: "[]"},
          "AssessmentClarificationNotes": ${ apAssessmentClarificationNotesJson ?: "[]"},
          "SpaceBookings": ${ apSpaceBookingsJson ?: "[]"},
-         "OfflineApplications": ${ offlineApplicationsJson ?: "[]"},
          "Appeals": ${ appealsJson ?: "[]"},
          "PlacementApplications": ${ placementApplicationsJson ?: "[]"},
          "PlacementRequests": ${ placementRequestsJson ?: "[]"},

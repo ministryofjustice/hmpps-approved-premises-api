@@ -35,7 +35,12 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   fun `Get CAS1 Information - No Results`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(
+        offenderDetails.otherIds.crn,
+        offenderDetails.otherIds.nomsNumber,
+        START_DATE,
+        END_DATE,
+      )
 
     assertNull(result)
   }
@@ -56,7 +61,12 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
     val result =
-      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(
+        offenderDetails.otherIds.crn,
+        offenderDetails.otherIds.nomsNumber,
+        START_DATE,
+        END_DATE,
+      )
     assertNotNull(result)
 
     val expectedJson = """
@@ -66,7 +76,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "Assessments": [],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
-        "OfflineApplications":  [],
         "Appeals": [],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -101,7 +110,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "Assessments": [],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
-        "OfflineApplications":  [],
         "Appeals": [],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -126,7 +134,12 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     val assessment = approvedPremisesAssessmentEntity(application)
 
     val result =
-      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(
+        offenderDetails.otherIds.crn,
+        offenderDetails.otherIds.nomsNumber,
+        START_DATE,
+        END_DATE,
+      )
 
     assertNotNull(result)
 
@@ -137,7 +150,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
-        "OfflineApplications":  [],
         "Appeals": [],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -158,7 +170,12 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     val clarificationNote = approvedPremisesAssessmentClarificationNoteEntity(assessment)
 
     val result =
-      cas1SarService.getSarResult(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+      cas1SarService.getSarResult(
+        offenderDetails.otherIds.crn,
+        offenderDetails.otherIds.nomsNumber,
+        START_DATE,
+        END_DATE,
+      )
 
     assertNotNull(result)
 
@@ -167,11 +184,12 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
        "ApplicationTimeline" :[],
        "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
-       "AssessmentClarificationNotes": [${approvedPremisesAssessmentClarificationNoteJson(
-      clarificationNote,
-    )}],
+       "AssessmentClarificationNotes": [${
+      approvedPremisesAssessmentClarificationNoteJson(
+        clarificationNote,
+      )
+    }],
        "SpaceBookings": [],
-       "OfflineApplications":  [],
        "Appeals": [],
        "PlacementApplications": [],
        "PlacementRequests": [],
@@ -222,47 +240,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "Assessments": [],
       "AssessmentClarificationNotes": [],
       "SpaceBookings":  [ ${spaceBookingsJson(booking)} ],
-      "OfflineApplications":  [],
-      "Appeals": [],
-      "PlacementApplications": [],
-      "PlacementRequests": [],
-      "PlacementRequirements": [],
-      "PlacementRequirementCriteria" : [],
-      "BookingNotMades" : [],
-      "DomainEvents": []
-    }
-    """.trimIndent()
-
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
-  fun `Get CAS1 information - have a space booking with offline application`() {
-    val (offenderDetails, _) = givenAnOffender()
-    val offlineApplication = offlineApplicationEntity(offenderDetails)
-    val booking = spaceBookingEntity(
-      offenderDetails = offenderDetails,
-      offlineApplication = offlineApplication,
-    )
-
-    val result =
-      cas1SarService.getSarResult(
-        offenderDetails.otherIds.crn,
-        offenderDetails.otherIds.nomsNumber,
-        START_DATE,
-        END_DATE,
-      )
-
-    assertNotNull(result)
-
-    val expectedJson = """
-    {        
-      "Applications": [],
-      "ApplicationTimeline" : [],
-      "Assessments": [],
-      "AssessmentClarificationNotes": [],
-      "SpaceBookings":  [ ${spaceBookingsJson(booking)} ],
-      "OfflineApplications": [${offlineApplicationForSpaceBookingJson()}],
       "Appeals": [],
       "PlacementApplications": [],
       "PlacementRequests": [],
@@ -295,7 +272,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
-        "OfflineApplications":  [],
         "Appeals":[ ${appealsJson(appeal)}],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -327,7 +303,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "Assessments": [],
       "AssessmentClarificationNotes": [],
       "SpaceBookings": [],
-      "OfflineApplications":  [],
       "Appeals": [],
       "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
       "PlacementRequests": [],
@@ -360,7 +335,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "ApplicationTimeline" :[],
         "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
         "AssessmentClarificationNotes": [],
-        "OfflineApplications":  [],    
         "SpaceBookings":  [],    
         "Appeals": [],
         "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
@@ -395,8 +369,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "ApplicationTimeline" :[],
       "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
       "AssessmentClarificationNotes": [],
-      "SpaceBookings":  [],    
-      "OfflineApplications":  [],    
+      "SpaceBookings":  [],     
       "Appeals": [],
       "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
       "PlacementRequests": [${approvedPremisesPlacementRequestsJson(placementRequest)}],
@@ -417,7 +390,13 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     val application = approvedPremisesApplicationEntity(offender)
     val assessment = approvedPremisesAssessmentEntity(application)
     val user = userEntity()
-    val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
+    val domainEvent = domainEventEntity(
+      offender,
+      application.id,
+      assessment.id,
+      user.id,
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+    )
     val result = cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
@@ -428,15 +407,14 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "ApplicationTimeline" :[],
         "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
         "AssessmentClarificationNotes": [],
-        "SpaceBookings": [],
-        "OfflineApplications":  [],    
+        "SpaceBookings": [], 
         "Appeals": [],
         "PlacementApplications": [],
         "PlacementRequests": [],
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
         "BookingNotMades": [],
-        "DomainEvents": [${domainEventJson(domainEvent,user)}]
+        "DomainEvents": [${domainEventJson(domainEvent, user)}]
       }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -603,13 +581,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       {
         "created_at": "$CREATED_AT_NO_TZ",
         "notes": "${bookingNotMade.notes}"
-      }
-    """.trimIndent()
-
-  private fun offlineApplicationForSpaceBookingJson() =
-    """
-      {
-        "created_at":"$CREATED_AT"
       }
     """.trimIndent()
 }
