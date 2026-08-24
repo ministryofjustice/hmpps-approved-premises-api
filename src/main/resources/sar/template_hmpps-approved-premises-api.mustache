@@ -445,14 +445,6 @@
             <p>No Data Held</p>
         {{/PlacementRequirements}}
 
-        <h3>Offline Applications</h3>
-        {{#OfflineApplications}}
-            <table class="summary-list">{{#each .}}<tr><td>{{ @key }}</td><td>{{ this }}</td></tr>{{/each}}</table><br/>
-        {{/OfflineApplications}}
-        {{^OfflineApplications}}
-            <p>No Data Held</p>
-        {{/OfflineApplications}}
-
         <h3>Placement Requests</h3>
         {{#PlacementRequests}}
             <h4>Placement Request</h4>

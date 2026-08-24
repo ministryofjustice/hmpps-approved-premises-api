@@ -116,7 +116,6 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     appealTestRepository.deleteAll()
     approvedPremisesAssessmentRepository.deleteAll()
     approvedPremisesApplicationRepository.deleteAll()
-    offlineApplicationRepository.deleteAll()
     domainEventRepository.deleteAll()
     bedRepository.deleteAll()
     roomRepository.deleteAll()
@@ -158,8 +157,6 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       data = CAS1_APPLICATION_DATA,
       document = CAS1_APPLICATION_DOCUMENT,
     )
-
-    offlineApplicationEntity(offenderDetails)
 
     val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
 
