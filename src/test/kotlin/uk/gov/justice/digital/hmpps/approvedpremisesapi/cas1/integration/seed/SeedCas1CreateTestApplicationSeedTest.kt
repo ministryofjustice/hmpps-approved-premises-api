@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1ApplicationSeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CreateTestApplicationsSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -14,8 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulV3TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import java.time.LocalDateTime
+import java.util.UUID
 
 class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
 
@@ -29,6 +34,15 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
     apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn, ManagingTeamsResponse(teamCodes = listOf("TEAM1")))
     apAndOASysMockSuccessfulNeedsDetailsCall(crn, NeedsDetailsFactory().produce())
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+    val tier = Tier(
+      tierScore = "A1",
+      calculationId = UUID.randomUUID(),
+      calculationDate = LocalDateTime.now(),
+      changeReason = "Change Reason",
+    )
+    hmppsTierMockSuccessfulTierCall(crn, tier)
+    hmppsTierMockSuccessfulV3TierCall(crn, tier)
 
     val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 

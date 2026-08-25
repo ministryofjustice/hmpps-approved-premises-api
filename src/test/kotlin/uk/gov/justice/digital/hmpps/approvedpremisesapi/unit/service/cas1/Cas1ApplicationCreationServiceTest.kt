@@ -17,7 +17,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpStatus
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -28,9 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
@@ -41,15 +37,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
@@ -86,8 +79,6 @@ class Cas1ApplicationCreationServiceTest {
   private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockCas1AssessmentService = mockk<Cas1AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
-  private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
   private val mockJsonMapper = mockk<JsonMapper>()
   private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
@@ -105,8 +96,6 @@ class Cas1ApplicationCreationServiceTest {
     mockOffenderRisksService,
     mockCas1AssessmentService,
     mockOfflineApplicationRepository,
-    mockApDeliusContextApiClient,
-    mockApplicationTeamCodeRepository,
     mockJsonMapper,
     mockApAreaRepository,
     mockCas1ApplicationDomainEventService,
@@ -120,112 +109,6 @@ class Cas1ApplicationCreationServiceTest {
     mockCaseService,
     mockOffenderDetailService,
   )
-
-  @Nested
-  inner class CreateApprovedPremisesApplication {
-
-    @Test
-    fun `Returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
-      val crn = "CRN345"
-      val username = "SOMEPERSON"
-
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .produce()
-
-      val user = userWithUsername(username)
-
-      every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
-        HttpStatus.OK,
-        ManagingTeamsResponse(
-          teamCodes = listOf("TEAMCODE"),
-        ),
-      )
-
-      val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, null, null, null)
-
-      assertThatCasResult(result).isFieldValidationError()
-        .hasMessage("$.convictionId", "empty")
-        .hasMessage("$.deliusEventNumber", "empty")
-        .hasMessage("$.offenceId", "empty")
-    }
-
-    @Test
-    fun `Returns Success with created Application, persists Risk data and Offender name`() {
-      val crn = "CRN345"
-      val username = "SOMEPERSON"
-
-      val user = userWithUsername(username)
-
-      every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
-        HttpStatus.OK,
-        ManagingTeamsResponse(
-          teamCodes = listOf("TEAMCODE"),
-        ),
-      )
-
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .produce()
-
-      val cas1OffenderEntityId = UUID.randomUUID()
-
-      val caseDto = CaseDto(
-        crn = "CRN345",
-        nomsNumber = "nomsNo",
-        name = "name",
-        tier = TierDtoFactory().withVersion(TierVersionDto.V2).produce(),
-        createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
-        lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
-      )
-
-      every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
-      every { mockCaseService.ensureCaseExists(any()) } returns caseDto
-
-      val riskRatings = PersonRisksFactory()
-        .withRoshRisks(
-          RiskWithStatus(
-            value = RoshRisks(
-              overallRisk = "High",
-              riskToChildren = "Medium",
-              riskToPublic = "Low",
-              riskToKnownAdult = "High",
-              riskToStaff = "High",
-              lastUpdated = null,
-            ),
-          ),
-        )
-        .withMappa(
-          RiskWithStatus(
-            value = Mappa(
-              level = "",
-              lastUpdated = LocalDate.parse("2022-12-12"),
-            ),
-          ),
-        )
-        .withFlags(
-          RiskWithStatus(
-            value = listOf(
-              "flag1",
-              "flag2",
-            ),
-          ),
-        )
-        .produce()
-
-      every { mockCaseService.ensureCaseExists(crn) } returns caseDto
-      every { mockOffenderRisksService.getPersonRisks(caseDto) } returns riskRatings
-
-      val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, 123, "1", "A12HI")
-
-      assertThatCasResult(result).isSuccess().with {
-        val approvedPremisesApplication = it
-        assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
-        assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
-      }
-    }
-  }
 
   @Nested
   inner class CreateApprovedPremisesEligibleApplication {

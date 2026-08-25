@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -55,7 +54,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1CreateApplicationLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
@@ -195,42 +193,6 @@ class Cas1ApplicationsController(
         ),
       )
     }
-  }
-
-  @Operation(
-    summary = "Creates an application",
-  )
-  @PostMapping("/applications")
-  @Transactional
-  fun createApplication(
-    @RequestBody body: NewApplication,
-  ): ResponseEntity<ApprovedPremisesApplication> {
-    val user = userService.getUserForRequest()
-
-    val personInfo =
-      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.cas1CreateApplicationLaoStrategy())) {
-        is PersonInfoResult.NotFound -> throw NotFoundProblem(
-          personInfoResult.crn,
-          "Offender",
-        )
-
-        is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
-        is PersonInfoResult.Success.Full -> personInfoResult
-      }
-
-    val applicationResult = cas1ApplicationCreationService.createApprovedPremisesApplication(
-      personInfo.offenderDetailSummary,
-      user,
-      body.convictionId,
-      body.deliusEventNumber,
-      body.offenceId,
-    )
-
-    val application = extractEntityFromCasResult(applicationResult)
-
-    return ResponseEntity
-      .created(URI.create("/cas1/applications/${application.id}"))
-      .body(applicationsTransformer.transformCas1JpaToApi(application, personInfo))
   }
 
   @Operation(

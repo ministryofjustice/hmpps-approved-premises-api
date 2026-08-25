@@ -193,9 +193,9 @@ class Cas1ApplicationSeedService(
     val personInfo = cache.getPersonInfo(crn)
     val createdByUser = (userService.getExistingUserOrCreate(deliusUserName) as GetUserResponse.Success).user
 
-    val newApplicationEntity = extractEntityFromCasResult(
-      cas1ApplicationCreationService.createApprovedPremisesApplication(
-        offenderDetails = personInfo.offenderDetailSummary,
+    val newApplication = extractEntityFromCasResult(
+      cas1ApplicationCreationService.createApplication(
+        crn = personInfo.offenderDetailSummary.otherIds.crn,
         user = createdByUser,
         convictionId = 2500295345,
         deliusEventNumber = "2",
@@ -205,7 +205,7 @@ class Cas1ApplicationSeedService(
 
     val updatedApplication = extractEntityFromCasResult(
       cas1ApplicationCreationService.updateApplication(
-        applicationId = newApplicationEntity.id,
+        applicationId = newApplication.applicationId,
         updateFields = Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
           isWomensApplication = false,
           isEmergencyApplication = false,
@@ -222,7 +222,7 @@ class Cas1ApplicationSeedService(
     )
 
     cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(
-      applicationId = newApplicationEntity.id,
+      applicationId = newApplication.applicationId,
       note = "Application automatically created by Cas1 Seeding",
       user = null,
     )
