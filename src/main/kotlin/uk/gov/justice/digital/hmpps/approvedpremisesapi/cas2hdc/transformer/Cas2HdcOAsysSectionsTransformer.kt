@@ -9,10 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskTo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummaryInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
 @Service
-class Cas2HdcOAsysSectionsTransformer(val featureFlagService: FeatureFlagService) {
+class Cas2HdcOAsysSectionsTransformer {
   fun transformRiskToIndividual(
     risksToTheIndividual: RisksToTheIndividual,
   ): OASysRiskToSelf = OASysRiskToSelf(
@@ -33,20 +32,10 @@ class Cas2HdcOAsysSectionsTransformer(val featureFlagService: FeatureFlagService
     rosh = roshSummaryAnswers(roshSummary.roshSummary),
   )
 
-  private fun oldRiskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
-    OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual?.currentConcernsSelfHarmSuicide),
-    OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual?.currentVulnerability),
-    OASysQuestion("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual?.previousConcernsSelfHarmSuicide),
-  )
-
-  private fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = if (cas2UseNewQuestions()) {
-    if (risksToTheIndividual.isPreNod1057()) {
-      riskToSelfAnswersPreNod1057(risksToTheIndividual)
-    } else {
-      riskToSelfAnswersPostNod1057(risksToTheIndividual)
-    }
+  private fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = if (risksToTheIndividual.isPreNod1057()) {
+    riskToSelfAnswersPreNod1057(risksToTheIndividual)
   } else {
-    oldRiskToSelfAnswers(risksToTheIndividual)
+    riskToSelfAnswersPostNod1057(risksToTheIndividual)
   }
 
   private fun riskToSelfAnswersPostNod1057(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
@@ -71,8 +60,6 @@ class Cas2HdcOAsysSectionsTransformer(val featureFlagService: FeatureFlagService
   } else {
     answer1 ?: answer2
   }
-
-  private fun cas2UseNewQuestions() = featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions")
 
   private fun RiskToTheIndividualInner?.isPreNod1057() = this?.currentConcernsSelfHarmSuicide != null ||
     this?.previousConcernsSelfHarmSuicide != null ||

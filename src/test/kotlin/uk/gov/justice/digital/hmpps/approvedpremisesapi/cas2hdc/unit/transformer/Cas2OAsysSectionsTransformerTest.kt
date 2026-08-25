@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.unit.transformer
 
-import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -15,202 +13,114 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcOAsysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
 @ExtendWith(MockKExtension::class)
 class Cas2OAsysSectionsTransformerTest {
-
-  @MockK
-  lateinit var featureFlagService: FeatureFlagService
 
   @InjectMockKs
   lateinit var transformer: Cas2HdcOAsysSectionsTransformer
 
   @Nested
   inner class RiskToIndividual {
+    @ParameterizedTest
+    @CsvSource(
+      nullValues = [ "null" ],
+      value = [
+        "currentConcernsSelfHarmSuicideAnswer,previousConcernsSelfHarmSuicideAnswer,'previousConcernsSelfHarmSuicideAnswer\n\ncurrentConcernsSelfHarmSuicideAnswer'",
+        "currentConcernsSelfHarmSuicideAnswer,null,currentConcernsSelfHarmSuicideAnswer",
+        "null,previousConcernsSelfHarmSuicideAnswer,previousConcernsSelfHarmSuicideAnswer",
+      ],
+    )
+    fun `transforms correctly, pre NOD 1057 assessment`(
+      currentConcernsSelfHarmSuicideAnswer: String?,
+      previousConcernsSelfHarmSuicideAnswer: String?,
+      combinedAnswer: String,
+    ) {
+      val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
+        withCurrentConcernsSelfHarmSuicide(currentConcernsSelfHarmSuicideAnswer)
+        withPreviousConcernsSelfHarmSuicide(previousConcernsSelfHarmSuicideAnswer)
+        withCurrentVulnerability("currentVulnerabilityAnswer")
+      }.produce()
 
-    @Nested
-    inner class FeatureFlagFalse {
+      val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
 
-      @Test
-      fun `transforms correctly`() {
-        every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns false
+      assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
+      assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
+      assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
+      assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
 
-        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
-          withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicideAnswer")
-          withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicideAnswer")
-          withCurrentVulnerability("currentVulnerabilityAnswer")
-        }.produce()
-
-        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
-        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
-        assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
-
-        assertThat(result.riskToSelf).containsExactly(
-          OASysQuestion(
-            label = "Current concerns about self-harm or suicide",
-            questionNumber = "R8.1.1",
-            answer = "currentConcernsSelfHarmSuicideAnswer",
-          ),
-          OASysQuestion(
-            label = "Current concerns about Vulnerability",
-            questionNumber = "R8.3.1",
-            answer = "currentVulnerabilityAnswer",
-          ),
-          OASysQuestion(
-            label = "Previous concerns about self-harm or suicide",
-            questionNumber = "R8.1.4",
-            answer = "previousConcernsSelfHarmSuicideAnswer",
-          ),
-        )
-      }
-
-      @Test
-      fun `transforms correctly, no answers`() {
-        every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns false
-
-        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
-          withCurrentConcernsSelfHarmSuicide(null)
-          withPreviousConcernsSelfHarmSuicide(null)
-          withCurrentVulnerability(null)
-        }.produce()
-
-        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
-        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
-        assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
-
-        assertThat(result.riskToSelf).containsExactly(
-          OASysQuestion(
-            label = "Current concerns about self-harm or suicide",
-            questionNumber = "R8.1.1",
-            answer = null,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Vulnerability",
-            questionNumber = "R8.3.1",
-            answer = null,
-          ),
-          OASysQuestion(
-            label = "Previous concerns about self-harm or suicide",
-            questionNumber = "R8.1.4",
-            answer = null,
-          ),
-        )
-      }
+      assertThat(result.riskToSelf).containsExactly(
+        OASysQuestion(
+          label = "Analysis of current or previous self-harm and/or suicide concerns",
+          questionNumber = "FA62",
+          answer = combinedAnswer,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = "currentVulnerabilityAnswer",
+        ),
+      )
     }
 
-    @Nested
-    inner class FeatureFlagTrue {
-      @ParameterizedTest
-      @CsvSource(
-        nullValues = [ "null" ],
-        value = [
-          "currentConcernsSelfHarmSuicideAnswer,previousConcernsSelfHarmSuicideAnswer,'previousConcernsSelfHarmSuicideAnswer\n\ncurrentConcernsSelfHarmSuicideAnswer'",
-          "currentConcernsSelfHarmSuicideAnswer,null,currentConcernsSelfHarmSuicideAnswer",
-          "null,previousConcernsSelfHarmSuicideAnswer,previousConcernsSelfHarmSuicideAnswer",
-        ],
+    @Test
+    fun `transforms correctly, post NOD 1057 assessment`() {
+      val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
+        withCurrentConcernsSelfHarmSuicide(null)
+        withCurrentVulnerability(null)
+        withPreviousConcernsSelfHarmSuicide(null)
+        withAnalysisSuicideSelfharm("analysisSuicideSelfHarmAnswer")
+        withAnalysisVulnerabilities("analysisVulnerabilitiesAnswer")
+      }.produce()
+
+      val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
+
+      assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
+      assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
+      assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
+      assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
+
+      assertThat(result.riskToSelf).containsExactly(
+        OASysQuestion(
+          label = "Analysis of current or previous self-harm and/or suicide concerns",
+          questionNumber = "FA62",
+          answer = "analysisSuicideSelfHarmAnswer",
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = "analysisVulnerabilitiesAnswer",
+        ),
       )
-      fun `transforms correctly, pre NOD 1057 assessment`(
-        currentConcernsSelfHarmSuicideAnswer: String?,
-        previousConcernsSelfHarmSuicideAnswer: String?,
-        combinedAnswer: String,
-      ) {
-        every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
+    }
 
-        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
-          withCurrentConcernsSelfHarmSuicide(currentConcernsSelfHarmSuicideAnswer)
-          withPreviousConcernsSelfHarmSuicide(previousConcernsSelfHarmSuicideAnswer)
-          withCurrentVulnerability("currentVulnerabilityAnswer")
-        }.produce()
+    @Test
+    fun `transforms correctly, no answers`() {
+      val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
+        withCurrentConcernsSelfHarmSuicide(null)
+        withPreviousConcernsSelfHarmSuicide(null)
+        withCurrentVulnerability(null)
+      }.produce()
 
-        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
+      val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
 
-        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
-        assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
+      assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
+      assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
+      assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
+      assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
 
-        assertThat(result.riskToSelf).containsExactly(
-          OASysQuestion(
-            label = "Analysis of current or previous self-harm and/or suicide concerns",
-            questionNumber = "FA62",
-            answer = combinedAnswer,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Vulnerability",
-            questionNumber = "R8.3.1",
-            answer = "currentVulnerabilityAnswer",
-          ),
-        )
-      }
-
-      @Test
-      fun `transforms correctly, post NOD 1057 assessment`() {
-        every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
-
-        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
-          withCurrentConcernsSelfHarmSuicide(null)
-          withCurrentVulnerability(null)
-          withPreviousConcernsSelfHarmSuicide(null)
-          withAnalysisSuicideSelfharm("analysisSuicideSelfHarmAnswer")
-          withAnalysisVulnerabilities("analysisVulnerabilitiesAnswer")
-        }.produce()
-
-        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
-
-        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
-        assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
-
-        assertThat(result.riskToSelf).containsExactly(
-          OASysQuestion(
-            label = "Analysis of current or previous self-harm and/or suicide concerns",
-            questionNumber = "FA62",
-            answer = "analysisSuicideSelfHarmAnswer",
-          ),
-          OASysQuestion(
-            label = "Current concerns about Vulnerability",
-            questionNumber = "R8.3.1",
-            answer = "analysisVulnerabilitiesAnswer",
-          ),
-        )
-      }
-
-      @Test
-      fun `transforms correctly, no answers`() {
-        every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
-
-        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
-          withCurrentConcernsSelfHarmSuicide(null)
-          withPreviousConcernsSelfHarmSuicide(null)
-          withCurrentVulnerability(null)
-        }.produce()
-
-        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
-
-        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
-        assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
-
-        assertThat(result.riskToSelf).containsExactly(
-          OASysQuestion(
-            label = "Analysis of current or previous self-harm and/or suicide concerns",
-            questionNumber = "FA62",
-            answer = null,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Vulnerability",
-            questionNumber = "R8.3.1",
-            answer = null,
-          ),
-        )
-      }
+      assertThat(result.riskToSelf).containsExactly(
+        OASysQuestion(
+          label = "Analysis of current or previous self-harm and/or suicide concerns",
+          questionNumber = "FA62",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = null,
+        ),
+      )
     }
   }
 
