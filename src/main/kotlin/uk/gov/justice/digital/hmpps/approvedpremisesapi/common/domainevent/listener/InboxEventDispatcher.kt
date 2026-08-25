@@ -80,13 +80,15 @@ class InboxEventDispatcher(
     log.debug("Partitioned into {} groups", partitions.size)
 
     coroutineScope {
-      partitions.map { (_, events) ->
-        async(Dispatchers.IO) {
-          concurrencyLimit.withPermit {
-            events.forEach { dispatchEvent(it, progressTracker) }
+      partitions.entries
+        .chunked(20)
+        .map { chunk ->
+          async(Dispatchers.IO) {
+            concurrencyLimit.withPermit {
+              //bulk process chunk
+            }
           }
-        }
-      }.awaitAll()
+        }.awaitAll()
     }
 
     log.info(

@@ -488,6 +488,83 @@ class CaseServiceTest {
   }
 
   @Nested
+  inner class BulkReviseTiers {
+    @Test
+    fun `should bulk update tiers for CRNs (V2 or V3)`() {
+      val v2CrnList = listOf("CRN123", "CRN234")
+      val v3CrnList = listOf("CRN345", "CRN456", "CRN567")
+
+//      val caseEntity = (v2CrnList + v3CrnList).CaseEntityFactory()
+//        .withCrn(crn)
+//        .produce()
+
+//      every { mockCaseRepository.findByCrn(crn) } returns caseEntity
+//      every { mockCaseRepository.save(any()) } returns caseEntity
+//      every { mockTierService.fetchTierOrError(crn, TierVersion.V2) } returns TierFactory()
+//        .withTierScore("V2_NEW")
+//        .withVersion(TierVersion.V2)
+//        .produce()
+//      every { mockTierService.fetchTierOrError(crn, TierVersion.V3) } returns TierFactory()
+//        .withTierScore("V3_NEW")
+//        .withVersion(TierVersion.V3)
+//        .produce()
+
+      val result = service.bulkReviseTiers(v2CrnList, v3CrnList)
+
+      assertThat(result).isTrue()
+//      verify { mockTierService.fetchTierOrError(crn, TierVersion.V2) }
+//      verify { mockTierService.fetchTierOrError(crn, TierVersion.V3) }
+//      verify {
+//        mockCaseRepository.save(
+//          match {
+//            it.tierV2?.tierScore == "V2_NEW" && it.tierV3?.tierScore == "V3_NEW"
+//          },
+//        )
+//      }
+    }
+
+//    @Test
+//    fun `should return false if case does not exist`() {
+//      val crn = "CRN123"
+//      every { mockCaseRepository.findByCrn(crn) } returns null
+//
+//      val result = service.reviseTier(crn)
+//
+//      assertThat(result).isFalse()
+//    }
+//
+//    @Test
+//    fun `should throw exception if fetch fails`() {
+//      val crn = "CRN123"
+//      val caseEntity = CaseEntityFactory().withCrn(crn).produce()
+//
+//      every { mockCaseRepository.findByCrn(crn) } returns caseEntity
+//      every { mockTierService.fetchTierOrError(crn, any()) } throws RuntimeException("error")
+//
+//      assertThatThrownBy {
+//        service.reviseTier(crn)
+//      }.isInstanceOf(RuntimeException::class.java)
+//    }
+//
+//    @Test
+//    fun `should uppercase CRN when revising tier`() {
+//      val crn = "crn123"
+//      val uppercasedCrn = "CRN123"
+//      val caseEntity = CaseEntityFactory().withCrn(uppercasedCrn).produce()
+//
+//      every { mockCaseRepository.findByCrn(uppercasedCrn) } returns caseEntity
+//      every { mockTierService.fetchTierOrError(uppercasedCrn, any()) } throws RuntimeException("error")
+//
+//      assertThatThrownBy {
+//        service.reviseTier(crn)
+//      }.isInstanceOf(RuntimeException::class.java)
+//
+//      verify { mockCaseRepository.findByCrn(uppercasedCrn) }
+//      verify { mockTierService.fetchTierOrError(uppercasedCrn, TierVersion.V2) }
+//    }
+  }
+
+  @Nested
   inner class GetCase {
 
     @Test

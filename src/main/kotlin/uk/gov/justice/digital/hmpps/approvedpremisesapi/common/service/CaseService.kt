@@ -97,6 +97,32 @@ class CaseService(
     return true
   }
 
+  fun bulkReviseTiers(crnList: VersionedCaseList): Boolean {
+    val existingCases = caseRepository.findByCrnIn(crnList.crnList)
+    if (existingCases.isEmpty()) return false
+
+    val updatedTiers = tierService.fetchTiersOrError(crnList)
+
+    updatedTiers.forEach { (crn, updatedTier) ->
+      val existingCase = existingCases.firstOrNull() { it.crn == crn } ?: error("Case not found for CRN $crn")
+      when (updatedTier?.version) {
+        TierVersion.V2 -> existingCase.tierV2 = updatedTier
+        TierVersion.V3 -> existingCase.tierV3 = updatedTier
+        else -> {
+          log.warn("No tier version found for $crn, skipping update")
+        }
+      }
+    }
+
+    caseRepository.saveAll(existingCases)
+    return true
+  }
+
+  data class VersionedCaseList(
+    val crnList : List<String>,
+    val version : TierVersion,
+  )
+
   /**
    * Get a case by CRN. Note that a case must have been previously registered via
    * a call to [ensureCaseExists] to be returned here. If a case isn't found an

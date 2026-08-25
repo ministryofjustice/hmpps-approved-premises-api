@@ -83,6 +83,11 @@ class TierService(
     is ClientResult.Failure -> throw response.toException()
   }
 
+  fun fetchTiersOrError(crnList: CaseService.VersionedCaseList) = when (val response = hmppsTierApiClient.getTiers(crnList)) {
+    is ClientResult.Success -> response.body.mapValues { it.value?.toTier(crnList.version) }
+    is ClientResult.Failure -> throw response.toException()
+  }
+
   private fun UpstreamTier.toTier(tierVersion: TierVersion) = Tier(
     tierScore = tierScore,
     calculationId = calculationId,

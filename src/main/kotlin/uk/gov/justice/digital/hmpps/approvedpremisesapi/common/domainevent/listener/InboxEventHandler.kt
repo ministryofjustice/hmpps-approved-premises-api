@@ -35,6 +35,15 @@ interface InboxEventHandler {
    */
   fun handle(inboxEvent: InboxEvent): Result
 
+  /**
+   * Process a list of inbox events. Should run in its own transaction to make success or failure isolated per
+   * list of events. This function should be idempotent.
+   *
+   * Exceptions should be thrown to indicate failures that require manual intervention (in this case
+   * the event will be marked as `FAILED` and an alert will be raised)
+   */
+  fun handle(inboxEvents: List<InboxEvent>): Result
+
   enum class Result {
     PROCESSED,
     IGNORED,

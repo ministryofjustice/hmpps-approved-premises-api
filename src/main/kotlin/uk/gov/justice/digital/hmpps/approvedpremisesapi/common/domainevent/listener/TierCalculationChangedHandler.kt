@@ -29,5 +29,14 @@ class TierCalculationChangedHandler(
     }
   }
 
+  override fun handleBulk(inboxEvent: InboxEventHandler.InboxEvent): InboxEventHandler.Result {
+    val crn = inboxEvent.extractCrn()
+
+    return when (caseService.reviseTier(crn!!)) {
+      true -> InboxEventHandler.Result.PROCESSED
+      false -> InboxEventHandler.Result.IGNORED
+    }
+  }
+
   private fun InboxEventHandler.InboxEvent.extractCrn() = jsonMapper.readValue<HmppsDomainEvent>(this.payload).personReference.findCrn()
 }
