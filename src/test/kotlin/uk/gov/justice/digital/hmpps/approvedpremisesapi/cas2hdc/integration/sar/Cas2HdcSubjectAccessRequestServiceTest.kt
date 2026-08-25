@@ -4,12 +4,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar.Cas2SarTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcSubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
 class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
@@ -57,8 +54,7 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "ApplicationNotes": [],
       "Assessments": [],
       "StatusUpdates": [],
-      "StatusUpdateDetails": [],
-      "DomainEvents":  []
+      "StatusUpdateDetails": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -87,8 +83,7 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "ApplicationNotes": [],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [],
-      "StatusUpdateDetails": [],
-      "DomainEvents":  []
+      "StatusUpdateDetails": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -119,9 +114,7 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [],
-      "StatusUpdateDetails": [],
-      "DomainEvents":  []
-
+      "StatusUpdateDetails": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -154,53 +147,9 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
       "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
-      "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents":  []
-      
+      "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
   }
-
-  @Test
-  fun `Get CAS2 Information - Domain Events`() {
-    val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity()
-    val assessor = cas2ExternalUserEntity()
-    val application = cas2ApplicationEntity(offenderDetails, user)
-    val assessment = cas2AssessmentEntity(application)
-
-    val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
-    val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
-    val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, DomainEventType.CAS2_APPLICATION_SUBMITTED, ServiceName.cas2)
-
-    val result = cas2HdcSubjectAccessRequestService.getSarResult(
-      offenderDetails.otherIds.crn,
-      offenderDetails.otherIds.nomsNumber,
-      START_DATE,
-      END_DATE,
-    )
-
-    assertNotNull(result)
-
-    val expectedJson = """
-   {
-      "Applications": [${cas2ApplicationsJson(application)}],
-      "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
-      "Assessments": [${cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
-      "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents": [${domainEventJson(domainEvent)}]
-   }
-    """.trimIndent()
-    assertJsonEquals(expectedJson, result)
-  }
-
-  fun domainEventJson(domainEvent: DomainEventEntity): String = """
-      {
-        "type": "${domainEvent.type}",
-        "occurred_at": "$ALLOCATED_AT",
-        "created_at": "$CREATED_AT" }
-  """.trimIndent()
 }

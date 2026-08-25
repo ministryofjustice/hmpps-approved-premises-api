@@ -18,7 +18,6 @@ class Cas2HdcSubjectAccessRequestService(
     val statusUpdateDetailsJson =
       cas2HdcSubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
     val assessmentsJson = cas2HdcSubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val domainEventsJson = cas2HdcSubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2")
 
     if (listOf(
         applicationsJson,
@@ -26,8 +25,6 @@ class Cas2HdcSubjectAccessRequestService(
         statusUpdatesJson,
         statusUpdateDetailsJson,
         assessmentsJson,
-        domainEventsJson,
-
       ).all { it == null }
     ) {
       return null
@@ -39,8 +36,7 @@ class Cas2HdcSubjectAccessRequestService(
          "ApplicationNotes": ${ applicationNotesJson ?: "[]"},
          "Assessments": ${ assessmentsJson ?: "[]"},
          "StatusUpdates": ${ statusUpdatesJson ?: "[]"},
-         "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
+         "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"}
       }
     """.trimIndent()
 

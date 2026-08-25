@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
@@ -81,8 +80,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequests": [],
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
-        "BookingNotMades" : [],
-        "DomainEvents": []
+        "BookingNotMades" : []
     }
     """.trimIndent()
 
@@ -115,8 +113,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequests": [],
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
-        "BookingNotMades" : [],
-        "DomainEvents": []
+        "BookingNotMades" : []
     }
     """.trimIndent()
 
@@ -155,8 +152,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequests": [],
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
-        "BookingNotMades" : [],
-        "DomainEvents": []
+        "BookingNotMades" : []
     }
     """
     assertJsonEquals(expectedJson, result)
@@ -195,8 +191,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
        "PlacementRequests": [],
        "PlacementRequirements": [],
        "PlacementRequirementCriteria" : [],
-       "BookingNotMades" : [],
-       "DomainEvents": []
+       "BookingNotMades" : []
     }
     """.trimIndent()
 
@@ -245,8 +240,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "PlacementRequests": [],
       "PlacementRequirements": [],
       "PlacementRequirementCriteria" : [],
-      "BookingNotMades" : [],
-      "DomainEvents": []
+      "BookingNotMades" : []
     }
     """.trimIndent()
 
@@ -277,8 +271,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequests": [],
         "PlacementRequirements": [],
         "PlacementRequirementCriteria" : [],
-        "BookingNotMades" : [],
-        "DomainEvents": []
+        "BookingNotMades" : []
     }
     """.trimIndent()
 
@@ -308,8 +301,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "PlacementRequests": [],
       "PlacementRequirements": [],
       "PlacementRequirementCriteria" : [],
-      "BookingNotMades" : [],
-      "DomainEvents": []
+      "BookingNotMades" : []
     }
     """.trimIndent()
 
@@ -341,8 +333,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "PlacementRequests": [${approvedPremisesPlacementRequestsJson(placementRequest)}],
         "PlacementRequirements": [${placementRequirementJson(placementRequest.placementRequirements)}],
         "PlacementRequirementCriteria" : [${placementRequirementCriteriaJson(placementRequest.placementRequirements)}],
-        "BookingNotMades" : [],
-        "DomainEvents": []
+        "BookingNotMades" : []
     }
     """.trimIndent()
 
@@ -375,48 +366,10 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       "PlacementRequests": [${approvedPremisesPlacementRequestsJson(placementRequest)}],
       "PlacementRequirements": [${placementRequirementJson(placementRequest.placementRequirements)}],
       "PlacementRequirementCriteria" : [${placementRequirementCriteriaJson(placementRequest.placementRequirements)}],
-      "BookingNotMades": [${bookingsNotMadeJson(bookingNotMade)}],
-      "DomainEvents": []
+      "BookingNotMades": [${bookingsNotMadeJson(bookingNotMade)}]
     }
     """.trimIndent()
 
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
-  fun `get CAS1 information - Domain Events`() {
-    val (offender, _) = givenAnOffender()
-
-    val application = approvedPremisesApplicationEntity(offender)
-    val assessment = approvedPremisesAssessmentEntity(application)
-    val user = userEntity()
-    val domainEvent = domainEventEntity(
-      offender,
-      application.id,
-      assessment.id,
-      user.id,
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-    )
-    val result = cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
-
-    assertNotNull(result)
-
-    val expectedJson = """
-      {
-        "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
-        "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(assessment)}],
-        "AssessmentClarificationNotes": [],
-        "SpaceBookings": [], 
-        "Appeals": [],
-        "PlacementApplications": [],
-        "PlacementRequests": [],
-        "PlacementRequirements": [],
-        "PlacementRequirementCriteria" : [],
-        "BookingNotMades": [],
-        "DomainEvents": [${domainEventJson(domainEvent, user)}]
-      }
-    """.trimIndent()
     assertJsonEquals(expectedJson, result)
   }
 
