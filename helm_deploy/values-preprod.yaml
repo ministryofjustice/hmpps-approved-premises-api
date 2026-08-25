@@ -105,6 +105,8 @@ generic-service:
     FEATURE-FLAGS_ISR-EMAIL-CHANGES-ENABLED: true
     FEATURE-FLAGS_ISR-CAS1-EMAIL-CHANGES-ENABLED: false
 
+    DOMAIN-EVENTS_INBOX_DISPATCHER_MAX-EVENTS-PER-BATCH: 30
+
   namespace_secrets:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
