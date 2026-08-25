@@ -399,8 +399,12 @@ class Cas1SimpleApiClient {
     integrationTestBase: IntegrationTestBase,
     premisesId: UUID,
     bookingId: UUID,
-    departureDateTime: Instant,
+    departureDateTime: Instant? = null,
+    departureDate: LocalDate? = null,
+    departureTime: LocalTime? = null,
     reasonId: UUID,
+    moveOnCategoryId: UUID? = null,
+    notes: String? = null,
   ) {
     val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)).second
 
@@ -411,6 +415,10 @@ class Cas1SimpleApiClient {
         Cas1NewDeparture(
           reasonId = reasonId,
           departureDateTime = departureDateTime,
+          departureDate = departureDate,
+          departureTime = departureTime?.toString(),
+          moveOnCategoryId = moveOnCategoryId,
+          notes = notes,
         ),
       )
       .exchange()
