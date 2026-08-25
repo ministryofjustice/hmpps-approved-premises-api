@@ -82,7 +82,7 @@ class Cas2ReportsService(
     Cas2Cohort.HEFR -> "Homeless at end of fixed-term recall"
     Cas2Cohort.ISC -> "Intensive supervision courts"
     Cas2Cohort.RARR -> "Risk Assessed Recall Review"
-    Cas2Cohort.FROM_AP -> "Referral from Approved Premises"
+    Cas2Cohort.FROM_AP -> "Move on from Approved Premises"
   }
 
   data class ApplicationStatusUpdatesReportRow(

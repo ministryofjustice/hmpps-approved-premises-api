@@ -259,7 +259,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           assertThat(dataFrame[6]["cohort"]).isEqualTo("Risk Assessed Recall Review")
 
           assertThat(dataFrame[7]["applicationOrigin"]).isEqualTo("other")
-          assertThat(dataFrame[7]["cohort"]).isEqualTo("Referral from Approved Premises")
+          assertThat(dataFrame[7]["cohort"]).isEqualTo("Move on from Approved Premises")
         }
     }
   }
@@ -504,7 +504,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           assertThat(dataFrame[6]["cohort"]).isEqualTo("Risk Assessed Recall Review")
 
           assertThat(dataFrame[7]["applicationOrigin"]).isEqualTo("other")
-          assertThat(dataFrame[7]["cohort"]).isEqualTo("Referral from Approved Premises")
+          assertThat(dataFrame[7]["cohort"]).isEqualTo("Move on from Approved Premises")
         }
     }
   }
@@ -640,7 +640,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           assertThat(dataFrame[6]["cohort"]).isEqualTo("Risk Assessed Recall Review")
 
           assertThat(dataFrame[7]["applicationOrigin"]).isEqualTo("other")
-          assertThat(dataFrame[7]["cohort"]).isEqualTo("Referral from Approved Premises")
+          assertThat(dataFrame[7]["cohort"]).isEqualTo("Move on from Approved Premises")
         }
     }
   }

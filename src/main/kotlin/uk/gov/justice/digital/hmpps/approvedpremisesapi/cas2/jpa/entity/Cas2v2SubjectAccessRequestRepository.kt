@@ -47,7 +47,7 @@ class Cas2v2SubjectAccessRequestRepository(
             WHEN 'HEFR' THEN 'Homeless at End of Fixed-term Recall'
             WHEN 'ISC' THEN 'Intensive Supervision Courts (ISC)'
             WHEN 'RARR' THEN 'Risk Assessed Recall Review (RARR)'
-            WHEN 'FROM_AP' THEN 'Referral from Approved Premises'
+            WHEN 'FROM_AP' THEN 'Move on from Approved Premises'
             END as cohort_long_display_name
         from
         	cas_2_applications ca
