@@ -108,6 +108,7 @@ generic-service:
     FEATURE-FLAGS_CAS3-REPORTS-WITH-NEW-BEDSPACE-MODEL-TABLES-ENABLED: true
     FEATURE-FLAGS_ISR-EMAIL-CHANGES-ENABLED: true
     FEATURE-FLAGS_ISR-CAS1-EMAIL-CHANGES-ENABLED: true
+    FEATURE-FLAGS_USE-TIER-V3: true
 
   namespace_secrets:
     hmpps-domain-events-topic:
