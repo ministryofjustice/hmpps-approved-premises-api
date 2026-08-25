@@ -16,7 +16,6 @@ class Cas2SubjectAccessRequestService(
     val statusUpdateDetailsJson =
       cas2v2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
     val assessmentsJson = cas2v2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
-    val domainEventsJson = cas2v2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2V2")
 
     if (listOf(
         applicationsJson,
@@ -24,8 +23,6 @@ class Cas2SubjectAccessRequestService(
         statusUpdatesJson,
         statusUpdateDetailsJson,
         assessmentsJson,
-        domainEventsJson,
-
       ).all { it == null }
     ) {
       return null
@@ -37,8 +34,7 @@ class Cas2SubjectAccessRequestService(
          "ApplicationNotes": ${ applicationNotesJson ?: "[]"},
          "Assessments": ${ assessmentsJson ?: "[]"},
          "StatusUpdates": ${ statusUpdatesJson ?: "[]"},
-         "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"}
+         "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"}
       }
     """.trimIndent()
 

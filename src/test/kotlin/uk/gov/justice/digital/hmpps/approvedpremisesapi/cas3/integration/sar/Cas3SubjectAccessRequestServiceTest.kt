@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3SubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -12,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -59,8 +57,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes" : [],
         "Bookings": [],
         "BookingExtensions": [],
-        "Cancellations": [],
-        "DomainEvents": []
+        "Cancellations": []
       }
     """.trimIndent()
 
@@ -84,8 +81,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes" : [],
         "Bookings": [],
         "BookingExtensions": [],
-        "Cancellations": [],
-        "DomainEvents": []
+        "Cancellations": []
       }
     """.trimIndent()
 
@@ -112,8 +108,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes": [${assessmentReferralHistoryNotesJson(assessmentReferralHistoryNoteSystem, assessmentReferralHistoryNoteUser)} ],
         "Bookings": [],
         "BookingExtensions": [],
-        "Cancellations": [],
-        "DomainEvents": []
+        "Cancellations": []
       }
     """.trimIndent()
 
@@ -140,8 +135,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes" : [],
         "Bookings": [${bookingsJson(booking)}],
         "BookingExtensions": [],
-        "Cancellations": [],
-        "DomainEvents": []
+        "Cancellations": []
     }
     """.trimIndent()
 
@@ -169,8 +163,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentReferralHistoryNotes" : [],
         "Bookings": [${bookingsJson(booking)}],
         "BookingExtensions": [${bookingExtensionJson(bookingExtension)}],
-        "Cancellations": [],
-        "DomainEvents": []
+        "Cancellations": []
     }
     """.trimIndent()
 
@@ -197,37 +190,10 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "AssessmentReferralHistoryNotes" : [], 
       "Bookings": [${bookingsJson(booking)}],
       "BookingExtensions": [],
-      "Cancellations": [${cancellationJson(cancellation)}],
-      "DomainEvents": []
+      "Cancellations": [${cancellationJson(cancellation)}]
     }
     """.trimIndent()
 
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
-  fun `get CAS3 information - Domain Events`() {
-    val (offender, _) = givenAnOffender()
-    val user = userEntity()
-    val application = temporaryAccommodationApplicationEntity(offender, user)
-    val assessment = temporaryAccommodationAssessmentEntity(application)
-
-    val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, DomainEventType.CAS3_REFERRAL_SUBMITTED, ServiceName.temporaryAccommodation)
-    val result = cas3SubjectAccessRequestService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
-
-    assertNotNull(result)
-
-    val expectedJson = """
-      {
-        "Applications" : [${temporaryAccommodationApplicationJson(application)}],
-        "Assessments"  : [${temporaryAccommodationAssessmentJson(assessment)}],
-        "AssessmentReferralHistoryNotes" : [],
-        "Bookings": [],
-        "BookingExtensions": [],
-        "Cancellations": [],
-        "DomainEvents": [${domainEventJson(domainEvent,user)}]
-      }
-    """.trimIndent()
     assertJsonEquals(expectedJson, result)
   }
 
