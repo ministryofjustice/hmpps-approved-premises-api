@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.AvailableTierDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
@@ -63,14 +64,42 @@ class TierService(
     return upstreamTier?.toDto()
   }
 
+  /**
+   * Returns the tier for each of the given CRNs, keyed by the uppercased CRN.
+   * Only uses the local tier cache saved in cases when more than one unique CRN is provided.
+   * For a single CRN, if it isn't found in the cache the tier is fetched from upstream.
+   */
+  fun getTiers(crns: Set<String>): Map<String, TierDto?> {
+    val normalisedCrns = crns.mapTo(mutableSetOf()) { it.uppercase() }
+
+    if (normalisedCrns.isEmpty()) return emptyMap()
+
+    if (normalisedCrns.size == 1) {
+      val crn = normalisedCrns.first()
+      return mapOf(crn to getTier(crn))
+    }
+
+    val useTierV3 = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
+
+    val casesByCrn = caseRepository
+      .findByCrnIn(normalisedCrns.toList())
+      .associateBy { it.crn }
+
+    return normalisedCrns.associateWith { crn ->
+      casesByCrn[crn]?.let { getTierVersion(it, useTierV3)?.toDto() }
+    }
+  }
+
   private fun getLocalTier(crn: String, useTierV3: Boolean): Tier? {
     val case = caseRepository.findByCrn(crn) ?: return null
 
-    return if (useTierV3) {
-      case.tierV3
-    } else {
-      case.tierV2
-    }
+    return getTierVersion(case, useTierV3)
+  }
+
+  private fun getTierVersion(case: CaseEntity, useTierV3: Boolean): Tier? = if (useTierV3) {
+    case.tierV3
+  } else {
+    case.tierV2
   }
 
   fun fetchTierOrNull(crn: String, version: TierVersion) = when (val response = hmppsTierApiClient.getTier(crn, version)) {

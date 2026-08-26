@@ -4,6 +4,7 @@ import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
@@ -16,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.toCasResu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -39,6 +40,7 @@ class OffenderService(
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
   private val offenderRiskNoteParser: OffenderRiskNoteParser,
   private val caseService: CaseService,
+  private val tierService: TierService,
 ) {
   companion object {
     const val MAX_OFFENDER_REQUEST_COUNT = 500
@@ -122,8 +124,8 @@ class OffenderService(
       }
     }
 
-    val casesByCrn = when (includeTier) {
-      true -> caseService.getCases(crnsList).associateBy { it.crn }
+    val tiersByCrn = when (includeTier) {
+      true -> tierService.getTiers(crns)
       false -> emptyMap()
     }
 
@@ -133,7 +135,7 @@ class OffenderService(
         caseSummary = caseSummariesByCrn[crn],
         caseAccess = caseAccessByCrn[crn],
         laoStrategy = laoStrategy,
-        case = casesByCrn[crn],
+        tier = tiersByCrn[crn.uppercase()],
       )
     }
   }
@@ -158,7 +160,7 @@ class OffenderService(
     caseSummary: CaseSummary?,
     caseAccess: CaseAccess?,
     laoStrategy: LaoStrategy,
-    case: CaseDto?,
+    tier: TierDto?,
   ): PersonSummaryInfoResult {
     if (caseSummary == null) {
       log.debug("Could not find case summary for '$crn'. Returning not found")
@@ -170,7 +172,7 @@ class OffenderService(
       return PersonSummaryInfoResult.Success.Full(
         crn = crn,
         summary = caseSummary,
-        tier = case?.tier,
+        tier = tier,
       )
     }
 
@@ -184,14 +186,14 @@ class OffenderService(
         PersonSummaryInfoResult.Success.Restricted(
           crn = crn,
           nomsNumber = caseSummary.nomsId,
-          tier = case?.tier,
+          tier = tier,
         )
       } else {
         log.debug("Caller can access LAO '$crn'. Returning full details")
         PersonSummaryInfoResult.Success.Full(
           crn = crn,
           summary = caseSummary,
-          tier = case?.tier,
+          tier = tier,
         )
       }
     }

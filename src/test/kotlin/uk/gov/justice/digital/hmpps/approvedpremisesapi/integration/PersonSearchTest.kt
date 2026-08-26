@@ -6,12 +6,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
 class PersonSearchTest : IntegrationTestBase() {
 
@@ -105,7 +110,7 @@ class PersonSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Searching for a CRN returns OK with correct body, tier is not included`() {
+  fun `Searching for a CRN returns OK with correct body including the tier from the local cases cache`() {
     givenAUser { _, jwt ->
       givenAnOffender(
         offenderDetailsConfigBlock = {
@@ -135,7 +140,10 @@ class PersonSearchTest : IntegrationTestBase() {
         },
       ) { _, _ ->
 
-        val tier = TierFactory().withTierScore("D4").produce()
+        val tier = TierFactory()
+          .withTierScore("D4")
+          .withCalculationDate(LocalDateTime.parse("2026-01-02T03:04:05"))
+          .produce()
         givenACase(crn = CRN, tierV2 = tier, tierV3 = null)
 
         webTestClient.get()
@@ -161,10 +169,52 @@ class PersonSearchTest : IntegrationTestBase() {
                 genderIdentity = "This is a self described identity",
                 prisonName = "HMP Bristol",
                 isRestricted = false,
-                tier = null,
+                tier = tier.toDto(),
               ),
             ),
           )
+      }
+    }
+  }
+
+  @Test
+  fun `Searching for a CRN with no cases entry returns OK with the tier fetched from upstream`() {
+    givenAUser { _, jwt ->
+      givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn(CRN)
+          withDateOfBirth(LocalDate.parse("1985-05-05"))
+          withNomsNumber("NOMS321")
+          withFirstName("James")
+          withLastName("Someone")
+          withGender("Male")
+        },
+        inmateDetailsConfigBlock = {
+          withOffenderNo("NOMS321")
+          withCustodyStatus(InmateStatus.IN)
+        },
+      ) { _, _ ->
+
+        hmppsTierMockSuccessfulTierCall(
+          CRN,
+          UpstreamTier(
+            tierScore = "B2",
+            calculationId = UUID.randomUUID(),
+            calculationDate = LocalDateTime.parse("2026-01-02T03:04:05"),
+            changeReason = "Change Reason",
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/people/search?crn=$CRN")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.crn").isEqualTo(CRN)
+          .jsonPath("$.tier.tierScore").isEqualTo("B2")
+          .jsonPath("$.tier.version").isEqualTo("V2")
       }
     }
   }
