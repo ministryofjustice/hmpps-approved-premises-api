@@ -114,6 +114,11 @@ data class PlacementApplicationEntity(
 
   var decisionSummary: String? = null,
 
+  /**
+   * Only available for withdrawals as of 2024-07. There was also a
+   * (since-fixed) bug that meant a small number of placement applications
+   * did not have a withdrawal date captured after this date
+   */
   var withdrawalOccurredAt: OffsetDateTime? = null,
 
   var placementType: PlacementType?,
@@ -127,7 +132,7 @@ data class PlacementApplicationEntity(
    * applications review process (they're approved on creation),
    * or appear as completed tasks
    *
-   * These type of requests for placemnets were only created as of 26/8/25.
+   * These type of requests for placements were only created as of 26/8/25.
    * See [PlacementRequestEntity.isForLegacyInitialRequestForPlacement] for
    * more information
    */
