@@ -77,6 +77,7 @@ class Cas2ApplicationNoteEmailService(
       "crn" to cas2Application.crn,
       "timeApplicationReceived" to submittedAt.format(TIME_FORMAT),
       "dateApplicationReceived" to submittedAt.format(DATE_FORMAT),
+      "assessorName" to getAssessorNameOrPlaceholder(assessment),
       "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(assessment),
       "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(assessment),
       "viewSubmittedApplicationUrl" to resolvedUrl,
@@ -102,5 +103,12 @@ class Cas2ApplicationNoteEmailService(
       return assessment.nacroReferralId!!
     }
     return "Unknown. The Nacro CAS-2 reference number has not been added to the application yet."
+  }
+
+  private fun getAssessorNameOrPlaceholder(assessment: Cas2AssessmentEntity): String {
+    if (assessment.assessorName != null) {
+      return assessment.assessorName!!
+    }
+    return "Unknown. The assessor has not added their name to the application yet."
   }
 }
