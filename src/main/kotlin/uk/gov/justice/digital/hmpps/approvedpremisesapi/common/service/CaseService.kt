@@ -111,22 +111,6 @@ class CaseService(
     return case
   }
 
-  /**
-   * If a case can't be found for a given CRN there will be no corresponding entry in the result
-   */
-  fun getCases(crns: List<String>): List<CaseDto> {
-    val normalizedCrn = crns.map(String::uppercase)
-    val cases = caseRepository.findByCrnIn(normalizedCrn).map { it.toDto() }
-
-    val foundCrns = cases.map(CaseDto::crn).toSet()
-
-    normalizedCrn
-      .subtract(foundCrns)
-      .forEach(::alertCaseNotFound)
-
-    return cases
-  }
-
   private fun fetchAvailableTiers(crn: String) = CaseTiers(
     v2 = tierService.fetchTierOrNull(crn, TierVersion.V2),
     v3 = tierService.fetchTierOrNull(crn, TierVersion.V3),
