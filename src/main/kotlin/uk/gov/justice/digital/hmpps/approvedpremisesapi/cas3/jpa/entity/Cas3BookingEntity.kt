@@ -269,9 +269,6 @@ interface Cas3BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     pageable: Pageable?,
   ): Slice<Cas3BookingEntity>
 
-  @Query("SELECT b FROM Cas3BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bedspace = :bedspace ORDER BY b.createdAt")
-  fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bedspace: Cas3BedspacesEntity): List<Cas3BookingEntity>
-
   @EntityGraph(
     attributePaths = [
       "bedspace.premises.probationDeliveryUnit.probationRegion",
@@ -365,8 +362,6 @@ interface Cas3BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     startDate: LocalDate,
     endDate: LocalDate,
   ): List<Cas3v2OverlapBookingsSearchResult>
-
-  fun findTopByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas3BookingEntity?
 
   fun findTopByApplicationIdAndStatusOrderByCreatedAtDesc(applicationId: UUID, status: Cas3BookingStatus): Cas3BookingEntity?
 }

@@ -14,8 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceUsageReportGenerator
@@ -36,8 +34,6 @@ import java.time.OffsetDateTime
 
 class Cas3BedspaceUsageReportGeneratorTest {
   private val mockBookingTransformer = mockk<Cas3BookingTransformer>()
-  private val mockBookingRepository = mockk<Cas3BookingRepository>()
-  private val mockLostBedsRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
   private val bedUsageReportGenerator = BedspaceUsageReportGenerator(
@@ -63,15 +59,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
       .withEndDate(LocalDate.parse("2023-04-07"))
       .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .produce()
-
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bedspace) } returns emptyList()
-    every {
-      mockLostBedsRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-04-30"),
-        bedspace,
-      )
-    } returns listOf(voidBedspace)
 
     val reportData = BedspaceUsageReportData(
       bedspace = bedspace,
@@ -113,21 +100,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
       .withEndDate(LocalDate.parse("2023-04-07"))
       .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .produce()
-
-    every {
-      mockBookingRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-07-01"),
-        bedspace,
-      )
-    } returns emptyList()
-    every {
-      mockLostBedsRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-07-01"),
-        bedspace,
-      )
-    } returns listOf(voidBedspace)
 
     val reportData = BedspaceUsageReportData(
       bedspace = bedspace,
@@ -210,23 +182,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
       .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .produce()
 
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), cas3BedspaceInProbationRegion) } returns emptyList()
-    every {
-      mockLostBedsRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-04-30"),
-        cas3BedspaceInProbationRegion,
-      )
-    } returns listOf(temporaryAccommodationLostBedInProbationArea)
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), cas3BedspaceOutsideProbationRegion) } returns emptyList()
-    every {
-      mockLostBedsRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-04-30"),
-        cas3BedspaceOutsideProbationRegion,
-      )
-    } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
-
     val reportData1 = BedspaceUsageReportData(
       bedspace = cas3BedspaceInProbationRegion,
       bookings = emptyList(),
@@ -308,35 +263,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
       .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .produce()
 
-    every {
-      mockBookingRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-04-30"),
-        cas3BedspaceInProbationRegion,
-      )
-    } returns emptyList()
-    every {
-      mockLostBedsRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-04-30"),
-        cas3BedspaceInProbationRegion,
-      )
-    } returns listOf(lostBedInProbationArea)
-    every {
-      mockBookingRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-04-30"),
-        cas3BedspaceOutsideProbationRegion,
-      )
-    } returns emptyList()
-    every {
-      mockLostBedsRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-04-30"),
-        cas3BedspaceOutsideProbationRegion,
-      )
-    } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
-
     val reportData1 = BedspaceUsageReportData(
       bedspace = cas3BedspaceInProbationRegion,
       bookings = emptyList(),
@@ -397,9 +323,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
       .withCrn("CRN321")
       .withPremises(cas3Premises)
       .produce()
-
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), cas3Bedspace) } returns listOf(booking)
-    every { mockLostBedsRepository.findAllByOverlappingDateForBedspace(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), cas3Bedspace) } returns emptyList()
 
     every { mockBookingTransformer.determineStatus(booking) } returns Cas3BookingStatus.closed
 
@@ -475,9 +398,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
 
     booking.turnarounds += turnaround
 
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), cas3Bedspace) } returns listOf(booking)
-    every { mockLostBedsRepository.findAllByOverlappingDateForBedspace(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), cas3Bedspace) } returns emptyList()
-
     every { mockBookingTransformer.determineStatus(booking) } returns Cas3BookingStatus.closed
 
     every { mockWorkingDayService.addWorkingDays(LocalDate.parse("2023-04-07"), 2) } returns LocalDate.parse("2023-04-09")
@@ -541,15 +461,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
       .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withCostCentre(Cas3CostCentre.SUPPLIER)
       .produce()
-
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), cas3Bedspace) } returns emptyList()
-    every {
-      mockLostBedsRepository.findAllByOverlappingDateForBedspace(
-        LocalDate.parse("2023-04-01"),
-        LocalDate.parse("2023-04-30"),
-        cas3Bedspace,
-      )
-    } returns listOf(temporaryAccommodationLostBed)
 
     val reportData = BedspaceUsageReportData(
       bedspace = cas3Bedspace,
@@ -616,8 +527,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
         .produce(),
     )
 
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns listOf(booking)
-    every { mockLostBedsRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns emptyList()
     every { mockBookingTransformer.determineStatus(booking) } returns Cas3BookingStatus.closed
 
     val reportData = BedspaceUsageReportData(
@@ -664,8 +573,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
       .withDepartureDate(LocalDate.parse("2023-04-08"))
       .produce()
 
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns listOf(booking)
-    every { mockLostBedsRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns emptyList()
     every { mockBookingTransformer.determineStatus(booking) } returns Cas3BookingStatus.closed
 
     val reportData = BedspaceUsageReportData(
@@ -734,8 +641,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
         .produce(),
     )
 
-    every { mockBookingRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns listOf(booking)
-    every { mockLostBedsRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns emptyList()
     every { mockBookingTransformer.determineStatus(booking) } returns Cas3BookingStatus.closed
 
     val reportData = BedspaceUsageReportData(
