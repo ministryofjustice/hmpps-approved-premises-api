@@ -11,8 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
@@ -86,38 +86,41 @@ class Cas1ExternalApplicationServiceTest {
       val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(4),
       ).withStatus(RequestForPlacementStatus.placementBooked)
-        .withPlacementDates(
-          listOf(
-            PlacementDates(
-              expectedArrival = LocalDate.now().plusDays(3),
-              duration = 10,
-            ),
+        .withCanonicalPlacementPeriod(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.now().plusDays(3),
+            arrivalFlexible = true,
+            duration = 10,
           ),
         )
         .produce()
       val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(1),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted).withPlacementDates(
-        emptyList(),
-      ).produce()
+      ).withStatus(RequestForPlacementStatus.requestUnsubmitted)
+        .withCanonicalPlacementPeriod(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.now().plusDays(1),
+            arrivalFlexible = true,
+            duration = 5,
+          ),
+        ).produce()
       val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(5),
-      ).withStatus(RequestForPlacementStatus.requestSubmitted).withPlacementDates(
-        listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.now().plusDays(2),
+      ).withStatus(RequestForPlacementStatus.requestSubmitted)
+        .withCanonicalPlacementPeriod(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.now().plusDays(2),
+            arrivalFlexible = true,
             duration = 8,
           ),
-        ),
-      ).produce()
+        ).produce()
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(2),
-      ).withStatus(RequestForPlacementStatus.awaitingMatch).withPlacementDates(
-        listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.now().plusDays(1),
-            duration = 11,
-          ),
+      ).withStatus(RequestForPlacementStatus.awaitingMatch).withCanonicalPlacementPeriod(
+        Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.now().plusDays(1),
+          arrivalFlexible = true,
+          duration = 11,
         ),
       ).produce()
 
@@ -1093,8 +1096,8 @@ class Cas1ExternalApplicationServiceTest {
       rejectionReason = rejectionReason,
       expectedArrivalDate =
       placement?.expectedArrivalDate
-        ?: requestForPlacement.placementDates.firstOrNull()?.expectedArrival,
-      durationDays = requestForPlacement.placementDates.firstOrNull()?.duration,
+        ?: requestForPlacement.canonicalPlacementPeriod.arrival,
+      durationDays = requestForPlacement.canonicalPlacementPeriod.duration,
       status = requestForPlacement.status,
     ),
     placement = Cas1ExternalPlacementDto(
@@ -1128,8 +1131,8 @@ class Cas1ExternalApplicationServiceTest {
       submittedAt = requestForPlacement?.submittedAt?.toLocalDate(),
       withdrawalReason = requestForPlacement?.withdrawalReason,
       withdrawalDate = null,
-      expectedArrivalDate = placement?.expectedArrivalDate ?: requestForPlacement?.placementDates?.firstOrNull()?.expectedArrival,
-      durationDays = requestForPlacement?.placementDates?.firstOrNull()?.duration,
+      expectedArrivalDate = placement?.expectedArrivalDate ?: requestForPlacement?.canonicalPlacementPeriod?.arrival,
+      durationDays = requestForPlacement?.canonicalPlacementPeriod?.duration,
       status = requestForPlacement?.status,
     ),
     placement = Cas1ExternalPlacementDto(

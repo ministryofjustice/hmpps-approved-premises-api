@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
@@ -48,7 +47,6 @@ class RequestForPlacementTransformer(
       } else {
         RequestForPlacementType.manual
       },
-      placementDates = listOf(placementApplicationEntity.placementDates()!!.toApiType()),
       requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = authorisedPlacementPeriod,
       submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
@@ -105,12 +103,6 @@ class RequestForPlacementTransformer(
       type = RequestForPlacementType.automatic,
       requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = authorisedPlacementPeriod,
-      placementDates = listOf(
-        PlacementDates(
-          expectedArrival = placementRequestEntity.expectedArrival,
-          duration = placementRequestEntity.duration,
-        ),
-      ),
       submittedAt = placementRequestEntity.createdAt.toInstant(),
       requestReviewedAt = placementRequestEntity.assessment.submittedAt?.toInstant(),
       document = null,

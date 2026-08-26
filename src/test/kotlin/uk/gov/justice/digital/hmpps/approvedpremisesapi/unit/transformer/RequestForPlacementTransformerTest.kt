@@ -100,9 +100,6 @@ class RequestForPlacementTransformerTest {
       assertThat(result.authorisedPlacementPeriod!!.arrival).isEqualTo(LocalDate.of(2012, 9, 9))
       assertThat(result.authorisedPlacementPeriod.arrivalFlexible).isFalse
       assertThat(result.authorisedPlacementPeriod.duration).isEqualTo(49)
-      assertThat(result.placementDates).hasSize(1)
-      assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
-      assertThat(result.placementDates[0].duration).isEqualTo(49)
       assertThat(result.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(result.submittedBy?.name).isEqualTo(placementApplication.createdByUser.name)
 
@@ -394,9 +391,6 @@ class RequestForPlacementTransformerTest {
       assertThat(result.authorisedPlacementPeriod!!.arrival).isEqualTo(placementRequest.expectedArrival)
       assertThat(result.authorisedPlacementPeriod.arrivalFlexible).isNull()
       assertThat(result.authorisedPlacementPeriod.duration).isEqualTo(placementRequest.duration)
-      assertThat(result.placementDates).hasSize(1)
-      assertThat(result.placementDates[0].expectedArrival).isEqualTo(placementRequest.expectedArrival)
-      assertThat(result.placementDates[0].duration).isEqualTo(placementRequest.duration)
       assertThat(result.submittedAt).isEqualTo(placementRequest.createdAt.toInstant())
       assertThat(result.requestReviewedAt).isEqualTo(placementRequest.assessment.submittedAt?.toInstant())
       assertThat(result.document).isNull()

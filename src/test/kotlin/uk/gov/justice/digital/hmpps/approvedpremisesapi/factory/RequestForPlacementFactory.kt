@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
@@ -45,14 +44,6 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     )
   }
   private var type: Yielded<RequestForPlacementType> = { RequestForPlacementType.automatic }
-  private var placementDates: Yielded<List<PlacementDates>> = {
-    listOf(
-      PlacementDates(
-        expectedArrival = LocalDate.now(),
-        duration = 14,
-      ),
-    )
-  }
 
   private var authorisedPlacementPeriod: Yielded<Cas1RequestedPlacementPeriod?> = { null }
   private var status: Yielded<RequestForPlacementStatus> = { RequestForPlacementStatus.placementBooked }
@@ -85,10 +76,6 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
 
   fun withAuthorisedPlacementPeriod(authorisedPlacementPeriod: Cas1RequestedPlacementPeriod) = apply {
     this.authorisedPlacementPeriod = { authorisedPlacementPeriod }
-  }
-
-  fun withPlacementDates(placementDates: List<PlacementDates>) = apply {
-    this.placementDates = { placementDates }
   }
 
   fun withRequestedPlacementPeriod(requestedPlacementPeriod: Cas1RequestedPlacementPeriod) = apply {
@@ -159,7 +146,6 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     createdByUserId = this.createdByUserId(),
     canBeDirectlyWithdrawn = this.canBeDirectlyWithdrawn(),
     type = this.type(),
-    placementDates = this.placementDates(),
     requestedPlacementPeriod = this.requestedPlacementPeriod(),
     authorisedPlacementPeriod = this.authorisedPlacementPeriod(),
     status = this.status(),
