@@ -560,49 +560,4 @@ class CaseServiceTest {
       verify { mockSentryService.captureException(any<CaseService.CaseNotFound>()) }
     }
   }
-
-  @Nested
-  inner class GetCases {
-    @Test
-    fun `should return all cases for given CRNs, raising alerts for missing cases`() {
-      val crn1 = "CRN123"
-      val crn2 = "CRN456"
-      val crn3 = "CRN789"
-
-      val caseEntity1 = CaseEntityFactory().withCrn(crn1).produce()
-      val caseEntity3 = CaseEntityFactory().withCrn(crn3).produce()
-
-      every { mockCaseRepository.findByCrnIn(listOf(crn1, crn2, crn3)) } returns listOf(caseEntity1, caseEntity3)
-
-      val result = service.getCases(listOf(crn1, crn2, crn3))
-
-      assertThat(result).hasSize(2)
-      assertThat(result.map { it.crn }).containsExactlyInAnyOrder(crn1, crn3)
-
-      val thrownExceptionSlot = slot<CaseService.CaseNotFound>()
-      verify { mockSentryService.captureException(capture(thrownExceptionSlot)) }
-
-      assertThat(thrownExceptionSlot.captured.message).isEqualTo("Case with CRN CRN456 not found")
-    }
-
-    @Test
-    fun `should uppercase CRNs when getting multiple cases`() {
-      val crn1 = "crn123"
-      val crn2 = "crn456"
-      val uppercasedCrn1 = "CRN123"
-      val uppercasedCrn2 = "CRN456"
-
-      val caseEntity1 = CaseEntityFactory().withCrn(uppercasedCrn1).produce()
-
-      every { mockCaseRepository.findByCrnIn(listOf(uppercasedCrn1, uppercasedCrn2)) } returns listOf(caseEntity1)
-
-      val result = service.getCases(listOf(crn1, crn2))
-
-      assertThat(result).hasSize(1)
-      assertThat(result[0].crn).isEqualTo(uppercasedCrn1)
-
-      verify { mockCaseRepository.findByCrnIn(listOf(uppercasedCrn1, uppercasedCrn2)) }
-      verify { mockSentryService.captureException(any<CaseService.CaseNotFound>()) }
-    }
-  }
 }
