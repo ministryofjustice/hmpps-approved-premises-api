@@ -59,16 +59,16 @@ import java.util.UUID
  * ```
  * application
  *  - assessment
- *    - request for placement (PlacementRequest)
- *      - placement (Booking)
- *    - request for placement (PlacementApplication)
- *      - matching request (PlacementRequest)
- *        - placement (Booking)
- *    - adhoc placement (Booking)
+ *    - placement request - these are legacy, see [PlacementRequestEntity.isForLegacyInitialRequestForPlacement]
+ *      - space booking
+ *    - placement application
+ *      - placement request
+ *        - space booking
+ *    - ad hoc placement - these are legacy, see [Cas1SpaceBookingEntity.placementRequest]
  * ```
  *
- * Withdrawals should cascade down the tree, although a booking with arrivals will block any ancestors in the tree
- * from being withdrawn
+ * Withdrawals should cascade down the tree, although a space booking with arrivals will block any ancestors in the tree
+ * from being withdrawn, in which case the user can expire the application instead
  *
  * Note: The general functionality of each entities' withdrawal endpoint is tested in the corresponding API Test Class
  */
