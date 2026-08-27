@@ -13,9 +13,12 @@
       "agreementSummary": "a summary here"
     },
     "confirm-your-details": {
+      "detailsToUpdate": [
+        "phoneNumber"
+      ],
       "emailAddress": "",
       "name": "",
-      "phoneNumber": "",
+      "phoneNumber": "test",
       "caseManagementResponsibility": "yes",
       "userDetailsFromDelius": {
         "name": "JIM SNOW",
