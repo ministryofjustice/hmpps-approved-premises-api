@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestsForPlacementDurationsCalculationResponseDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
@@ -50,7 +51,6 @@ class Cas1RequestForPlacementService(
     return CasResult.Success(result.sortedByDescending { it.submittedAt })
   }
 
-  @SuppressWarnings("ComplexCondition", "CyclomaticComplexMethod", "NestedBlockDepth", "MagicNumber")
   fun defaultDurations(
     applicationId: UUID,
     apType: ApType,
@@ -63,65 +63,72 @@ class Cas1RequestForPlacementService(
       ?: return CasResult.NotFound("Version for live tier associated with case CRN", application.crn)
 
     return when (liveTierVersion) {
-      TierVersionDto.V2 ->
-        when (apType) {
-          ApType.pipe -> createDurationCalculation(Period.ofWeeks(26), null)
-          ApType.esap -> createDurationCalculation(Period.ofWeeks(52), null)
-          ApType.normal,
-          ApType.rfap,
-          ApType.mhapStJosephs,
-          ApType.mhapElliottHouse,
-          -> createDurationCalculation(Period.ofWeeks(12), null)
+      TierVersionDto.V2 -> defaultDurationTierV2(apType)
+      TierVersionDto.V3 -> defaultDurationTierV3(apType, application, sentenceType, liveTier)
+    }
+  }
+
+  @SuppressWarnings("MagicNumber")
+  private fun defaultDurationTierV2(
+    apType: ApType,
+  ) = when (apType) {
+    ApType.pipe -> createDurationCalculation(Period.ofWeeks(26), null)
+    ApType.esap -> createDurationCalculation(Period.ofWeeks(52), null)
+    ApType.normal,
+    ApType.rfap,
+    ApType.mhapStJosephs,
+    ApType.mhapElliottHouse,
+    -> createDurationCalculation(Period.ofWeeks(12), null)
+  }
+
+  @SuppressWarnings("MagicNumber", "ComplexCondition", "CyclomaticComplexMethod")
+  private fun defaultDurationTierV3(
+    apType: ApType,
+    application: ApprovedPremisesApplicationEntity,
+    sentenceType: String,
+    liveTier: TierDto,
+  ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> = when (apType) {
+    ApType.pipe -> createDurationCalculation(Period.ofWeeks(26), null)
+    ApType.esap -> createDurationCalculation(Period.ofWeeks(62), null)
+    ApType.mhapStJosephs,
+    ApType.mhapElliottHouse,
+    -> if (application.isWomensApplication == true) {
+      CasResult.GeneralValidationError("MHAP not supported for women's applications")
+    } else {
+      createDurationCalculation(Period.ofWeeks(26), null)
+    }
+
+    ApType.normal,
+    ApType.rfap,
+    -> if (application.isWomensApplication == true) {
+      createDurationCalculation(Period.ofWeeks(16), null)
+    } else {
+      if (sentenceType == SentenceTypeOption.life.value || sentenceType == SentenceTypeOption.ipp.value) {
+        if (liveTier.tierScore in listOf("A", "B", "C")) {
+          createDurationCalculation(Period.ofWeeks(16), null)
+        } else {
+          CasResult.GeneralValidationError("Only tier A, B or C is eligible for life and ipp sentence type")
         }
-
-      TierVersionDto.V3 -> {
-        when (apType) {
-          ApType.pipe -> createDurationCalculation(Period.ofWeeks(26), null)
-
-          ApType.esap -> createDurationCalculation(Period.ofWeeks(62), null)
-
-          ApType.mhapStJosephs,
-          ApType.mhapElliottHouse,
-          -> if (application.isWomensApplication == true) {
-            CasResult.GeneralValidationError("MHAP not supported for women's applications")
-          } else {
-            createDurationCalculation(Period.ofWeeks(26), null)
-          }
-
-          ApType.normal,
-          ApType.rfap,
-          -> if (application.isWomensApplication == true) {
-            createDurationCalculation(Period.ofWeeks(16), null)
-          } else {
-            if (sentenceType == SentenceTypeOption.life.value || sentenceType == SentenceTypeOption.ipp.value) {
-              if (liveTier.tierScore in listOf("A", "B", "C")) {
-                createDurationCalculation(Period.ofWeeks(16), null)
-              } else {
-                CasResult.GeneralValidationError("Only tier A, B or C is eligible for life and ipp sentence type")
-              }
-            } else if (
-              sentenceType == SentenceTypeOption.standardDeterminate.value ||
-              sentenceType == SentenceTypeOption.extendedDeterminate.value ||
-              sentenceType == SentenceTypeOption.communityOrder.value ||
-              sentenceType == SentenceTypeOption.bailPlacement.value ||
-              sentenceType == SentenceTypeOption.nonStatutory.value
-            ) {
-              if (liveTier.tierScore == "A") {
-                createDurationCalculation(Period.ofWeeks(16), null)
-              } else if (liveTier.tierScore == "B") {
-                createDurationCalculation(Period.ofWeeks(12), null)
-              } else if (liveTier.tierScore == "C" || liveTier.tierScore == "D") {
-                createDurationCalculation(Period.ofWeeks(8), null)
-              } else if (liveTier.tierScore in listOf("E", "F", "G")) {
-                CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
-              } else {
-                CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
-              }
-            } else {
-              CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
-            }
-          }
+      } else if (
+        sentenceType == SentenceTypeOption.standardDeterminate.value ||
+        sentenceType == SentenceTypeOption.extendedDeterminate.value ||
+        sentenceType == SentenceTypeOption.communityOrder.value ||
+        sentenceType == SentenceTypeOption.bailPlacement.value ||
+        sentenceType == SentenceTypeOption.nonStatutory.value
+      ) {
+        if (liveTier.tierScore == "A") {
+          createDurationCalculation(Period.ofWeeks(16), null)
+        } else if (liveTier.tierScore == "B") {
+          createDurationCalculation(Period.ofWeeks(12), null)
+        } else if (liveTier.tierScore == "C" || liveTier.tierScore == "D") {
+          createDurationCalculation(Period.ofWeeks(8), null)
+        } else if (liveTier.tierScore in listOf("E", "F", "G")) {
+          CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
+        } else {
+          CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
         }
+      } else {
+        CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
       }
     }
   }
