@@ -522,6 +522,9 @@ class TemporaryAccommodationApplicationEntity(
   var personReleaseDate: LocalDate?,
   var name: String?,
   var prisonReleaseTypes: String?,
+  /**
+   * Populated as of 2024-08-14, cannot be easily backfilled
+   */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
