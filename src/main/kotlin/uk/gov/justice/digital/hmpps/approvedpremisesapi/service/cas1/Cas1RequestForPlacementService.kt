@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestsFor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -32,7 +32,7 @@ class Cas1RequestForPlacementService(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceBookingTransformer: Cas1SpaceBookingTransformer,
   private val domainEventRepository: DomainEventRepository,
-  private val caseService: CaseService,
+  private val tierService: TierService,
   private val jsonMapper: JsonMapper,
 ) {
   fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity?): CasResult<List<RequestForPlacement>> {
@@ -56,15 +56,12 @@ class Cas1RequestForPlacementService(
     apType: ApType,
     sentenceType: String,
   ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
-    val application = applicationService.getApplication(applicationId)
-      ?: return CasResult.NotFound("Application", applicationId.toString())
-    val liveTier = (caseService.getCase(application.crn) ?: return CasResult.GeneralValidationError("Case is null for application crn ${application.crn}")).tier
-    val liveTierVersion = liveTier?.version
-      ?: return CasResult.NotFound("Version for live tier associated with case CRN", application.crn)
+    val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound("Application", applicationId.toString())
+    val tier = tierService.getTier(application.crn) ?: return CasResult.NotFound("Tier associated with case CRN", application.crn)
 
-    return when (liveTierVersion) {
+    return when (tier.version) {
       TierVersionDto.V2 -> defaultDurationTierV2(apType)
-      TierVersionDto.V3 -> defaultDurationTierV3(apType, application, sentenceType, liveTier)
+      TierVersionDto.V3 -> defaultDurationTierV3(apType, application, sentenceType, tier)
     }
   }
 
