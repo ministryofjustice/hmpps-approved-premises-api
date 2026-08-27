@@ -84,35 +84,39 @@ class Cas1RequestForPlacementService(
     application: ApprovedPremisesApplicationEntity,
     sentenceType: String,
     liveTier: TierDto,
-  ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> = when (apType) {
-    ApType.pipe -> createDurationCalculation(Period.ofWeeks(26))
-    ApType.esap -> createDurationCalculation(Period.ofWeeks(62))
-    ApType.mhapStJosephs,
-    ApType.mhapElliottHouse,
-    -> if (application.isWomensApplication == true) {
-      CasResult.GeneralValidationError("MHAP not supported for women's applications")
-    } else {
-      createDurationCalculation(Period.ofWeeks(26))
-    }
+  ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
+    val tierScore = liveTier.tierScore
 
-    ApType.normal,
-    ApType.rfap,
-    -> if (application.isWomensApplication == true) {
-      createDurationCalculation(Period.ofWeeks(16))
-    } else {
-      if (sentenceType == SentenceTypeOption.life.value || sentenceType == SentenceTypeOption.ipp.value) {
-        if (liveTier.tierScore in listOf("A", "B", "C")) {
-          createDurationCalculation(Period.ofWeeks(16))
-        } else {
-          CasResult.GeneralValidationError("Only tier A, B or C is eligible for life and ipp sentence type")
-        }
+    return when (apType) {
+      ApType.pipe -> createDurationCalculation(Period.ofWeeks(26))
+      ApType.esap -> createDurationCalculation(Period.ofWeeks(62))
+      ApType.mhapStJosephs,
+      ApType.mhapElliottHouse,
+      -> if (application.isWomensApplication == true) {
+        CasResult.GeneralValidationError("MHAP not supported for women's applications")
       } else {
-        when (liveTier.tierScore) {
-          "A" -> createDurationCalculation(Period.ofWeeks(16))
-          "B" -> createDurationCalculation(Period.ofWeeks(12))
-          "C", "D" -> createDurationCalculation(Period.ofWeeks(8))
-          "E", "F", "G" -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
-          else -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
+        createDurationCalculation(Period.ofWeeks(26))
+      }
+
+      ApType.normal,
+      ApType.rfap,
+      -> if (application.isWomensApplication == true) {
+        createDurationCalculation(Period.ofWeeks(16))
+      } else {
+        if (sentenceType == SentenceTypeOption.life.value || sentenceType == SentenceTypeOption.ipp.value) {
+          if (tierScore in listOf("A", "B", "C")) {
+            createDurationCalculation(Period.ofWeeks(16))
+          } else {
+            CasResult.GeneralValidationError("Only tier A, B or C is eligible for life and ipp sentence type")
+          }
+        } else {
+          when (tierScore) {
+            "A" -> createDurationCalculation(Period.ofWeeks(16))
+            "B" -> createDurationCalculation(Period.ofWeeks(12))
+            "C", "D" -> createDurationCalculation(Period.ofWeeks(8))
+            "E", "F", "G" -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $tierScore")
+            else -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $tierScore")
+          }
         }
       }
     }
