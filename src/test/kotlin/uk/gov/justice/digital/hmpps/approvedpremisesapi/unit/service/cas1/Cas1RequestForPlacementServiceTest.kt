@@ -511,7 +511,7 @@ class Cas1RequestForPlacementServiceTest {
           "mhapStJosephs",
         ],
       )
-      fun `returns general validation error when apType is mhap st josephs or mhap elliott house and womens`(apType: String) {
+      fun `returns null duration when apType is mhap st josephs or mhap elliott house and womens`(apType: String) {
         val application = ApprovedPremisesApplicationEntityFactory()
           .withDefaults()
           .withIsWomensApplication(true)
@@ -526,9 +526,10 @@ class Cas1RequestForPlacementServiceTest {
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
-        assertThatCasResult(defaultDuration).isGeneralValidationError(
-          "MHAP not supported for women's applications",
-        )
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isNull()
+          assertThat(it.maxDurationDays).isNull()
+        }
       }
 
       @ParameterizedTest
@@ -644,7 +645,7 @@ class Cas1RequestForPlacementServiceTest {
           "rfap,ipp,G",
         ],
       )
-      fun `returns general validation error when apType is normal or rfap and mens and sentence type is life or ipp and live tier is D, E, F or G`(apType: String, sentenceType: String, liveTierScore: String) {
+      fun `returns null duration when apType is normal or rfap and mens and sentence type is life or ipp and live tier is D, E, F or G`(apType: String, sentenceType: String, liveTierScore: String) {
         val application = ApprovedPremisesApplicationEntityFactory()
           .withIsWomensApplication(false)
           .withDefaults()
@@ -657,9 +658,10 @@ class Cas1RequestForPlacementServiceTest {
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
-        assertThatCasResult(defaultDuration).isGeneralValidationError(
-          "Only tier A, B or C is eligible for life and ipp sentence type",
-        )
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isNull()
+          assertThat(it.maxDurationDays).isNull()
+        }
       }
 
       @ParameterizedTest
@@ -813,7 +815,7 @@ class Cas1RequestForPlacementServiceTest {
         ],
       )
       @SuppressWarnings("MaxLineLength")
-      fun `returns general validation error when apType is normal or rfap and mens and sentence type is standardDeterminate, extendedDeterminate, communityOrder, bailPlacement or nonStatutory and live tier is E, F or G`(apType: String, sentenceType: String, liveTierScore: String) {
+      fun `returns null duration when apType is normal or rfap and mens and sentence type is standardDeterminate, extendedDeterminate, communityOrder, bailPlacement or nonStatutory and live tier is E, F or G`(apType: String, sentenceType: String, liveTierScore: String) {
         val application = ApprovedPremisesApplicationEntityFactory()
           .withIsWomensApplication(false)
           .withDefaults()
@@ -826,13 +828,14 @@ class Cas1RequestForPlacementServiceTest {
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
-        assertThatCasResult(defaultDuration).isGeneralValidationError(
-          "Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $liveTierScore",
-        )
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isNull()
+          assertThat(it.maxDurationDays).isNull()
+        }
       }
 
       @Test
-      fun `returns general validation error when apType is normal and mens and sentence type is standardDeterminate and live tier is H`() {
+      fun `returns null duration when apType is normal and mens and sentence type is standardDeterminate and live tier is H`() {
         val application = ApprovedPremisesApplicationEntityFactory()
           .withIsWomensApplication(false)
           .withDefaults()
@@ -845,9 +848,10 @@ class Cas1RequestForPlacementServiceTest {
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.normal, SentenceTypeOption.standardDeterminate.value)
 
-        assertThatCasResult(defaultDuration).isGeneralValidationError(
-          "Cannot calculate duration for ap type normal, sentence type standardDeterminate, tier score H",
-        )
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isNull()
+          assertThat(it.maxDurationDays).isNull()
+        }
       }
     }
   }

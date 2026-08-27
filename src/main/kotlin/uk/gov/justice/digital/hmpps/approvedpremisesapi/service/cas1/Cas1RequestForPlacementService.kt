@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
@@ -35,6 +36,8 @@ class Cas1RequestForPlacementService(
   private val tierService: TierService,
   private val jsonMapper: JsonMapper,
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity?): CasResult<List<RequestForPlacement>> {
     val application = applicationService.getApplication(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
@@ -95,7 +98,8 @@ class Cas1RequestForPlacementService(
       ApType.mhapStJosephs,
       ApType.mhapElliottHouse,
       -> if (application.isWomensApplication == true) {
-        CasResult.GeneralValidationError("MHAP not supported for women's applications")
+        log.warn("MHAP not supported for women's applications")
+        createDurationCalculation(null)
       } else {
         createDurationCalculation(Period.ofWeeks(26))
       }
@@ -109,15 +113,22 @@ class Cas1RequestForPlacementService(
           if (tierScore in listOf("A", "B", "C")) {
             createDurationCalculation(Period.ofWeeks(16))
           } else {
-            CasResult.GeneralValidationError("Only tier A, B or C is eligible for life and ipp sentence type")
+            log.warn("Only tier A, B or C is eligible for life and ipp sentence type")
+            createDurationCalculation(null)
           }
         } else {
           when (tierScore) {
             "A" -> createDurationCalculation(Period.ofWeeks(16))
             "B" -> createDurationCalculation(Period.ofWeeks(12))
             "C", "D" -> createDurationCalculation(Period.ofWeeks(8))
-            "E", "F", "G" -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $tierScore")
-            else -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $tierScore")
+            "E", "F", "G" -> {
+              log.warn("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $tierScore")
+              createDurationCalculation(null)
+            }
+            else -> {
+              log.warn("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $tierScore")
+              createDurationCalculation(null)
+            }
           }
         }
       }
@@ -130,8 +141,7 @@ class Cas1RequestForPlacementService(
     jsonMapper.readValue(it.data, RequestForPlacementAssessedEnvelope::class.java)
   }?.eventDetails?.decisionSummary
 
-  @SuppressWarnings("MaxLineLength")
-  private fun createDurationCalculation(period: Period, maxDurationDays: Int? = null): CasResult.Success<Cas1RequestsForPlacementDurationsCalculationResponseDto> = CasResult.Success(Cas1RequestsForPlacementDurationsCalculationResponseDto(period.days, maxDurationDays))
+  private fun createDurationCalculation(period: Period?, maxDurationDays: Int? = null) = CasResult.Success(Cas1RequestsForPlacementDurationsCalculationResponseDto(period?.days, maxDurationDays))
 
   private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity?) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
     placementApplication,
