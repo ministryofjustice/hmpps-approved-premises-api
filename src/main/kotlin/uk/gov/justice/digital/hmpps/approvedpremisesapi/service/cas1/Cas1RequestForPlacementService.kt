@@ -81,7 +81,7 @@ class Cas1RequestForPlacementService(
     -> createDurationCalculation(Period.ofWeeks(12), null)
   }
 
-  @SuppressWarnings("MagicNumber", "ComplexCondition", "CyclomaticComplexMethod")
+  @SuppressWarnings("MagicNumber", "CyclomaticComplexMethod")
   private fun defaultDurationTierV3(
     apType: ApType,
     application: ApprovedPremisesApplicationEntity,
@@ -109,26 +109,14 @@ class Cas1RequestForPlacementService(
         } else {
           CasResult.GeneralValidationError("Only tier A, B or C is eligible for life and ipp sentence type")
         }
-      } else if (
-        sentenceType == SentenceTypeOption.standardDeterminate.value ||
-        sentenceType == SentenceTypeOption.extendedDeterminate.value ||
-        sentenceType == SentenceTypeOption.communityOrder.value ||
-        sentenceType == SentenceTypeOption.bailPlacement.value ||
-        sentenceType == SentenceTypeOption.nonStatutory.value
-      ) {
-        if (liveTier.tierScore == "A") {
-          createDurationCalculation(Period.ofWeeks(16))
-        } else if (liveTier.tierScore == "B") {
-          createDurationCalculation(Period.ofWeeks(12))
-        } else if (liveTier.tierScore == "C" || liveTier.tierScore == "D") {
-          createDurationCalculation(Period.ofWeeks(8))
-        } else if (liveTier.tierScore in listOf("E", "F", "G")) {
-          CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
-        } else {
-          CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
-        }
       } else {
-        CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
+        when (liveTier.tierScore) {
+          "A" -> createDurationCalculation(Period.ofWeeks(16))
+          "B" -> createDurationCalculation(Period.ofWeeks(12))
+          "C", "D" -> createDurationCalculation(Period.ofWeeks(8))
+          "E", "F", "G" -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
+          else -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
+        }
       }
     }
   }

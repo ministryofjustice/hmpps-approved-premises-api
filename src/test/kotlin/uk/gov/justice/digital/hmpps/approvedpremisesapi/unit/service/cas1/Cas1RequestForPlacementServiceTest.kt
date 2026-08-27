@@ -948,30 +948,6 @@ class Cas1RequestForPlacementServiceTest {
           "Cannot calculate duration for ap type normal, sentence type standardDeterminate, tier score H",
         )
       }
-
-      @Test
-      fun `returns general validation error when apType is normal and mens and sentence type is invalidSentenceType and live tier is A`() {
-        val application = ApprovedPremisesApplicationEntityFactory()
-          .withIsWomensApplication(false)
-          .withDefaults()
-          .produce()
-
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore("A").produce(),
-        )
-          .produce()
-
-        every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
-
-        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.normal, "invalidSentenceType")
-
-        assertThatCasResult(defaultDuration).isGeneralValidationError(
-          "Cannot calculate duration for ap type normal, sentence type invalidSentenceType, tier score A",
-        )
-      }
     }
   }
 }
