@@ -1,0 +1,130 @@
+AP Type,Tier Score,Gender,Sentence type,Exception Status,Placement Period Result
+Standard AP,A,Male,Any,Any,16 weeks
+Standard AP,B,Male,Not IPP,Any,12 weeks
+Standard AP,C,Male,Not IPP,Any,8 weeks
+Standard AP,D,Male,Not IPP,TRUE,8 weeks
+Standard AP,E,Male,Not IPP,TRUE,8 weeks
+Standard AP,F,Male,Not IPP,TRUE,8 weeks
+Standard AP,G,Male,Not IPP,TRUE,8 weeks
+Standard AP,D,Male,IPP,FALSE,Cannot be calculated
+Standard AP,E,Male,IPP,FALSE,Cannot be calculated
+Standard AP,F,Male,IPP,FALSE,Cannot be calculated
+Standard AP,B,Male,IPP,Any,16 weeks
+Standard AP,C,Male,IPP,Any,16 weeks
+Standard AP,D,Male,IPP,Any,Cannot be calculated
+Standard AP,E,Male,IPP,Any,Cannot be calculated
+Standard AP,F,Male,IPP,Any,Cannot be calculated
+Standard AP,G,Male,IPP,Any,Cannot be calculated
+Standard AP,A,Female,Any,Any,16 weeks
+Standard AP,B,Female,Any,Any,16 weeks
+Standard AP,C,Female,Any,Any,16 weeks
+Standard AP,D,Female,Any,TRUE,16 weeks
+Standard AP,E,Female,Any,TRUE,16 weeks
+Standard AP,F,Female,Any,TRUE,16 weeks
+Standard AP,G,Female,Any,TRUE,16 weeks
+Standard AP,D,Female,Any,FALSE,Cannot be calculated
+Standard AP,E,Female,Any,FALSE,Cannot be calculated
+Standard AP,F,Female,Any,FALSE,Cannot be calculated
+Standard AP,G,Female,Any,FALSE,Cannot be calculated
+PIPE AP,A,Male,Any,Any,26 weeks
+PIPE AP,B,Male,Any,Any,26 weeks
+PIPE AP,C,Male,Any,Any,26 weeks
+PIPE AP,D,Male,Not IPP,TRUE,26 weeks
+PIPE AP,E,Male,Not IPP,TRUE,26 weeks
+PIPE AP,F,Male,Not IPP,TRUE,26 weeks
+PIPE AP,G,Male,Not IPP,TRUE,26 weeks
+PIPE AP,D,Male,Not IPP,FALSE,Cannot be calculated
+PIPE AP,E,Male,Not IPP,FALSE,Cannot be calculated
+PIPE AP,F,Male,Not IPP,FALSE,Cannot be calculated
+PIPE AP,G,Male,Not IPP,FALSE,Cannot be calculated
+PIPE AP,D,Male,IPP,Any,Cannot be calculated
+PIPE AP,E,Male,IPP,Any,Cannot be calculated
+PIPE AP,F,Male,IPP,Any,Cannot be calculated
+PIPE AP,G,Male,IPP,Any,Cannot be calculated
+PIPE AP,A,Female,Any,Any,26 weeks
+PIPE AP,B,Female,Any,Any,26 weeks
+PIPE AP,C,Female,Any,Any,26 weeks
+PIPE AP,D,Female,Any,TRUE,26 weeks
+PIPE AP,E,Female,Any,TRUE,26 weeks
+PIPE AP,F,Female,Any,TRUE,26 weeks
+PIPE AP,G,Female,Any,TRUE,26 weeks
+PIPE AP,D,Female,Any,FALSE,Cannot be calculated
+PIPE AP,E,Female,Any,FALSE,Cannot be calculated
+PIPE AP,F,Female,Any,FALSE,Cannot be calculated
+PIPE AP,G,Female,Any,FALSE ,Cannot be calculated
+ESAP AP ,A,Male,Any,Any,Max 52 weeks
+ESAP AP ,B,Male,Any,Any,Max 52 weeks
+ESAP AP ,C,Male,Any,Any,Max 52 weeks
+ESAP AP ,D,Male,Not IPP,TRUE,Max 52 weeks
+ESAP AP ,E,Male,Not IPP,TRUE,Max 52 weeks
+ESAP AP ,F,Male,Not IPP,TRUE,Max 52 weeks
+ESAP AP ,G,Male,Not IPP,TRUE,Max 52 weeks
+ESAP AP ,D,Male,Not IPP,FALSE ,Cannot be calculated
+ESAP AP ,E,Male,Not IPP,FALSE ,Cannot be calculated
+ESAP AP ,F,Male,Not IPP,FALSE ,Cannot be calculated
+ESAP AP ,G,Male,Not IPP,FALSE ,Cannot be calculated
+ESAP AP ,D,Male,IPP,Any,Cannot be calculated
+ESAP AP ,E,Male,IPP,Any,Cannot be calculated
+ESAP AP ,F,Male,IPP,Any,Cannot be calculated
+ESAP AP ,G,Male,IPP,Any,Cannot be calculated
+ESAP AP ,A,Female,Any,Any,Max 52 weeks
+ESAP AP ,B,Female,Any,Any,Max 52 weeks
+ESAP AP ,C,Female,Any,Any,Max 52 weeks
+ESAP AP ,D,Female,Any,TRUE,Max 52 weeks
+ESAP AP ,E,Female,Any,TRUE,Max 52 weeks
+ESAP AP ,F,Female,Any,TRUE,Max 52 weeks
+ESAP AP ,G,Female,Any,TRUE,Max 52 weeks
+ESAP AP ,D,Female,Any,FALSE ,Cannot be calculated
+ESAP AP ,E,Female,Any,FALSE ,Cannot be calculated
+ESAP AP ,F,Female,Any,FALSE ,Cannot be calculated
+ESAP AP ,G,Female,Any,FALSE ,Cannot be calculated
+RFAP AP,A,Male,Any,Any,16 weeks
+RFAP AP,B,Male,Not IPP,Any,12 weeks
+RFAP AP,C,Male,Not IPP,Any,8 weeks
+RFAP AP,D,Male,Not IPP,TRUE,8 weeks
+RFAP AP,E,Male,Not IPP,TRUE,8 weeks
+RFAP AP,F,Male,Not IPP,TRUE,8 weeks
+RFAP AP,G,Male,Not IPP,TRUE,8 weeks
+RFAP AP,D,Male,Not IPP,FALSE ,Cannot be calculated
+RFAP AP,E,Male,Not IPP,FALSE ,Cannot be calculated
+RFAP AP,F,Male,Not IPP,FALSE ,Cannot be calculated
+RFAP AP,G,Male,Not IPP,FALSE ,Cannot be calculated
+RFAP AP,D,Male,IPP,Any,Cannot be calculated
+RFAP AP,E,Male,IPP,Any,Cannot be calculated
+RFAP AP,F,Male,IPP,Any,Cannot be calculated
+RFAP AP,G,Male,IPP,Any,Cannot be calculated
+RFAP AP,A,Female,Any,Any,16 weeks
+RFAP AP,B,Female,Any,Any,16 weeks
+RFAP AP,C,Female,Any,Any,16 weeks
+RFAP AP,D,Female,Any,TRUE,16 weeks
+RFAP AP,E,Female,Any,TRUE,16 weeks
+RFAP AP,F,Female,Any,TRUE,16 weeks
+RFAP AP,G,Female,Any,TRUE,16 weeks
+RFAP AP,D,Female,Any,FALSE ,Cannot be calculated
+RFAP AP,E,Female,Any,FALSE ,Cannot be calculated
+RFAP AP,F,Female,Any,FALSE ,Cannot be calculated
+RFAP AP,G,Female,Any,FALSE ,Cannot be calculated
+Mental Health AP,A,Male,Any,Any,26 weeks
+Mental Health AP,B,Male,Any,Any,26 weeks
+Mental Health AP,C,Male,Any,Any,26 weeks
+Mental Health AP,D,Male,Not IPP,TRUE,26 weeks
+Mental Health AP,E,Male,Not IPP,TRUE,26 weeks
+Mental Health AP,F,Male,Not IPP,TRUE,26 weeks
+Mental Health AP,G,Male,Not IPP,TRUE,26 weeks
+Mental Health AP,D,Male,Not IPP,FALSE ,Cannot be calculated
+Mental Health AP,E,Male,Not IPP,FALSE ,Cannot be calculated
+Mental Health AP,F,Male,Not IPP,FALSE ,Cannot be calculated
+Mental Health AP,G,Male,Not IPP,FALSE ,Cannot be calculated
+Mental Health AP,D,Male,IPP,Any,Cannot be calculated
+Mental Health AP,E,Male,IPP,Any,Cannot be calculated
+Mental Health AP,F,Male,IPP,Any,Cannot be calculated
+Mental Health AP,G,Male,IPP,Any,Cannot be calculated
+Mental Health AP,A,Female,Any,Any,Cannot be calculated
+Mental Health AP,B,Female,Any,Any,Cannot be calculated
+Mental Health AP,C,Female,Any,Any,Cannot be calculated
+Mental Health AP,D,Female,Any,Any,Cannot be calculated
+Mental Health AP,E,Female,Any,Any,Cannot be calculated
+Mental Health AP,F,Female,Any,Any,Cannot be calculated
+Mental Health AP,G,Female,Any,Any,Cannot be calculated
+Any,Missing,Any,Any,Any,Cannot be calculated
+Any,Unsupervised,Any,Any,Any,Cannot be calculated

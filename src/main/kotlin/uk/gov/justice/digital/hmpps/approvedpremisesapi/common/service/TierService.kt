@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.AvailableTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierV3Score
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -28,23 +29,11 @@ class TierService(
       "B0", "B1", "B2", "B3",
       "A0", "A1", "A2", "A3",
     ).map { AvailableTierDto(it) }
-
-    private val TIERS_V3 = listOf(
-      "A",
-      "B",
-      "C",
-      "D",
-      "E",
-      "F",
-      "G",
-      "MISSING",
-      "NOT_SUPERVISED",
-    ).map { AvailableTierDto(it) }
   }
 
   fun getAvailableTiersV2(): List<AvailableTierDto> = TIERS_V2
 
-  fun getAvailableTiersV3(): List<AvailableTierDto> = TIERS_V3
+  fun getAvailableTiersV3(): List<AvailableTierDto> = TierV3Score.entries.map { AvailableTierDto(it.name) }
 
   fun getTier(crn: String): TierDto? {
     val normalizedCrn = crn.uppercase()

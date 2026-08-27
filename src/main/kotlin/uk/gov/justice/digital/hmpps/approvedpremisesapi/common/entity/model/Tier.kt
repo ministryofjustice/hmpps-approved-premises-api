@@ -29,3 +29,15 @@ enum class TierVersion {
   V2,
   V3,
 }
+
+enum class TierV3Score {
+  A,
+  B,
+  C,
+  D,
+  E,
+  F,
+  G,
+  MISSING,
+  NOT_SUPERVISED,
+}
