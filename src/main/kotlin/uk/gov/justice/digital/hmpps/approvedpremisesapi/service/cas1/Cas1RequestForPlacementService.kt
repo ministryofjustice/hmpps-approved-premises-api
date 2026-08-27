@@ -51,10 +51,12 @@ class Cas1RequestForPlacementService(
     return CasResult.Success(result.sortedByDescending { it.submittedAt })
   }
 
+  @SuppressWarnings("UnusedParameter")
   fun defaultDurations(
     applicationId: UUID,
     apType: ApType,
     sentenceType: String,
+    exceptionalApplication: Boolean = false,
   ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
     val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound("Application", applicationId.toString())
     val tier = tierService.getTier(application.crn) ?: return CasResult.NotFound("Tier associated with case CRN", application.crn)

@@ -28,8 +28,9 @@ class Cas1RequestsForPlacementController(
     @PathVariable applicationId: UUID,
     @RequestParam("apType") apType: ApType,
     @RequestParam("sentenceType") sentenceType: SentenceTypeOption,
+    @RequestParam("exceptionalApplication") exceptionalApplication: Boolean = false,
   ): ResponseEntity<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
-    val result = cas1RequestForPlacementService.defaultDurations(applicationId, apType, sentenceType.value)
+    val result = cas1RequestForPlacementService.defaultDurations(applicationId, apType, sentenceType.value, exceptionalApplication)
 
     return ResponseEntity.ok(extractEntityFromCasResult(result))
   }
