@@ -91,21 +91,26 @@
 
             <h5>Risk Ratings</h5>
             {{#risk_ratings}}
+                <p><b>Multi-Agency Public Protection Arrangements (MAPPA)</b></p>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-50">Multi-Agency Public Protection Arrangements value</td>
-                        <td class="data-column-50">Multi-Agency Public Protection Arrangements status</td>
+                        <td class="data-column-33">MAPPA level</td>
+                        <td class="data-column-33">Status</td>
+                        <td class="data-column-33">Last updated</td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue mappa.value }}</td>
+                        <td>{{ optionalValue mappa.value.level }}</td>
                         <td>{{ optionalValue mappa.status }}</td>
+                        <td>{{ buildDateNumber mappa.value.lastUpdated.[0] mappa.value.lastUpdated.[1] mappa.value.lastUpdated.[2] }}</td>
                     </tr>
                 </table>
+
+                <p><b>Tier</b></p>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Tier level</td>
-                        <td class="data-column-25">Tier status</td>
-                        <td class="data-column-25">Tier last updated</td>
+                        <td class="data-column-33">Tier level</td>
+                        <td class="data-column-33">Status</td>
+                        <td class="data-column-33">Last updated</td>
                     </tr>
                     <tr>
                         <td>{{ optionalValue tier.value.level }}</td>
@@ -113,36 +118,40 @@
                         <td>{{ buildDateNumber tier.value.lastUpdated.[0] tier.value.lastUpdated.[1] tier.value.lastUpdated.[2] }}</td>
                     </tr>
                 </table>
+
+                <p><b>Risk of Serious Harm (RoSH)</b></p>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Risk of Serious Harm overall risk</td>
-                        <td class="data-column-25">Risk to Children</td>
-                        <td class="data-column-25">Risk to Public</td>
-                        <td class="data-column-25">Risk to Known Adult</td>
+                        <td class="data-column-20">Overall risk</td>
+                        <td class="data-column-20">Risk to Children</td>
+                        <td class="data-column-20">Risk to Public</td>
+                        <td class="data-column-20">Risk to Known Adult</td>
+                        <td class="data-column-20">Risk to Staff</td>
                     </tr>
                     <tr>
                         <td>{{ optionalValue roshRisks.value.overallRisk }}</td>
                         <td>{{ optionalValue roshRisks.value.riskToChildren }}</td>
                         <td>{{ optionalValue roshRisks.value.riskToPublic }}</td>
                         <td>{{ optionalValue roshRisks.value.riskToKnownAdult }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Risk to Staff</td>
-                        <td class="data-column-25">Risk of Serious Harm status</td>
-                        <td class="data-column-25">Risk of Serious Harm last updated</td>
-                    </tr>
-                    <tr>
                         <td>{{ optionalValue roshRisks.value.riskToStaff }}</td>
-                        <td>{{ optionalValue roshRisks.status }}</td>
-                        <td>{{ buildDateNumber roshRisks.value.lastUpdated.[0] roshRisks.value.lastUpdated.[1] roshRisks.value.lastUpdated.[2] }}</td>
                     </tr>
                 </table>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-50">Flags</td>
-                        <td class="data-column-50">Flags status</td>
+                        <td class="data-column-50">Last updated</td>
+                        <td class="data-column-50"></td>
+                    </tr>
+                    <tr>
+                        <td>{{ buildDateNumber roshRisks.value.lastUpdated.[0] roshRisks.value.lastUpdated.[1] roshRisks.value.lastUpdated.[2] }}</td>
+                        <td></td>
+                    </tr>
+                </table>
+
+                <p><b>Flags</b></p>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-75">Flags</td>
+                        <td class="data-column-25">Status</td>
                     </tr>
                     <tr>
                         <td>{{#flags.value}}{{.}}{{#unless @last}}, {{/unless}}{{/flags.value}}{{^flags.value}}No Data Held{{/flags.value}}</td>
@@ -223,7 +232,14 @@
 
                 <p><b>Prison Information</b></p>
                 {{#prison-information}}
-                    <table class="summary-list">{{#each .}}<tr><td>{{ @key }}</td><td>{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    {{#Adjudications}}
+                        <table class="summary-list">
+                            <tr><td class="data-column-30">Offence description</td><td class="data-column-70">{{ optionalValue [Offence description] }}</td></tr>
+                            <tr><td class="data-column-30">Establishment</td><td class="data-column-70">{{ optionalValue Establishment }}</td></tr>
+                            <tr><td class="data-column-30">Finding</td><td class="data-column-70">{{ optionalValue Finding }}</td></tr>
+                            <tr><td class="data-column-30">Report date and time</td><td class="data-column-70">{{ optionalValue [Report date and time] }}</td></tr>
+                        </table><br/>
+                    {{/Adjudications}}
                 {{/prison-information}}
                 {{^prison-information}}
                     <p>No Data Held</p>
@@ -915,21 +931,26 @@
 
             <h5>Risk Ratings</h5>
             {{#risk_ratings}}
+                <p><b>Multi-Agency Public Protection Arrangements (MAPPA)</b></p>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-50">Multi-Agency Public Protection Arrangements value</td>
-                        <td class="data-column-50">Multi-Agency Public Protection Arrangements status</td>
+                        <td class="data-column-33">MAPPA level</td>
+                        <td class="data-column-33">Status</td>
+                        <td class="data-column-33">Last updated</td>
                     </tr>
                     <tr>
-                        <td>{{ optionalValue mappa.value }}</td>
+                        <td>{{ optionalValue mappa.value.level }}</td>
                         <td>{{ optionalValue mappa.status }}</td>
+                        <td>{{ buildDateNumber mappa.value.lastUpdated.[0] mappa.value.lastUpdated.[1] mappa.value.lastUpdated.[2] }}</td>
                     </tr>
                 </table>
+
+                <p><b>Tier</b></p>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Tier level</td>
-                        <td class="data-column-25">Tier status</td>
-                        <td class="data-column-25">Tier last updated</td>
+                        <td class="data-column-33">Tier level</td>
+                        <td class="data-column-33">Status</td>
+                        <td class="data-column-33">Last updated</td>
                     </tr>
                     <tr>
                         <td>{{ optionalValue tier.value.level }}</td>
@@ -937,36 +958,40 @@
                         <td>{{ buildDateNumber tier.value.lastUpdated.[0] tier.value.lastUpdated.[1] tier.value.lastUpdated.[2] }}</td>
                     </tr>
                 </table>
+
+                <p><b>Risk of Serious Harm (RoSH)</b></p>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-25">Risk of Serious Harm overall risk</td>
-                        <td class="data-column-25">Risk to Children</td>
-                        <td class="data-column-25">Risk to Public</td>
-                        <td class="data-column-25">Risk to Known Adult</td>
+                        <td class="data-column-20">Overall risk</td>
+                        <td class="data-column-20">Risk to Children</td>
+                        <td class="data-column-20">Risk to Public</td>
+                        <td class="data-column-20">Risk to Known Adult</td>
+                        <td class="data-column-20">Risk to Staff</td>
                     </tr>
                     <tr>
                         <td>{{ optionalValue roshRisks.value.overallRisk }}</td>
                         <td>{{ optionalValue roshRisks.value.riskToChildren }}</td>
                         <td>{{ optionalValue roshRisks.value.riskToPublic }}</td>
                         <td>{{ optionalValue roshRisks.value.riskToKnownAdult }}</td>
-                    </tr>
-                </table>
-                <table class="data-table">
-                    <tr>
-                        <td class="data-column-25">Risk to Staff</td>
-                        <td class="data-column-25">Risk of Serious Harm status</td>
-                        <td class="data-column-25">Risk of Serious Harm last updated</td>
-                    </tr>
-                    <tr>
                         <td>{{ optionalValue roshRisks.value.riskToStaff }}</td>
-                        <td>{{ optionalValue roshRisks.status }}</td>
-                        <td>{{ buildDateNumber roshRisks.value.lastUpdated.[0] roshRisks.value.lastUpdated.[1] roshRisks.value.lastUpdated.[2] }}</td>
                     </tr>
                 </table>
                 <table class="data-table">
                     <tr>
-                        <td class="data-column-50">Flags</td>
-                        <td class="data-column-50">Flags status</td>
+                        <td class="data-column-50">Last updated</td>
+                        <td class="data-column-50"></td>
+                    </tr>
+                    <tr>
+                        <td>{{ buildDateNumber roshRisks.value.lastUpdated.[0] roshRisks.value.lastUpdated.[1] roshRisks.value.lastUpdated.[2] }}</td>
+                        <td></td>
+                    </tr>
+                </table>
+
+                <p><b>Flags</b></p>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-75">Flags</td>
+                        <td class="data-column-25">Status</td>
                     </tr>
                     <tr>
                         <td>{{#flags.value}}{{.}}{{#unless @last}}, {{/unless}}{{/flags.value}}{{^flags.value}}No Data Held{{/flags.value}}</td>
