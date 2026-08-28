@@ -72,7 +72,7 @@ class Cas1RequestForPlacementService(
   fun defaultDurations(
     applicationId: UUID,
     apType: ApType,
-    sentenceType: String,
+    sentenceType: SentenceTypeOption,
     exceptionalApplication: Boolean = false,
   ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
     val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound("Application", applicationId.toString())
@@ -90,7 +90,7 @@ class Cas1RequestForPlacementService(
   private data class DurationCriteria(
     val apType: ApType,
     val application: ApprovedPremisesApplicationEntity,
-    val sentenceType: String,
+    val sentenceType: SentenceTypeOption,
     val liveTier: TierDto,
     val exceptionalApplication: Boolean,
   )
@@ -119,8 +119,8 @@ class Cas1RequestForPlacementService(
     val apType = criteria.apType
     val tierScore = TierV3Score.entries.firstOrNull { it.name == criteria.liveTier.tierScore }
       ?: error("Could not resolve tier value ${criteria.liveTier.tierScore}")
-    val isIpp = criteria.sentenceType == SentenceTypeOption.ipp.value
-    val male = !(criteria.application.isWomensApplication!!)
+    val isIpp = criteria.sentenceType == SentenceTypeOption.ipp
+    val male = !(criteria.application.isWomensApplication ?: error("Cannot calculate duration for application ${criteria.application.id} because isWomensApplication is not set"))
 
     val tierAbc = tierScore in TIER_SCORE_ABC
     val tierDOrBelowWithException = tierScore in TIER_SCORE_D_OR_BELOW && criteria.exceptionalApplication

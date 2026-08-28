@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.apache.commons.csv.CSVFormat
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -368,7 +369,7 @@ class Cas1RequestForPlacementServiceTest {
     fun `returns not found when application not found for applicationId`() {
       val applicationId = UUID.randomUUID()
 
-      val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+      val sentenceType = SentenceTypeOption.entries.toTypedArray().random()
 
       every { applicationService.getApplication(applicationId) } returns null
 
@@ -389,7 +390,7 @@ class Cas1RequestForPlacementServiceTest {
       every { applicationService.getApplication(application.id) } returns application
       every { tierService.getTier(application.crn) } returns null
 
-      val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, mockk<ApType>(), SentenceTypeOption.entries.toTypedArray().random().value)
+      val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, mockk<ApType>(), SentenceTypeOption.entries.toTypedArray().random())
 
       assertThatCasResult(defaultDuration).isNotFound(
         "Tier associated with case CRN",
@@ -413,7 +414,7 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random()
 
         every { applicationService.getApplication(application.id) } returns application
         every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
@@ -434,7 +435,7 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random()
 
         every { applicationService.getApplication(application.id) } returns application
         every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
@@ -455,7 +456,7 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random()
 
         every { applicationService.getApplication(application.id) } returns application
         every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
@@ -473,6 +474,31 @@ class Cas1RequestForPlacementServiceTest {
 
     @Nested
     inner class V3 {
+
+      @Test
+      fun `error if is_womens_application is null`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withDefaults()
+          .withId(UUID.fromString("5a3ddade-e24b-481a-8d75-56a546839f9c"))
+          .withIsWomensApplication(null)
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+
+        every { tierService.getTier(application.crn) } returns TierDtoFactory()
+          .withVersion(TierVersionDto.V3)
+          .withTierScore("A")
+          .produce()
+
+        assertThatThrownBy {
+          cas1RequestForPlacementService.defaultDurations(
+            applicationId = application.id,
+            apType = ApType.normal,
+            sentenceType = SentenceTypeOption.ipp,
+            exceptionalApplication = false,
+          )
+        }.hasMessage("Cannot calculate duration for application 5a3ddade-e24b-481a-8d75-56a546839f9c because isWomensApplication is not set")
+      }
 
       @ParameterizedTest(name = "{0}")
       @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1RequestForPlacementServiceTest#durationCalculationExpectations")
@@ -494,7 +520,7 @@ class Cas1RequestForPlacementServiceTest {
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(
           applicationId = application.id,
           apType = expectation.apType,
-          sentenceType = expectation.sentenceType.value,
+          sentenceType = expectation.sentenceType,
           exceptionalApplication = expectation.exceptionStatus,
         )
 
