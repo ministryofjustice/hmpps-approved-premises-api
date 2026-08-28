@@ -513,10 +513,11 @@ class Cas1RequestForPlacementServiceTest {
               withArg { actual ->
                 assertThat(actual).startsWith("Could not calculate duration for criteria")
               },
+              "cas1-cant-calculate-duration",
             )
           }
         } else {
-          verify(exactly = 0) { sentryService.captureErrorMessage(any()) }
+          verify(exactly = 0) { sentryService.captureErrorMessage(any(), any()) }
         }
       }
     }

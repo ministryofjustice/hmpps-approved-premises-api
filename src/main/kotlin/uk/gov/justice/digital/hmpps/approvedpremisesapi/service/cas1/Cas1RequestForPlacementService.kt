@@ -181,7 +181,7 @@ class Cas1RequestForPlacementService(
     }
 
     if (period == null) {
-      sentryService.captureErrorMessage("Could not calculate duration for criteria $criteria")
+      sentryService.captureErrorMessage(message = "Could not calculate duration for criteria $criteria", groupId = "cas1-cant-calculate-duration")
     }
 
     return Cas1RequestsForPlacementDurationsCalculationResponseDto(period?.days, null)

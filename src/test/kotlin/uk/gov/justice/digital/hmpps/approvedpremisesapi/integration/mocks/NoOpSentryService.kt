@@ -22,7 +22,7 @@ class NoOpSentryService : SentryService {
     capturedExceptions.add(throwable)
   }
 
-  override fun captureErrorMessage(message: String) {
+  override fun captureErrorMessage(message: String, groupId: String?) {
     log.info("Sentry Message Captured : '$message'", message)
     capturedErrors.add(message)
   }
