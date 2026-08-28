@@ -33,7 +33,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
@@ -46,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary as Cas1PlacementRequestSummaryEntity
 
 @Cas1Controller
 @Tag(name = "CAS1 Placement Requests")
@@ -55,6 +58,7 @@ class Cas1PlacementRequestsController(
   private val cas1PlacementRequestSummaryTransformer: Cas1PlacementRequestSummaryTransformer,
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val offenderDetailService: OffenderDetailService,
+  private val offenderService: OffenderService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
   private val userAccessService: Cas1UserAccessService,
@@ -121,18 +125,19 @@ class Cas1PlacementRequestsController(
   }
 
   private fun mapPersonDetailOntoPlacementRequests(
-    placementRequests: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary>,
+    placementRequests: List<Cas1PlacementRequestSummaryEntity>,
     user: UserEntity,
   ): List<Cas1PlacementRequestSummary> {
-    val offenderDetails = offenderDetailService.getPersonInfoResults(
+    val personSummaryInfoResults = offenderService.getPersonSummaryInfoResults(
       placementRequests.map { it.getPersonCrn() }.toSet(),
       user.cas1LaoStrategy(),
     )
+    val personSummaryInfoResultsByCrn = personSummaryInfoResults.associateBy { it.crn }
     return placementRequests.map { placementRequest ->
       val crn = placementRequest.getPersonCrn()
       cas1PlacementRequestSummaryTransformer.transformCas1PlacementRequestSummaryJpaToApi(
         placementRequest,
-        offenderDetails.find { it.crn == crn }!!,
+        personSummaryInfoResultsByCrn[crn] ?: PersonSummaryInfoResult.NotFound(crn),
       )
     }
   }
