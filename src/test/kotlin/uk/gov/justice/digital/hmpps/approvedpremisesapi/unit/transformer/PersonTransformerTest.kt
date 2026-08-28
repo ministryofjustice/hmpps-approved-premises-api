@@ -105,6 +105,7 @@ class PersonTransformerTest {
           crn = "the crn",
           summary = CaseSummaryFactory()
             .withName(Name("max", "power", emptyList()))
+            .withDateOfBirth(LocalDate.of(1990, 1, 2))
             .produce(),
           tier = tier,
         ),
@@ -114,6 +115,7 @@ class PersonTransformerTest {
       assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
       assertThat(result).isInstanceOf(FullPersonSummary::class.java)
       assertThat((result as FullPersonSummary).name).isEqualTo("max power")
+      assertThat(result.dateOfBirth).isEqualTo(LocalDate.of(1990, 1, 2))
       assertThat(result.tier).isEqualTo(tier)
     }
 
