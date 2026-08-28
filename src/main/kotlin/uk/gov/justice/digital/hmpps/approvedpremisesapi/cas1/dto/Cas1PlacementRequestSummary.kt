@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import java.time.LocalDate
 import java.util.UUID
 
@@ -12,7 +12,7 @@ data class Cas1PlacementRequestSummary(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  @get:JsonProperty("person", required = true) val person: PersonSummary,
 
   @get:JsonProperty("placementRequestStatus", required = true) val placementRequestStatus: PlacementRequestStatus,
 
