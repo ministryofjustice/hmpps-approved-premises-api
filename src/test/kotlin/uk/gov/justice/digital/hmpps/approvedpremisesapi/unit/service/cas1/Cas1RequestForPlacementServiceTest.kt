@@ -23,10 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
@@ -62,7 +61,7 @@ class Cas1RequestForPlacementServiceTest {
   private val cas1WithdrawableService = mockk<Cas1WithdrawableService>()
   private val cas1SpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val cas1SpaceBookingTransformer = mockk<Cas1SpaceBookingTransformer>()
-  private val caseService = mockk<CaseService>()
+  private val tierService = mockk<TierService>()
   private val domainEventRepository = mockk<DomainEventRepository>()
   private val jsonMapper = JsonMapper()
 
@@ -75,7 +74,7 @@ class Cas1RequestForPlacementServiceTest {
     cas1SpaceBookingRepository,
     cas1SpaceBookingTransformer,
     domainEventRepository,
-    caseService,
+    tierService,
     jsonMapper,
   )
 
@@ -373,39 +372,18 @@ class Cas1RequestForPlacementServiceTest {
     }
 
     @Test
-    fun `returns validation error when case not found for crn`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCrn("CRN123")
-        .withDefaults()
-        .produce()
-
-      val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
-
-      every { applicationService.getApplication(application.id) } returns application
-      every { caseService.getCase(application.crn) } returns null
-
-      val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, mockk<ApType>(), sentenceType)
-
-      assertThatCasResult(defaultDuration).isGeneralValidationError(
-        "Case is null for application crn CRN123",
-      )
-    }
-
-    @Test
-    fun `returns not found error when case tier is null`() {
+    fun `returns not found error when tier is null`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withDefaults()
         .produce()
 
-      val case = CaseDtoFactory().withTier(null).produce()
-
       every { applicationService.getApplication(application.id) } returns application
-      every { caseService.getCase(application.crn) } returns case
+      every { tierService.getTier(application.crn) } returns null
 
       val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, mockk<ApType>(), SentenceTypeOption.entries.toTypedArray().random().value)
 
       assertThatCasResult(defaultDuration).isNotFound(
-        "Version for live tier associated with case CRN",
+        "Tier associated with case CRN",
         expectedId = application.crn,
       )
     }
@@ -426,17 +404,12 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory().withVersion(
-            TierVersionDto.V2,
-          ).produce(),
-        )
-          .produce()
-
         val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
 
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
+          TierVersionDto.V2,
+        ).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -452,17 +425,12 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory().withVersion(
-            TierVersionDto.V2,
-          ).produce(),
-        )
-          .produce()
-
         val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
 
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
+          TierVersionDto.V2,
+        ).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.pipe, sentenceType)
 
@@ -478,17 +446,12 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory().withVersion(
-            TierVersionDto.V2,
-          ).produce(),
-        )
-          .produce()
-
         val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
 
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
+          TierVersionDto.V2,
+        ).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.esap, sentenceType)
 
@@ -507,17 +470,12 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory().withVersion(
-            TierVersionDto.V3,
-          ).produce(),
-        )
-          .produce()
-
         val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
 
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
+          TierVersionDto.V3,
+        ).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.pipe, sentenceType)
 
@@ -533,17 +491,12 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory().withVersion(
-            TierVersionDto.V3,
-          ).produce(),
-        )
-          .produce()
-
         val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
 
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
+          TierVersionDto.V3,
+        ).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.esap, sentenceType)
 
@@ -566,17 +519,12 @@ class Cas1RequestForPlacementServiceTest {
           .withIsWomensApplication(true)
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory().withVersion(
-            TierVersionDto.V3,
-          ).produce(),
-        )
-          .produce()
-
         val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
 
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
+          TierVersionDto.V3,
+        ).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -598,17 +546,12 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory().withVersion(
-            TierVersionDto.V3,
-          ).produce(),
-        )
-          .produce()
-
         val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
 
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
+          TierVersionDto.V3,
+        ).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -631,17 +574,12 @@ class Cas1RequestForPlacementServiceTest {
           .withIsWomensApplication(true)
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory().withVersion(
-            TierVersionDto.V3,
-          ).produce(),
-        )
-          .produce()
-
         val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
 
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory().withVersion(
+          TierVersionDto.V3,
+        ).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -674,15 +612,10 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore(liveTierScore).produce(),
-        )
-          .produce()
-
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory()
+          .withVersion(TierVersionDto.V3)
+          .withTierScore(liveTierScore).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -719,15 +652,10 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore(liveTierScore).produce(),
-        )
-          .produce()
-
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory()
+          .withVersion(TierVersionDto.V3)
+          .withTierScore(liveTierScore).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -758,15 +686,10 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore("A").produce(),
-        )
-          .produce()
-
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory()
+          .withVersion(TierVersionDto.V3)
+          .withTierScore("A").produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -798,15 +721,10 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore("B").produce(),
-        )
-          .produce()
-
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory()
+          .withVersion(TierVersionDto.V3)
+          .withTierScore("B").produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -848,15 +766,10 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore(liveTierScore).produce(),
-        )
-          .produce()
-
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory()
+          .withVersion(TierVersionDto.V3)
+          .withTierScore(liveTierScore).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -908,15 +821,10 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore(liveTierScore).produce(),
-        )
-          .produce()
-
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory()
+          .withVersion(TierVersionDto.V3)
+          .withTierScore(liveTierScore).produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
 
@@ -932,44 +840,15 @@ class Cas1RequestForPlacementServiceTest {
           .withDefaults()
           .produce()
 
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore("H").produce(),
-        )
-          .produce()
-
         every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
+        every { tierService.getTier(application.crn) } returns TierDtoFactory()
+          .withVersion(TierVersionDto.V3)
+          .withTierScore("H").produce()
 
         val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.normal, SentenceTypeOption.standardDeterminate.value)
 
         assertThatCasResult(defaultDuration).isGeneralValidationError(
           "Cannot calculate duration for ap type normal, sentence type standardDeterminate, tier score H",
-        )
-      }
-
-      @Test
-      fun `returns general validation error when apType is normal and mens and sentence type is invalidSentenceType and live tier is A`() {
-        val application = ApprovedPremisesApplicationEntityFactory()
-          .withIsWomensApplication(false)
-          .withDefaults()
-          .produce()
-
-        val case = CaseDtoFactory().withTier(
-          TierDtoFactory()
-            .withVersion(TierVersionDto.V3)
-            .withTierScore("A").produce(),
-        )
-          .produce()
-
-        every { applicationService.getApplication(application.id) } returns application
-        every { caseService.getCase(application.crn) } returns case
-
-        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.normal, "invalidSentenceType")
-
-        assertThatCasResult(defaultDuration).isGeneralValidationError(
-          "Cannot calculate duration for ap type normal, sentence type invalidSentenceType, tier score A",
         )
       }
     }
