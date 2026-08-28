@@ -1,0 +1,2 @@
+ALTER TABLE approved_premises_applications ADD is_exceptional boolean NULL;
+ALTER TABLE approved_premises_applications ADD calculated_placement_duration int NULL;

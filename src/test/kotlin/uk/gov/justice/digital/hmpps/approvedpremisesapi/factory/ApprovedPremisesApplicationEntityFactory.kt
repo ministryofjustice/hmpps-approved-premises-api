@@ -263,6 +263,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     sentenceType = this.sentenceType(),
     arrivalDate = this.arrivalDate(),
     duration = this.duration(),
+    calculatedPlacementDuration = null,
     isInapplicable = this.isInapplicable(),
     isWithdrawn = this.isWithdrawn(),
     withdrawalReason = this.withdrawalReason(),
@@ -282,5 +283,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     licenceExpiryDate = this.licenseExpiryDate(),
     expiredReason = this.expiredReason(),
     referredBy = this.referredBy(),
+    isExceptional = null,
   )
 }

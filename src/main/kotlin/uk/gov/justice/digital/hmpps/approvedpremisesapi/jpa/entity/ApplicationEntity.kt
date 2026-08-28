@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Rele
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -397,6 +398,15 @@ class ApprovedPremisesApplicationEntity(
    */
   var duration: Int?,
   /**
+   * Default duration calculated for placements based upon logic defined in [Cas1RequestForPlacementService.defaultDurations]
+   *
+   * Will be provided even if a request for placement was not made in the application
+   * (i.e. no arrival date has been provided)
+   *
+   * added in 2026-08 and has not been backfilled
+   */
+  var calculatedPlacementDuration: Int?,
+  /**
    * The offender name. This should only be used for search purposes (i.e. SQL)
    * If returning the offender name to the user, use the [OffenderService], which
    * will also consider any LAO restrictions
@@ -431,6 +441,13 @@ class ApprovedPremisesApplicationEntity(
   var licenceExpiryDate: LocalDate?,
   var expiredReason: String?,
   var referredBy: String?,
+  /**
+   * An application is exceptional if the case does not meet the CAS1 eligibility criteria,
+   * but a senior manager has agreed that the application can proceed
+   *
+   * added in 2026-08 and has not been backfilled
+   */
+  var isExceptional: Boolean?,
 ) : ApplicationEntity(
   id,
   crn,
