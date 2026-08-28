@@ -45,7 +45,7 @@ class Cas1RequestForPlacementService(
       TierV3Score.C,
     )
 
-    val TIER_SCORE_D_OR_BELOW = listOf(
+    val TIER_SCORE_D_TO_G = listOf(
       TierV3Score.D,
       TierV3Score.E,
       TierV3Score.F,
@@ -112,18 +112,17 @@ class Cas1RequestForPlacementService(
     return Cas1RequestsForPlacementDurationsCalculationResponseDto(period?.days, null)
   }
 
-  @SuppressWarnings("MagicNumber", "CyclomaticComplexMethod")
+  @SuppressWarnings("MagicNumber", "CyclomaticComplexMethod", "NestedBlockDepth")
   private fun defaultDurationTierV3(
     criteria: DurationCriteria,
   ): Cas1RequestsForPlacementDurationsCalculationResponseDto {
     val apType = criteria.apType
-    val tierScore = TierV3Score.entries.firstOrNull { it.name == criteria.liveTier.tierScore }
-      ?: error("Could not resolve tier value ${criteria.liveTier.tierScore}")
+    val tierScore = TierV3Score.entries.firstOrNull { it.name == criteria.liveTier.tierScore } ?: error("Could not resolve tier value ${criteria.liveTier.tierScore}")
     val isIpp = criteria.sentenceType == SentenceTypeOption.ipp
     val male = !(criteria.application.isWomensApplication ?: error("Cannot calculate duration for application ${criteria.application.id} because isWomensApplication is not set"))
 
     val tierAbc = tierScore in TIER_SCORE_ABC
-    val tierDOrBelowWithException = tierScore in TIER_SCORE_D_OR_BELOW && criteria.exceptionalApplication
+    val tierDtoGWithException = tierScore in TIER_SCORE_D_TO_G && criteria.exceptionalApplication
 
     fun maleIppRestrictedRule(period: Period) = if (isIpp && male) {
       if (tierAbc) {
@@ -131,7 +130,7 @@ class Cas1RequestForPlacementService(
       } else {
         null
       }
-    } else if (tierAbc || tierDOrBelowWithException) {
+    } else if (tierAbc || tierDtoGWithException) {
       period
     } else {
       null
@@ -158,19 +157,24 @@ class Cas1RequestForPlacementService(
           maleIppRestrictedRule(Period.ofWeeks(16))
         } else {
           if (male) {
-            if (tierScore == TierV3Score.A) {
-              Period.ofWeeks(16)
-            } else if (tierScore == TierV3Score.B) {
-              Period.ofWeeks(12)
-            } else if (tierScore == TierV3Score.C) {
-              Period.ofWeeks(8)
-            } else if (tierDOrBelowWithException) {
-              Period.ofWeeks(8)
-            } else {
-              null
+            when (tierScore) {
+              TierV3Score.A -> Period.ofWeeks(16)
+              TierV3Score.B -> Period.ofWeeks(12)
+              TierV3Score.C -> Period.ofWeeks(8)
+              TierV3Score.D,
+              TierV3Score.E,
+              TierV3Score.F,
+              TierV3Score.G,
+              -> if (criteria.exceptionalApplication) {
+                Period.ofWeeks(8)
+              } else {
+                null
+              }
+              TierV3Score.MISSING -> null
+              TierV3Score.NOT_SUPERVISED -> null
             }
           } else {
-            if (tierAbc || tierDOrBelowWithException) {
+            if (tierAbc || tierDtoGWithException) {
               Period.ofWeeks(16)
             } else {
               null
