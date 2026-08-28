@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
@@ -48,7 +47,7 @@ class RequestForPlacementTransformer(
       } else {
         RequestForPlacementType.manual
       },
-      placementDates = listOf(placementApplicationEntity.placementDates()!!.toApiType()),
+      canonicalPlacementPeriod = authorisedPlacementPeriod ?: requestedPlacementPeriod,
       requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = authorisedPlacementPeriod,
       submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
@@ -63,11 +62,8 @@ class RequestForPlacementTransformer(
       situation = placementApplicationEntity.situation?.let { SituationOption.valueOf(it) },
       decision = placementApplicationEntity.decision,
       submittedBy = cas1AssessmentTransformer.transformToStaffDto(placementApplicationEntity.createdByUser),
-      canonicalPlacementPeriod = getCanonicalPlacementPeriod(authorisedPlacementPeriod, requestedPlacementPeriod),
     )
   }
-
-  private fun getCanonicalPlacementPeriod(authorisedPlacementPeriod: Cas1RequestedPlacementPeriod?, requestedPlacementPeriod: Cas1RequestedPlacementPeriod) = authorisedPlacementPeriod ?: requestedPlacementPeriod
 
   /**
    * This should only be used for placement requests for the application's arrival date.
@@ -103,14 +99,9 @@ class RequestForPlacementTransformer(
       createdAt = placementRequestEntity.createdAt.toInstant(),
       isWithdrawn = placementRequestEntity.isWithdrawn,
       type = RequestForPlacementType.automatic,
+      canonicalPlacementPeriod = authorisedPlacementPeriod,
       requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = authorisedPlacementPeriod,
-      placementDates = listOf(
-        PlacementDates(
-          expectedArrival = placementRequestEntity.expectedArrival,
-          duration = placementRequestEntity.duration,
-        ),
-      ),
       submittedAt = placementRequestEntity.createdAt.toInstant(),
       requestReviewedAt = placementRequestEntity.assessment.submittedAt?.toInstant(),
       document = null,
@@ -123,7 +114,6 @@ class RequestForPlacementTransformer(
       situation = application.situation?.let { SituationOption.valueOf(it) },
       decision = PlacementApplicationDecision.ACCEPTED,
       submittedBy = cas1AssessmentTransformer.transformToStaffDto(application.createdByUser),
-      canonicalPlacementPeriod = getCanonicalPlacementPeriod(authorisedPlacementPeriod, requestedPlacementPeriod),
     )
   }
 

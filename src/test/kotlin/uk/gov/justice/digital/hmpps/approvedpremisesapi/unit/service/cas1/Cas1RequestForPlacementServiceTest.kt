@@ -14,7 +14,6 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
@@ -98,7 +97,6 @@ class Cas1RequestForPlacementServiceTest {
       canBeDirectlyWithdrawn = true,
       isWithdrawn = false,
       type = RequestForPlacementType.manual,
-      placementDates = listOf(PlacementDates(LocalDate.now(), 14)),
       requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = null,
       status = RequestForPlacementStatus.requestSubmitted,

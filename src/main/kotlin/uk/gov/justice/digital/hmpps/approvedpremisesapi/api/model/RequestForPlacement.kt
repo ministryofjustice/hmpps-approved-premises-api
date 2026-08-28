@@ -16,8 +16,6 @@ data class RequestForPlacement(
   val canBeDirectlyWithdrawn: Boolean,
   val isWithdrawn: Boolean,
   val type: RequestForPlacementType,
-  @Schema(description = "Deprecated. Requests for placements only have one set of placement dates, use 'requestedPlacementPeriod' or 'authorisedPlacementPeriod' instead", deprecated = true)
-  val placementDates: List<PlacementDates>,
   val canonicalPlacementPeriod: Cas1RequestedPlacementPeriod,
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod,
   val authorisedPlacementPeriod: Cas1RequestedPlacementPeriod?,

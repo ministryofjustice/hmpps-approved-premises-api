@@ -42,7 +42,7 @@ data class Cas1Application(
 
   val arrivalDate: Instant? = null,
 
-  @Schema(description = "The default duration in days for any request for placement linked to this application. This will be available for any submitted application, even if arrivalDate is null")
+  @Schema(description = "The placement duration requested by the applicant, which may be the default duration if not overridden. This will be available for any submitted application, even if arrivalDate is null")
   val duration: Int?,
 
   @Schema(description = "Contains ROSH Risks, Tier, Risk Flags and MAPPA captured when the application was created")
