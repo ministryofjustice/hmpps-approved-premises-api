@@ -154,6 +154,7 @@ class TaskTransformerTest {
       assertThat(result.personSummary is FullPersonSummary).isTrue
       assertThat(result.personSummary.crn).isEqualTo(assessment.application.crn)
       assertThat((result.personSummary as FullPersonSummary).name).isEqualTo("First Last")
+      assertThat((result.personSummary as FullPersonSummary).dateOfBirth).isEqualTo(LocalDate.of(1985, 6, 15))
       assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
       assertThat(result.expectedArrivalDate).isEqualTo(application.arrivalDate!!.toLocalDate())
       assertThat(result.apType).isEqualTo((assessment.application as ApprovedPremisesApplicationEntity).apType.asApiType())
@@ -439,6 +440,7 @@ class TaskTransformerTest {
         PersonSummaryInfoResult.Success.Full(
           crn,
           CaseSummaryFactory().withName(NameFactory().withForename("First").withSurname("Last").produce())
+            .withDateOfBirth(LocalDate.of(1985, 6, 15))
             .produce(),
           tier = null,
         ),

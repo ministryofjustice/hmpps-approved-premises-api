@@ -2625,6 +2625,7 @@ class Cas1TasksTest {
           .withSurname(offenderDetails.surname)
           .produce(),
       )
+        .withDateOfBirth(offenderDetails.dateOfBirth)
         .produce(),
       tier = null,
     ),

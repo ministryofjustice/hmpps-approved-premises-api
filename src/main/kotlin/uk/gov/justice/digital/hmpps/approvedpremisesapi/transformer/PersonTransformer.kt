@@ -72,6 +72,7 @@ class PersonTransformer {
           crn = personSummaryInfo.crn,
           personType = PersonSummaryDiscriminator.fullPersonSummary,
           name = getNameFromPersonSummaryInfoResult(personSummaryInfo),
+          dateOfBirth = personSummaryInfo.summary.dateOfBirth,
           isRestricted = personSummaryInfo.summary.currentRestriction || personSummaryInfo.summary.currentExclusion,
           tier = personSummaryInfo.tier,
         )

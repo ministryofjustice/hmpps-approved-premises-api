@@ -1300,6 +1300,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(offender1.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
       assertThat(offender1).isInstanceOf(FullPersonSummary::class.java)
       assertThat((offender1 as FullPersonSummary).name).isEqualTo("${offenderOffline.name.forename} ${offenderOffline.name.surname}")
+      assertThat(offender1.dateOfBirth).isEqualTo(offenderOffline.dateOfBirth)
 
       val bookingSummary2 = summaries.spaceBookingSummaries[1]
       assertThat(bookingSummary2.id).isEqualTo(spaceBookingLate.id)
@@ -1318,6 +1319,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(offender2.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
       assertThat(offender2).isInstanceOf(FullPersonSummary::class.java)
       assertThat((offender2 as FullPersonSummary).name).isEqualTo("${offenderB.name.forename} ${offenderB.name.surname}")
+      assertThat(offender2.dateOfBirth).isEqualTo(offenderB.dateOfBirth)
 
       val bookingSummary3 = summaries.spaceBookingSummaries[2]
       assertThat(bookingSummary3.id).isEqualTo(spaceBookingEarly.id)
@@ -1334,6 +1336,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(offender3.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
       assertThat(offender3).isInstanceOf(FullPersonSummary::class.java)
       assertThat((offender3 as FullPersonSummary).name).isEqualTo("${offenderA.name.forename} ${offenderA.name.surname}")
+      assertThat(offender3.dateOfBirth).isEqualTo(offenderA.dateOfBirth)
     }
 
     @Test
@@ -1511,10 +1514,13 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       val offender1 = summaries.spaceBookingSummaries[0].person
       assertThat((offender1 as FullPersonSummary).name).isEqualTo("firstNameAAA lastNameAAA")
+      assertThat(offender1.dateOfBirth).isEqualTo(offenderA.dateOfBirth)
       val offender2 = summaries.spaceBookingSummaries[1].person
       assertThat((offender2 as FullPersonSummary).name).isEqualTo("firstNameBBB lastNameBBB")
+      assertThat(offender2.dateOfBirth).isEqualTo(offenderB.dateOfBirth)
       val offender3 = summaries.spaceBookingSummaries[2].person
       assertThat((offender3 as FullPersonSummary).name).isEqualTo("mister offline")
+      assertThat(offender3.dateOfBirth).isEqualTo(offenderOffline.dateOfBirth)
     }
 
     @Test
