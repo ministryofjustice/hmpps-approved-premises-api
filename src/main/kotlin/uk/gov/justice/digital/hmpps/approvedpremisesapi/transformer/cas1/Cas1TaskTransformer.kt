@@ -1,6 +1,7 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
@@ -18,13 +19,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
 @Component
-class TaskTransformer(
+class Cas1TaskTransformer(
   private val userTransformer: UserTransformer,
   private val risksTransformer: RisksTransformer,
   private val apAreaTransformer: ApAreaTransformer,
@@ -84,6 +91,11 @@ class TaskTransformer(
     },
     expectedArrivalDate = placementApplication.placementDates()!!.expectedArrival,
     apType = placementApplication.application.apType.asApiType(),
+    requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = placementApplication.expectedArrival!!,
+      arrivalFlexible = placementApplication.expectedArrivalFlexible,
+      duration = placementApplication.requestedDuration!!,
+    ),
   )
 
   private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): PersonSummary = personTransformer.personSummaryInfoResultToPersonSummary(

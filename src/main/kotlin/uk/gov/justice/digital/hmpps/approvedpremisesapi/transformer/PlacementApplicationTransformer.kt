@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
@@ -37,6 +38,13 @@ class PlacementApplicationTransformer(
       type = PlacementApplicationType.additional,
       dates = placementDates,
       placementDates = listOfNotNull(placementDates),
+      requestedPlacementPeriod = jpa.expectedArrival?.let { arrival ->
+        Cas1RequestedPlacementPeriod(
+          arrival = arrival,
+          arrivalFlexible = jpa.expectedArrivalFlexible,
+          duration = jpa.requestedDuration!!,
+        )
+      },
     )
   }
 

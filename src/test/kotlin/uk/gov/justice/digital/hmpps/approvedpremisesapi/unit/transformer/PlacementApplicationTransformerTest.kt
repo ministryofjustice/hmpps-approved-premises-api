@@ -57,15 +57,15 @@ class PlacementApplicationTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi converts correctly when there is no data or document`() {
+  fun `transformJpaToApi converts correctly when not submitted with no data, document, expected arrival or duration`() {
     val placementApplication = PlacementApplicationEntityFactory()
       .withCreatedByUser(user)
       .withApplication(applicationMock)
       .withData(null)
       .withDocument(null)
-      .withSubmittedAt(OffsetDateTime.now())
-      .withExpectedArrival(LocalDate.of(2023, 12, 11))
-      .withRequestedDuration(30)
+      .withSubmittedAt(null)
+      .withExpectedArrival(null)
+      .withRequestedDuration(null)
       .produce()
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
@@ -79,21 +79,18 @@ class PlacementApplicationTransformerTest {
     assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
     assertThat(result.data).isNull()
     assertThat(result.document).isNull()
-    assertThat(result.submittedAt).isNotNull()
-    assertThat(result.canBeWithdrawn).isTrue
+    assertThat(result.submittedAt).isNull()
+    assertThat(result.canBeWithdrawn).isFalse
     assertThat(result.isWithdrawn).isFalse
     assertThat(result.withdrawalReason).isNull()
     assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
-    assertThat(result.dates!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
-    assertThat(result.dates!!.duration).isEqualTo(30)
-
-    assertThat(result.placementDates).hasSize(1)
-    assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
-    assertThat(result.placementDates[0].duration).isEqualTo(30)
+    assertThat(result.dates).isNull()
+    assertThat(result.placementDates).isEmpty()
+    assertThat(result.requestedPlacementPeriod).isNull()
   }
 
   @Test
-  fun `transformJpaToApi converts correctly when there is data and a document`() {
+  fun `transformJpaToApi converts correctly when there is data, document, expected arrival and duration dates`() {
     val data = "{\"data\": \"something\"}"
     val document = "{\"document\": \"something\"}"
     val placementApplication = PlacementApplicationEntityFactory()
@@ -102,6 +99,7 @@ class PlacementApplicationTransformerTest {
       .withData(data)
       .withDocument(document)
       .withSubmittedAt(OffsetDateTime.now())
+      .withExpectedArrivalFlexible(true)
       .withExpectedArrival(LocalDate.of(2023, 12, 11))
       .withRequestedDuration(30)
       .produce()
@@ -112,11 +110,15 @@ class PlacementApplicationTransformerTest {
     assertThat(result.data).isEqualTo(jsonMapper.readTree(data))
     assertThat(result.document).isEqualTo(jsonMapper.readTree(document))
     assertThat(result.dates!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
-    assertThat(result.dates!!.duration).isEqualTo(30)
+    assertThat(result.dates.duration).isEqualTo(30)
 
     assertThat(result.placementDates).hasSize(1)
     assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
     assertThat(result.placementDates[0].duration).isEqualTo(30)
+
+    assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2023, 12, 11))
+    assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isEqualTo(true)
+    assertThat(result.requestedPlacementPeriod?.duration).isEqualTo(30)
   }
 
   @Test

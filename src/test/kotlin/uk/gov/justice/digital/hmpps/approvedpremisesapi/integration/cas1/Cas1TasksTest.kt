@@ -48,8 +48,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.UserWorkload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.text.SimpleDateFormat
@@ -70,7 +70,7 @@ class Cas1TasksTest {
     inner class PermissionsTest : IntegrationTestBase() {
 
       @Autowired
-      lateinit var taskTransformer: TaskTransformer
+      lateinit var taskTransformer: Cas1TaskTransformer
 
       @BeforeEach
       fun stubBankHolidaysApi() {
@@ -220,7 +220,7 @@ class Cas1TasksTest {
     inner class FilterByType : IntegrationTestBase() {
 
       @Autowired
-      lateinit var taskTransformer: TaskTransformer
+      lateinit var taskTransformer: Cas1TaskTransformer
 
       fun setupTasksForUser(user: UserEntity): Map<TaskType, List<Task>> {
         val (otherUser, _) = givenAUser()
@@ -398,7 +398,7 @@ class Cas1TasksTest {
     inner class FilterByCruManagementArea : IntegrationTestBase() {
 
       @Autowired
-      lateinit var taskTransformer: TaskTransformer
+      lateinit var taskTransformer: Cas1TaskTransformer
 
       fun setupTasksForUser(user: UserEntity): Pair<Map<TaskType, List<Task>>, Cas1CruManagementAreaEntity> {
         val (otherUser, _) = givenAUser()
@@ -537,7 +537,7 @@ class Cas1TasksTest {
     inner class FilterByUser : IntegrationTestBase() {
 
       @Autowired
-      lateinit var taskTransformer: TaskTransformer
+      lateinit var taskTransformer: Cas1TaskTransformer
 
       fun setupTasksForUser(user: UserEntity): Map<TaskType, List<Task>> {
         val (otherUser, _) = givenAUser()
@@ -854,7 +854,7 @@ class Cas1TasksTest {
     inner class FilterQualification : IntegrationTestBase() {
 
       @Autowired
-      lateinit var taskTransformer: TaskTransformer
+      lateinit var taskTransformer: Cas1TaskTransformer
 
       fun setupForUser(user: UserEntity): Map<TaskType, MutableMap<UserQualification, List<Task>>> {
         val (otherUser, _) = givenAUser()
@@ -1049,7 +1049,7 @@ class Cas1TasksTest {
       private lateinit var crnMatchTasks: Map<TaskType, Task>
 
       @Autowired
-      lateinit var taskTransformer: TaskTransformer
+      lateinit var taskTransformer: Cas1TaskTransformer
 
       fun setupForUser(user: UserEntity): String {
         val (otherUser, _) = givenAUser()
@@ -1255,7 +1255,7 @@ class Cas1TasksTest {
     inner class FilterByCompleted : IntegrationTestBase() {
 
       @Autowired
-      lateinit var taskTransformer: TaskTransformer
+      lateinit var taskTransformer: Cas1TaskTransformer
 
       fun setupForUser(user: UserEntity): Triple<String, List<Task>, List<Task>> {
         val (otherUser, _) = givenAUser()
@@ -1383,7 +1383,7 @@ class Cas1TasksTest {
     inner class SortByTest : IntegrationTestBase() {
 
       @Autowired
-      lateinit var taskTransformer: TaskTransformer
+      lateinit var taskTransformer: Cas1TaskTransformer
 
       fun setupForUser(user: UserEntity): TaskSortTestData {
         val (otherUser, _) = givenAUser()
@@ -1977,7 +1977,7 @@ class Cas1TasksTest {
   @Nested
   inner class GetTaskTest : IntegrationTestBase() {
     @Autowired
-    lateinit var taskTransformer: TaskTransformer
+    lateinit var taskTransformer: Cas1TaskTransformer
 
     @Autowired
     lateinit var userTransformer: UserTransformer

@@ -152,17 +152,21 @@ data class PlacementApplicationEntity(
   var isWithdrawn: Boolean = false,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access.
+   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
+   * for authorised placement date
    */
   var expectedArrival: LocalDate? = null,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access.
+   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
+   * for authorised placement date
    */
   var requestedDuration: Int? = null,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access.
+   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
+   *
+   * for authorised placement date
    */
   var authorisedDuration: Int? = null,
 
