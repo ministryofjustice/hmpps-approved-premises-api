@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 
@@ -91,14 +92,14 @@ class Cas3ApplicationTransformer(
 
   fun transformDomainToCas3ApplicationSummary(
     domain: ApplicationSummary,
-    personInfo: PersonInfoResult,
+    personSummaryInfo: PersonSummaryInfoResult,
   ): Cas3ApplicationSummary {
     val riskRatings =
       if (domain.getRiskRatings() != null) jsonMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
     return Cas3ApplicationSummary(
       id = domain.getId(),
-      person = personTransformer.personInfoResultToPerson(personInfo),
+      personSummary = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
       createdByUserId = domain.getCreatedByUserId(),
       createdAt = domain.getCreatedAt(),
       submittedAt = domain.getSubmittedAt(),

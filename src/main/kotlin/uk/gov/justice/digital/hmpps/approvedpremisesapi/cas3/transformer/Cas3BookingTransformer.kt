@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Book
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.time.LocalDate
@@ -25,11 +25,11 @@ class Cas3BookingTransformer(
   private val workingDayService: WorkingDayService,
 ) {
 
-  fun transformJpaToApi(jpa: Cas3BookingEntity, personInfo: PersonInfoResult): Cas3Booking {
+  fun transformJpaToApi(jpa: Cas3BookingEntity, personSummaryInfo: PersonSummaryInfoResult): Cas3Booking {
     val hasNonZeroDayTurnaround = jpa.hasNonZeroDayTurnaround()
     return Cas3Booking(
       id = jpa.id,
-      person = personTransformer.personInfoResultToPerson(personInfo),
+      personSummary = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
       arrivalDate = jpa.arrivalDate,
       departureDate = jpa.departureDate,
       status = determineStatus(jpa),

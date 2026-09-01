@@ -49,8 +49,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.Forbidden
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
@@ -64,7 +64,7 @@ import java.util.UUID
 @RequestMapping("/cas3/v2", headers = ["X-Service-Name=temporary-accommodation"])
 class Cas3v2BookingController(
   private val userService: UserService,
-  private val offenderDetailService: OffenderDetailService,
+  private val offenderService: OffenderService,
   private val bookingService: Cas3BookingService,
   private val bookingSearchService: Cas3BookingSearchService,
   private val bookingTransformer: Cas3BookingTransformer,
@@ -87,14 +87,14 @@ class Cas3v2BookingController(
     val user = userService.getUserForRequest()
     val bookingResult = bookingService.getBooking(bookingId, premisesId = null, user)
     val booking = extractEntityFromCasResult(bookingResult)
-    val personInfo = offenderDetailService.getPersonInfoResult(
+    val personSummaryInfo = offenderService.getPersonSummaryInfoResult(
       booking.crn,
       user.cas3LaoStrategy(),
     )
 
     val apiBooking = bookingTransformer.transformJpaToApi(
       booking,
-      personInfo,
+      personSummaryInfo,
     )
 
     return ResponseEntity.ok(apiBooking)
@@ -133,19 +133,20 @@ class Cas3v2BookingController(
       throw ForbiddenProblem()
     }
 
-    val personInfoResults = async {
-      offenderDetailService.getPersonInfoResults(
+    val personSummaryInfoResults = async {
+      offenderService.getPersonSummaryInfoResults(
         crns = premises.bookings.map { it.crn }.toSet(),
         laoStrategy = user.cas3LaoStrategy(),
       )
     }.await()
+    val personSummaryInfoResultsByCrn = personSummaryInfoResults.associateBy { it.crn }
 
     return@runBlocking ResponseEntity.ok(
       premises.bookings.map { booking ->
         bookingTransformer.transformJpaToApi(
           jpa = booking,
-          personInfo = personInfoResults.firstOrNull { pi -> pi.crn == booking.crn }
-            ?: PersonInfoResult.NotFound(booking.crn),
+          personSummaryInfo = personSummaryInfoResultsByCrn[booking.crn]
+            ?: PersonSummaryInfoResult.NotFound(booking.crn),
         )
       },
     )
@@ -156,13 +157,13 @@ class Cas3v2BookingController(
     val user = usersService.getUserForRequest()
     val bookingResult = cas3BookingService.getBooking(bookingId, premisesId, user)
     val booking = extractEntityFromCasResult(bookingResult)
-    val personInfo = offenderDetailService.getPersonInfoResult(
+    val personSummaryInfo = offenderService.getPersonSummaryInfoResult(
       booking.crn,
       user.cas3LaoStrategy(),
     )
     val apiBooking = bookingTransformer.transformJpaToApi(
       booking,
-      personInfo,
+      personSummaryInfo,
     )
     ResponseEntity.ok(apiBooking)
   }
@@ -184,18 +185,18 @@ class Cas3v2BookingController(
       throw ForbiddenProblem()
     }
 
-    val personInfo =
-      offenderDetailService.getPersonInfoResult(crn, user.cas3LaoStrategy())
+    val personSummaryInfo =
+      offenderService.getPersonSummaryInfoResult(crn, user.cas3LaoStrategy())
 
-    if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: $crn")
+    if (personSummaryInfo !is PersonSummaryInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: $crn")
 
     val createdBookingResult = cas3BookingService.createBooking(
       user = user,
       premises = premises,
       crn = crn,
-      nomsNumber = when (personInfo) {
-        is PersonInfoResult.Success.Restricted -> personInfo.nomsNumber
-        is PersonInfoResult.Success.Full -> personInfo.inmateDetail?.offenderNo
+      nomsNumber = when (personSummaryInfo) {
+        is PersonSummaryInfoResult.Success.Restricted -> personSummaryInfo.nomsNumber
+        is PersonSummaryInfoResult.Success.Full -> personSummaryInfo.summary.nomsId
       },
       arrivalDate = newBooking.arrivalDate,
       departureDate = newBooking.departureDate,
@@ -206,7 +207,7 @@ class Cas3v2BookingController(
     return ResponseEntity.status(HttpStatus.CREATED).body(
       bookingTransformer.transformJpaToApi(
         jpa = extractEntityFromCasResult(createdBookingResult),
-        personInfo,
+        personSummaryInfo,
       ),
     )
   }
