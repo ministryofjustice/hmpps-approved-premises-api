@@ -2339,7 +2339,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 12, 1))
       assertThat(persistedApplication.releaseType).isEqualTo(Cas1ReleaseType.reReleasedFollowingFixedTermRecall)
       assertThat(persistedApplication.arrivalDate).isEqualTo(OffsetDateTime.of(LocalDate.of(2031, 5, 6), LocalTime.of(0, 0), ZoneOffset.UTC))
-      assertThat(persistedApplication.duration).isEqualTo(52)
+      assertThat(persistedApplication.requestedPlacementDuration).isEqualTo(52)
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }

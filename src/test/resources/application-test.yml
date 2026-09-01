@@ -119,7 +119,7 @@ hmpps:
       enabled: true
     tests:
       attachments-expected: false
-      expected-flyway-schema-version: 20260828160543000
+      expected-flyway-schema-version: 20260901122908000
       expected-jpa-entity-schema:
         path: /sar/cas-entities-schema.json
 

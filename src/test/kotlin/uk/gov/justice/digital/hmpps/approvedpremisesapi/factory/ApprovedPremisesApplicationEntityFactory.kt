@@ -262,7 +262,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     releaseType = this.releaseType(),
     sentenceType = this.sentenceType(),
     arrivalDate = this.arrivalDate(),
-    duration = this.duration(),
+    requestedPlacementDuration = this.duration(),
     calculatedPlacementDuration = null,
     isInapplicable = this.isInapplicable(),
     isWithdrawn = this.isWithdrawn(),

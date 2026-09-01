@@ -956,7 +956,7 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
-        assertThat(it.duration).isEqualTo(25)
+        assertThat(it.requestedPlacementDuration).isEqualTo(25)
 
         val placementAppPlaceholderCaptor = slot<PlacementApplicationPlaceholderEntity>()
         verify {
@@ -1342,7 +1342,7 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
-        assertThat(it.duration).isEqualTo(25)
+        assertThat(it.requestedPlacementDuration).isEqualTo(25)
 
         val placementAppPlaceholderCaptor = slot<PlacementApplicationPlaceholderEntity>()
         verify {

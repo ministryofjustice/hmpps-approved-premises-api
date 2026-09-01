@@ -118,8 +118,8 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
       error("A placement application already exists with the ID $newPlacementApplicationId")
     }
 
-    val requestedDuration = if (application.duration != null) {
-      application.duration
+    val requestedDuration = if (application.requestedPlacementDuration != null) {
+      application.requestedPlacementDuration
     } else {
       log.warn("No duration defined on the application ${application.id}, using the placement request duration")
       placementRequest.duration

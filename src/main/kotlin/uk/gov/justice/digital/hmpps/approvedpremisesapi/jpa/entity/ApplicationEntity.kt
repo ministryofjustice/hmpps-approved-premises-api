@@ -396,7 +396,7 @@ class ApprovedPremisesApplicationEntity(
    * Note that this will be populated even if the applicant didn't make a request
    * for a placement as part of the original application (i.e. arrivalDate is null)
    */
-  var duration: Int?,
+  var requestedPlacementDuration: Int?,
   /**
    * Default duration calculated for placements based upon logic defined in [Cas1RequestForPlacementService.defaultDurations]
    *

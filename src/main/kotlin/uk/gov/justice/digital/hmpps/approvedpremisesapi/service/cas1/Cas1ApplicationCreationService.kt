@@ -127,7 +127,7 @@ class Cas1ApplicationCreationService(
     placementRequests = mutableListOf(),
     releaseType = null,
     arrivalDate = null,
-    duration = null,
+    requestedPlacementDuration = null,
     calculatedPlacementDuration = null,
     isInapplicable = null,
     isWithdrawn = false,
@@ -195,7 +195,7 @@ class Cas1ApplicationCreationService(
       releaseType = Cas1ReleaseType.fromApiType(submitApplication.releaseType)
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival ?: submitApplication.arrivalDate)
-      duration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.duration
+      requestedPlacementDuration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.duration
       calculatedPlacementDuration = submitApplication.calculatedPlacementDuration
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
