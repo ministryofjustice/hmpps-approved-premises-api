@@ -36,9 +36,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -114,7 +115,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
               jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                  PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                 ),
               ),
             )
@@ -230,7 +231,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
               jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                  PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                 ),
               ),
             )
@@ -261,7 +262,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             jsonMapper.writeValueAsString(
               bookingTransformer.transformJpaToApi(
                 booking,
-                PersonInfoResult.NotFound("SOME-CRN"),
+                PersonSummaryInfoResult.NotFound("SOME-CRN"),
               ),
             ),
           )
@@ -295,7 +296,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
               jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null, tier = null),
+                  PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                 ),
               ),
             )
@@ -422,7 +423,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           bookings.map {
             bookingTransformer.transformJpaToApi(
               it,
-              PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+              PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
             )
           },
         )
@@ -453,7 +454,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         listOf(
           bookingTransformer.transformJpaToApi(
             booking,
-            PersonInfoResult.NotFound("SOME-CRN"),
+            PersonSummaryInfoResult.NotFound("SOME-CRN"),
           ),
         ),
       )
@@ -486,10 +487,9 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           listOf(
             bookingTransformer.transformJpaToApi(
               booking,
-              PersonInfoResult.Success.Full(
+              PersonSummaryInfoResult.Success.Full(
                 crn = offenderDetails.otherIds.crn,
-                offenderDetailSummary = offenderDetails,
-                inmateDetail = null,
+                summary = offenderDetails.asCaseSummary(),
                 tier = null,
               ),
             ),
@@ -552,8 +552,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.personSummary.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.personSummary.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -721,8 +721,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.personSummary.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.personSummary.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -776,8 +776,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.personSummary.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.personSummary.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -840,8 +840,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.personSummary.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.personSummary.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -887,8 +887,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.personSummary.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.personSummary.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -936,8 +936,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.personSummary.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.personSummary.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -1143,8 +1143,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.personSummary.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.personSummary.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-01")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-01")
@@ -1267,8 +1267,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isCreated
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.personSummary.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.personSummary.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-01")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-01")

@@ -24,8 +24,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
@@ -38,6 +40,7 @@ class Cas3ApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
+  private val offenderService: OffenderService,
   private val cas3ApplicationTransformer: Cas3ApplicationTransformer,
   private val jsonMapper: JsonMapper,
 ) {
@@ -166,13 +169,15 @@ class Cas3ApplicationsController(
     laoStrategy: LaoStrategy,
   ): List<Cas3ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personSummaryInfoResults = offenderService.getPersonSummaryInfoResults(crns.toSet(), laoStrategy)
+
+    val personSummaryInfoResultsByCrn = personSummaryInfoResults.associateBy { it.crn }
 
     return applications.map {
       val crn = it.getCrn()
       cas3ApplicationTransformer.transformDomainToCas3ApplicationSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
+        personSummaryInfoResultsByCrn[crn] ?: PersonSummaryInfoResult.NotFound(crn),
       )
     }
   }
