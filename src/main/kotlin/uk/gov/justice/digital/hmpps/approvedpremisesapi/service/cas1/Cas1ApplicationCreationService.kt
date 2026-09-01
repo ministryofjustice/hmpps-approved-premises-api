@@ -128,6 +128,7 @@ class Cas1ApplicationCreationService(
     releaseType = null,
     arrivalDate = null,
     duration = null,
+    calculatedPlacementDuration = null,
     isInapplicable = null,
     isWithdrawn = false,
     withdrawalReason = null,
@@ -148,6 +149,7 @@ class Cas1ApplicationCreationService(
     licenceExpiryDate = null,
     expiredReason = null,
     referredBy = referredBy,
+    isExceptional = null,
   )
 
   fun createOfflineApplication(offlineApplication: OfflineApplicationEntity) = offlineApplicationRepository.save(offlineApplication)
@@ -194,6 +196,7 @@ class Cas1ApplicationCreationService(
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival ?: submitApplication.arrivalDate)
       duration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.duration
+      calculatedPlacementDuration = submitApplication.calculatedPlacementDuration
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
@@ -216,6 +219,7 @@ class Cas1ApplicationCreationService(
       )
       this.noticeType = getNoticeType(submitApplication.noticeType, submitApplication.isEmergencyApplication, this)
       this.licenceExpiryDate = submitApplication.licenseExpiryDate
+      isExceptional = submitApplication.isExceptional
     }
 
     cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, user.deliusUsername)

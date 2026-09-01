@@ -111,7 +111,7 @@ class Cas1ApplicationCreationServiceTest {
   )
 
   @Nested
-  inner class CreateApprovedPremisesEligibleApplication {
+  inner class CreateApprovedPremisesApplication {
 
     @Test
     fun `Does not create application when tier is null`() {
@@ -838,6 +838,8 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
         noticeType = Cas1ApplicationTimelinessCategory.standard,
         duration = 10,
+        calculatedPlacementDuration = 15,
+        isExceptional = true,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -888,6 +890,8 @@ class Cas1ApplicationCreationServiceTest {
         assertThat(it.apArea).isEqualTo(apArea)
         assertThat(it.cruManagementArea).isEqualTo(apArea.defaultCruManagementArea)
         assertThat(it.licenceExpiryDate).isNull()
+        assertThat(it.calculatedPlacementDuration).isEqualTo(15)
+        assertThat(it.isExceptional).isTrue
       }
 
       verify { mockApplicationRepository.save(any()) }

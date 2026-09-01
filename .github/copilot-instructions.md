@@ -345,6 +345,10 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   `ALTER TABLE beds RENAME TO cas1_beds;`, `ALTER TABLE x DROP CONSTRAINT y;`),
   relying on migrations running exactly once in order. Match the surrounding
   migrations rather than adding defensive existence checks.
+* If a new column is added and its value is not backfilled, we should document 
+  on any corresponding JPA property when the column was added and that a backfill
+  wasn't performed. This is helpful when determining if the column can be used
+  for historic data
 
 ---
 

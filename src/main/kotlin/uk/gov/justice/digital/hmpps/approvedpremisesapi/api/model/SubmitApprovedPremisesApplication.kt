@@ -31,6 +31,10 @@ data class SubmitApprovedPremisesApplication(
   val reasonForShortNoticeOther: String? = null,
   val licenseExpiryDate: java.time.LocalDate? = null,
   override val translatedDocument: Any? = null,
+  @Schema(description = "If true this is an exceptional application (The case does not meet the CAS1 eligibility criteria, but a senior manager has agreed that the application can proceed)")
+  val isExceptional: Boolean? = null,
+  @Schema(description = "Default placement duration in days. Should be provided even if no requestedPlacementPeriod is defined. Can be null if calculation is not possible")
+  val calculatedPlacementDuration: Int? = null,
   @Schema(description = "The applicant can make a single request for placement as part of the initial application")
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod? = null,
 ) : SubmitApplication
