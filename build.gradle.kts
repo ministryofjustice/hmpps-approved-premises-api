@@ -34,7 +34,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.7.1-jre")
-  implementation("org.javers:javers-core:7.11.7")
+  implementation("org.javers:javers-core:7.11.8")
 
   val springDocOpenApiStarterVersion = "3.0.2"
   // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
