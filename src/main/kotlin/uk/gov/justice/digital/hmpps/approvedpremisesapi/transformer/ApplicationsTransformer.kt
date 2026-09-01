@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
@@ -164,6 +165,9 @@ class ApplicationsTransformer(
   fun transformJpaToCas1Application(applicationEntity: ApprovedPremisesApplicationEntity, personInfo: PersonInfoResult): Cas1Application {
     val latestAssessment = applicationEntity.getLatestAssessment()
 
+    val requestedPlacementDuration = applicationEntity.requestedPlacementDuration
+    val arrivalDate = applicationEntity.arrivalDate
+
     return Cas1Application(
       id = applicationEntity.id,
       person = personTransformer.personInfoResultToPerson(personInfo),
@@ -172,9 +176,16 @@ class ApplicationsTransformer(
       submittedAt = applicationEntity.submittedAt?.toInstant(),
       isWomensApplication = applicationEntity.isWomensApplication,
       isPipeApplication = applicationEntity.isPipeApplication,
-      arrivalDate = applicationEntity.arrivalDate?.toInstant(),
-      duration = applicationEntity.requestedPlacementDuration,
-      requestedPlacementDuration = applicationEntity.requestedPlacementDuration,
+      arrivalDate = arrivalDate?.toInstant(),
+      duration = requestedPlacementDuration,
+      requestedPlacementDuration = requestedPlacementDuration,
+      requestedPlacementPeriod = arrivalDate?.let {
+        Cas1RequestedPlacementPeriod(
+          arrival = arrivalDate.toLocalDate(),
+          arrivalFlexible = null,
+          duration = requestedPlacementDuration!!,
+        )
+      },
       data = if (applicationEntity.data != null) jsonMapper.readTree(applicationEntity.data) else null,
       document = if (applicationEntity.document != null) jsonMapper.readTree(applicationEntity.document) else null,
       risks = if (applicationEntity.riskRatings != null) {

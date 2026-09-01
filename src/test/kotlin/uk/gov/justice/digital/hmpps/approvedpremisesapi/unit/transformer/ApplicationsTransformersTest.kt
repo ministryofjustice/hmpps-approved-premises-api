@@ -313,6 +313,9 @@ class ApplicationsTransformersTest {
     assertThat(result.arrivalDate).isEqualTo(OffsetDateTime.parse("2004-12-11T10:15:30Z").toInstant())
     assertThat(result.duration).isEqualTo(52)
     assertThat(result.requestedPlacementDuration).isEqualTo(52)
+    assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2004, 12, 11))
+    assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isNull()
+    assertThat(result.requestedPlacementPeriod?.duration).isEqualTo(52)
     assertThat(result.status).isEqualTo(apiStatus)
     assertThat(result.apArea).isNull()
     assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
@@ -321,6 +324,21 @@ class ApplicationsTransformersTest {
     assertThat(result.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 5, 5))
     assertThat(result.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
     assertThat(result.releaseType).isEqualTo(ReleaseTypeOption.notApplicable)
+  }
+
+  @Test
+  fun `transformJpaToCas1Application with no arrival date`() {
+    val application = approvedPremisesApplicationFactory
+      .withArrivalDate(null)
+      .withRequestedPlacementDuration(52)
+      .produce()
+
+    val result = applicationsTransformer.transformJpaToCas1Application(application, mockk())
+
+    assertThat(result.arrivalDate).isNull()
+    assertThat(result.duration).isEqualTo(52)
+    assertThat(result.requestedPlacementDuration).isEqualTo(52)
+    assertThat(result.requestedPlacementPeriod).isNull()
   }
 
   @Test
