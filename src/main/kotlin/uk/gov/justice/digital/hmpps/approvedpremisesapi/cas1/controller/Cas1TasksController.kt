@@ -45,7 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
@@ -59,7 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualificat
 class Cas1TasksController(
   private val userService: UserService,
   private val cas1AssessmentService: Cas1AssessmentService,
-  private val taskTransformer: TaskTransformer,
+  private val taskTransformer: Cas1TaskTransformer,
   private val offenderService: OffenderService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val enumConverterFactory: EnumConverterFactory,

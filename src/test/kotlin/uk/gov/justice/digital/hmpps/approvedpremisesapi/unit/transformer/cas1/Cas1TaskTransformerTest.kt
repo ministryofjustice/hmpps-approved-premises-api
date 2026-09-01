@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
 import io.mockk.every
 import io.mockk.mockk
@@ -48,7 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -56,7 +56,7 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
-class TaskTransformerTest {
+class Cas1TaskTransformerTest {
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockApAreaTransformer = mockk<ApAreaTransformer>()
@@ -111,7 +111,7 @@ class TaskTransformerTest {
   private val mockApArea = ApArea(UUID.randomUUID(), "someIdentifier", "someName")
   private val mockPdu = ProbationDeliveryUnit(UUID.randomUUID(), "thePduName")
 
-  private val taskTransformer = TaskTransformer(
+  private val taskTransformer = Cas1TaskTransformer(
     mockUserTransformer,
     mockRisksTransformer,
     mockApAreaTransformer,
