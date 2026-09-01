@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -68,7 +69,7 @@ class Cas3AssessmentTransformer(
     accommodationRequiredFromDate = jpa.accommodationRequiredFromDate ?: LocalDate.from(jpa.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate),
   )
 
-  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): Cas3AssessmentSummary = Cas3AssessmentSummary(
+  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, personSummaryInfo: PersonSummaryInfoResult): Cas3AssessmentSummary = Cas3AssessmentSummary(
     id = ase.id,
     applicationId = ase.applicationId,
     createdAt = ase.createdAt,
@@ -81,7 +82,7 @@ class Cas3AssessmentTransformer(
         ase.crn,
       )
     },
-    person = personTransformer.personInfoResultToPerson(personInfo),
+    personSummary = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
     probationDeliveryUnitName = ase.probationDeliveryUnitName,
   )
 

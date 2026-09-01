@@ -25,9 +25,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.sortCas3AssessmentsByName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
@@ -42,6 +43,7 @@ class Cas3AssessmentController(
   private val cas3AssessmentService: Cas3AssessmentService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
+  private val offenderService: OffenderService,
   private val cas3AssessmentTransformer: Cas3AssessmentTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
 ) {
@@ -214,13 +216,14 @@ class Cas3AssessmentController(
     laoStrategy: LaoStrategy,
   ): List<Cas3AssessmentSummary> {
     val crns = summaries.map { it.crn }
-    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personSummaryInfoResults = offenderService.getPersonSummaryInfoResults(crns.toSet(), laoStrategy)
+    val personSummaryInfoResultsByCrn = personSummaryInfoResults.associateBy { it.crn }
 
     return summaries.map {
       val crn = it.crn
       cas3AssessmentTransformer.transformDomainToApiSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
+        personSummaryInfoResultsByCrn[crn] ?: PersonSummaryInfoResult.NotFound(crn),
       )
     }
   }
