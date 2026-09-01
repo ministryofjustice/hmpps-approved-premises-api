@@ -174,7 +174,6 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       departureReason = departureReason,
       moveOnCategory = moveOnCategory,
       cancellationReason = cancellationReason,
-      transferType = TRANSFER_TYPE,
       additionalInformation = ADDITIONAL_INFORMATION,
       transferReason = TRANSFER_REASON,
       createdByUser = spaceBookingCreatedByUser,

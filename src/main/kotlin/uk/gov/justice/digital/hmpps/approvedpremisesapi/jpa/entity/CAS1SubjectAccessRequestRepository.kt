@@ -509,7 +509,6 @@ from
             nar.name as non_arrival_reason,
             apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
             b.created_at,
-            b.key_worker_staff_code,
             b.key_worker_assigned_at,
             b.key_worker_name,
             p."name" as premises_name,
@@ -522,7 +521,6 @@ from
             cr.name as cancellation_reason,
             b.cancellation_occurred_at, 
             b.cancellation_recorded_at,
-            b.transfer_type,
             b.additional_information,
             b.transfer_reason,
             ( 
