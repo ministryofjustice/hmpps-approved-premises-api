@@ -27,7 +27,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-71:3.15.4")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-71:3.15.5")
   implementation("org.hibernate.orm:hibernate-spatial")
   implementation("org.hibernate.orm:hibernate-jcache")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
