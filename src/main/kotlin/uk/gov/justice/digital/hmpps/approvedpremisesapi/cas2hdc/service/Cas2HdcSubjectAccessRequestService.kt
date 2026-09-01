@@ -14,16 +14,11 @@ class Cas2HdcSubjectAccessRequestService(
     val applicationsJson = cas2HdcSubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
     val applicationNotesJson =
       cas2HdcSubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val statusUpdatesJson = cas2HdcSubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val statusUpdateDetailsJson =
-      cas2HdcSubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
     val assessmentsJson = cas2HdcSubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
 
     if (listOf(
         applicationsJson,
         applicationNotesJson,
-        statusUpdatesJson,
-        statusUpdateDetailsJson,
         assessmentsJson,
       ).all { it == null }
     ) {
@@ -35,8 +30,6 @@ class Cas2HdcSubjectAccessRequestService(
          "Applications": ${ applicationsJson ?: "[]"},
          "ApplicationNotes": ${ applicationNotesJson ?: "[]"},
          "Assessments": ${ assessmentsJson ?: "[]"},
-         "StatusUpdates": ${ statusUpdatesJson ?: "[]"},
-         "StatusUpdateDetails": ${ statusUpdateDetailsJson ?: "[]"}
       }
     """.trimIndent()
 

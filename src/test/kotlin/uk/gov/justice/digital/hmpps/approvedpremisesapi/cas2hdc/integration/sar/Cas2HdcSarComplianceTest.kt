@@ -85,8 +85,6 @@ class Cas2HdcSarComplianceTest : Cas2SarTestBase() {
     )
 
     cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
-    cas2StatusUpdateDetailEntity(statusUpdate)
   }
 
   @Test

@@ -84,8 +84,6 @@ class Cas2SarComplianceTest : Cas2SarTestBase() {
     )
 
     cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
-    cas2StatusUpdateDetailEntity(statusUpdate)
   }
 
   @Test
