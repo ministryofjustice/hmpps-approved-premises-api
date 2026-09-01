@@ -22,20 +22,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
@@ -252,7 +254,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           .bodyAsListOfObjects<Cas1ApplicationSummary>()
 
         assertThat(response).hasSize(1)
-        assertThat(response[0].person).isInstanceOf(RestrictedPerson::class.java)
+        assertThat(response[0].person).isInstanceOf(RestrictedPersonSummary::class.java)
       }
     }
 
@@ -290,7 +292,44 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           .bodyAsListOfObjects<Cas1ApplicationSummary>()
 
         assertThat(response).hasSize(1)
-        assertThat(response[0].person).isInstanceOf(FullPerson::class.java)
+        assertThat(response[0].person).isInstanceOf(FullPersonSummary::class.java)
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 and an unknown person summary when the CRN has no Delius case summary`() {
+      givenAUser { userEntity, jwt ->
+        val crn = "X999999"
+
+        apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withId(UUID.randomUUID())
+          withCrn(crn)
+          withCreatedByUser(userEntity)
+          withCreatedAt(OffsetDateTime.parse("2022-09-24T15:00:00+01:00"))
+          withSubmittedAt(OffsetDateTime.parse("2022-09-25T16:00:00+01:00"))
+          withData(
+            """
+        {
+           "thingId": 123
+        }
+        """,
+          )
+        }
+
+        val response = webTestClient.get()
+          .uri("/cas1/applications/all")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+        assertThat(response).hasSize(1)
+        assertThat(response[0].person).isInstanceOf(UnknownPersonSummary::class.java)
+        assertThat((response[0].person as UnknownPersonSummary).crn).isEqualTo(crn)
       }
     }
 
@@ -927,9 +966,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-    private fun Person.personTierScore() = when (this) {
-      is FullPerson -> this.tier?.tierScore
-      is RestrictedPerson -> this.tier?.tierScore
+    private fun PersonSummary.personTierScore() = when (this) {
+      is FullPersonSummary -> this.tier?.tierScore
+      is RestrictedPersonSummary -> this.tier?.tierScore
       else -> null
     }
 
@@ -1120,7 +1159,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           .bodyAsListOfObjects<Cas1ApplicationSummary>()
 
         assertThat(response).hasSize(1)
-        assertThat(response[0].person).isInstanceOf(RestrictedPerson::class.java)
+        assertThat(response[0].person).isInstanceOf(RestrictedPersonSummary::class.java)
       }
     }
 
@@ -1158,7 +1197,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           .bodyAsListOfObjects<Cas1ApplicationSummary>()
 
         assertThat(response).hasSize(1)
-        assertThat(response[0].person).isInstanceOf(FullPerson::class.java)
+        assertThat(response[0].person).isInstanceOf(FullPersonSummary::class.java)
       }
     }
   }

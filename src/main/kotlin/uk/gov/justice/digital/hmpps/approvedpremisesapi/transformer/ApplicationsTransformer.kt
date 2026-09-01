@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
@@ -136,14 +137,14 @@ class ApplicationsTransformer(
 
   fun transformDomainToCas1ApplicationSummary(
     domain: DomainApprovedPremisesApplicationSummary,
-    personInfo: PersonInfoResult,
+    personSummaryInfo: PersonSummaryInfoResult,
   ): Cas1ApplicationSummary {
     val riskRatings =
       if (domain.getRiskRatings() != null) jsonMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
     return Cas1ApplicationSummary(
       id = domain.getId(),
-      person = personTransformer.personInfoResultToPerson(personInfo),
+      person = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
       createdByUserId = domain.getCreatedByUserId(),
       createdAt = domain.getCreatedAt(),
       submittedAt = domain.getSubmittedAt(),

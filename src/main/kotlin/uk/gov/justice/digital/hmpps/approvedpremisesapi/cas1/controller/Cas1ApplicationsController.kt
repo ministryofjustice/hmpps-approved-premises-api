@@ -41,7 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -442,13 +442,13 @@ class Cas1ApplicationsController(
     laoStrategy: LaoStrategy,
   ): List<Cas1ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personSummaryInfoResults = offenderService.getPersonSummaryInfoResults(crns.toSet(), laoStrategy)
 
     return applications.map {
       val crn = it.getCrn()
       applicationsTransformer.transformDomainToCas1ApplicationSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
+        personSummaryInfoResults.firstOrNull { result -> result.crn == crn } ?: PersonSummaryInfoResult.NotFound(crn),
       )
     }
   }
