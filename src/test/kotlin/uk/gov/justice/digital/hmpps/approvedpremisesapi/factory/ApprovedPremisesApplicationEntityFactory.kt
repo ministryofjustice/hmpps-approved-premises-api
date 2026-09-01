@@ -52,7 +52,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var sentenceType: Yielded<String?> = { null }
   private var situation: Yielded<String?> = { null }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
-  private var duration: Yielded<Int?> = { null }
+  private var requestedPlacementDuration: Yielded<Int?> = { null }
   private var isInapplicable: Yielded<Boolean?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var withdrawalReason: Yielded<String?> = { null }
@@ -228,8 +228,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.licenseExpiryDate = { licenseExpiredDate }
   }
 
-  fun withDuration(duration: Int?) = apply {
-    this.duration = { duration }
+  fun withRequestedPlacementDuration(duration: Int?) = apply {
+    this.requestedPlacementDuration = { duration }
   }
 
   fun withExpiredReason(expiredReason: String?) = apply {
@@ -262,7 +262,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     releaseType = this.releaseType(),
     sentenceType = this.sentenceType(),
     arrivalDate = this.arrivalDate(),
-    requestedPlacementDuration = this.duration(),
+    requestedPlacementDuration = this.requestedPlacementDuration(),
     calculatedPlacementDuration = null,
     isInapplicable = this.isInapplicable(),
     isWithdrawn = this.isWithdrawn(),

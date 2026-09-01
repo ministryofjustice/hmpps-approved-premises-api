@@ -169,7 +169,7 @@ class Cas1PlacementApplicationServiceTest {
         .withCreatedByUser(applicationCreator)
         .withCreatedAt(OffsetDateTime.parse("2018-12-03T10:15:30+01:00"))
         .withSubmittedAt(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
-        .withDuration(25)
+        .withRequestedPlacementDuration(25)
         .withSentenceType(SentenceTypeOption.bailPlacement.name)
         .withReleaseType(Cas1ReleaseType.licence)
         .withSituation(SituationOption.bailAssessment.name)

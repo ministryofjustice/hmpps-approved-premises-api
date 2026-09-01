@@ -117,7 +117,7 @@ fun IntegrationTestBase.givenAnApplication(
     withCaseManagerIsNotApplicant(caseManager != null)
     withApplicantUserDetails(applicant)
     withArrivalDate(arrivalDate)
-    withDuration(duration)
+    withRequestedPlacementDuration(duration)
     withData(data)
     withDocument(document)
     withApType(apType)

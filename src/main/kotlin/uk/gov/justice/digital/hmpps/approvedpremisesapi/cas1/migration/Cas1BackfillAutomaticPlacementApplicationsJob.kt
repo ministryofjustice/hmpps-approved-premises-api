@@ -121,7 +121,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
     val requestedDuration = if (application.requestedPlacementDuration != null) {
       application.requestedPlacementDuration
     } else {
-      log.warn("No duration defined on the application ${application.id}, using the placement request duration")
+      log.warn("No requestedPlacementDuration defined on the application ${application.id}, using the placement request duration")
       placementRequest.duration
     }
 
