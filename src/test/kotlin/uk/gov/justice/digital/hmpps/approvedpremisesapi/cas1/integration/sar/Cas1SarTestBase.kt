@@ -90,7 +90,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
          "non_arrival_reason": ${if (booking.nonArrivalReason != null) "\"${booking.nonArrivalReason!!.name}\"" else null},
          "tier": ${if (booking.application?.riskRatings?.tier?.value?.level != null) "\"${booking.application?.riskRatings?.tier?.value?.level}\"" else null},
          "created_at": "$CREATED_AT",
-         "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
          "key_worker_assigned_at": "$CREATED_AT",
          "key_worker_name": "${booking.keyWorkerName}",
          "premises_name": "${booking.premises.name}",
@@ -105,7 +104,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
          "cancellation_occurred_at": ${if (booking.cancellationOccurredAt != null) "\"${booking.cancellationOccurredAt}\"" else null},
          "cancellation_recorded_at": "$CANCELLATION_DATE",
          "characteristics_property_names": "${booking.criteria?.let{ it.map { criteria -> criteria.propertyName}.sortedBy{ propertyName -> propertyName }.joinToString(",")}}",
-         "transfer_type": ${booking.transferType?.let { "\"${booking.transferType}\"" }},
          "additional_information": ${booking.additionalInformation?.let { "\"${it}\"" }},
          "transfer_reason": ${booking.transferReason?.let { "\"${it.name}\"" }}
       }
@@ -120,7 +118,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     moveOnCategory: MoveOnCategoryEntity? = null,
     cancellationReason: CancellationReasonEntity? = null,
     offlineApplication: OfflineApplicationEntity? = null,
-    transferType: TransferType? = null,
     additionalInformation: String? = null,
     transferReason: TransferReason? = null,
     createdByUser: UserEntity? = null,
@@ -148,7 +145,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
       withActualDepartureDate(LocalDate.parse(departedAtDateOnly))
       withActualDepartureTime(LocalTime.parse(departedAtTime))
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withKeyworkerStaffCode("KEYWORKERSTAFFCODE")
       withKeyworkerName("KEYWORKERNAME")
       withKeyworkerAssignedAt(OffsetDateTime.parse(CREATED_AT).toInstant())
       withCreatedBy(user)
@@ -169,7 +165,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
         ),
       )
       withOfflineApplication(offlineApplication)
-      withTransferType(transferType)
       withAdditionalInformation(additionalInformation)
       withTransferReason(transferReason)
     }
