@@ -39,6 +39,20 @@ class DispatcherConfig(
   var maxConcurrentEvents: Int = 4,
 )
 
+/**
+ * Dispatches inbox events to registered handlers. Each event is processed in isolation - handlers
+ * manage their own transactions. Add new event types by implementing [InboxEventHandler] and
+ * registering as a Spring bean.
+ *
+ * Options for improving [performance](https://dsdmoj.atlassian.net/browse/FM-1139?focusedCommentId=838225):
+ *  1. Increase batch size (given observation that it takes 30ms per crn looking at AppInsight logs).  Currently set to
+ *  30 in preprod and prod.
+ *  2. Increase batch size and increase max concurrent events.
+ *  3. Do not persist events for CRNS that aren’t in the case_list table to inbox_events table.
+ *  4. Only fetch tier version for the tier that has been updated (will halve calls to tier service API).
+ *  And increase batch size.  Will need confirming if backfill is required before V3 go live.
+ *  5. Leverage batch getTiers endpoint and increase batch size.
+ */
 @Component
 class InboxEventDispatcher(
   handlers: List<InboxEventHandler>,
