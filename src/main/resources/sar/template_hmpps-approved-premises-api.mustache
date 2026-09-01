@@ -522,17 +522,24 @@
             </table>
             <table class="data-table">
                 <tr>
-                    <td class="data-column-20">Submitted at</td>
-                    <td class="data-column-20">Allocated user</td>
-                    <td class="data-column-20">Allocated at</td>
-                    <td class="data-column-20">Reallocated_at</td>
-                    <td class="data-column-20">Due at</td>
+                    <td class="data-column-33">Submitted at</td>
+                    <td class="data-column-33">Allocated user</td>
+                    <td class="data-column-33">Allocated at</td>
                 </tr>
                 <tr>
                     <td>{{ optionalValue (formatDate submitted_at) }}</td>
                     <td>{{ getUserLastName allocated_user }}</td>
                     <td>{{ optionalValue (formatDate allocated_at) }}</td>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-33">Reallocated_at</td>
+                    <td class="data-column-33">Authorised_Duration</td>
+                    <td class="data-column-33">Due at</td>
+                </tr>
+                <tr>
                     <td>{{ optionalValue (formatDate reallocated_at) }}</td>
+                    <td>{{ optionalValue authorised_duration }}</td>
                     <td>{{ optionalValue (formatDate due_at) }}</td>
                 </tr>
             </table>
