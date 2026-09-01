@@ -53,8 +53,6 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [],
       "Assessments": [],
-      "StatusUpdates": [],
-      "StatusUpdateDetails": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -82,8 +80,6 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [],
-      "StatusUpdateDetails": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -113,8 +109,6 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [],
-      "StatusUpdateDetails": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -129,8 +123,6 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
     val assessment = cas2AssessmentEntity(application)
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
-    val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
 
     val result = cas2HdcSubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
@@ -146,8 +138,6 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
       "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
-      "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)

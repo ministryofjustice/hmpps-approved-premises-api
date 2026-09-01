@@ -5,8 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar.Cas3SarComplianceTest.Companion.TEST_CREATED_BY_USER_NAME
@@ -18,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.util.UUID
 
 open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
@@ -32,24 +29,6 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
     val CAS2V2_APPLICATION_DATA by lazy { readResource("$CAS2V2_DATA_PATH/data_A1234AX.json") }
     val CAS2V2_APPLICATION_DOCUMENT by lazy { readResource("$CAS2V2_DATA_PATH/document_A1234AX.json") }
   }
-
-  protected fun cas2StatusUpdateDetails(statusUpdateDetail: Cas2StatusUpdateDetailEntity): String = """
-    {
-        "status_label": "${statusUpdateDetail.statusUpdate.label}",
-        "detail_label": "${statusUpdateDetail.label}",
-        "created_at": "${statusUpdateDetail.createdAt!!.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}"
-    }
-  """.trimIndent()
-
-  protected fun cas2StatusUpdatesJson(statusUpdate: Cas2StatusUpdateEntity): String = """
-    {
-      	"assessor_name": "${statusUpdate.assessor.name}",
-        ${if (statusUpdate.application.serviceOrigin == Cas2ServiceOrigin.HDC) "\"assessor_origin\": \"${statusUpdate.assessor.externalType}\"," else ""}
-      	"created_at": "${statusUpdate.createdAt.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
-        "description": "${statusUpdate.description}",
-        "label": "${statusUpdate.label}"
-    }    
-  """.trimIndent()
 
   protected fun cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
@@ -100,27 +79,6 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
     withCreatedByUser(user)
     withBody("some body text")
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-  }
-
-  protected fun cas2StatusUpdateEntity(
-    application: Cas2ApplicationEntity,
-    assessment: Cas2AssessmentEntity,
-    assessor: Cas2UserEntity,
-  ): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
-    withApplication(application)
-    withAssessment(assessment)
-    withStatusId(UUID.randomUUID())
-    withAssessor(assessor)
-    withLabel("Some Label")
-    withDescription("Some Description")
-    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-  }
-
-  protected fun cas2StatusUpdateDetailEntity(statusUpdate: Cas2StatusUpdateEntity): Cas2StatusUpdateDetailEntity = cas2StatusUpdateDetailEntityFactory.produceAndPersist {
-    withStatusUpdate(statusUpdate)
-    withLabel("Some detailed label")
-    withStatusDetailId(UUID.randomUUID())
-    withCreatedAt(OffsetDateTime.parse(CREATED_AT).withOffsetSameInstant(ZoneOffset.UTC))
   }
 
   protected fun cas2AssessmentEntity(
