@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.springframework.stereotype.Component
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
@@ -105,32 +104,6 @@ class Cas1SimpleApiClient {
     assessmentId: UUID,
     assessorJwt: String,
     body: Cas1AssessmentAcceptance,
-  ) {
-    integrationTestBase.webTestClient.post()
-      .uri("/cas1/assessments/$assessmentId/acceptance")
-      .header("Authorization", "Bearer $assessorJwt")
-      .bodyValue(body)
-      .exchange()
-      .expectStatus()
-      .isOk
-  }
-
-  /**
-   * This uses the /assessments/{id}/acceptance endpoint
-   * instead of /cas1/assessments/{id}/acceptance. The
-   * former endpoint doesn't create a placement_applications
-   * entry for initial requests for placements, providing us
-   * with a way to test reporting on these legacy placements
-   *
-   * Once we've migrated these existing entries to also
-   * have an entry in placement_applications, we can remove
-   * this function, and remove [AssessmentAcceptance]
-   */
-  fun assessmentAcceptLegacyBehaviour(
-    integrationTestBase: IntegrationTestBase,
-    assessmentId: UUID,
-    assessorJwt: String,
-    body: AssessmentAcceptance,
   ) {
     integrationTestBase.webTestClient.post()
       .uri("/cas1/assessments/$assessmentId/acceptance")
