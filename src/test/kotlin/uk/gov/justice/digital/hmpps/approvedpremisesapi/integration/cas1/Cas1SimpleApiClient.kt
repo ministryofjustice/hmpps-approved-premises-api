@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.springframework.stereotype.Component
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
@@ -124,13 +123,13 @@ class Cas1SimpleApiClient {
    *
    * Once we've migrated these existing entries to also
    * have an entry in placement_applications, we can remove
-   * this function, and remove [AssessmentAcceptance]
+   * this function, and remove [Cas1AssessmentAcceptance]
    */
   fun assessmentAcceptLegacyBehaviour(
     integrationTestBase: IntegrationTestBase,
     assessmentId: UUID,
     assessorJwt: String,
-    body: AssessmentAcceptance,
+    body: Cas1AssessmentAcceptance,
   ) {
     integrationTestBase.webTestClient.post()
       .uri("/cas1/assessments/$assessmentId/acceptance")

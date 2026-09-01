@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentAcceptance
@@ -1113,7 +1112,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .uri("/cas3/assessments/${assessment.id}/acceptance")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              AssessmentAcceptance(
+              Cas3AssessmentAcceptance(
                 document = mapOf("document" to "value"),
               ),
             )

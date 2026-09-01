@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
@@ -816,7 +815,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       this,
       assessmentId,
       assessorJwt,
-      AssessmentAcceptance(
+      Cas1AssessmentAcceptance(
         document = mapOf("document" to "value"),
         requirements = placementRequirements,
         placementDates = expectedArrival?.let {
@@ -825,7 +824,6 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
             duration = duration!!,
           )
         },
-        apType = ApType.normal,
       ),
     )
   }
