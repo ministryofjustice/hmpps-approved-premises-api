@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestsForPlacementDurationsCalculationResponseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierV3Score
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import java.time.Period
@@ -34,7 +36,23 @@ class Cas1RequestForPlacementService(
   private val domainEventRepository: DomainEventRepository,
   private val tierService: TierService,
   private val jsonMapper: JsonMapper,
+  private val sentryService: SentryService,
 ) {
+  companion object {
+    val TIER_SCORE_ABC = listOf(
+      TierV3Score.A,
+      TierV3Score.B,
+      TierV3Score.C,
+    )
+
+    val TIER_SCORE_D_TO_G = listOf(
+      TierV3Score.D,
+      TierV3Score.E,
+      TierV3Score.F,
+      TierV3Score.G,
+    )
+  }
+
   fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity?): CasResult<List<RequestForPlacement>> {
     val application = applicationService.getApplication(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
@@ -54,72 +72,123 @@ class Cas1RequestForPlacementService(
   fun defaultDurations(
     applicationId: UUID,
     apType: ApType,
-    sentenceType: String,
+    sentenceType: SentenceTypeOption,
+    exceptionalApplication: Boolean = false,
   ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
     val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound("Application", applicationId.toString())
     val tier = tierService.getTier(application.crn) ?: return CasResult.NotFound("Tier associated with case CRN", application.crn)
+    val durationCriteria = DurationCriteria(apType, application, sentenceType, tier, exceptionalApplication)
 
-    return when (tier.version) {
-      TierVersionDto.V2 -> defaultDurationTierV2(apType)
-      TierVersionDto.V3 -> defaultDurationTierV3(apType, application, sentenceType, tier)
-    }
+    return CasResult.Success(
+      when (tier.version) {
+        TierVersionDto.V2 -> defaultDurationTierV2(durationCriteria)
+        TierVersionDto.V3 -> defaultDurationTierV3(durationCriteria)
+      },
+    )
   }
+
+  private data class DurationCriteria(
+    val apType: ApType,
+    val application: ApprovedPremisesApplicationEntity,
+    val sentenceType: SentenceTypeOption,
+    val liveTier: TierDto,
+    val exceptionalApplication: Boolean,
+  )
 
   @SuppressWarnings("MagicNumber")
   private fun defaultDurationTierV2(
-    apType: ApType,
-  ) = when (apType) {
-    ApType.pipe -> createDurationCalculation(Period.ofWeeks(26), null)
-    ApType.esap -> createDurationCalculation(Period.ofWeeks(52), null)
-    ApType.normal,
-    ApType.rfap,
-    ApType.mhapStJosephs,
-    ApType.mhapElliottHouse,
-    -> createDurationCalculation(Period.ofWeeks(12), null)
-  }
-
-  @SuppressWarnings("MagicNumber", "CyclomaticComplexMethod")
-  private fun defaultDurationTierV3(
-    apType: ApType,
-    application: ApprovedPremisesApplicationEntity,
-    sentenceType: String,
-    liveTier: TierDto,
-  ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
-    val tierScore = liveTier.tierScore
-
-    return when (apType) {
-      ApType.pipe -> createDurationCalculation(Period.ofWeeks(26))
-      ApType.esap -> createDurationCalculation(Period.ofWeeks(62))
+    criteria: DurationCriteria,
+  ): Cas1RequestsForPlacementDurationsCalculationResponseDto {
+    val period = when (criteria.apType) {
+      ApType.pipe -> Period.ofWeeks(26)
+      ApType.esap -> Period.ofWeeks(52)
+      ApType.normal,
+      ApType.rfap,
       ApType.mhapStJosephs,
       ApType.mhapElliottHouse,
-      -> if (application.isWomensApplication == true) {
-        CasResult.GeneralValidationError("MHAP not supported for women's applications")
+      -> Period.ofWeeks(12)
+    }
+
+    return Cas1RequestsForPlacementDurationsCalculationResponseDto(period?.days, null)
+  }
+
+  @SuppressWarnings("MagicNumber", "CyclomaticComplexMethod", "NestedBlockDepth")
+  private fun defaultDurationTierV3(
+    criteria: DurationCriteria,
+  ): Cas1RequestsForPlacementDurationsCalculationResponseDto {
+    val apType = criteria.apType
+    val tierScore = TierV3Score.entries.firstOrNull { it.name == criteria.liveTier.tierScore } ?: error("Could not resolve tier value ${criteria.liveTier.tierScore}")
+    val isIpp = criteria.sentenceType == SentenceTypeOption.ipp
+    val male = !(criteria.application.isWomensApplication ?: error("Cannot calculate duration for application ${criteria.application.id} because isWomensApplication is not set"))
+
+    val tierAbc = tierScore in TIER_SCORE_ABC
+    val tierDtoGWithException = tierScore in TIER_SCORE_D_TO_G && criteria.exceptionalApplication
+
+    fun maleIppRestrictedRule(period: Period) = if (isIpp && male) {
+      if (tierAbc) {
+        period
       } else {
-        createDurationCalculation(Period.ofWeeks(26))
+        null
+      }
+    } else if (tierAbc || tierDtoGWithException) {
+      period
+    } else {
+      null
+    }
+
+    val period = when (apType) {
+      ApType.pipe -> maleIppRestrictedRule(Period.ofWeeks(26))
+      ApType.esap -> maleIppRestrictedRule(Period.ofWeeks(52))
+
+      ApType.mhapStJosephs,
+      ApType.mhapElliottHouse,
+      -> {
+        if (male) {
+          maleIppRestrictedRule(Period.ofWeeks(26))
+        } else {
+          null
+        }
       }
 
       ApType.normal,
       ApType.rfap,
-      -> if (application.isWomensApplication == true) {
-        createDurationCalculation(Period.ofWeeks(16))
-      } else {
-        if (sentenceType == SentenceTypeOption.life.value || sentenceType == SentenceTypeOption.ipp.value) {
-          if (tierScore in listOf("A", "B", "C")) {
-            createDurationCalculation(Period.ofWeeks(16))
-          } else {
-            CasResult.GeneralValidationError("Only tier A, B or C is eligible for life and ipp sentence type")
-          }
+      -> {
+        if (isIpp) {
+          maleIppRestrictedRule(Period.ofWeeks(16))
         } else {
-          when (tierScore) {
-            "A" -> createDurationCalculation(Period.ofWeeks(16))
-            "B" -> createDurationCalculation(Period.ofWeeks(12))
-            "C", "D" -> createDurationCalculation(Period.ofWeeks(8))
-            "E", "F", "G" -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $tierScore")
-            else -> CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $tierScore")
+          if (male) {
+            when (tierScore) {
+              TierV3Score.A -> Period.ofWeeks(16)
+              TierV3Score.B -> Period.ofWeeks(12)
+              TierV3Score.C -> Period.ofWeeks(8)
+              TierV3Score.D,
+              TierV3Score.E,
+              TierV3Score.F,
+              TierV3Score.G,
+              -> if (criteria.exceptionalApplication) {
+                Period.ofWeeks(8)
+              } else {
+                null
+              }
+              TierV3Score.MISSING -> null
+              TierV3Score.NOT_SUPERVISED -> null
+            }
+          } else {
+            if (tierAbc || tierDtoGWithException) {
+              Period.ofWeeks(16)
+            } else {
+              null
+            }
           }
         }
       }
     }
+
+    if (period == null) {
+      sentryService.captureErrorMessage(message = "Could not calculate duration for criteria $criteria", groupId = "cas1-cant-calculate-duration")
+    }
+
+    return Cas1RequestsForPlacementDurationsCalculationResponseDto(period?.days, null)
   }
 
   fun getRequestForPlacementWithdrawalDate(rfp: RequestForPlacement) = domainEventRepository.findWithdrawnRequestForPlacement(rfp.id)?.occurredAt?.toLocalDate()
@@ -127,9 +196,6 @@ class Cas1RequestForPlacementService(
   fun getRequestForPlacementRejectionReason(rfp: RequestForPlacement) = domainEventRepository.findAssessedRequestForPlacement(rfp.id)?.let {
     jsonMapper.readValue(it.data, RequestForPlacementAssessedEnvelope::class.java)
   }?.eventDetails?.decisionSummary
-
-  @SuppressWarnings("MaxLineLength")
-  private fun createDurationCalculation(period: Period, maxDurationDays: Int? = null): CasResult.Success<Cas1RequestsForPlacementDurationsCalculationResponseDto> = CasResult.Success(Cas1RequestsForPlacementDurationsCalculationResponseDto(period.days, maxDurationDays))
 
   private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity?) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
     placementApplication,

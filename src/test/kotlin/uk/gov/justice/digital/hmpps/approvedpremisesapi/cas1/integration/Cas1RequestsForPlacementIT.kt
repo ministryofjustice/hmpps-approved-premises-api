@@ -63,11 +63,15 @@ class Cas1RequestsForPlacementIT : IntegrationTestBase() {
         mockFeatureFlagService.setFlag("use-tier-v3", true)
 
         val (_, jwt) = givenAUser()
-        val application = givenACas1Application(apType = ApprovedPremisesType.RFAP, sentenceType = SentenceTypeOption.nonStatutory.value)
+        val application = givenACas1Application(
+          apType = ApprovedPremisesType.MHAP_ELLIOTT_HOUSE,
+          sentenceType = SentenceTypeOption.nonStatutory.value,
+          isWomensApplication = false,
+        )
         givenACase(application.crn, tierV2 = null, tierV3 = TierFactory().withVersion(TierVersion.V3).withTierScore("B").produce())
 
         val response = webTestClient.get()
-          .uri("/cas1/applications/${application.id}/requests-for-placement/calc/durations?apType=${ApType.rfap}&sentenceType=${SentenceTypeOption.ipp}")
+          .uri("/cas1/applications/${application.id}/requests-for-placement/calc/durations?apType=${ApType.rfap}&sentenceType=${SentenceTypeOption.ipp}&exceptionalApplication=false")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
