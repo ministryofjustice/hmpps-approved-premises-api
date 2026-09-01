@@ -174,6 +174,7 @@ class ApplicationsTransformer(
       isPipeApplication = applicationEntity.isPipeApplication,
       arrivalDate = applicationEntity.arrivalDate?.toInstant(),
       duration = applicationEntity.requestedPlacementDuration,
+      requestedPlacementDuration = applicationEntity.requestedPlacementDuration,
       data = if (applicationEntity.data != null) jsonMapper.readTree(applicationEntity.data) else null,
       document = if (applicationEntity.document != null) jsonMapper.readTree(applicationEntity.document) else null,
       risks = if (applicationEntity.riskRatings != null) {

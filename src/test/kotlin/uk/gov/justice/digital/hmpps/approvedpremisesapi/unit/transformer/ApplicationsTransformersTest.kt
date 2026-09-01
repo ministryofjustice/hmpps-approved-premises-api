@@ -312,6 +312,7 @@ class ApplicationsTransformersTest {
     assertThat(result.createdByUserName).isEqualTo(user.name)
     assertThat(result.arrivalDate).isEqualTo(OffsetDateTime.parse("2004-12-11T10:15:30Z").toInstant())
     assertThat(result.duration).isEqualTo(52)
+    assertThat(result.requestedPlacementDuration).isEqualTo(52)
     assertThat(result.status).isEqualTo(apiStatus)
     assertThat(result.apArea).isNull()
     assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
