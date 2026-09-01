@@ -233,6 +233,7 @@
                 <p><b>Prison Information</b></p>
                 {{#prison-information}}
                     {{#Adjudications}}
+                        <p><b>Adjudication</b></p>
                         <table class="summary-list">
                             <tr><td class="data-column-30">Offence description</td><td class="data-column-70">{{ optionalValue [Offence description] }}</td></tr>
                             <tr><td class="data-column-30">Establishment</td><td class="data-column-70">{{ optionalValue Establishment }}</td></tr>
@@ -1010,11 +1011,22 @@
                     {{#tasks}}
                         <p><b>{{ title }}</b></p>
                         {{#content}}
-                            <table class="summary-list">
-                                {{#each .}}
-                                    <tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ this }}</td></tr>
-                                {{/each}}
-                            </table>
+                            {{#Adjudications}}
+                                <p><b>Adjudication</b></p>
+                                <table class="summary-list">
+                                    <tr><td class="data-column-30">Offence description</td><td class="data-column-70">{{ optionalValue [Offence description] }}</td></tr>
+                                    <tr><td class="data-column-30">Establishment</td><td class="data-column-70">{{ optionalValue Establishment }}</td></tr>
+                                    <tr><td class="data-column-30">Finding</td><td class="data-column-70">{{ optionalValue Finding }}</td></tr>
+                                    <tr><td class="data-column-30">Report date and time</td><td class="data-column-70">{{ optionalValue [Report date and time] }}</td></tr>
+                                </table><br/>
+                            {{/Adjudications}}
+                            {{^Adjudications}}
+                                <table class="summary-list">
+                                    {{#each .}}
+                                        <tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ this }}</td></tr>
+                                    {{/each}}
+                                </table>
+                            {{/Adjudications}}
                         {{/content}}
                         {{^content}}
                             <p>No Data Held</p>
