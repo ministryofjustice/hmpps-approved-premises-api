@@ -76,7 +76,7 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
   implementation("uk.gov.service.notify:notifications-java-client:6.2.0-RELEASE")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
