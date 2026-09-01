@@ -195,7 +195,7 @@ class Cas1ApplicationCreationService(
       releaseType = Cas1ReleaseType.fromApiType(submitApplication.releaseType)
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival ?: submitApplication.arrivalDate)
-      requestedPlacementDuration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.duration
+      requestedPlacementDuration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.requestedDuration()
       calculatedPlacementDuration = submitApplication.calculatedPlacementDuration
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
@@ -269,9 +269,13 @@ class Cas1ApplicationCreationService(
       return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
     }
 
+    val requestedDuration = submitApplication.requestedDuration() ?: return CasResult.GeneralValidationError(
+      "Either duration or requestedPlacementDuration should be provided",
+    )
+
     if (
       submitApplication.requestedPlacementPeriod != null &&
-      submitApplication.duration != submitApplication.requestedPlacementPeriod.duration
+      requestedDuration != submitApplication.requestedPlacementPeriod.duration
     ) {
       return CasResult.GeneralValidationError(
         "The requested placement period duration must match the duration specified in the application.",

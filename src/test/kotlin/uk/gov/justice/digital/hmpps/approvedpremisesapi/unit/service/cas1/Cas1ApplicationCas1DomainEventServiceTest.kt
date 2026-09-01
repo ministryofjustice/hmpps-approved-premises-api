@@ -168,7 +168,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         caseManagerIsNotApplicant = false,
         reasonForShortNotice = "reason for short notice",
         reasonForShortNoticeOther = "reason for short notice other",
-        duration = 10,
+        requestedPlacementDuration = 10,
       )
 
       service.applicationSubmitted(
@@ -240,7 +240,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         caseManagerIsNotApplicant = false,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
-        duration = 10,
+        requestedPlacementDuration = 10,
       )
 
       service.applicationSubmitted(

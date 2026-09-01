@@ -944,7 +944,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         apAreaId = apArea.id,
         arrivalDate = arrivalDate,
         situation = situation,
-        duration = 10,
+        requestedPlacementDuration = 10,
         requestedPlacementPeriod = null,
       ),
     )
