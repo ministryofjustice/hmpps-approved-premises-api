@@ -102,7 +102,7 @@ class Cas1AssessmentEmailService(
           "crn" to application.crn,
           "timeApplicationReceived" to timeApplicationReceived,
           "dateApplicationReceived" to dateApplicationReceived,
-          "cas2Url" to cas2Url,
+          "cas2Url" to "$cas2Url?referred_by=cas1_app_rejected_email",
         ),
         application = application,
       )
