@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierEnvelopeDto
 
@@ -12,6 +13,8 @@ data class PlacementApplicationTask(
 
   @get:JsonProperty("placementType", required = true) val placementType: PlacementType,
 
+  @Deprecated("use requestedPlacementPeriod")
+  @Schema(deprecated = true, description = "Use requestedPlacementPeriod")
   @get:JsonProperty("dates", required = true) val dates: PlacementDates,
 
   @get:JsonProperty("taskType", required = true) override val taskType: TaskType,
@@ -38,8 +41,8 @@ data class PlacementApplicationTask(
 
   @get:JsonProperty("apType", required = true) override val apType: ApType,
 
-  @Schema(example = "null", description = "Placement apps only have one set of placement dates, use 'dates' instead")
-  @Deprecated(message = "")
+  @Deprecated("use requestedPlacementPeriod")
+  @Schema(deprecated = true, description = "Use requestedPlacementPeriod")
   @get:JsonProperty("placementDates") val placementDates: List<PlacementDates>? = null,
 
   @get:JsonProperty("outcome") val outcome: PlacementApplicationDecisionDto? = null,
@@ -53,4 +56,6 @@ data class PlacementApplicationTask(
   @get:JsonProperty("probationDeliveryUnit") override val probationDeliveryUnit: ProbationDeliveryUnit? = null,
 
   @get:JsonProperty("outcomeRecordedAt") override val outcomeRecordedAt: java.time.Instant? = null,
+
+  val requestedPlacementPeriod: Cas1RequestedPlacementPeriod,
 ) : Task

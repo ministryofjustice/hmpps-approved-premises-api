@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
@@ -48,8 +49,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1TaskTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -290,6 +291,7 @@ class Cas1TaskTransformerTest {
       placementApplication.submittedAt = OffsetDateTime.now()
       placementApplication.expectedArrival = LocalDate.of(2024, 3, 23)
       placementApplication.requestedDuration = 12
+      placementApplication.expectedArrivalFlexible = true
       val result = taskTransformer.transformPlacementApplicationToTask(
         placementApplication,
         getPersonSummaryInfoResultForDiscriminatorType(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
@@ -305,6 +307,9 @@ class Cas1TaskTransformerTest {
       )
       assertThat(result.placementDates).containsExactly(
         PlacementDates(LocalDate.of(2024, 3, 23), 12),
+      )
+      assertThat(result.requestedPlacementPeriod).isEqualTo(
+        Cas1RequestedPlacementPeriod(LocalDate.of(2024, 3, 23), true, 12),
       )
       assertThat(result.dueDate).isEqualTo(placementApplication.dueAt!!.toLocalDate())
       assertThat(result.dueAt).isEqualTo(placementApplication.dueAt!!.toInstant())

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
@@ -90,6 +91,11 @@ class Cas1TaskTransformer(
     },
     expectedArrivalDate = placementApplication.placementDates()!!.expectedArrival,
     apType = placementApplication.application.apType.asApiType(),
+    requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = placementApplication.expectedArrival!!,
+      arrivalFlexible = placementApplication.expectedArrivalFlexible,
+      duration = placementApplication.requestedDuration!!,
+    ),
   )
 
   private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): PersonSummary = personTransformer.personSummaryInfoResultToPersonSummary(
