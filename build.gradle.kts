@@ -84,7 +84,7 @@ dependencies {
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.2")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.8.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.8.1")
   // Used directly in our tests for JSON response assertions.
   // Also aligned with the approach used in the SAR team's tests.
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.2.0")
