@@ -51,6 +51,9 @@ class UserMergeService(
     userRepository.saveAndFlush(oldUser)
 
     log.info("Refreshing user info for user ${oldUser.id}")
-    userService.updateUserFromDelius(oldUser.id)
+    when (val updateResult = userService.updateUserFromDelius(oldUser)) {
+      is UserService.GetUserResponse.Success -> Unit
+      else -> error("Error updating user $updateResult")
+    }
   }
 }

@@ -264,7 +264,7 @@ class UserService(
 
   fun updateUserFromDelius(
     user: UserEntity,
-    forService: ServiceName?,
+    forService: ServiceName? = null,
   ) = when (val clientResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
     is ClientResult.Failure.StatusCode -> {
       if (clientResult.status == HttpStatus.NOT_FOUND) {

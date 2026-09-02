@@ -77,6 +77,10 @@ class UserMergeServiceTest {
         userRepository.saveAndFlush(any())
       } returnsArgument 0
 
+      every {
+        userService.updateUserFromDelius(oldUser)
+      } returns UserService.GetUserResponse.Success(oldUser)
+
       userMergeService.mergeUser(
         OLD_USERNAME,
         NEW_USERNAME,
@@ -91,7 +95,7 @@ class UserMergeServiceTest {
       assertThat(updatedUserSlot.captured.deliusUsername).isEqualTo(NEW_USERNAME.uppercase())
 
       verify {
-        userService.updateUserFromDelius(oldUser.id)
+        userService.updateUserFromDelius(oldUser)
       }
 
       verify(exactly = 0) { userRepository.delete(any<UserEntity>()) }
@@ -113,6 +117,10 @@ class UserMergeServiceTest {
         userRepository.saveAndFlush(any())
       } returnsArgument 0
 
+      every {
+        userService.updateUserFromDelius(oldUser)
+      } returns UserService.GetUserResponse.Success(oldUser)
+
       userMergeService.mergeUser(
         OLD_USERNAME,
         NEW_USERNAME,
@@ -127,12 +135,40 @@ class UserMergeServiceTest {
       assertThat(updatedUserSlot.captured.deliusUsername).isEqualTo(NEW_USERNAME.uppercase())
 
       verify {
-        userService.updateUserFromDelius(oldUser.id)
+        userService.updateUserFromDelius(oldUser)
       }
 
       verify {
         userRepository.delete(newUser)
       }
     }
+  }
+
+  @Test
+  fun `error if non-success response from update`() {
+    val oldUser = UserEntityFactory().withDefaults().withDeliusUsername(OLD_USERNAME).produce()
+
+    every {
+      userRepository.findByDeliusUsername(OLD_USERNAME.uppercase())
+    } returns oldUser
+
+    every {
+      userRepository.findByDeliusUsername(NEW_USERNAME.uppercase())
+    } returns null
+
+    every {
+      userRepository.saveAndFlush(any())
+    } returnsArgument 0
+
+    every {
+      userService.updateUserFromDelius(oldUser)
+    } returns UserService.GetUserResponse.StaffRecordNotFound
+
+    assertThatThrownBy {
+      userMergeService.mergeUser(
+        OLD_USERNAME,
+        NEW_USERNAME,
+      )
+    }.hasMessage("Error updating user StaffRecordNotFound")
   }
 }
