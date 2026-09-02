@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
@@ -40,10 +41,22 @@ data class Cas1Application(
 
   val apType: ApType? = null,
 
+  @Deprecated(message = "use requestedPlacementPeriod")
+  @Schema(deprecated = true, description = "use requestedPlacementPeriod")
   val arrivalDate: Instant? = null,
 
-  @Schema(description = "The placement duration requested by the applicant, which may be the default duration if not overridden. This will be available for any submitted application, even if arrivalDate is null")
+  @Deprecated("use requestedPlacementDuration")
+  @Schema(deprecated = true, description = "use requestedPlacementDuration")
   val duration: Int?,
+
+  @Schema(
+    description = "The placement duration requested by the applicant, which may be the default duration if not overridden. " +
+      "This will be available for any submitted application, even if there no is requestedPlacementPeriod is null",
+  )
+  val requestedPlacementDuration: Int?,
+
+  @Schema(description = "The applicant can make a single request for placement as part of the initial application")
+  val requestedPlacementPeriod: Cas1RequestedPlacementPeriod?,
 
   @Schema(description = "Contains ROSH Risks, Tier, Risk Flags and MAPPA captured when the application was created")
   val risks: PersonRisks? = null,
