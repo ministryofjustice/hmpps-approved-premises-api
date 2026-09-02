@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -37,21 +38,7 @@ interface UserRepository :
   )
   fun findByNameContainingIgnoreCase(str: String): List<UserEntity>
 
-  fun findByDeliusUsernameIgnoreCase(deliusUsername: String): UserEntity?
-
   fun findByDeliusUsername(deliusUsername: String): UserEntity?
-
-  @Query(
-    """
-    SELECT DISTINCT u 
-    FROM UserEntity u 
-    JOIN u.roles r
-    WHERE UPPER(u.deliusStaffCode) IN :staffCodes AND r.role = :role
-    """,
-  )
-  fun findByDeliusStaffCodeAndRole(staffCodes: List<String>, role: UserRole): List<UserEntity>
-
-  fun findByDeliusStaffCode(staffCode: String): UserEntity?
 
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role and u.isActive = true")
   fun findActiveUsersWithRole(role: UserRole): List<UserEntity>
@@ -101,16 +88,16 @@ data class UserEntity(
   @Id
   val id: UUID,
   var name: String,
-  val deliusUsername: String,
+  var deliusUsername: String,
   var deliusStaffCode: String,
   var email: String?,
   var telephoneNumber: String?,
   var isActive: Boolean,
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<ApplicationEntity>,
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", cascade = [ CascadeType.REMOVE ])
   var roles: MutableList<UserRoleAssignmentEntity>,
-  @OneToMany(mappedBy = "user")
+  @OneToMany(mappedBy = "user", cascade = [ CascadeType.REMOVE ])
   val qualifications: MutableList<UserQualificationAssignmentEntity>,
   @ManyToOne(fetch = FetchType.LAZY)
   var probationRegion: ProbationRegionEntity,
