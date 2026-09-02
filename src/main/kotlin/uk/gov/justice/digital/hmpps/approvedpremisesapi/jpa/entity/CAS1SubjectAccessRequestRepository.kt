@@ -529,11 +529,7 @@ from
               LEFT OUTER JOIN cas1_characteristics ON cas1_characteristics.id = sbc.characteristic_id
               WHERE sbc.space_booking_id = b.id 
               GROUP by sbc.space_booking_id
-            ) AS characteristics_property_names,    
-            CASE 
-              WHEN apa.id IS NOT NULL THEN apa.name
-              ELSE offline_app.name
-            END as person_name
+            ) AS characteristics_property_names    
             FROM 
               cas1_space_bookings b
             LEFT JOIN non_arrival_reasons nar ON 

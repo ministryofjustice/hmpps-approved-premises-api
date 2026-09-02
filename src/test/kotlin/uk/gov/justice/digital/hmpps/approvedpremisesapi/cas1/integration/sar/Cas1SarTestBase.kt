@@ -93,7 +93,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
          "key_worker_assigned_at": "$CREATED_AT",
          "key_worker_name": "${booking.keyWorkerName}",
          "premises_name": "${booking.premises.name}",
-         "person_name": ${if (booking.application != null) "\"${booking.application!!.name}\"" else "\"${booking.offlineApplication!!.name}\""},
          "delius_event_number": "${booking.deliusEventNumber}",
          "created_by_user_name":  ${booking.createdBy?.let { "\"${it.name}\"" }},
          "departure_reason": ${booking.departureReason?.let { "\"${it.name}\"" }},
