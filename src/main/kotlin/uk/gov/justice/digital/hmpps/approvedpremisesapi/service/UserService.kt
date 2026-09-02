@@ -192,7 +192,6 @@ class UserService(
     user.isActive = false
     userRepository.save(user)
   }
-
   fun updateUser(
     id: UUID,
     roles: List<ApprovedPremisesUserRole>,
@@ -257,7 +256,7 @@ class UserService(
 
   fun updateUserFromDelius(
     id: UUID,
-    forService: ServiceName,
+    forService: ServiceName? = null,
   ): CasResult<GetUserResponse> {
     val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound(entityType = "User", id = id.toString())
     return CasResult.Success(updateUserFromDelius(user, forService))
@@ -265,7 +264,7 @@ class UserService(
 
   fun updateUserFromDelius(
     user: UserEntity,
-    forService: ServiceName,
+    forService: ServiceName?,
   ) = when (val clientResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
     is ClientResult.Failure.StatusCode -> {
       if (clientResult.status == HttpStatus.NOT_FOUND) {
@@ -311,7 +310,7 @@ class UserService(
   fun updateUserEntity(
     user: UserEntity,
     staffDetail: StaffDetail,
-    forService: ServiceName,
+    forService: ServiceName?,
     username: String,
   ): UserEntity {
     user.name = staffDetail.name.deliusName()
@@ -322,8 +321,10 @@ class UserService(
 
     staffDetail.probationArea.let { probationArea ->
       findProbationRegionFromArea(probationArea.code)?.let { probationRegion ->
+        if (user.probationRegion.id != probationRegion.id) {
+          log.info("Updating user probation region with probation area code ${probationArea.code} to ${probationRegion.name} for the user $username.")
+        }
         user.probationRegion = probationRegion
-        log.info("Updating user probation region with probation area code ${probationArea.code} to ${probationRegion.name} for the user $username.")
       }
     }
 
@@ -332,7 +333,7 @@ class UserService(
       user.probationDeliveryUnit = pduResult.value
     }
 
-    if (forService == ServiceName.approvedPremises) {
+    if (forService == null || forService == ServiceName.approvedPremises) {
       val apArea = cas1ApAreaMappingService.determineApArea(user.probationRegion, staffDetail.teamCodes(), username)
       user.apArea = apArea
       if (user.cruManagementAreaOverride == null) {

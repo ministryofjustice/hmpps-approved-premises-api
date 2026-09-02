@@ -124,6 +124,7 @@ class SeedService(
         SeedFileType.approvedPremisesClosePremises -> getBean(Cas1ClosePremisesSeedJob::class)
         SeedFileType.cas3UpdatePremisesPostcode -> getBean(Cas3UpdatePremisesPostcodeSeedJob::class)
         SeedFileType.updateInboxEventStatus -> getBean(UpdateInboxEventStatusSeedJob::class)
+        SeedFileType.cas1cas3UserMerge -> getBean(Cas1Cas3UserMergeJob::class)
       }
 
       val seedStarted = LocalDateTime.now()
