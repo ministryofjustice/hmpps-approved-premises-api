@@ -191,10 +191,6 @@ class Cas1AssessmentService(
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
-  fun getApprovedPremisesAssessmentsByCrnNotReallocated(
-    crn: String,
-  ): List<ApprovedPremisesAssessmentEntity> = assessmentRepository.findApprovedPremisesAssessmentsByCrnNotReallocated(crn)
-
   @SuppressWarnings("ReturnCount")
   fun addAssessmentClarificationNote(
     user: UserEntity,

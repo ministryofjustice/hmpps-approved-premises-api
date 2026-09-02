@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.Instant
 import java.time.LocalDate
@@ -306,6 +307,100 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
 
           Assertions.assertThat(response).hasSize(1)
           Assertions.assertThat(response!![0].id).isEqualTo(currentAssessment.id)
+        }
+      }
+    }
+
+    @Test
+    fun `Get referrals for application with appeal returns only the latest assessment`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val apArea = givenAnApArea(name = "London AP Area")
+          val cruManagementArea = givenACas1CruManagementArea(name = "London CRU")
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(crn)
+            withCreatedByUser(user)
+            withApArea(apArea)
+            withCruManagementArea(cruManagementArea)
+          }
+
+          approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAllocatedToUser(user)
+            withDecision(AssessmentDecision.REJECTED)
+            withCreatedAt(OffsetDateTime.now().minusDays(5).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          }
+
+          val appealedAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAllocatedToUser(user)
+            withDecision(AssessmentDecision.ACCEPTED)
+            withCreatedFromAppeal(true)
+            withCreatedAt(OffsetDateTime.now().minusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          }
+
+          val response = webTestClient.get()
+            .uri("/cas1/external/referrals/$crn")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBodyList<Cas1ReferralHistory>()
+            .returnResult()
+            .responseBody
+
+          Assertions.assertThat(response).hasSize(1)
+          Assertions.assertThat(response!![0].id).isEqualTo(appealedAssessment.id)
+          Assertions.assertThat(response[0].applicationId).isEqualTo(application.id)
+        }
+      }
+    }
+
+    @Test
+    fun `Get referrals for unassessed started application returns referral with application id`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val apArea = givenAnApArea(name = "London AP Area")
+          val cruManagementArea = givenACas1CruManagementArea(name = "London CRU")
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(crn)
+            withCreatedByUser(user)
+            withApArea(apArea)
+            withCruManagementArea(cruManagementArea)
+            withStatus(ApprovedPremisesApplicationStatus.STARTED)
+            withSubmittedAt(null)
+          }
+
+          val response = webTestClient.get()
+            .uri("/cas1/external/referrals/$crn")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBodyList<Cas1ReferralHistory>()
+            .returnResult()
+            .responseBody
+
+          val expectedReferral = Cas1ReferralHistory(
+            id = application.id,
+            applicationId = application.id,
+            date = application.createdAt.toLocalDate(),
+            applicationStatus = ApprovedPremisesApplicationStatus.STARTED,
+            type = ServiceType.CAS1,
+            referralRejectionReason = null,
+            localAuthorityArea = apArea.name,
+            pdu = cruManagementArea.name,
+            referredBy = createStaffDto(application.createdByUser),
+            placementAddress = null,
+            placementStatus = null,
+            requestForPlacementStatus = null,
+            uiUrl = "http://frontend/applications/${application.id}",
+            withdrawalReason = null,
+          )
+
+          Assertions.assertThat(response).containsExactly(expectedReferral)
         }
       }
     }
