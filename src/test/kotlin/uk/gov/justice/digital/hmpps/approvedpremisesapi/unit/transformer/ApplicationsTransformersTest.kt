@@ -299,7 +299,7 @@ class ApplicationsTransformersTest {
       .withSentenceType(SentenceTypeOption.bailPlacement.name)
       .withReleaseType(Cas1ReleaseType.notApplicable)
       .withArrivalDate(OffsetDateTime.parse("2004-12-11T10:15:30Z"))
-      .withDuration(52)
+      .withRequestedPlacementDuration(52)
       .produce()
 
     every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(applicantUserDetails) } returns Cas1ApplicationUserDetails("applicant", "", "")

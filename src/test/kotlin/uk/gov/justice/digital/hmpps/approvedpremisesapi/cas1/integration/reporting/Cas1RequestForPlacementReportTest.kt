@@ -659,7 +659,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       jwt,
       SubmitApprovedPremisesApplication(
         arrivalDate = arrivalDateOnApplication,
-        duration = durationOnApplication,
+        requestedPlacementDuration = durationOnApplication,
         translatedDocument = {},
         isWomensApplication = false,
         isEmergencyApplication = false,

@@ -621,7 +621,7 @@ class Cas1ApplicationCreationServiceTest {
       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
       caseManagerIsNotApplicant = false,
       apType = ApType.normal,
-      duration = 10,
+      requestedPlacementDuration = 10,
       requestedPlacementPeriod = null,
     )
 
@@ -677,7 +677,7 @@ class Cas1ApplicationCreationServiceTest {
       val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication.copy(
-          duration = 10,
+          requestedPlacementDuration = 10,
           requestedPlacementPeriod = null,
         ),
         user,
@@ -705,7 +705,7 @@ class Cas1ApplicationCreationServiceTest {
       val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication.copy(
-          duration = 10,
+          requestedPlacementDuration = 10,
           requestedPlacementPeriod = null,
         ),
         user,
@@ -713,6 +713,37 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       assertThatCasResult(result).isGeneralValidationError("Only an application with the 'STARTED' status can be submitted")
+    }
+
+    @Test
+    fun `Returns GeneralValidationError when duration and requestedPlacementDuration are not populated`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockLockableApplicationRepository.acquirePessimisticLock(applicationId) } returns LockableApplicationEntity(applicationId)
+
+      val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
+        duration = null,
+        requestedPlacementDuration = null,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.now(),
+          duration = 11,
+          arrivalFlexible = null,
+        ),
+      )
+
+      val result = applicationService.submitApplication(
+        applicationId,
+        submitApplication,
+        user,
+        apAreaId = apArea.id,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("Either duration or requestedPlacementDuration should be provided")
     }
 
     @Test
@@ -746,6 +777,36 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
+    fun `Returns GeneralValidationError when requestedPlacementDuration does not match requestedPlacementPeriod duration`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockLockableApplicationRepository.acquirePessimisticLock(applicationId) } returns LockableApplicationEntity(applicationId)
+
+      val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
+        requestedPlacementDuration = 10,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.now(),
+          duration = 11,
+          arrivalFlexible = null,
+        ),
+      )
+
+      val result = applicationService.submitApplication(
+        applicationId,
+        submitApplication,
+        user,
+        apAreaId = apArea.id,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("The requested placement period duration must match the duration specified in the application.")
+    }
+
+    @Test
     fun `Returns success when duration matches requestedPlacementPeriod duration`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
@@ -759,7 +820,7 @@ class Cas1ApplicationCreationServiceTest {
       setupMocksForSuccess(application)
 
       val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
-        duration = 10,
+        requestedPlacementDuration = 10,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
           arrival = LocalDate.now(),
           duration = 10,
@@ -798,7 +859,7 @@ class Cas1ApplicationCreationServiceTest {
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
-        duration = 10,
+        requestedPlacementDuration = 10,
       )
 
       every { mockJsonMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
@@ -806,7 +867,7 @@ class Cas1ApplicationCreationServiceTest {
       val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication.copy(
-          duration = 10,
+          requestedPlacementDuration = 10,
           requestedPlacementPeriod = null,
         ),
         user,
@@ -837,7 +898,7 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
         noticeType = Cas1ApplicationTimelinessCategory.standard,
-        duration = 10,
+        requestedPlacementDuration = 10,
         calculatedPlacementDuration = 15,
         isExceptional = true,
       )
@@ -926,7 +987,7 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerUserDetails = null,
         noticeType = Cas1ApplicationTimelinessCategory.standard,
         arrivalDate = LocalDate.of(2023, 2, 1),
-        duration = 25,
+        requestedPlacementDuration = 25,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -956,7 +1017,7 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
-        assertThat(it.duration).isEqualTo(25)
+        assertThat(it.requestedPlacementDuration).isEqualTo(25)
 
         val placementAppPlaceholderCaptor = slot<PlacementApplicationPlaceholderEntity>()
         verify {
@@ -992,7 +1053,7 @@ class Cas1ApplicationCreationServiceTest {
           LocalDate.now().plusMonths(7)
         },
         noticeType = null,
-        duration = 10,
+        requestedPlacementDuration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1070,7 +1131,7 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
         arrivalDate = LocalDate.now().plusMonths(7),
         noticeType = null,
-        duration = 10,
+        requestedPlacementDuration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1147,7 +1208,7 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        duration = 10,
+        requestedPlacementDuration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1228,7 +1289,7 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = false,
         caseManagerUserDetails = null,
-        duration = 10,
+        requestedPlacementDuration = 10,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1292,7 +1353,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `Success with requestedPlacementPeriod, creates assessment and stores event, triggers email, creates placement app placeholder`() {
+    fun `Success with deprecated duration field used instead of requestedPlacementDuration`() {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         apType = ApType.pipe,
@@ -1308,6 +1369,7 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerUserDetails = null,
         noticeType = Cas1ApplicationTimelinessCategory.standard,
         duration = 25,
+        requestedPlacementDuration = null,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
           arrival = LocalDate.of(2023, 2, 1),
           duration = 25,
@@ -1342,7 +1404,73 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
-        assertThat(it.duration).isEqualTo(25)
+        assertThat(it.requestedPlacementDuration).isEqualTo(25)
+
+        val placementAppPlaceholderCaptor = slot<PlacementApplicationPlaceholderEntity>()
+        verify {
+          mockPlacementApplicationPlaceholderRepository.save(
+            capture(placementAppPlaceholderCaptor),
+          )
+        }
+
+        assertThat(placementAppPlaceholderCaptor.captured.application).isEqualTo(it)
+        assertThat(placementAppPlaceholderCaptor.captured.expectedArrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
+        assertThat(placementAppPlaceholderCaptor.captured.archived).isFalse
+      }
+    }
+
+    @Test
+    fun `Success with requestedPlacementPeriod, creates assessment and stores event, triggers email, creates placement app placeholder`() {
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        apType = ApType.pipe,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = false,
+        caseManagerUserDetails = null,
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        requestedPlacementDuration = 25,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.of(2023, 2, 1),
+          duration = 25,
+          arrivalFlexible = null,
+        ),
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+
+      setupMocksForSuccess(application)
+
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(any())
+      } returns theApplicantUserDetailsEntity
+
+      every {
+        mockPlacementApplicationPlaceholderRepository.save(any())
+      } returnsArgument 0
+
+      val result =
+        applicationService.submitApplication(
+          applicationId,
+          defaultSubmitApprovedPremisesApplication,
+          user,
+          apAreaId = apArea.id,
+        )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
+        assertThat(it.requestedPlacementDuration).isEqualTo(25)
 
         val placementAppPlaceholderCaptor = slot<PlacementApplicationPlaceholderEntity>()
         verify {

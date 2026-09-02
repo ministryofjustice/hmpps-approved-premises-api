@@ -147,7 +147,7 @@ class Cas1PlacementApplicationService(
           createdByUser = application.createdByUser,
           createdAt = application.createdAt,
           expectedArrival = authorisedExpectedArrival,
-          requestedDuration = application.duration,
+          requestedDuration = application.requestedPlacementDuration,
           authorisedDuration = authorisedDurationDays,
           submittedAt = application.submittedAt!!,
           decision = JpaPlacementApplicationDecision.ACCEPTED,

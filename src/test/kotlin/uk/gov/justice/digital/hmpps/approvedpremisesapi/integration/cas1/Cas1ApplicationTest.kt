@@ -2316,7 +2316,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
             licenseExpiryDate = LocalDate.of(2026, 12, 1),
-            duration = 52,
+            requestedPlacementDuration = 52,
             requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
               arrival = LocalDate.of(2031, 5, 6),
               duration = 52,
@@ -2339,7 +2339,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 12, 1))
       assertThat(persistedApplication.releaseType).isEqualTo(Cas1ReleaseType.reReleasedFollowingFixedTermRecall)
       assertThat(persistedApplication.arrivalDate).isEqualTo(OffsetDateTime.of(LocalDate.of(2031, 5, 6), LocalTime.of(0, 0), ZoneOffset.UTC))
-      assertThat(persistedApplication.duration).isEqualTo(52)
+      assertThat(persistedApplication.requestedPlacementDuration).isEqualTo(52)
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -2410,7 +2410,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               "applicationTelephone",
             ),
             caseManagerIsNotApplicant = false,
-            duration = 10,
+            requestedPlacementDuration = 10,
             requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
               arrival = LocalDate.now(),
               duration = 11,
@@ -2480,7 +2480,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             ),
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
-            duration = 10,
+            requestedPlacementDuration = 10,
             requestedPlacementPeriod = null,
           ),
         )
@@ -2592,7 +2592,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             ),
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
-            duration = 10,
+            requestedPlacementDuration = 10,
             requestedPlacementPeriod = null,
           ),
         )
@@ -2691,7 +2691,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             apAreaId = overriddenApArea.id,
             applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
             caseManagerIsNotApplicant = false,
-            duration = 10,
+            requestedPlacementDuration = 10,
             requestedPlacementPeriod = null,
           ),
         )
@@ -2774,7 +2774,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             apAreaId = overriddenApArea.id,
             applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
             caseManagerIsNotApplicant = false,
-            duration = 10,
+            requestedPlacementDuration = 10,
             requestedPlacementPeriod = null,
           ),
         )
@@ -2866,7 +2866,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
                       type = "CAS1",
                       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
                       caseManagerIsNotApplicant = false,
-                      duration = 10,
+                      requestedPlacementDuration = 10,
                       requestedPlacementPeriod = null,
                     ),
                   )

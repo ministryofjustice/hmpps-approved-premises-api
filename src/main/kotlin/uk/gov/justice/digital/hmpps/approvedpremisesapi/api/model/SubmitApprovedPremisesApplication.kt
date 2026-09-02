@@ -19,9 +19,11 @@ data class SubmitApprovedPremisesApplication(
   @Schema(description = "If the applicant has requested a placement, this is the requested arrival date")
   @Deprecated(message = "Use requestedPlacementPeriod.arrival instead")
   val arrivalDate: java.time.LocalDate? = null,
-  @Schema(description = "The placement duration requested by the applicant, which may be the default duration if not overridden. This will be provided even if requestedPlacementPeriod is null (in which case it's the default duration)")
-  val duration: Int,
-  @Schema(description = "If the user's ap area id is incorrect, they can optionally override it for the application")
+  @Deprecated(message = "Use requestedPlacementDuration instead")
+  @Schema(deprecated = true, description = "Use requestedPlacementDuration instead, which a better named version of this field")
+  val duration: Int? = null,
+  @Schema(description = "The placement duration requested by the applicant, which may be the default duration if not overridden. This will be provided even if requestedPlacementPeriod is null. Required on submission. nullable until 'duration' is removed")
+  val requestedPlacementDuration: Int? = null,
   val apAreaId: java.util.UUID? = null,
   val applicantUserDetails: Cas1ApplicationUserDetails? = null,
   val caseManagerIsNotApplicant: Boolean? = null,
@@ -37,4 +39,6 @@ data class SubmitApprovedPremisesApplication(
   val calculatedPlacementDuration: Int? = null,
   @Schema(description = "The applicant can make a single request for placement as part of the initial application")
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod? = null,
-) : SubmitApplication
+) : SubmitApplication {
+  fun requestedDuration() = requestedPlacementDuration ?: duration
+}

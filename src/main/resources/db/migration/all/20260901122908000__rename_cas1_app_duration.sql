@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises_applications RENAME COLUMN duration TO requested_placement_duration;
