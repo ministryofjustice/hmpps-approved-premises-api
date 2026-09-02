@@ -377,7 +377,7 @@
                     <td>{{ optionalValue (formatDate due_at) }}</td>
                     <td>{{ optionalValue (formatDate allocated_at) }}</td>
                     <td>{{ optionalValue (formatDate reallocated_at) }}</td>
-                    <td>{{ optionalValue assessor_name }}</td>
+                    <td>{{ getUserLastName assessor_name }}</td>
                 </tr>
             </table>
 
@@ -1182,7 +1182,7 @@
                     <td class="data-column-25">Allocated at</td>
                 </tr>
                 <tr>
-                    <td>{{ optionalValue assessor_name }}</td>
+                    <td>{{ getUserLastName assessor_name }}</td>
                     <td>{{ optionalValue (formatDate allocated_at) }}</td>
                 </tr>
             </table>

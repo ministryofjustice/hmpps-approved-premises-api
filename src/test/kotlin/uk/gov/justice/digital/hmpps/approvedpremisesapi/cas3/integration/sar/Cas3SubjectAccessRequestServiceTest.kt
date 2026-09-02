@@ -243,7 +243,7 @@ class Cas3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   ): String =
     """
       {
-         "assessor_name": "${assessment.allocatedToUser?.name}",
+         "assessor_name": "${assessment.allocatedToUser?.deliusUsername}",
          "created_at": "$CREATED_AT",
          "allocated_at": "$ALLOCATED_AT",
          "submitted_at": "$SUBMITTED_AT",

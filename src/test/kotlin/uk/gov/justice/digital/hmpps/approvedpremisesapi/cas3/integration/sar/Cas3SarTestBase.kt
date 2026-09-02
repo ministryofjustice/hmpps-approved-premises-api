@@ -43,7 +43,7 @@ open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun temporaryAccommodationAssessmentEntity(
     application: TemporaryAccommodationApplicationEntity,
-    allocatedToUser: UserEntity = userEntity(),
+    allocatedToUser: UserEntity = userEntity("an assessor"),
     referralRejectionReasonName: String = randomStringMultiCaseWithNumbers(6),
   ): TemporaryAccommodationAssessmentEntity = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
     withData(DATA_JSON_SIMPLE)

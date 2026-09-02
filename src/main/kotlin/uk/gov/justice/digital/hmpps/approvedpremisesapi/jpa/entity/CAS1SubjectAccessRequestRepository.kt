@@ -44,7 +44,7 @@ from
 		apa.sentence_type,
 		apa.notice_type,
 		apa.ap_type,
-		case_manager."name" as case_manager_name,
+		REGEXP_REPLACE(TRIM(case_manager."name"), '^.* ', '') as case_manager_name,
 		apa.case_manager_is_not_applicant,
     apa.situation,
     apa.is_inapplicable,
@@ -126,7 +126,7 @@ from
       """
        select json_agg(assess) as json from (
            select
-               u."name" as assessor_name,
+               u.delius_username as assessor_name,
                assess."document",
                assess.created_at,
                assess.allocated_at,
@@ -510,7 +510,7 @@ from
             apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
             b.created_at,
             b.key_worker_assigned_at,
-            b.key_worker_name,
+            REGEXP_REPLACE(TRIM(b.key_worker_name), '^.* ', '') as key_worker_name,
             p."name" as premises_name,
             b.delius_event_number,
             u.name as created_by_user_name,
