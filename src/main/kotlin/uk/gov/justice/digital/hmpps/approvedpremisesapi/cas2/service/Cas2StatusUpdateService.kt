@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
-import io.sentry.Sentry
 import jakarta.transaction.Transactional
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
@@ -12,13 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.util.Cas2ApplicationUtils
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
@@ -28,12 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2U
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -43,16 +33,11 @@ class Cas2StatusUpdateService(
   private val cas2StatusUpdateRepository: Cas2StatusUpdateRepository,
   private val cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: Cas2DomainEventService,
-  private val emailNotificationService: EmailNotificationService,
   private val cas2PersistedApplicationStatusFinder: Cas2PersistedApplicationStatusFinder,
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,
   private val cas2ApplicationStatusUpdateEmailService: Cas2ApplicationStatusUpdateEmailService,
-  private val featureFlagService: FeatureFlagService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
-
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   @Transactional
   @SuppressWarnings("ReturnCount")
@@ -105,11 +90,7 @@ class Cas2StatusUpdateService(
       )
     }
 
-    if (featureFlagService.getBooleanFlag("isr-email-changes-enabled")) {
-      cas2ApplicationStatusUpdateEmailService.statusUpdate(assessment, createdStatusUpdate)
-    } else {
-      sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
-    }
+    cas2ApplicationStatusUpdateEmailService.statusUpdate(assessment, createdStatusUpdate)
 
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
@@ -168,36 +149,5 @@ class Cas2StatusUpdateService(
         ),
       ),
     )
-  }
-
-  private fun sendEmailStatusUpdated(user: Cas2UserEntity, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
-    if (application.createdByUser.email != null) {
-      val applicationOrigin = application.applicationOrigin
-      val applicationType = Cas2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
-
-      val templateId = when (applicationOrigin) {
-        ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_STATUS_UPDATED_COURT_BAIL
-        ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_STATUS_UPDATED_PRISON_BAIL
-        ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_APPLICATION_STATUS_UPDATED
-        ApplicationOrigin.other -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
-      }
-
-      emailNotificationService.sendCas2Email(
-        recipientEmailAddress = user.email!!,
-        templateId = templateId,
-        personalisation = mapOf(
-          "applicationStatus" to status.label,
-          "dateStatusChanged" to status.createdAt.toLocalDate().toCas2UiFormat(),
-          "timeStatusChanged" to status.createdAt.toCas2UiFormattedHourOfDay(),
-          "applicationType" to applicationType,
-          "nomsNumber" to application.nomsNumber,
-          "crn" to application.crn,
-          "applicationUrl" to applicationOverviewUrlTemplate.replace("#id", application.id.toString()),
-        ),
-      )
-    } else {
-      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
-      Sentry.captureMessage("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
-    }
   }
 }

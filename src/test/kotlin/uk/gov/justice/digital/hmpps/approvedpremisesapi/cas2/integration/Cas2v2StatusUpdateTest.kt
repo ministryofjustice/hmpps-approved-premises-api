@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
@@ -32,7 +31,6 @@ import java.util.UUID
 
 class Cas2v2StatusUpdateTest(
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) : IntegrationTestBase() {
 
   @MockkSpyBean
@@ -194,109 +192,9 @@ class Cas2v2StatusUpdateTest(
     @Nested
     inner class WithStatusDetail {
       @Test
-      fun `Create cas2v2 status update returns 201 and creates StatusUpdate when given status and detail are valid, and sends an email to the referrer`() {
+      fun `Create cas2v2 status update returns 201 and sends the email`() {
         val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
         val submittedAt = OffsetDateTime.now()
-        mockFeatureFlagService.setFlag("isr-email-changes-enabled", false)
-
-        try {
-          givenACas2v2Assessor { _, jwt ->
-            givenACas2v2PomUser { applicant, _ ->
-              val application = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(applicant)
-                withSubmittedAt(submittedAt)
-                withNomsNumber("123NOMS")
-                withServiceOrigin(Cas2ServiceOrigin.BAIL)
-              }
-
-              cas2AssessmentEntityFactory.produceAndPersist {
-                withId(assessmentId)
-                withApplication(application)
-                withServiceOrigin(Cas2ServiceOrigin.BAIL)
-              }
-
-              assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
-
-              val now = OffsetDateTime.now()
-              mockkStatic(OffsetDateTime::class)
-              every { OffsetDateTime.now() } returns now
-
-              webTestClient.post()
-                .uri("/cas2/assessments/$assessmentId/status-updates")
-                .header("Authorization", "Bearer $jwt")
-                .bodyValue(
-                  Cas2HdcAssessmentStatusUpdate(
-                    newStatus = "offerDeclined",
-                    newStatusDetails = listOf("changeOfCircumstances"),
-                  ),
-                )
-                .exchange()
-                .expectStatus()
-                .isCreated
-
-              assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(1)
-              assertThat(realCas2StatusUpdateDetailRepository.count()).isEqualTo(1)
-
-              val persistedStatusUpdate =
-                realCas2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
-              assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
-
-              val persistedStatusDetailUpdate =
-                realCas2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate.id)
-              assertThat(persistedStatusDetailUpdate).isNotNull
-
-              val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
-                .find { status ->
-                  status.id == persistedStatusUpdate.statusId
-                }
-
-              assertThat(appliedStatus!!.name).isEqualTo("offerDeclined")
-              assertThat(appliedStatus.statusDetails?.find { detail -> detail.id == persistedStatusDetailUpdate?.statusDetailId })
-                .isNotNull()
-
-              emailAsserter.assertEmailsRequestedCount(1)
-
-              emailAsserter.assertEmailRequested(
-                toEmailAddress = applicant.email!!,
-                templateId = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a",
-                personalisation = mapOf(
-                  "applicationStatus" to "Offer declined or withdrawn",
-                  "dateStatusChanged" to now.toLocalDate().toCas2UiFormat(),
-                  "timeStatusChanged" to now.toCas2UiFormattedHourOfDay(),
-                  "nomsNumber" to "123NOMS",
-                  "applicationType" to "Home Detention Curfew (HDC)",
-                  "applicationUrl" to applicationOverviewUrlTemplate.replace("#id", application.id.toString()),
-                ),
-                replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
-              )
-
-              // verify that generated 'application.status-updated' domain event links
-              // to the CAS2 domain
-              val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", application.id.toString())
-              val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
-
-              val domainEventFromJson = jsonMapper.readValue(
-                persistedDomainEvent!!.data,
-                Cas2ApplicationStatusUpdatedEvent::class.java,
-              )
-              assertThat(domainEventFromJson.eventDetails.applicationUrl)
-                .isEqualTo(expectedFrontEndUrl)
-
-              // verify that the persisted domain event contains the expected status details
-              val expected = listOf(Cas2StatusDetail("changeOfCircumstances", "Change of circumstances"))
-              assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails).isEqualTo(expected)
-            }
-          }
-        } finally {
-          unmockkAll()
-        }
-      }
-
-      @Test
-      fun `Create cas2v2 status update returns 201 and sends the new email when the flag is true`() {
-        val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-        val submittedAt = OffsetDateTime.now()
-        mockFeatureFlagService.setFlag("isr-email-changes-enabled", true)
 
         try {
           givenACas2v2Assessor { _, jwt ->
@@ -372,6 +270,16 @@ class Cas2v2StatusUpdateTest(
                 ),
                 replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
               )
+
+              // verify that emitted application.status-updated domain event includes the status details
+              val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
+              val domainEventFromJson = jsonMapper.readValue(
+                persistedDomainEvent!!.data,
+                Cas2ApplicationStatusUpdatedEvent::class.java,
+              )
+              assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails)
+                .isNotNull
+                .anyMatch { detail -> detail.name == "changeOfCircumstances" }
             }
           }
         } finally {

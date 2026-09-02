@@ -31,11 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Validatab
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -43,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service
@@ -54,14 +49,11 @@ class Cas2ApplicationService(
   private val cas2OffenderService: Cas2OffenderService,
   private val cas2UserAccessService: Cas2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
-  private val emailNotificationService: EmailNotificationService,
   private val cas2AssessmentService: Cas2AssessmentService,
-  private val notifyConfig: NotifyConfig,
   private val jsonMapper: JsonMapper,
   private val sentryService: SentryService,
   private val caseService: CaseService,
   private val cas2ApplicationEmailService: Cas2ApplicationEmailService,
-  private val featureFlagService: FeatureFlagService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -319,11 +311,7 @@ class Cas2ApplicationService(
 
     createAssessment(application)
 
-    if (featureFlagService.getBooleanFlag("isr-email-changes-enabled")) {
-      cas2ApplicationEmailService.applicationSubmitted(application)
-    } else {
-      sendAssessorEmailApplicationSubmitted(user, application)
-    }
+    cas2ApplicationEmailService.applicationSubmitted(application)
 
     return CasResult.Success(application)
   }
@@ -392,37 +380,6 @@ class Cas2ApplicationService(
     }
 
     return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
-  }
-
-  private fun sendAssessorEmailApplicationSubmitted(user: Cas2UserEntity, application: Cas2ApplicationEntity) {
-    val applicationOrigin = application.applicationOrigin.toString()
-
-    val templateId = when (applicationOrigin) {
-      ApplicationOrigin.courtBail.toString() -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_SUBMITTED_COURT_BAIL
-      ApplicationOrigin.prisonBail.toString() -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_SUBMITTED_PRISON_BAIL
-      ApplicationOrigin.other.toString() -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
-      else -> Cas2NotifyTemplates.CAS2_APPLICATION_SUBMITTED
-    }
-
-    emailNotificationService.sendEmail(
-      recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
-      templateId = templateId,
-      personalisation = mapOf(
-        "name" to user.name,
-        "email" to user.email,
-        "prisonNumber" to application.nomsNumber,
-        "nomsNumber" to application.nomsNumber,
-        "crn" to application.crn,
-        "telephoneNumber" to application.telephoneNumber,
-        "timeApplicationSubmitted" to (application.submittedAt?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: ""),
-        "dateApplicationSubmitted" to (application.submittedAt?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""),
-        "referrerName" to application.createdByUser.name,
-        "referrerEmail" to application.createdByUser.email,
-        "referrerTelephoneNumber" to application.telephoneNumber,
-        "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
-      ),
-      replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
-    )
   }
 
   private fun removeXssCharacters(data: String?): String? {
