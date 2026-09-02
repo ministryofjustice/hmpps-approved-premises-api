@@ -102,7 +102,7 @@ class CAS3SubjectAccessRequestRepository(
         select json_agg(assessments) as json 
         from (
               select
-                u."name" as assessor_name,
+                u.delius_username as assessor_name,
                 assess.created_at,
                 assess.allocated_at,
                 assess.submitted_at,

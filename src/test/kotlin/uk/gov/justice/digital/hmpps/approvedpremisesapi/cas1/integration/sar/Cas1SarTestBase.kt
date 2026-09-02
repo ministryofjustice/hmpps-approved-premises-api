@@ -91,7 +91,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
          "tier": ${if (booking.application?.riskRatings?.tier?.value?.level != null) "\"${booking.application?.riskRatings?.tier?.value?.level}\"" else null},
          "created_at": "$CREATED_AT",
          "key_worker_assigned_at": "$CREATED_AT",
-         "key_worker_name": "${booking.keyWorkerName}",
+         "key_worker_name": ${booking.keyWorkerName?.let { "\"${it.trim().substringAfterLast(' ')}\"" } ?: "null"},
          "premises_name": "${booking.premises.name}",
          "delius_event_number": "${booking.deliusEventNumber}",
          "created_by_user_name":  ${booking.createdBy?.let { "\"${it.name}\"" }},
@@ -144,7 +144,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
       withActualDepartureDate(LocalDate.parse(departedAtDateOnly))
       withActualDepartureTime(LocalTime.parse(departedAtTime))
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withKeyworkerName("KEYWORKERNAME")
+      withKeyworkerName("KEY WORKER SURNAME")
       withKeyworkerAssignedAt(OffsetDateTime.parse(CREATED_AT).toInstant())
       withCreatedBy(user)
       withDeliusEventNumber("DELIUSEVENTNUMBER")
@@ -255,7 +255,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun approvedPremisesAssessmentEntity(
     application: ApprovedPremisesApplicationEntity,
-    assessor: UserEntity = userEntity(),
+    assessor: UserEntity = userEntity("an assessor"),
     data: String = DATA_JSON_SIMPLE,
     document: String = DOCUMENT_JSON_SIMPLE,
   ): ApprovedPremisesAssessmentEntity = approvedPremisesAssessmentEntityFactory.produceAndPersist {

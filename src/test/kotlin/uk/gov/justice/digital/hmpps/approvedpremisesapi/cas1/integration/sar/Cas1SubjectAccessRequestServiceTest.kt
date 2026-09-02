@@ -473,7 +473,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
            "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
            "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
            "ap_type": "${ApprovedPremisesType.NORMAL}",
-           "case_manager_name": "${application.caseManagerUserDetails?.name}",
+           "case_manager_name": ${application.caseManagerUserDetails?.name?.let { "\"${it.trim().substringAfterLast(' ')}\"" } ?: "null"},
            "case_manager_is_not_applicant" : true,
            "situation": "${SituationOption.bailSentence}",
            "is_inapplicable": false,
@@ -498,7 +498,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
   ): String =
     """
       {
-         "assessor_name":"${assessment.allocatedToUser?.name}",
+         "assessor_name":"${assessment.allocatedToUser?.deliusUsername}",
          "document":$DOCUMENT_JSON_SIMPLE,
          "created_at":"$CREATED_AT",
          "allocated_at":"$ALLOCATED_AT",

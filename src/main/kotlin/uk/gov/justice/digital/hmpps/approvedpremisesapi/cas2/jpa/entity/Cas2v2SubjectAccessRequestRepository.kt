@@ -70,7 +70,7 @@ class Cas2v2SubjectAccessRequestRepository(
       from(
           select
           	caa.created_at,
-          	caa.assessor_name,
+          	REGEXP_REPLACE(TRIM(caa.assessor_name), '^.* ', '') as assessor_name,
           	caa.nacro_referral_id
           from
           	cas_2_assessments caa
