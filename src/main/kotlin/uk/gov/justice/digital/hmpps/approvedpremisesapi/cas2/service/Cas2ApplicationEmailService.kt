@@ -17,11 +17,11 @@ class Cas2ApplicationEmailService(
 ) {
 
   fun applicationSubmitted(cas2Application: Cas2ApplicationEntity) {
-    val recipientEmailAddress = cas2Application.createdByUser.email ?: return
-    val submittedAt = cas2Application.submittedAt ?: return
+    val submittedAt = cas2Application.submittedAt ?: error("Submitted At required")
     val cohort = requireNotNull(cas2Application.cohort)
     val timeReceived = submittedAt.format(DateTimeFormatter.ofPattern("HH:mm"))
     val dateReceived = submittedAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    val referrerEmail = cas2Application.createdByUser.email
 
     val commonPersonalisation = mapOf(
       "cohort" to cohort.displayName,
@@ -31,14 +31,16 @@ class Cas2ApplicationEmailService(
       "nacroReferenceId" to cas2Application.id.toString(),
     )
 
-    cas2EmailService.sendEmail(
-      recipientEmailAddress = recipientEmailAddress,
-      templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_SUBMITTED,
-      personalisation = commonPersonalisation + mapOf(
-        "viewSubmittedApplicationUrl" to submittedApplicationReferrerUrlTemplate.resolve("id", cas2Application.id.toString()),
-      ),
-      cas2Application = cas2Application,
-    )
+    referrerEmail?.let {
+      cas2EmailService.sendEmail(
+        recipientEmailAddress = it,
+        templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_SUBMITTED,
+        personalisation = commonPersonalisation + mapOf(
+          "viewSubmittedApplicationUrl" to submittedApplicationReferrerUrlTemplate.resolve("id", cas2Application.id.toString()),
+        ),
+        cas2Application = cas2Application,
+      )
+    }
 
     cas2EmailService.sendEmail(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
@@ -46,8 +48,8 @@ class Cas2ApplicationEmailService(
       personalisation = commonPersonalisation + mapOf(
         "sla" to cohort.assessmentSla,
         "referrerName" to cas2Application.createdByUser.name,
-        "referrerEmail" to cas2Application.createdByUser.email,
-        "referrerTelephoneNumber" to cas2Application.telephoneNumber,
+        "referrerEmail" to (referrerEmail ?: ""),
+        "referrerTelephoneNumber" to (cas2Application.telephoneNumber ?: ""),
         "viewSubmittedApplicationUrl" to submittedApplicationAssessorUrlTemplate.resolve("applicationId", cas2Application.id.toString()),
       ),
       cas2Application = cas2Application,

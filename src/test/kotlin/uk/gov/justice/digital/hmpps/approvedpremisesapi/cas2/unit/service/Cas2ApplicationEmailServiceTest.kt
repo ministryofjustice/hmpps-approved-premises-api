@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
@@ -85,6 +86,74 @@ class Cas2ApplicationEmailServiceTest {
         ),
         cas2Application = application,
       )
+    }
+  }
+
+  @Test
+  fun `applicationSubmitted skips referrer email but still sends assessor email when referrer has no email`() {
+    val emailConfig = EmailAddressConfig()
+    emailConfig.cas2Assessors = "assessors@example.com"
+    every { mockNotifyConfig.emailAddresses } returns emailConfig
+
+    val userWithoutEmail = Cas2UserEntityFactory()
+      .withEmail(null)
+      .produce()
+
+    val applicationId = UUID.randomUUID()
+    val application = Cas2ApplicationEntityFactory()
+      .withId(applicationId)
+      .withCreatedByUser(userWithoutEmail)
+      .withSubmittedAt(OffsetDateTime.parse("2024-06-24T16:07:00Z"))
+      .withCrn("CRN123")
+      .withCohort(Cas2Cohort.HDC)
+      .produce()
+
+    service.applicationSubmitted(application)
+
+    verify(exactly = 0) {
+      mockCas2EmailService.sendEmail(
+        recipientEmailAddress = any(),
+        templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_SUBMITTED,
+        personalisation = any(),
+        cas2Application = any(),
+      )
+    }
+
+    verify(exactly = 1) {
+      mockCas2EmailService.sendEmail(
+        recipientEmailAddress = "assessors@example.com",
+        templateId = Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_TO_ASSESS,
+        personalisation = mapOf(
+          "cohort" to "HDC",
+          "crn" to "CRN123",
+          "timeApplicationReceived" to "16:07",
+          "dateApplicationReceived" to "24/06/2024",
+          "nacroReferenceId" to applicationId.toString(),
+          "viewSubmittedApplicationUrl" to "http://frontend/applications/assess/$applicationId",
+          "sla" to "3 working days",
+          "referrerName" to application.createdByUser.name,
+          "referrerEmail" to "",
+          "referrerTelephoneNumber" to application.telephoneNumber,
+        ),
+        cas2Application = application,
+      )
+    }
+  }
+
+  @Test
+  fun `applicationSubmitted throws exception when submittedAt is null`() {
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(null)
+      .withCohort(Cas2Cohort.HDC)
+      .produce()
+
+    assertThatThrownBy { service.applicationSubmitted(application) }
+      .isInstanceOf(IllegalStateException::class.java)
+      .hasMessage("Submitted At required")
+
+    verify(exactly = 0) {
+      mockCas2EmailService.sendEmail(any(), any(), any(), any())
     }
   }
 }
