@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
@@ -13,9 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -148,23 +151,42 @@ class Cas2ApplicationService(
 
   fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? {
    return cas2ApplicationRepository.findAllByCrn(crn)
-     .filter {
-       it.cohort != Cas2Cohort.HDC
-         && it.cohort != Cas2Cohort.COURT_BAIL
-         && it.cohort != Cas2Cohort.PRISON_BAIL
-         && it.abandonedAt == null
-     }.maxByOrNull { it.createdAt }?.let{ mostRecent ->
+      .filter { it.cohort != Cas2Cohort.HDC && it.cohort != Cas2Cohort.COURT_BAIL && it.cohort != Cas2Cohort.PRISON_BAIL && it.abandonedAt == null }
+      .sortedByDescending { it.createdAt }
+      .firstOrNull {
+
+        val now = OffsetDateTime.now()
+        val today = now.toLocalDate()
+
+        val draftExpiryLimit = 2L
+        when {
+          it.conditionalReleaseDate != null -> it.conditionalReleaseDate!! >= today
+          else -> it.createdAt >= now.minusMonths(draftExpiryLimit)
+        }
+      }?.let{ mostRecent ->
+
+      val submittedBy = mostRecent.applicationAssignments
+        .filter { it.createdAt < mostRecent.submittedAt && it.allocatedPomUser != null }
+        .maxByOrNull { it.createdAt }?.allocatedPomUser ?: mostRecent.createdByUser
 
       val latestStatusUpdate = mostRecent.statusUpdates?.maxByOrNull { it.createdAt }
 
        return Cas2SuitableApplication(
-         application = Cas2ExternalApplicationDto(
-           id = mostRecent.id,
-           status = latestStatusUpdate?.label,
-         ),
-         uiUrl = "TODO"
-       )
+        uiUrl = cas2ApplicationUrlTemplate.replace("#id", mostRecent.id.toString()),
+        application = Cas2ExternalApplicationDto(
+          id = mostRecent.id,
+          status = latestStatusUpdate?.label,
+          statusReason = latestStatusUpdate?.statusUpdateDetails?.firstOrNull()?.label,
+          submittedBy = Cas2StaffDto(
+            name = submittedBy.name,
+            username = submittedBy.username,
+            staffCode = submittedBy.deliusStaffCode
+          ),
+          submittedAt = mostRecent.submittedAt,
+        )
+      )
     }
+
   }
 
   fun getSubmittedApplicationsByCrn(crn: String): List<Cas2ApplicationEntity> = cas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
