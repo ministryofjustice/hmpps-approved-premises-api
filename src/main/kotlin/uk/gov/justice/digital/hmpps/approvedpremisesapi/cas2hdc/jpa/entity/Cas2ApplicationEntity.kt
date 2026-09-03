@@ -41,6 +41,11 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   fun findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn: String): List<Cas2ApplicationEntity>
 
   @Query(
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.crn = :crn and a.cohort in :cohorts and a.abandonedAt is null order by a.createdAt desc limit 1",
+  )
+  fun findLatestApplication(crn: String, cohorts: List<Cas2Cohort>): Cas2ApplicationEntity?
+
+  @Query(
     "SELECT id, application_origin FROM cas_2_applications WHERE cohort IS NULL",
     nativeQuery = true,
   )
@@ -93,19 +98,21 @@ interface Cas2LockableApplicationRepository : JpaRepository<Cas2LockableApplicat
 /*
  * If these values change, then the Cas2v2SubjectAccessRequestRepository needs to be updated to reflect the new values.
  */
-enum class Cas2Cohort(val apiType: Cas2CohortDto, val displayName: String, val longDisplayName: String, val assessmentSla: String) {
-  HDC(Cas2CohortDto.HOME_DETENTION_CURFEW, "HDC", "Home Detention Curfew", "3 working days"),
-  PRISON_BAIL(Cas2CohortDto.PRISON_BAIL, "Prison Bail", "Prison Bail", "1 working day"),
-  COURT_BAIL(Cas2CohortDto.COURT_BAIL, "Court Bail", "Court Bail", "1 hour"),
-  ATCR(Cas2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL, "ATCR", "Alternative to Custodial Recall (ATCR)", "1 hour"),
-  HCRD(Cas2CohortDto.HOMELESS_AT_CONDITIONAL_RELEASE_DATE, "HCRD", "Homeless at Conditional Release Date (HCRD)", "3 working days"),
-  HEFR(Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL, "HEFR", "Homeless at End of Fixed-term Recall", "3 working days"),
-  ISC(Cas2CohortDto.INTENSIVE_SUPERVISION_COURTS, "ISC", "Intensive Supervision Courts (ISC)", "3 working days"),
-  RARR(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW, "RARR", "Risk Assessed Recall Review (RARR)", "3 working days"),
-  FROM_AP(Cas2CohortDto.REFERRAL_FROM_APPROVED_PREMISES, "From AP", "Move on from Approved Premises", "3 working days"),
+enum class Cas2Cohort(val apiType: Cas2CohortDto, val displayName: String, val longDisplayName: String, val assessmentSla: String, val isIsr: Boolean) {
+  HDC(Cas2CohortDto.HOME_DETENTION_CURFEW, "HDC", "Home Detention Curfew", "3 working days", false),
+  PRISON_BAIL(Cas2CohortDto.PRISON_BAIL, "Prison Bail", "Prison Bail", "1 working day", false),
+  COURT_BAIL(Cas2CohortDto.COURT_BAIL, "Court Bail", "Court Bail", "1 hour", false),
+  ATCR(Cas2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL, "ATCR", "Alternative to Custodial Recall (ATCR)", "1 hour", true),
+  HCRD(Cas2CohortDto.HOMELESS_AT_CONDITIONAL_RELEASE_DATE, "HCRD", "Homeless at Conditional Release Date (HCRD)", "3 working days", true),
+  HEFR(Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL, "HEFR", "Homeless at End of Fixed-term Recall", "3 working days", true),
+  ISC(Cas2CohortDto.INTENSIVE_SUPERVISION_COURTS, "ISC", "Intensive Supervision Courts (ISC)", "3 working days", true),
+  RARR(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW, "RARR", "Risk Assessed Recall Review (RARR)", "3 working days", true),
+  FROM_AP(Cas2CohortDto.REFERRAL_FROM_APPROVED_PREMISES, "From AP", "Move on from Approved Premises", "3 working days", true),
   ;
 
   companion object {
+    fun isr() = entries.filter { it.isIsr }
+
     @JvmStatic
     @JsonCreator
     fun forValue(value: String) = values().first { it.apiType.value == value }
