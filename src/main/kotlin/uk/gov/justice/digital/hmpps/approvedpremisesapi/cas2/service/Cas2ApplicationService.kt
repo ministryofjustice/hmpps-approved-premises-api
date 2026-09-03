@@ -14,7 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -43,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.chrono.ChronoLocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -64,6 +67,7 @@ class Cas2ApplicationService(
   private val featureFlagService: FeatureFlagService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
+  @Value($$"${url-templates.frontend.application}") private val cas2ApplicationUrlTemplate: String,
 ) {
 
   fun getCas2Applications(
@@ -139,6 +143,27 @@ class Cas2ApplicationService(
       CasResult.Success(applicationEntity)
     } else {
       CasResult.Unauthorised()
+    }
+  }
+
+  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? {
+   return cas2ApplicationRepository.findAllByCrn(crn)
+     .filter {
+       it.cohort != Cas2Cohort.HDC
+         && it.cohort != Cas2Cohort.COURT_BAIL
+         && it.cohort != Cas2Cohort.PRISON_BAIL
+         && it.abandonedAt == null
+     }.maxByOrNull { it.createdAt }?.let{ mostRecent ->
+
+      val latestStatusUpdate = mostRecent.statusUpdates?.maxByOrNull { it.createdAt }
+
+       return Cas2SuitableApplication(
+         application = Cas2ExternalApplicationDto(
+           id = mostRecent.id,
+           status = latestStatusUpdate?.label,
+         ),
+         uiUrl = "TODO"
+       )
     }
   }
 

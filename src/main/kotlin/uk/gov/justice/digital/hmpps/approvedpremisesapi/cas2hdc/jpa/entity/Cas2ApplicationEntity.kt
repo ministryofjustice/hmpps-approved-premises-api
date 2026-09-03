@@ -39,6 +39,7 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   fun findByIdAndServiceOriginAndSubmittedAtIsNotNull(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2ApplicationEntity?
   fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2ApplicationEntity?
   fun findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn: String): List<Cas2ApplicationEntity>
+  fun findAllByCrn(crn: String): List<Cas2ApplicationEntity>
 
   @Query(
     "SELECT id, application_origin FROM cas_2_applications WHERE cohort IS NULL",
