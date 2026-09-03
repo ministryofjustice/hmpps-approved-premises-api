@@ -16,9 +16,6 @@ data class SubmitApprovedPremisesApplication(
   @Deprecated(message = "noticeType should be used to indicate if this an emergency application")
   val isEmergencyApplication: Boolean? = null,
   val situation: SituationOption? = null,
-  @Schema(description = "If the applicant has requested a placement, this is the requested arrival date")
-  @Deprecated(message = "Use requestedPlacementPeriod.arrival instead")
-  val arrivalDate: java.time.LocalDate? = null,
   @Deprecated(message = "Use requestedPlacementDuration instead")
   @Schema(deprecated = true, description = "Use requestedPlacementDuration instead, which a better named version of this field")
   val duration: Int? = null,

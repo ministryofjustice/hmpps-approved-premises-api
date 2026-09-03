@@ -658,8 +658,14 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       application.id,
       jwt,
       SubmitApprovedPremisesApplication(
-        arrivalDate = arrivalDateOnApplication,
         requestedPlacementDuration = durationOnApplication,
+        requestedPlacementPeriod = arrivalDateOnApplication?.let {
+          Cas1RequestedPlacementPeriod(
+            arrival = arrivalDateOnApplication,
+            arrivalFlexible = null,
+            duration = durationOnApplication,
+          )
+        },
         translatedDocument = {},
         isWomensApplication = false,
         isEmergencyApplication = false,

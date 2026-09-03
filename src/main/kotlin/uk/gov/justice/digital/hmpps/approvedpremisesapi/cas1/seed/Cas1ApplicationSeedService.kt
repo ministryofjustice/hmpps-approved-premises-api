@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -244,7 +245,11 @@ class Cas1ApplicationSeedService(
         isWomensApplication = false,
         releaseType = ReleaseTypeOption.licence,
         targetLocation = postcodeDistrictRepository.findAll()[0].outcode,
-        arrivalDate = LocalDate.of(2030, 1, 1),
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.of(2030, 1, 1),
+          arrivalFlexible = null,
+          duration = 28,
+        ),
         requestedPlacementDuration = 28,
         sentenceType = SentenceTypeOption.ipp,
         situation = SituationOption.bailSentence,

@@ -881,7 +881,7 @@ class Cas1ApplicationCreationServiceTest {
     @EnumSource(value = SituationOption::class)
     @NullSource
     @Suppress("CyclomaticComplexMethod")
-    fun `Success with no arrival date, creates assessment and stores event, triggers email`(
+    fun `Success with no requested placement period, creates assessment and stores event, triggers email`(
       situation: SituationOption?,
     ) {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
@@ -901,6 +901,7 @@ class Cas1ApplicationCreationServiceTest {
         requestedPlacementDuration = 10,
         calculatedPlacementDuration = 15,
         isExceptional = true,
+        requestedPlacementPeriod = null,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -970,68 +971,6 @@ class Cas1ApplicationCreationServiceTest {
       verify(exactly = 0) { mockPlacementApplicationPlaceholderRepository.save(any()) }
     }
 
-    @Test
-    fun `Success with arrival date, creates assessment and stores event, triggers email, creates placement app placeholder`() {
-      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
-        translatedDocument = {},
-        apType = ApType.pipe,
-        isWomensApplication = false,
-        isEmergencyApplication = false,
-        targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
-        type = "CAS1",
-        sentenceType = SentenceTypeOption.nonStatutory,
-        situation = SituationOption.bailSentence,
-        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
-        caseManagerIsNotApplicant = false,
-        caseManagerUserDetails = null,
-        noticeType = Cas1ApplicationTimelinessCategory.standard,
-        arrivalDate = LocalDate.of(2023, 2, 1),
-        requestedPlacementDuration = 25,
-      )
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-
-      setupMocksForSuccess(application)
-
-      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
-      every {
-        mockCas1ApplicationUserDetailsRepository.save(any())
-      } returns theApplicantUserDetailsEntity
-
-      every {
-        mockPlacementApplicationPlaceholderRepository.save(any())
-      } returnsArgument 0
-
-      val result =
-        applicationService.submitApplication(
-          applicationId,
-          defaultSubmitApprovedPremisesApplication,
-          user,
-          apAreaId = apArea.id,
-        )
-
-      assertThatCasResult(result).isSuccess().with {
-        assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
-        assertThat(it.requestedPlacementDuration).isEqualTo(25)
-
-        val placementAppPlaceholderCaptor = slot<PlacementApplicationPlaceholderEntity>()
-        verify {
-          mockPlacementApplicationPlaceholderRepository.save(
-            capture(placementAppPlaceholderCaptor),
-          )
-        }
-
-        assertThat(placementAppPlaceholderCaptor.captured.application).isEqualTo(it)
-        assertThat(placementAppPlaceholderCaptor.captured.expectedArrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
-        assertThat(placementAppPlaceholderCaptor.captured.archived).isFalse
-      }
-    }
-
     @ParameterizedTest
     @EnumSource(value = Cas1ApplicationTimelinessCategory::class)
     fun `Sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
@@ -1047,13 +986,17 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
-          LocalDate.now().plusDays(10)
-        } else {
-          LocalDate.now().plusMonths(7)
-        },
         noticeType = null,
         requestedPlacementDuration = 10,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+            LocalDate.now().plusDays(10)
+          } else {
+            LocalDate.now().plusMonths(7)
+          },
+          arrivalFlexible = null,
+          duration = 10,
+        ),
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1129,9 +1072,13 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        arrivalDate = LocalDate.now().plusMonths(7),
         noticeType = null,
         requestedPlacementDuration = 10,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.now().plusMonths(7),
+          arrivalFlexible = null,
+          duration = 10,
+        ),
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()

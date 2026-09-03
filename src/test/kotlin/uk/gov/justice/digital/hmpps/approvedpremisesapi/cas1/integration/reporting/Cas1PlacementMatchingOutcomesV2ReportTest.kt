@@ -684,7 +684,6 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       application.id,
       jwt,
       SubmitApprovedPremisesApplication(
-        arrivalDate = arrivalDateOnApplication,
         translatedDocument = {},
         isWomensApplication = false,
         isEmergencyApplication = false,
@@ -697,7 +696,13 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         apType = ApType.pipe,
         noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
         requestedPlacementDuration = 10,
-        requestedPlacementPeriod = null,
+        requestedPlacementPeriod = arrivalDateOnApplication?.let {
+          Cas1RequestedPlacementPeriod(
+            arrival = arrivalDateOnApplication,
+            arrivalFlexible = null,
+            duration = 10,
+          )
+        },
       ),
     )
 
