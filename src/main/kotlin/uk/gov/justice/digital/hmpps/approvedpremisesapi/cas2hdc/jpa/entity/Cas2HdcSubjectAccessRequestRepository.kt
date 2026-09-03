@@ -11,40 +11,6 @@ class Cas2HdcSubjectAccessRequestRepository(
   jdbcTemplate: NamedParameterJdbcTemplate,
 ) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
 
-  override fun domainEvents(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceName: String,
-  ): String? {
-    val result = jdbcTemplate.queryForMap(
-      """
-           select json_agg(domain_events) as json from ( 
-               select 
-                 de."type",
-                 de.occurred_at,
-                 de.created_at
-               from
-                     domain_events de 
-               left join users u on 
-                     u.id = de.triggered_by_user_id
-               where
-                  de.service = :service_name and
-                  (de.crn = :crn
-                        or de.noms_number = :noms_number )
-               and (:start_date::date is null or de.created_at >= :start_date)
-               and (:end_date::date is null or de.created_at <= :end_date) 
-               order by de.created_at
-           ) domain_events
-      """.trimIndent(),
-      MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate)
-        .addValue("service_name", serviceName),
-    )
-    return toJsonString(result)
-  }
-
   fun getApplicationsJson(
     crn: String?,
     nomsNumber: String?,
@@ -150,76 +116,6 @@ class Cas2HdcSubjectAccessRequestRepository(
       ) application_notes
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
-    )
-    return toJsonString(result)
-  }
-
-  fun getStatusUpdates(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceOrigin: String,
-  ): String? {
-    val result = jdbcTemplate.queryForMap(
-      """
-      select json_agg(application_status_updates) as json 
-      from (
-          select
-              u."name" as assessor_name,
-              u.external_type as assessor_origin,
-              to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
-              csu.description ,
-              csu."label"
-          from cas_2_status_updates csu 
-          inner join cas_2_applications ca
-              on ca.id =csu.application_id and ca.service_origin = :service_origin
-          inner join cas_2_users u 
-              on u.id = csu.cas2_user_assessor_id  and u.user_type = 'EXTERNAL' and u.service_origin = :service_origin
-          where 
-          	(ca.crn = :crn
-          		or ca.noms_number = :noms_number )
-          and (:start_date::date is null or ca.created_at >= :start_date) 
-          and (:end_date::date is null or ca.created_at <= :end_date)
-      ) application_status_updates
-      """.trimIndent(),
-      MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
-    )
-    return toJsonString(result)
-  }
-
-  fun getStatusUpdateDetails(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceOrigin: String,
-  ): String? {
-    val result = jdbcTemplate.queryForMap(
-      """
-      select json_agg(application_status_update_details) as json 
-      from (
-        select
-        	csu."label" as status_label,
-        	csud."label" as detail_label,
-        	to_char(csud.created_at , 'YYYY-MM-DD HH24:MI:SS') as created_at 
-        from cas_2_status_updates csu 
-        inner join cas_2_status_update_details csud  
-        	on csu.id  = csud.status_update_id 
-        inner join cas_2_applications ca 
-        	on ca.id =csu.application_id and ca.service_origin = :service_origin
-        inner join cas_2_users u 
-        	on u.id = csu.cas2_user_assessor_id and u.user_type = 'EXTERNAL' and u.service_origin = :service_origin
-        where 
-        	(ca.crn = :crn
-        		or ca.noms_number = :noms_number )
-        and (:start_date::date is null or ca.created_at >= :start_date) 
-        and (:end_date::date is null or ca.created_at <= :end_date)
-        ) application_status_update_details
-      """.trimIndent(),
-      MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
     )
     return toJsonString(result)
   }

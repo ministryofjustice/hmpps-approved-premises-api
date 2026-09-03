@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
@@ -63,7 +62,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     const val ADDITIONAL_INFORMATION = "some additional information"
     const val CAS1_DATA_PATH = "db/seed/dev+test/cas1_application_data"
 
-    val TRANSFER_TYPE = TransferType.PLANNED
     val TRANSFER_REASON = TransferReason.movingPersonCloserToResettlementArea
 
     val CAS1_APPLICATION_DATA by lazy { readResource("$CAS1_DATA_PATH/application_data.json") }
