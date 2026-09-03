@@ -9,7 +9,7 @@ The SAR implementation in CAS (Approved Premises) aggregates data from all servi
 - **Template**: The report is rendered using a single Mustache template located at `src/main/resources/sar/template_hmpps-approved-premises-api.mustache`.
 - **API Response**: The raw data returned by the SAR service is a JSON object.
 - **Fixtures**: Each service has its own set of "expected" fixtures (JSON and HTML) used for compliance testing. These are located in `src/test/resources/sar/`.
-- **PDF Creation**: During test execution, a PDF version of the report is generated and saved to `build/test-generated/sar-generated-report.pdf`. This allows for manual verification of the final PDF layout and styling.
+- **PDF Creation**: During test execution (e.g. Cas1SarComplianceTest), a PDF version of the report is generated and saved to `build/test-generated/sar-generated-report.pdf`. This allows for manual verification of the final PDF layout and styling. Note that this file will be overwritten when running a different CAS test
 - **Asserter**: The `CasSarFixtureAsserter` class is used to verify the actual output against these fixtures. The rationale for using this custom asserter instead of the standard library components is documented in its Javadoc.
 
 ## Generating Test Fixtures
@@ -23,7 +23,7 @@ You can automatically generate the actual output of the tests by setting the `SA
 To generate new fixtures for a specific service (e.g., CAS3), run the following command:
 
 ```bash
-SAR_GENERATE_ACTUAL=true ./gradlew integrationTest --tests "uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar.Cas3SarComplianceTest"
+SAR_GENERATE_ACTUAL=true ./gradlew integrationTest --tests "uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar.Cas1SarComplianceTest"
 ```
 
 Change the provided test class name depending on which template you are trying to generate fixtures for:
@@ -36,32 +36,25 @@ Change the provided test class name depending on which template you are trying t
 
 The tests are configured to save the actual output to `.log` files in the `src/test/resources/` directory (not in the `sar/` subdirectory) to avoid overwriting the source of truth until it's ready e.g.
 
-- `cas1-sar-api-response.json.log`
-- `cas1-sar-report.html.log`
+- `cas1-expected-api-response.json.log`
+- `cas1-expected-report.html.log`
 
 ### 3. Update the expected fixtures
 
 Once you have verified that the generated `.log` files contain the correct and expected data, copy them over the existing expected fixtures in `src/test/resources/sar/`.
 
-**Example for CAS3:**
-
-```bash
-cp src/test/resources/cas3-sar-api-response.json.log src/test/resources/sar/cas3-expected-api-response.json 
-&& cp src/test/resources/cas3-sar-report.html.log src/test/resources/sar/cas3-expected-report.html
-```
-
 **Example for CAS1:**
 
 ```bash
-cp src/test/resources/cas1-sar-api-response.json.log src/test/resources/sar/cas1-expected-api-response.json
-cp src/test/resources/cas1-sar-report.html.log src/test/resources/sar/cas1-expected-report.html
+cp src/test/resources/cas1-expected-api-response.json.log src/test/resources/sar/cas1-expected-api-response.json
+cp src/test/resources/cas1-expected-report.html.log src/test/resources/sar/cas1-expected-report.html
 ```
 
 ## Template Modifications
 
 The `template_hmpps-approved-premises-api.mustache` file is shared across all services. 
 
-- Use conditional sections like `{{#ApprovedPremises}}...{{/ApprovedPremises}}` or `{{#TemporaryAccommodation}}...{{/TemporaryAccommodation}}` to isolate service-specific sections.
+- Use conditional sections like `{{#CAS1}}...{{/CAS1}}` or `{{#CAS3}}...{{/CAS3}}` to isolate service-specific sections.
 - If you add new data to the API response, you must update the template to display it.
 - After updating the template, you **must** regenerate the HTML fixtures for **all** services that might be affected to ensure their compliance tests still pass.
 

@@ -43,7 +43,7 @@ open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun temporaryAccommodationAssessmentEntity(
     application: TemporaryAccommodationApplicationEntity,
-    allocatedToUser: UserEntity = userEntity(),
+    allocatedToUser: UserEntity = userEntity("an assessor"),
     referralRejectionReasonName: String = randomStringMultiCaseWithNumbers(6),
   ): TemporaryAccommodationAssessmentEntity = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
     withData(DATA_JSON_SIMPLE)
@@ -112,6 +112,8 @@ open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
       withPrisonReleaseTypes("ANY")
       withPrisonNameAtReferral("HMP Birmingham")
       withProbationDeliveryUnit(probationDeliveryUnitEntity(user, name = probationDeliveryUnitName))
+      withIsConcerningSexualBehaviour(false)
+      withDutyToReferOutcome("pending")
     }
   }
 }

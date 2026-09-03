@@ -19,6 +19,9 @@ class CAS3BookingProvisionallyMadeEventDetailsFactory : Factory<CAS3BookingProvi
   private var applicationId: Yielded<UUID?> = { null }
   private var bookedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
+  fun withPersonReference(personReference: PersonReference) = apply {
+    this.personReference = { personReference }
+  }
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {
     this.personReference = { PersonReferenceFactory().apply(configuration).produce() }
   }

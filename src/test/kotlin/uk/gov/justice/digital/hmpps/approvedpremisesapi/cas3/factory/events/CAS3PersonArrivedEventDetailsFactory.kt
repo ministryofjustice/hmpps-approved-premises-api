@@ -26,6 +26,9 @@ class CAS3PersonArrivedEventDetailsFactory : Factory<CAS3PersonArrivedEventDetai
   private var applicationId: Yielded<UUID?> = { null }
   private var recordedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
+  fun withPersonReference(personReference: PersonReference) = apply {
+    this.personReference = { personReference }
+  }
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {
     this.personReference = { PersonReferenceFactory().apply(configuration).produce() }
   }
@@ -40,6 +43,10 @@ class CAS3PersonArrivedEventDetailsFactory : Factory<CAS3PersonArrivedEventDetai
 
   fun withPremisesId(premisesId: UUID) = apply {
     this.premisesId = { premisesId }
+  }
+
+  fun withPremises(premises: Premises) = apply {
+    this.premises = { premises }
   }
 
   fun withPremises(configuration: PremisesFactory.() -> Unit) = apply {

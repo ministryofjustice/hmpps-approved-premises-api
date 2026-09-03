@@ -4,15 +4,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2SubjectAccessRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2HdcSarTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
-class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
+class Cas2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
   @Autowired
   lateinit var cas2SubjectAccessRequestService: Cas2SubjectAccessRequestService
@@ -61,10 +58,6 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [],
       "Assessments": [],
-      "StatusUpdates": [],
-      "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -92,10 +85,6 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [],
-      "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -125,11 +114,6 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [],
-      "StatusUpdateDetails": [],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
-
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -144,9 +128,6 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
 
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
-    val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
-
     val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
@@ -161,46 +142,6 @@ class Cas2SubjectAccessRequestServiceTest : Cas2HdcSarTestBase() {
       "Applications": [${cas2ApplicationsJson(application)}],
       "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
-      "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents":  [],
-      "DomainEventsMetadata": []
-      
-   }
-    """.trimIndent()
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
-  fun `Get CAS2 v2 Information - Domain Events`() {
-    val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL)
-    val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
-    val assessment = cas2AssessmentEntity(application, Cas2ServiceOrigin.BAIL)
-
-    val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
-    val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
-    val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, DomainEventType.CAS2_APPLICATION_SUBMITTED, ServiceName.cas2v2)
-
-    val result = cas2SubjectAccessRequestService.getSarResult(
-      offenderDetails.otherIds.crn,
-      offenderDetails.otherIds.nomsNumber,
-      START_DATE,
-      END_DATE,
-    )
-
-    assertNotNull(result)
-
-    val expectedJson = """
-   {
-      "Applications": [${cas2ApplicationsJson(application)}],
-      "ApplicationNotes": [${cas2ApplicationNotesJson(applicationNotes)}],
-      "Assessments": [${cas2AssessmentsJson(assessment)}],
-      "StatusUpdates": [${cas2StatusUpdatesJson(statusUpdate)}],
-      "StatusUpdateDetails": [${cas2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents": [${domainEventJson(domainEvent, null)}],
-      "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)

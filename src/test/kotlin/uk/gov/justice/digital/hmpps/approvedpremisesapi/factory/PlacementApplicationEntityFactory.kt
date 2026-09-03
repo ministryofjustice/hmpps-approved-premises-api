@@ -44,6 +44,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var sentenceType: Yielded<String?> = { null }
   private var releaseType: Yielded<Cas1ReleaseType?> = { null }
   private var situation: Yielded<String?> = { null }
+  private var allocatedAt: Yielded<OffsetDateTime?> = { null }
 
   fun withDefaults() = apply {
     this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
@@ -154,6 +155,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.situation = { situation }
   }
 
+  fun withAllocatedAt(allocatedAt: OffsetDateTime?) = apply {
+    this.allocatedAt = { allocatedAt }
+  }
+
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
@@ -163,7 +168,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     allocatedToUser = this.allocatedToUser(),
-    allocatedAt = null,
+    allocatedAt = this.allocatedAt(),
     reallocatedAt = this.reallocatedAt(),
     decision = this.decision(),
     decisionMadeAt = this.decisionMadeAt(),

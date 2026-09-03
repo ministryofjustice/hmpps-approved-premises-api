@@ -10,14 +10,12 @@ class Cas3SubjectAccessRequestService(
 ) {
 
   fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val temporaryAccommodationApplicationsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationApplications(crn, nomsNumber, startDate, endDate)
-    val temporaryAccommodationAssessmentsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationAssessments(crn, nomsNumber, startDate, endDate)
+    val temporaryAccommodationApplicationsJson = cas3SubjectAccessRequestRepository.cas3Applications(crn, nomsNumber, startDate, endDate)
+    val temporaryAccommodationAssessmentsJson = cas3SubjectAccessRequestRepository.cas3Assessments(crn, nomsNumber, startDate, endDate)
     val assessmentReferralHistoryNotesJson = cas3SubjectAccessRequestRepository.assessmentReferralHistoryNotes(crn, nomsNumber, startDate, endDate)
-    val bookingsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationBookings(crn, nomsNumber, startDate, endDate)
+    val bookingsJson = cas3SubjectAccessRequestRepository.cas3Bookings(crn, nomsNumber, startDate, endDate)
     val bookingExtensionsJson = cas3SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
     val cancellationsJson = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate)
-    val domainEventsJson = cas3SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS3")
-    val domainEventsMetaDataJson = cas3SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS3")
 
     if (listOf(
         temporaryAccommodationApplicationsJson,
@@ -26,8 +24,6 @@ class Cas3SubjectAccessRequestService(
         bookingsJson,
         bookingExtensionsJson,
         cancellationsJson,
-        domainEventsJson,
-        domainEventsMetaDataJson,
       ).all { it == null }
     ) {
       return null
@@ -40,9 +36,7 @@ class Cas3SubjectAccessRequestService(
          "AssessmentReferralHistoryNotes": ${ assessmentReferralHistoryNotesJson ?: "[]"},
          "Bookings": ${ bookingsJson ?: "[]"},
          "BookingExtensions": ${ bookingExtensionsJson ?: "[]"},
-         "Cancellations": ${ cancellationsJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventsMetaDataJson ?: "[]"}
+         "Cancellations": ${ cancellationsJson ?: "[]"}
       }
     """.trimIndent()
 

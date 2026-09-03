@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.LocalDate
+import java.util.UUID
 
 /**
  * Per-service SAR compliance test for CAS1.
@@ -19,6 +19,7 @@ import java.time.LocalDate
  * This class verifies CAS1's slice end-to-end against CAS1-specific fixtures
  * via [CasSarFixtureAsserter].
  */
+@SuppressWarnings("LongMethod")
 class Cas1SarComplianceTest : Cas1SarTestBase() {
 
   companion object {
@@ -29,7 +30,8 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     const val TEST_APPLICANT_NAME = "SAR-TEST-APPLICANT"
     const val TEST_APPLICATION_CREATED_BY_USER_NAME = "SAR-TEST-CREATED-BY-USER"
     const val TEST_ASSESSOR_NAME = "SAR-TEST-ASSESSOR"
-    const val TEST_CASE_MANAGER_NAME = "SAR-TEST-CASE-MANAGER"
+    const val TEST_ASSESSOR_USERNAME = "SAR-TEST-ASSESSOR-USERNAME"
+    const val TEST_CASE_MANAGER_NAME = "CASE MANAGER SURNAME"
     const val TEST_SPACE_BOOKING_CREATED_BY_USER_NAME = "SAR-TEST-BOOKING-CREATED-BY"
     const val TEST_PREMISES_NAME = "SAR-TEST-PREMISES"
     const val TEST_CHARACTERISTIC_NAME = "SAR-TEST-CHARACTERISTIC"
@@ -49,8 +51,8 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
 
     const val EXPECTED_API_RESPONSE_PATH = "/sar/cas1-expected-api-response.json"
     const val EXPECTED_REPORT_PATH = "/sar/cas1-expected-report.html"
-    const val GENERATED_API_RESPONSE_FILENAME = "cas1-sar-api-response.json.log"
-    const val GENERATED_REPORT_FILENAME = "cas1-sar-report.html.log"
+    const val GENERATED_API_RESPONSE_FILENAME = "cas1-expected-api-response.json.log"
+    const val GENERATED_REPORT_FILENAME = "cas1-expected-report.html.log"
   }
 
   private val asserter by lazy {
@@ -79,8 +81,6 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     appealTestRepository.deleteAll()
     approvedPremisesAssessmentRepository.deleteAll()
     approvedPremisesApplicationRepository.deleteAll()
-    offlineApplicationRepository.deleteAll()
-    domainEventRepository.deleteAll()
     bedRepository.deleteAll()
     roomRepository.deleteAll()
     approvedPremisesRepository.deleteAll()
@@ -100,11 +100,13 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       .produce()
     val createdByUser = userEntityFactory.produceAndPersist {
       withName(TEST_APPLICATION_CREATED_BY_USER_NAME)
+      withDeliusUsername(TEST_APPLICATION_CREATED_BY_USER_NAME)
       withProbationRegion(givenAProbationRegion())
     }
     val assessor = userEntityFactory.produceAndPersist {
       withName(TEST_ASSESSOR_NAME)
       withProbationRegion(givenAProbationRegion())
+      withDeliusUsername(TEST_ASSESSOR_USERNAME)
     }
     val spaceBookingCreatedByUser = userEntityFactory.produceAndPersist {
       withName(TEST_SPACE_BOOKING_CREATED_BY_USER_NAME)
@@ -117,25 +119,16 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       createdByUser = createdByUser,
       applicantUserName = TEST_APPLICANT_NAME,
       data = CAS1_APPLICATION_DATA,
-      document = "null",
-    )
-    approvedPremisesApplicationEntity(
-      offenderDetails,
-      caseManagerName = TEST_CASE_MANAGER_NAME,
-      createdByUser = createdByUser,
-      applicantUserName = TEST_APPLICANT_NAME,
-      data = CAS1_APPLICATION_DATA,
       document = CAS1_APPLICATION_DOCUMENT,
     )
-    val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, "null")
-    approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
+
+    val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
 
     applicationTimelineNoteEntity(application)
     approvedPremisesAssessmentClarificationNoteEntity(assessment)
     appealEntity(application, assessment)
 
-    val placementApplication = placementApplicationEntity(application, "null", CAS1_PLACEMENT_APPLICATION_DATA)
-    placementApplicationEntity(application, CAS1_PLACEMENT_APPLICATION_DOCUMENT, CAS1_PLACEMENT_APPLICATION_DATA)
+    val placementApplication = placementApplicationEntity(application, CAS1_PLACEMENT_APPLICATION_DOCUMENT, CAS1_PLACEMENT_APPLICATION_DATA)
     val placementRequirements = placementRequirementEntity(
       application,
       assessment,
@@ -162,7 +155,7 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     bookingNotMadeEntity(placementRequest)
 
     val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
-      withId(java.util.UUID.fromString(TEST_NON_ARRIVAL_REASON_ID))
+      withId(UUID.fromString(TEST_NON_ARRIVAL_REASON_ID))
       withName(TEST_NON_ARRIVAL_REASON_NAME)
     }
     val departureReason = departureReasonEntityFactory.produceAndPersist {
@@ -181,7 +174,6 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       departureReason = departureReason,
       moveOnCategory = moveOnCategory,
       cancellationReason = cancellationReason,
-      transferType = TRANSFER_TYPE,
       additionalInformation = ADDITIONAL_INFORMATION,
       transferReason = TRANSFER_REASON,
       createdByUser = spaceBookingCreatedByUser,
@@ -189,8 +181,6 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       characteristicName = TEST_CHARACTERISTIC_NAME,
       characteristicPropertyName = TEST_CHARACTERISTIC_PROPERTY_NAME,
     )
-
-    domainEventEntity(offenderDetails, application.id, assessment.id, assessor.id, DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
   }
 
   @Test

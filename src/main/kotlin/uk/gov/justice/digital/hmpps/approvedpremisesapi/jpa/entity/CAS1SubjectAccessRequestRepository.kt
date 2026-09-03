@@ -24,18 +24,13 @@ from
 	(
 	select
 		apa.name,
-		a.crn,
 		a.noms_number,
-		a."data",
 		a."document",
 		a.created_at,
 		a.submitted_at,
-		created_by_user.name as created_by_user,
-		app_user."name" as application_user_name ,
+		app_user.delius_username as application_user_name,
 		apa.event_number,
 		apa.is_womens_application,
-		apa.offence_id,
-		apa.conviction_id,
 		apa.risk_ratings,
 		apa.release_type,
 		apa.arrival_date,
@@ -49,7 +44,7 @@ from
 		apa.sentence_type,
 		apa.notice_type,
 		apa.ap_type,
-		case_manager."name" as case_manager_name,
+		REGEXP_REPLACE(TRIM(case_manager."name"), '^.* ', '') as case_manager_name,
 		apa.case_manager_is_not_applicant,
     apa.situation,
     apa.is_inapplicable,
@@ -64,8 +59,8 @@ from
         cas_1_application_user_details case_manager on
 		    case_manager.id = apa.case_manager_cas1_application_user_details_id
 	left join 
-        cas_1_application_user_details app_user on
-		    app_user.id = apa.applicant_cas1_application_user_details_id
+        users app_user on
+		    app_user.id = a.created_by_user_id
 	left join 
         users created_by_user on
 		    created_by_user.id = a.created_by_user_id
@@ -100,8 +95,6 @@ from
   	json_agg(apptimeline) as json
   from(
       select
-          a.crn,
-          a.noms_number,
           atn.body,
           atn.created_at,
           u."name" as user_name
@@ -133,10 +126,7 @@ from
       """
        select json_agg(assess) as json from (
            select
-               app.crn,
-               app.noms_number,
-               u."name" as assessor_name,
-               assess."data",
+               u.delius_username as assessor_name,
                assess."document",
                assess.created_at,
                assess.allocated_at,
@@ -188,8 +178,6 @@ from
     select json_agg(assess) as json 
     from (    
       select
-        app.crn,
-        app.noms_number,
         acn.created_at,
         acn.query,
         acn.response,
@@ -237,9 +225,6 @@ from
        select json_agg(placement_applications) 
        as json from (
           select
-            a.crn,
-            a.noms_number,
-            pa."data",
             pa."document",
             pa.created_at,
             pa.submitted_at ,
@@ -296,8 +281,6 @@ from
         select json_agg(placement_requests) 
         as json from (
         select 
-              app.crn,
-              app.noms_number, 
               pr.expected_arrival,
               pr.duration, 
               pr.created_at,
@@ -329,8 +312,6 @@ from
      select json_agg(placement_requirements) 
      as json from (
         select 
-             app.crn,
-             app.noms_number,
              case
                when pr.ap_type = '0' then 'NORMAL'
                when pr.ap_type = '1' then 'PIPE'
@@ -370,12 +351,8 @@ from
        select json_agg(placement_requirements_criteria) as json 
        from (
           select 
-    
-            app.crn,
-            app.noms_number,
             c."name" as criteria_name,
             c.property_name,
-            c.is_active,
             'DESIRABLE' as criteria_type
           from placement_requirements pr
           inner join applications app on
@@ -394,11 +371,8 @@ from
             (:end_date::date is null or app.created_at <= :end_date)
           union all 
           select 
-            app.crn as crn,
-            app.noms_number as noms_number,
             c."name" as criteria_name,
             c.property_name,
-            c.is_active,
             'ESSENTIAL' as criteria_type
           from placement_requirements pr
           inner join applications app on
@@ -428,16 +402,13 @@ from
         select json_agg(offline_applications) as json
         from ( 
             select 
-                sb.crn,
-                null AS noms_number,
                 oa.created_at 
             from offline_applications oa 
-            left join cas1_space_bookings sb on sb.offline_application_id = oa.id 
-            where sb.crn = :crn
+            where oa.crn = :crn
             and (
-                  (:start_date::date is null or sb.created_at >= :start_date)
+                  (:start_date::date is null or oa.created_at >= :start_date)
               and 
-                  (:end_date::date is null or sb.created_at <= :end_date)
+                  (:end_date::date is null or oa.created_at <= :end_date)
                 )
             ) offline_applications
       """.trimIndent(),
@@ -457,8 +428,6 @@ from
       """
          select json_agg(booking_not_mades) as json from ( 
              select 
-                 a.crn,
-                 a.noms_number,
                  b.created_at,
                  b.notes
              from booking_not_mades b
@@ -487,8 +456,6 @@ from
       select json_agg(appeals) as json
       from ( 
             select
-              app.crn,
-              app.noms_number,
               a.appeal_date,
               a.appeal_detail,
               a.decision ,
@@ -508,6 +475,88 @@ from
             and (:start_date::date is null or app.created_at >= :start_date)
             and (:end_date::date is null or app.created_at <= :end_date)
         ) appeals
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ),
+    )
+    return toJsonString(result)
+  }
+
+  fun spaceBookings(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+  ): String? {
+    val result = jdbcTemplate.queryForMap(
+      """
+    select json_agg(spaceBooking) as json 
+    from (
+          select
+            a.noms_number,            
+            b.expected_arrival_date,
+            b.expected_departure_date,
+            b.actual_arrival_date,
+            b.actual_arrival_time,
+            b.actual_departure_date,
+            b.actual_departure_time,
+            b.non_arrival_confirmed_at,
+            b.non_arrival_notes,
+            nar.name as non_arrival_reason,
+            apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+            b.created_at,
+            b.key_worker_assigned_at,
+            REGEXP_REPLACE(TRIM(b.key_worker_name), '^.* ', '') as key_worker_name,
+            p."name" as premises_name,
+            b.delius_event_number,
+            u.name as created_by_user_name,
+            dr.name as departure_reason,
+            b.departure_notes,
+            moc.name as move_on_category,
+            b.cancellation_reason_notes,
+            cr.name as cancellation_reason,
+            b.cancellation_occurred_at, 
+            b.cancellation_recorded_at,
+            b.additional_information,
+            b.transfer_reason,
+            ( 
+              SELECT STRING_AGG (cas1_characteristics.property_name, ',')
+              FROM cas1_space_bookings_criteria sbc
+              LEFT OUTER JOIN cas1_characteristics ON cas1_characteristics.id = sbc.characteristic_id
+              WHERE sbc.space_booking_id = b.id 
+              GROUP by sbc.space_booking_id
+            ) AS characteristics_property_names    
+            FROM 
+              cas1_space_bookings b
+            LEFT JOIN non_arrival_reasons nar ON 
+              b.non_arrival_reason_id = nar.id           
+            LEFT JOIN cas1_premises_base p ON
+              b.premises_id = p.id            
+            LEFT OUTER JOIN approved_premises_applications apa ON 
+              b.approved_premises_application_id = apa.id
+            LEFT OUTER JOIN offline_applications offline_app ON 
+            b.offline_application_id = offline_app.id              
+            LEFT OUTER JOIN   
+              applications a on 
+              a.id = apa.id
+            LEFT JOIN departure_reasons dr ON 
+              b.departure_reason_id = dr.id
+            LEFT JOIN move_on_categories moc ON
+              b.departure_move_on_category_id = moc.id
+            LEFT JOIN cancellation_reasons cr ON
+              b.cancellation_reason_id = cr.id
+            LEFT JOIN users u ON
+              b.created_by_user_id = u.id
+          where
+              (b.crn = :crn
+              or a.noms_number = :noms_number )
+          and (:start_date::date is null or b.created_at >= :start_date) 
+          and (:end_date::date is null or b.created_at <= :end_date)         
+  ) spaceBooking
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(
         crn,

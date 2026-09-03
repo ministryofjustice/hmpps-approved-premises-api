@@ -63,6 +63,9 @@ class PersonDepartedFactory : Factory<PersonDeparted> {
     this.personDepartedDestination = { personDepartedDestination }
   }
 
+  fun withRecordedBy(recordedBy: StaffMember) = apply {
+    this.recordedBy = { recordedBy }
+  }
   override fun produce() = PersonDeparted(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
