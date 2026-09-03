@@ -194,7 +194,7 @@ class Cas1ApplicationCreationService(
       document = serializedTranslatedDocument
       releaseType = Cas1ReleaseType.fromApiType(submitApplication.releaseType)
       targetLocation = submitApplication.targetLocation
-      arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival ?: submitApplication.arrivalDate)
+      arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival)
       requestedPlacementDuration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.requestedDuration()
       calculatedPlacementDuration = submitApplication.calculatedPlacementDuration
       sentenceType = submitApplication.sentenceType.toString()

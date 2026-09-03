@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
@@ -942,10 +943,15 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         apType = apType,
         noticeType = timelinessCategory,
         apAreaId = apArea.id,
-        arrivalDate = arrivalDate,
         situation = situation,
         requestedPlacementDuration = 10,
-        requestedPlacementPeriod = null,
+        requestedPlacementPeriod = arrivalDate?.let {
+          Cas1RequestedPlacementPeriod(
+            arrival = arrivalDate,
+            arrivalFlexible = false,
+            duration = 10,
+          )
+        },
       ),
     )
 

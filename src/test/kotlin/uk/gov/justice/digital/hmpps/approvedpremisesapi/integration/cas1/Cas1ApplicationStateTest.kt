@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -481,12 +482,17 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
-          arrivalDate = arrivalDate,
           sentenceType = SentenceTypeOption.nonStatutory,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
           requestedPlacementDuration = 10,
-          requestedPlacementPeriod = null,
+          requestedPlacementPeriod = arrivalDate?.let {
+            Cas1RequestedPlacementPeriod(
+              arrival = arrivalDate,
+              arrivalFlexible = null,
+              duration = 10,
+            )
+          },
         ),
       )
       .exchange()
