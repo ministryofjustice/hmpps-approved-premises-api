@@ -1,13 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
-import io.sentry.Sentry
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.util.Cas2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteRepository
@@ -16,12 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -32,15 +21,8 @@ class Cas2ApplicationNoteService(
   private val cas2ApplicationNoteRepository: Cas2ApplicationNoteRepository,
   private val userService: Cas2UserService,
   private val userAccessService: Cas2UserAccessService,
-  private val emailNotificationService: EmailNotificationService,
-  private val notifyConfig: NotifyConfig,
   private val cas2ApplicationNoteEmailService: Cas2ApplicationNoteEmailService,
-  private val futureFlagService: FeatureFlagService,
-  @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) {
-
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   @Suppress("ReturnCount")
   fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote): CasResult<Cas2ApplicationNoteEntity> {
@@ -72,106 +54,11 @@ class Cas2ApplicationNoteService(
     assessment: Cas2AssessmentEntity,
     savedNote: Cas2ApplicationNoteEntity,
   ) {
-    val emailChangesEnabled = futureFlagService.getBooleanFlag("isr-email-changes-enabled")
-
-    when {
-      emailChangesEnabled && isExternalUser ->
-        cas2ApplicationNoteEmailService.assessorNoteAdded(application, assessment, savedNote)
-
-      emailChangesEnabled ->
-        cas2ApplicationNoteEmailService.refererNoteAdded(application, assessment, savedNote)
-
-      isExternalUser ->
-        sendEmailToReferrer(application, savedNote)
-
-      else ->
-        sendEmailToAssessors(application, savedNote)
-    }
-  }
-
-  private fun sendEmailToReferrer(
-    application: Cas2ApplicationEntity,
-    savedNote: Cas2ApplicationNoteEntity,
-  ) {
-    if (application.createdByUser.email != null) {
-      val applicationOrigin = application.applicationOrigin
-      val applicationType = Cas2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
-
-      val templateId = when (applicationOrigin) {
-        ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_REFERRER_COURT_BAIL
-        ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_REFERRER_PRISON_BAIL
-        ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_REFERRER
-        ApplicationOrigin.other -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
-      }
-      emailNotificationService.sendCas2Email(
-        recipientEmailAddress = application.createdByUser.email!!,
-        templateId = templateId,
-        personalisation = mapOf(
-          "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-          "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-          "nomsNumber" to application.nomsNumber,
-          "crn" to application.crn,
-          "applicationType" to applicationType,
-          "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-        ),
-      )
+    if (isExternalUser) {
+      cas2ApplicationNoteEmailService.assessorNoteAdded(application, assessment, savedNote)
     } else {
-      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
-      Sentry.captureMessage("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
+      cas2ApplicationNoteEmailService.refererNoteAdded(application, assessment, savedNote)
     }
-  }
-
-  private fun sendEmailToAssessors(
-    application: Cas2ApplicationEntity,
-    savedNote: Cas2ApplicationNoteEntity,
-  ) {
-    val applicationOrigin = application.applicationOrigin
-    val applicationType = Cas2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
-
-    val templateId = when (applicationOrigin) {
-      ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_COURT_BAIL
-      ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_PRISON_BAIL
-      ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_ASSESSOR
-      ApplicationOrigin.other -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
-    }
-
-    emailNotificationService.sendCas2Email(
-      recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
-      templateId = templateId,
-      personalisation = mapOf(
-        "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(application.assessment!!),
-        "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(application.assessment!!),
-        "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-        "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-        "assessorName" to getAssessorNameOrPlaceholder(application.assessment!!),
-        "nomsNumber" to application.nomsNumber,
-        "crn" to application.crn,
-        "applicationType" to applicationType,
-        "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", application.id.toString()),
-      ),
-    )
-  }
-
-  private fun getSubjectLineReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String {
-    if (assessment.nacroReferralId != null) {
-      return "(${assessment.nacroReferralId!!})"
-    }
-    return ""
-  }
-
-  private fun getNacroReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String {
-    if (assessment.nacroReferralId != null) {
-      return assessment.nacroReferralId!!
-    }
-    return "Unknown. " +
-      "The Nacro CAS-2 reference number has not been added to the application yet."
-  }
-
-  private fun getAssessorNameOrPlaceholder(assessment: Cas2AssessmentEntity): String {
-    if (assessment.assessorName != null) {
-      return assessment.assessorName!!
-    }
-    return "Unknown. " + "The assessor has not added their name to the application yet."
   }
 
   private fun saveNote(application: Cas2ApplicationEntity, assessment: Cas2AssessmentEntity, body: String, user: Cas2UserEntity): Cas2ApplicationNoteEntity {

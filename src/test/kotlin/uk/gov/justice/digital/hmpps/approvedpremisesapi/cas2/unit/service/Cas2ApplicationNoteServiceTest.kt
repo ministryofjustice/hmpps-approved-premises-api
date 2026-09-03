@@ -4,7 +4,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
@@ -23,11 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.EmailAddressConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -37,13 +31,7 @@ class Cas2ApplicationNoteServiceTest {
   private val mockCas2ApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
   private val mockUserService = mockk<Cas2UserService>()
   private val mockUserAccessService = mockk<Cas2UserAccessService>()
-  private val mockEmailNotificationService = mockk<EmailNotificationService>(relaxed = true)
-  private val mockNotifyConfig = mockk<NotifyConfig>()
   private val mockCas2ApplicationNoteEmailService = mockk<Cas2ApplicationNoteEmailService>(relaxed = true)
-  private val mockFeatureFlagService = mockk<FeatureFlagService>()
-
-  private val applicationUrlTemplate = "http://frontend/applications/#id"
-  private val assessmentUrlTemplate = "http://frontend/assessments/#applicationId"
 
   private val service = Cas2ApplicationNoteService(
     mockCas2ApplicationRepository,
@@ -51,12 +39,7 @@ class Cas2ApplicationNoteServiceTest {
     mockCas2ApplicationNoteRepository,
     mockUserService,
     mockUserAccessService,
-    mockEmailNotificationService,
-    mockNotifyConfig,
     mockCas2ApplicationNoteEmailService,
-    mockFeatureFlagService,
-    applicationUrlTemplate,
-    assessmentUrlTemplate,
   )
 
   private val user = Cas2UserEntityFactory()
@@ -76,16 +59,6 @@ class Cas2ApplicationNoteServiceTest {
     .withNacroReferralId("NACRO-ID")
     .withAssessorName("Assessor Name")
     .produce()
-
-  private val assessmentIdForTest = UUID.randomUUID()
-
-  @BeforeEach
-  fun setup() {
-    val emailConfig = EmailAddressConfig()
-    emailConfig.cas2Assessors = "assessors@example.com"
-    every { mockNotifyConfig.emailAddresses } returns emailConfig
-    every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns false
-  }
 
   @Nested
   inner class CreateAssessmentNote {
@@ -176,9 +149,8 @@ class Cas2ApplicationNoteServiceTest {
   @Nested
   inner class SendEmail {
     @Test
-    fun `sends assessor note added email via Cas2ApplicationNoteEmailService when flag is enabled and user is external`() {
+    fun `sends assessor note added email via Cas2ApplicationNoteEmailService when user is external`() {
       val externalUser = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
-      every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns true
       every { mockCas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.BAIL) } returns assessment
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(application.id, assessment.serviceOrigin) } returns application
       every { mockUserService.getUserForRequest() } returns externalUser
@@ -191,9 +163,8 @@ class Cas2ApplicationNoteServiceTest {
     }
 
     @Test
-    fun `sends referrer note added email via Cas2ApplicationNoteEmailService when flag is enabled and user is internal`() {
+    fun `sends referrer note added email via Cas2ApplicationNoteEmailService when user is internal`() {
       val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
-      every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns true
       every { mockCas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.BAIL) } returns assessment
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(application.id, assessment.serviceOrigin) } returns application
       every { mockUserService.getUserForRequest() } returns nomisUser
@@ -203,74 +174,6 @@ class Cas2ApplicationNoteServiceTest {
       service.createAssessmentNote(assessment.id, NewCas2ApplicationNote(note = "some note"))
 
       verify(exactly = 1) { mockCas2ApplicationNoteEmailService.refererNoteAdded(application, assessment, any()) }
-    }
-
-    @Test
-    fun `sends email to referrer via EmailNotificationService when flag is disabled and user is external`() {
-      val externalUser = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
-      val applicationWithOrigin = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .withApplicationOrigin(ApplicationOrigin.prisonBail)
-        .produce()
-      val assessmentWithOrigin = Cas2AssessmentEntityFactory().withApplication(applicationWithOrigin).produce()
-
-      every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns false
-      every { mockCas2AssessmentRepository.findByIdAndServiceOrigin(assessmentWithOrigin.id, Cas2ServiceOrigin.BAIL) } returns assessmentWithOrigin
-      every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationWithOrigin.id, assessmentWithOrigin.serviceOrigin) } returns applicationWithOrigin
-      every { mockUserService.getUserForRequest() } returns externalUser
-      every { mockUserAccessService.userCanAddNote(externalUser, applicationWithOrigin) } returns true
-      every { mockCas2ApplicationNoteRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationNoteEntity }
-
-      service.createAssessmentNote(assessmentWithOrigin.id, NewCas2ApplicationNote(note = "some note"))
-
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendCas2Email(
-          recipientEmailAddress = user.email!!,
-          templateId = Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_REFERRER_PRISON_BAIL,
-          personalisation = any(),
-        )
-      }
-    }
-
-    @Test
-    fun `sends email to assessors via EmailNotificationService when flag is disabled and user is internal`() {
-      val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
-
-      val assessmentForEmail = Cas2AssessmentEntityFactory()
-        .withNacroReferralId("NACRO-ID")
-        .withAssessorName("Assessor Name")
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        .produce()
-
-      val applicationForEmail = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .withApplicationOrigin(ApplicationOrigin.courtBail)
-        .withAssessment(assessmentForEmail)
-        .produce()
-
-      every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns false
-      val anyAssessmentId = UUID.randomUUID()
-      every { mockCas2AssessmentRepository.findByIdAndServiceOrigin(anyAssessmentId, any()) } returns assessmentForEmail
-      every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(any(), any()) } returns applicationForEmail
-      every { mockUserService.getUserForRequest() } returns nomisUser
-      every { mockUserAccessService.userCanAddNote(any(), any()) } returns true
-      every { mockCas2ApplicationNoteRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationNoteEntity }
-
-      service.createAssessmentNote(anyAssessmentId, NewCas2ApplicationNote(note = "some note"))
-
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendCas2Email(
-          recipientEmailAddress = "assessors@example.com",
-          templateId = Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_COURT_BAIL,
-          personalisation = match {
-            it["nacroReferenceId"] == "NACRO-ID" &&
-              it["assessorName"] == "Assessor Name" &&
-              it["applicationUrl"] == assessmentUrlTemplate.replace("#applicationId", applicationForEmail.id.toString())
-          },
-        )
-      }
     }
   }
 }

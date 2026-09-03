@@ -52,11 +52,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -75,14 +72,11 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2OffenderService = mockk<Cas2OffenderService>()
   private val mockCas2UserAccessService = mockk<Cas2UserAccessService>()
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
-  private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockCas2AssessmentService = mockk<Cas2AssessmentService>()
   private val mockJsonMapper = mockk<JsonMapper>()
-  private val mockNotifyConfig = mockk<NotifyConfig>()
   private val mockSentryService = mockk<SentryService>()
   private val mockCaseService = mockk<CaseService>()
   private val mockCas2ApplicationEmailService = mockk<Cas2ApplicationEmailService>()
-  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
   private val cas2ApplicationService = Cas2ApplicationService(
     mockCas2ApplicationRepository,
@@ -91,14 +85,11 @@ class Cas2v2ApplicationServiceTest {
     mockCas2OffenderService,
     mockCas2UserAccessService,
     mockDomainEventService,
-    mockEmailNotificationService,
     mockCas2AssessmentService,
-    mockNotifyConfig,
     mockJsonMapper,
     mockSentryService,
     mockCaseService,
     mockCas2ApplicationEmailService,
-    mockFeatureFlagService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -842,7 +833,6 @@ class Cas2v2ApplicationServiceTest {
     }
 
     private fun assertEmailAndAssessmentsWereNotCreated() {
-      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
       verify(exactly = 0) { mockCas2AssessmentService.createCas2Assessment(any()) }
     }
 
@@ -878,10 +868,6 @@ class Cas2v2ApplicationServiceTest {
         )
       } returns AuthorisableActionResult.Success(inmateDetail)
 
-      every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
-      every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
-      every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
-
       every { mockCas2ApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2ApplicationEntity
@@ -904,8 +890,6 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2AssessmentService.createCas2Assessment(any()) } returns any()
 
       every { mockCas2ApplicationEmailService.applicationSubmitted(any()) } just Runs
-
-      every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns true
 
       val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
 
@@ -939,8 +923,6 @@ class Cas2v2ApplicationServiceTest {
           },
         )
       }
-
-      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) }
 
       verify(exactly = 1) { mockCas2AssessmentService.createCas2Assessment(persistedApplication) }
       verify(exactly = 1) { mockCas2ApplicationEmailService.applicationSubmitted(persistedApplication) }

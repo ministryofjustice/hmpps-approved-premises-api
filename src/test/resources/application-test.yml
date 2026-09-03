@@ -278,5 +278,4 @@ refresh-inmate-details-cache:
 
 feature-flags:
   cas1-disable-overbooking-summary: false
-  isr-email-changes-enabled: true
   isr-cas1-email-changes-enabled: true

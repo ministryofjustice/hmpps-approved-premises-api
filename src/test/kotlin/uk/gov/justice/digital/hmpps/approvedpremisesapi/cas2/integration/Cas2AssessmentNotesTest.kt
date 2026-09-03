@@ -58,9 +58,7 @@ class Cas2AssessmentNotesTest(
   @Nested
   inner class ExternalUser {
     @Test
-    fun `when external user adds note (ISR flag enabled) then application creator is notified by NEW style email`() {
-      mockFeatureFlagService.setFlag("isr-email-changes-enabled", true)
-
+    fun `when external user adds note then application creator is notified by email`() {
       givenACas2v2PomUser { referrer, _ ->
         givenACas2v2Assessor { _, jwt ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
@@ -105,57 +103,12 @@ class Cas2AssessmentNotesTest(
         }
       }
     }
-
-    @Test
-    fun `when external user adds note (ISR flag disabled) then application creator is notified by LEGACY style email`() {
-      mockFeatureFlagService.setFlag("isr-email-changes-enabled", false)
-
-      givenACas2v2PomUser { referrer, _ ->
-        givenACas2v2Assessor { _, jwt ->
-          val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(referrer)
-            withSubmittedAt(OffsetDateTime.now())
-            withNomsNumber("NOMS123")
-            withCrn("CRN123")
-            withApplicationOrigin(ApplicationOrigin.prisonBail)
-            withServiceOrigin(Cas2ServiceOrigin.BAIL)
-          }
-
-          val assessment = cas2AssessmentEntityFactory.produceAndPersist {
-            withApplication(application)
-            withServiceOrigin(Cas2ServiceOrigin.BAIL)
-          }
-
-          webTestClient.post()
-            .uri("/cas2/assessments/${assessment.id}/notes")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.cas2v2.value)
-            .bodyValue(NewCas2ApplicationNote(note = "Assessor note legacy"))
-            .exchange()
-            .expectStatus()
-            .isCreated()
-
-          emailAsserter.assertEmailRequested(
-            toEmailAddress = referrer.email!!,
-            templateId = "b277e84a-c72b-4afa-a388-72a70e588fb2", // CAS2_V2_NOTE_ADDED_FOR_REFERRER_PRISON_BAIL
-            personalisation = mapOf(
-              "nomsNumber" to "NOMS123",
-              "crn" to "CRN123",
-              "applicationType" to "Cas2 Prison Bail",
-              "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
-            ),
-          )
-        }
-      }
-    }
   }
 
   @Nested
   inner class InternalUser {
     @Test
-    fun `when internal user adds note (ISR flag enabled) then assessors are notified by NEW style email`() {
-      mockFeatureFlagService.setFlag("isr-email-changes-enabled", true)
-
+    fun `when internal user adds note then assessors are notified by email`() {
       givenACas2v2PomUser { referrer, jwt ->
         val application = cas2ApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(referrer)
@@ -198,54 +151,6 @@ class Cas2AssessmentNotesTest(
             "nacroReferenceId" to "OH789",
             "nacroReferenceIdInSubject" to "(OH789)",
             "viewSubmittedApplicationUrl" to assessmentUrlTemplate.resolve("applicationId", application.id.toString()),
-          ),
-        )
-      }
-    }
-
-    @Test
-    fun `when internal user adds note (ISR flag disabled) then assessors are notified by LEGACY style email`() {
-      mockFeatureFlagService.setFlag("isr-email-changes-enabled", false)
-
-      givenACas2v2PomUser { referrer, jwt ->
-        val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(referrer)
-          withSubmittedAt(OffsetDateTime.now())
-          withCrn("CRN123")
-          withApplicationOrigin(ApplicationOrigin.prisonBail)
-          withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        }
-
-        application.createApplicationAssignment(referrer.activeNomisCaseloadId!!, referrer)
-        cas2ApplicationRepository.save(application)
-
-        val assessment = cas2AssessmentEntityFactory.produceAndPersist {
-          withApplication(application)
-          withNacroReferralId("OH789")
-          withAssessorName("Anne Assessor")
-          withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        }
-        application.assessment = assessment
-
-        webTestClient.post()
-          .uri("/cas2/assessments/${assessment.id}/notes")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.cas2v2.value)
-          .bodyValue(NewCas2ApplicationNote(note = "Referrer note legacy"))
-          .exchange()
-          .expectStatus()
-          .isCreated()
-
-        emailAsserter.assertEmailRequested(
-          toEmailAddress = "assessors@example.com",
-          templateId = "9a37fb66-5215-40f2-8fa4-210e2e27d693", // CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_PRISON_BAIL
-          personalisation = mapOf(
-            "nacroReferenceId" to "OH789",
-            "nacroReferenceIdInSubject" to "(OH789)",
-            "assessorName" to "Anne Assessor",
-            "crn" to "CRN123",
-            "applicationType" to "Cas2 Prison Bail",
-            "applicationUrl" to assessmentUrlTemplate.resolve("applicationId", application.id.toString()),
           ),
         )
       }
