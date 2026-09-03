@@ -40,6 +40,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var expectedArrival: Yielded<LocalDate?> = { null }
   private var requestedDuration: Yielded<Int?> = { null }
   private var authorisedDuration: Yielded<Int?> = { null }
+  private var calculatedPlacementDuration: Yielded<Int?> = { null }
   private var expectedArrivalFlexible: Yielded<Boolean> = { false }
   private var sentenceType: Yielded<String?> = { null }
   private var releaseType: Yielded<Cas1ReleaseType?> = { null }
@@ -138,6 +139,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.authorisedDuration = { authorisedDuration }
   }
 
+  fun withCalculatedPlacementDuration(calculatedPlacementDuration: Int?) = apply {
+    this.calculatedPlacementDuration = { calculatedPlacementDuration }
+  }
+
   fun withExpectedArrivalFlexible(expectedArrivalFlexible: Boolean) = apply {
     this.expectedArrivalFlexible = { expectedArrivalFlexible }
   }
@@ -179,6 +184,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     expectedArrival = this.expectedArrival(),
     requestedDuration = this.requestedDuration(),
     authorisedDuration = this.authorisedDuration(),
+    calculatedPlacementDuration = this.calculatedPlacementDuration(),
     expectedArrivalFlexible = this.expectedArrivalFlexible(),
     sentenceType = this.sentenceType(),
     releaseType = this.releaseType(),
