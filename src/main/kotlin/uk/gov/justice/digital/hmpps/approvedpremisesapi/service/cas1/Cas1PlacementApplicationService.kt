@@ -207,6 +207,10 @@ class Cas1PlacementApplicationService(
       return CasResult.GeneralValidationError("This placement application has already been completed")
     }
 
+    if (currentPlacementApplication.isWithdrawn) {
+      return CasResult.GeneralValidationError("This placement application has already been withdrawn")
+    }
+
     if (!assigneeUser.hasPermission(UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION)) {
       return CasResult.FieldValidationError(
         ValidationErrors().apply {

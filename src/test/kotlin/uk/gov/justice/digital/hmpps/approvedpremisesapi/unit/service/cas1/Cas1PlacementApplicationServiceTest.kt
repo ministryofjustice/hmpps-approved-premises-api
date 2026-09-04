@@ -855,6 +855,20 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.userId", "lackingMatcherRole")
     }
+
+    @Test
+    fun `Reallocating a placement application already withdrawn returns a General Validation Error`() {
+      previousPlacementApplication.apply {
+        isWithdrawn = true
+      }
+
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
+      every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
+
+      val result = cas1PlacementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
+
+      assertThatCasResult(result).isGeneralValidationError("This placement application has already been withdrawn")
+    }
   }
 
   @Nested
