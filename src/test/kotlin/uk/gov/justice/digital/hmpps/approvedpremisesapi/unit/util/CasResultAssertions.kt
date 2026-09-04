@@ -4,6 +4,7 @@ import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import java.util.UUID
 
 fun <T> assertThatCasResult(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)
 
@@ -84,6 +85,8 @@ class CasResultAssertions<T>(actual: CasResult<T>) :
     }
     return this
   }
+
+  fun isNotFound(expectedEntityType: String, expectedId: UUID) = isNotFound(expectedEntityType, expectedId.toString())
 
   fun isNotFound(expectedEntityType: String, expectedId: Any) {
     if (actual !is CasResult.NotFound) {

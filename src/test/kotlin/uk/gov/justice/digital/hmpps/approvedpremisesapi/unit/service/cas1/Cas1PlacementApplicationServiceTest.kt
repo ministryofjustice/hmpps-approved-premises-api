@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
@@ -49,6 +50,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationValidationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationValidationService.ValidatedDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
@@ -76,6 +79,7 @@ class Cas1PlacementApplicationServiceTest {
   private val lockablePlacementApplicationRepository = mockk<LockablePlacementApplicationRepository>()
   private val jsonMapper = mockk<JsonMapper>()
   private val tierService = mockk<TierService>()
+  private val cas1PlacementApplicationValidationService = mockk<Cas1PlacementApplicationValidationService>()
 
   private val cas1PlacementApplicationService = Cas1PlacementApplicationService(
     placementApplicationRepository,
@@ -90,6 +94,7 @@ class Cas1PlacementApplicationServiceTest {
     lockablePlacementApplicationRepository,
     jsonMapper,
     tierService,
+    cas1PlacementApplicationValidationService,
   )
 
   @Nested
@@ -652,27 +657,50 @@ class Cas1PlacementApplicationServiceTest {
 
   @Nested
   inner class DecisionTest {
-    lateinit var user: UserEntity
-    lateinit var createdByUser: UserEntity
+    val user = UserEntityFactory().withDefaults().produce()
+    val createdByUser = UserEntityFactory().withDefaults().produce()
 
     @BeforeEach
     fun setup() {
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
       every { userService.getUserForRequest() } returns user
+    }
 
-      createdByUser = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CasResultFactory#oneOfEachErrorType")
+    fun `Returns validation result if validation fails`(validationResult: CasResult.Error<ValidatedDecision>) {
+      val placementApplication = PlacementApplicationEntityFactory().withDefaults().produce()
+
+      val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
+        decision = PlacementApplicationDecisionDto.accepted,
+        summaryOfChanges = "summaryOfChanges",
+        decisionSummary = "decisionSummary accepted",
+      )
+
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
+
+      every {
+        cas1PlacementApplicationValidationService.validateDecision(
+          placementApplication.id,
+          placementApplicationDecisionEnvelope,
+          user,
+        )
+      } returns validationResult
+
+      val result = cas1PlacementApplicationService.recordDecision(
+        placementApplication.id,
+        placementApplicationDecisionEnvelope,
+      )
+
+      assertThat(result).isEqualTo(validationResult)
+
+      verify(exactly = 0) {
+        placementApplicationRepository.save(any())
+      }
     }
 
     @Test
     fun `Accepting sends a notification and returns successfully`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .produce()
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
 
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
@@ -690,7 +718,16 @@ class Cas1PlacementApplicationServiceTest {
 
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
 
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every {
+        cas1PlacementApplicationValidationService.validateDecision(
+          placementApplication.id,
+          placementApplicationDecisionEnvelope,
+          user,
+        )
+      } returns CasResult.Success(
+        ValidatedDecision(placementApplication),
+      )
+
       every {
         placementRequestService.createPlacementRequestsFromPlacementApplication(any(), any())
       } returns CasResult.Success(Unit)
@@ -722,46 +759,9 @@ class Cas1PlacementApplicationServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource(
-      value = PlacementApplicationDecisionDto::class,
-      names = ["withdraw", "withdrawnByPp"],
-      mode = EnumSource.Mode.INCLUDE,
-    )
-    fun `Rejecting with withdrawal reasons errors`(decision: PlacementApplicationDecisionDto) {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .withDecision(null)
-        .withCreatedByUser(createdByUser)
-        .produce()
-
-      val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
-        decision = decision,
-        summaryOfChanges = "summaryOfChanges",
-        decisionSummary = "decisionSummary rejected",
-      )
-
-      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-
-      val result = cas1PlacementApplicationService.recordDecision(
-        placementApplication.id,
-        placementApplicationDecisionEnvelope,
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("Decision $decision is not supported")
-    }
-
     @Test
     fun `Rejecting sends a notification and returns successfully`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .produce()
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
 
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
@@ -776,7 +776,17 @@ class Cas1PlacementApplicationServiceTest {
         decisionSummary = "decisionSummary rejected",
       )
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+
+      every {
+        cas1PlacementApplicationValidationService.validateDecision(
+          placementApplication.id,
+          placementApplicationDecisionEnvelope,
+          user,
+        )
+      } returns CasResult.Success(
+        ValidatedDecision(placementApplication),
+      )
+
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationEmailService.placementApplicationRejected(any()) } returns Unit
       every { cas1PlacementApplicationDomainEventService.placementApplicationAssessed(any(), any(), any()) } returns Unit
