@@ -14,7 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -133,6 +135,22 @@ class Cas2ApplicationService(
       CasResult.Unauthorised()
     }
   }
+
+  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? = cas2ApplicationRepository.findLatestApplication(crn)
+    ?.let { mostRecent ->
+      val uiUrl = if (mostRecent.submittedAt != null) {
+        submittedApplicationUrlTemplate.replace("#applicationId", mostRecent.id.toString())
+      } else {
+        applicationUrlTemplate.replace("#id", mostRecent.id.toString())
+      }
+      Cas2SuitableApplication(
+        uiUrl = uiUrl,
+        application = Cas2ExternalApplicationDto(
+          id = mostRecent.id,
+          status = mostRecent.statusUpdates?.firstOrNull()?.label,
+        ),
+      )
+    }
 
   fun getSubmittedApplicationsByCrn(crn: String): List<Cas2ApplicationEntity> = cas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
 

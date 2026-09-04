@@ -27,7 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -37,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -926,6 +929,78 @@ class Cas2v2ApplicationServiceTest {
 
       verify(exactly = 1) { mockCas2AssessmentService.createCas2Assessment(persistedApplication) }
       verify(exactly = 1) { mockCas2ApplicationEmailService.applicationSubmitted(persistedApplication) }
+    }
+  }
+
+  @Nested
+  inner class GetSuitableApplicationByCrn {
+    @Test
+    fun `returns latest application (submitted)`() {
+      val crn = "ADAFD"
+      val id = UUID.randomUUID()
+      val status = "finished"
+      val expected = Cas2SuitableApplication(
+        uiUrl = "http://frontend/assess/applications/$id/overview",
+        application = Cas2ExternalApplicationDto(
+          id = id,
+          status = status,
+        ),
+      )
+      val user = Cas2UserEntityFactory()
+        .produce()
+      val submittedAt = OffsetDateTime.now()
+      val cas2applicationEntity = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(submittedAt)
+        .withCrn(crn)
+        .withId(id)
+        .withStatusUpdates(mutableListOf())
+        .produce()
+      val statusUpdate = Cas2StatusUpdateEntityFactory()
+        .withApplication(cas2applicationEntity)
+        .withAssessor(user)
+        .withLabel(status)
+        .produce()
+      cas2applicationEntity.statusUpdates!!.add(statusUpdate)
+
+      every { mockCas2ApplicationRepository.findLatestApplication(crn) } returns cas2applicationEntity
+      val result = cas2ApplicationService.getSuitableApplicationByCrn(crn)
+      assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    fun `returns latest application (draft)`() {
+      val crn = "ADAFD"
+      val id = UUID.randomUUID()
+      val status = null
+      val expected = Cas2SuitableApplication(
+        uiUrl = "http://frontend/applications/$id",
+        application = Cas2ExternalApplicationDto(
+          id = id,
+          status = status,
+        ),
+      )
+      val user = Cas2UserEntityFactory()
+        .produce()
+      val cas2applicationEntity = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withId(id)
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      every { mockCas2ApplicationRepository.findLatestApplication(crn) } returns cas2applicationEntity
+      val result = cas2ApplicationService.getSuitableApplicationByCrn(crn)
+      assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    fun `returns no application`() {
+      val crn = "ADAFD"
+
+      every { mockCas2ApplicationRepository.findLatestApplication(crn) } returns null
+      val result = cas2ApplicationService.getSuitableApplicationByCrn(crn)
+      assertThat(result).isEqualTo(null)
     }
   }
 
