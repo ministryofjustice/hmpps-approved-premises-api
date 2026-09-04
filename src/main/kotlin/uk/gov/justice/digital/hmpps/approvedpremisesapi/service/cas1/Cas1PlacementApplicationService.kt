@@ -446,7 +446,7 @@ class Cas1PlacementApplicationService(
   @Transactional
   fun recordDecision(
     id: UUID,
-    placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
+    decisionEnvelope: PlacementApplicationDecisionEnvelope,
   ): CasResult<PlacementApplicationEntity> {
     val user = userService.getUserForRequest()
 
@@ -466,7 +466,7 @@ class Cas1PlacementApplicationService(
       return CasResult.GeneralValidationError("This application has already had a decision set")
     }
 
-    val decisionDto = placementApplicationDecisionEnvelope.decision
+    val decisionDto = decisionEnvelope.decision
     if (decisionDto == ApiPlacementApplicationDecision.withdraw || decisionDto == ApiPlacementApplicationDecision.withdrawnByPp) {
       return CasResult.GeneralValidationError("Decision $decisionDto is not supported")
     }
@@ -475,7 +475,7 @@ class Cas1PlacementApplicationService(
       val placementRequestResult =
         placementRequestService.createPlacementRequestsFromPlacementApplication(
           placementApplicationEntity,
-          placementApplicationDecisionEnvelope.decisionSummary,
+          decisionEnvelope.decisionSummary,
         )
 
       if (placementRequestResult is CasResult.Error) {
@@ -488,23 +488,23 @@ class Cas1PlacementApplicationService(
     placementApplicationEntity.apply {
       decision = JpaPlacementApplicationDecision.valueOf(decisionDto)
       decisionMadeAt = OffsetDateTime.now(clock)
-      decisionSummary = placementApplicationDecisionEnvelope.decisionSummary
+      decisionSummary = decisionEnvelope.decisionSummary
     }
 
-    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+    val savedPlacementApplication = placementApplicationRepository.save(placementApplicationEntity)
 
     when (decisionDto) {
-      ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplicationEntity)
-      ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
+      ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(savedPlacementApplication)
+      ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(savedPlacementApplication)
     }
 
     cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
-      savedApplication,
+      savedPlacementApplication,
       user,
-      placementApplicationDecisionEnvelope,
+      decisionEnvelope,
     )
 
-    return CasResult.Success(savedApplication)
+    return CasResult.Success(savedPlacementApplication)
   }
 
   private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<CasResult<T>, PlacementApplicationEntity> {
