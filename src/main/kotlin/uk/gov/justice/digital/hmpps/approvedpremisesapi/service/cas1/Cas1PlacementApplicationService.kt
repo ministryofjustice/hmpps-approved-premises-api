@@ -53,6 +53,7 @@ class Cas1PlacementApplicationService(
   private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
   private val jsonMapper: JsonMapper,
   private val tierService: TierService,
+  private val placementApplicationValidationService: Cas1PlacementApplicationValidationService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -452,24 +453,19 @@ class Cas1PlacementApplicationService(
 
     lockablePlacementApplicationRepository.acquirePessimisticLock(id)
 
-    val placementApplicationEntity =
-      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound(
-        entityType = "PlacementApplication",
-        id = id.toString(),
+    val validatedDecision = when (
+      val validationResult = placementApplicationValidationService.validateDecision(
+        id,
+        decisionEnvelope,
+        user,
       )
-
-    if (placementApplicationEntity.allocatedToUser != user) {
-      return CasResult.Unauthorised()
+    ) {
+      is CasResult.Success -> validationResult.value
+      is CasResult.Error -> return validationResult.reviseType()
     }
 
-    if (placementApplicationEntity.decision != null) {
-      return CasResult.GeneralValidationError("This application has already had a decision set")
-    }
-
+    val placementApplicationEntity = validatedDecision.placementApplication
     val decisionDto = decisionEnvelope.decision
-    if (decisionDto == ApiPlacementApplicationDecision.withdraw || decisionDto == ApiPlacementApplicationDecision.withdrawnByPp) {
-      return CasResult.GeneralValidationError("Decision $decisionDto is not supported")
-    }
 
     if (decisionDto == ApiPlacementApplicationDecision.accepted) {
       val placementRequestResult =
@@ -496,6 +492,7 @@ class Cas1PlacementApplicationService(
     when (decisionDto) {
       ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(savedPlacementApplication)
       ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(savedPlacementApplication)
+      else -> error("Decision type $decisionDto is not supported")
     }
 
     cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
