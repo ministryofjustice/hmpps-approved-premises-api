@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(name = "PlacementApplicationDecision")
+@Schema(name = "PlacementApplicationDecision", description = "'withdraw' and 'withdrawn_by_pp' should be considered deprecated")
 enum class PlacementApplicationDecisionDto(@get:JsonValue val value: String) {
 
   accepted("accepted"),
