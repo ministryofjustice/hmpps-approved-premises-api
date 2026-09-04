@@ -478,6 +478,7 @@ class Cas1PlacementApplicationService(
         return placementRequestResult.reviseType()
       }
 
+      // TODO: use validatedDecision.authorisedPlacementPeriod.duration for this value, and set it before creating the placement request
       placementApplicationEntity.authorisedDuration = placementApplicationEntity.requestedDuration
     }
 
