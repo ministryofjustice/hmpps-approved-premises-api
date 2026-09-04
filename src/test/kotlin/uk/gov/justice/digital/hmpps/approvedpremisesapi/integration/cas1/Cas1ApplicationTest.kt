@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1AuthorisedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
@@ -3241,7 +3242,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[3].isWithdrawn).isTrue()
           assertThat(requestForPlacements[3].requestedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
-          assertThat(requestForPlacements[3].authorisedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
+          assertThat(requestForPlacements[3].authorisedPlacementPeriod).isEqualTo(Cas1AuthorisedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
           assertThat(requestForPlacements[3].sentenceType).isNull()
           assertThat(requestForPlacements[3].releaseType).isEqualTo(ReleaseTypeOption.licence)
           assertThat(requestForPlacements[3].situation).isNull()
@@ -3250,7 +3251,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(requestForPlacements[4].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[4].status).isEqualTo(RequestForPlacementStatus.placementBooked)
           assertThat(requestForPlacements[4].requestedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
-          assertThat(requestForPlacements[4].authorisedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
+          assertThat(requestForPlacements[4].authorisedPlacementPeriod).isEqualTo(Cas1AuthorisedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
           assertThat(requestForPlacements[4].sentenceType).isNull()
           assertThat(requestForPlacements[4].releaseType).isEqualTo(ReleaseTypeOption.licence)
           assertThat(requestForPlacements[4].situation).isNull()

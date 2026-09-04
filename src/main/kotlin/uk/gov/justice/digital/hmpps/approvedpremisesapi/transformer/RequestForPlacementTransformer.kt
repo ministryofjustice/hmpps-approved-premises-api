@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1AuthorisedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
@@ -28,15 +29,20 @@ class RequestForPlacementTransformer(
     val requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementApplicationEntity.expectedArrival!!,
       arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
-      duration = placementApplicationEntity.requestedDuration!!,
+      duration = placementApplicationEntity.requestedDuration,
     )
     val authorisedPlacementPeriod = placementApplicationEntity.authorisedDuration?.let {
-      Cas1RequestedPlacementPeriod(
+      Cas1AuthorisedPlacementPeriod(
         arrival = placementApplicationEntity.expectedArrival!!,
         arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
         duration = it,
       )
     }
+    val canonicalPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = requestedPlacementPeriod.arrival,
+      arrivalFlexible = requestedPlacementPeriod.arrivalFlexible,
+      duration = authorisedPlacementPeriod?.duration ?: requestedPlacementPeriod.duration,
+    )
     return RequestForPlacement(
       id = placementApplicationEntity.id,
       createdByUserId = placementApplicationEntity.createdByUser.id,
@@ -47,7 +53,7 @@ class RequestForPlacementTransformer(
       } else {
         RequestForPlacementType.manual
       },
-      canonicalPlacementPeriod = authorisedPlacementPeriod ?: requestedPlacementPeriod,
+      canonicalPlacementPeriod = canonicalPlacementPeriod,
       requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = authorisedPlacementPeriod,
       submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
@@ -83,12 +89,17 @@ class RequestForPlacementTransformer(
 
     val application = placementRequestEntity.application
     val statusAndWhen = placementRequestEntity.deriveStatus()
+    val canonicalPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = placementRequestEntity.expectedArrival,
+      arrivalFlexible = null,
+      duration = placementRequestEntity.duration,
+    )
     val requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementRequestEntity.expectedArrival,
       arrivalFlexible = null,
       duration = placementRequestEntity.duration,
     )
-    val authorisedPlacementPeriod = Cas1RequestedPlacementPeriod(
+    val authorisedPlacementPeriod = Cas1AuthorisedPlacementPeriod(
       arrival = placementRequestEntity.expectedArrival,
       arrivalFlexible = null,
       duration = placementRequestEntity.duration,
@@ -99,7 +110,7 @@ class RequestForPlacementTransformer(
       createdAt = placementRequestEntity.createdAt.toInstant(),
       isWithdrawn = placementRequestEntity.isWithdrawn,
       type = RequestForPlacementType.automatic,
-      canonicalPlacementPeriod = authorisedPlacementPeriod,
+      canonicalPlacementPeriod = canonicalPlacementPeriod,
       requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = authorisedPlacementPeriod,
       submittedAt = placementRequestEntity.createdAt.toInstant(),

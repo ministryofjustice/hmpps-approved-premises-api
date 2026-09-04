@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -51,6 +52,7 @@ class Cas1PlacementApplicationService(
   private val clock: Clock,
   private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
   private val jsonMapper: JsonMapper,
+  private val tierService: TierService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -344,6 +346,10 @@ class Cas1PlacementApplicationService(
 
     if (requestedPlacementPeriods.isEmpty()) {
       return CasResult.GeneralValidationError("At least 1 requested placement periods is required")
+    }
+
+    if (tierService.useTierV2() && requestedPlacementPeriods.any { it.duration == null }) {
+      return CasResult.GeneralValidationError("1 or more requested placements have an undefined duration")
     }
 
     if (requestedPlacementPeriods.any { it.duration == 0 }) {
