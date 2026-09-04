@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1AuthorisedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
@@ -18,7 +19,7 @@ data class RequestForPlacement(
   val type: RequestForPlacementType,
   val canonicalPlacementPeriod: Cas1RequestedPlacementPeriod,
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod,
-  val authorisedPlacementPeriod: Cas1RequestedPlacementPeriod?,
+  val authorisedPlacementPeriod: Cas1AuthorisedPlacementPeriod?,
   val status: RequestForPlacementStatus,
   val statusSetDate: LocalDate,
   val submittedAt: java.time.Instant? = null,

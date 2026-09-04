@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1AuthorisedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
@@ -45,7 +46,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
   }
   private var type: Yielded<RequestForPlacementType> = { RequestForPlacementType.automatic }
 
-  private var authorisedPlacementPeriod: Yielded<Cas1RequestedPlacementPeriod?> = { null }
+  private var authorisedPlacementPeriod: Yielded<Cas1AuthorisedPlacementPeriod?> = { null }
   private var status: Yielded<RequestForPlacementStatus> = { RequestForPlacementStatus.placementBooked }
   private var statusSetDate: Yielded<LocalDate> = { LocalDate.now() }
   private var submittedBy: Yielded<Cas1StaffDto?> = { null }
@@ -68,18 +69,6 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
 
   fun withStatusSetDate(statusSetDate: LocalDate) = apply {
     this.statusSetDate = { statusSetDate }
-  }
-
-  fun withRequestReviewedAt(requestReviewedAt: Instant?) = apply {
-    this.requestReviewedAt = { requestReviewedAt }
-  }
-
-  fun withAuthorisedPlacementPeriod(authorisedPlacementPeriod: Cas1RequestedPlacementPeriod) = apply {
-    this.authorisedPlacementPeriod = { authorisedPlacementPeriod }
-  }
-
-  fun withRequestedPlacementPeriod(requestedPlacementPeriod: Cas1RequestedPlacementPeriod) = apply {
-    this.requestedPlacementPeriod = { requestedPlacementPeriod }
   }
 
   fun withCanonicalPlacementPeriod(canonicalPlacementPeriod: Cas1RequestedPlacementPeriod) = apply {
@@ -116,14 +105,6 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
 
   fun withSentenceType(sentenceType: SentenceTypeOption?) = apply {
     this.sentenceType = { sentenceType }
-  }
-
-  fun withCreatedByUserId(createdByUserId: UUID) = apply {
-    this.createdByUserId = { createdByUserId }
-  }
-
-  fun withCanBeDirectlyWithdrawn(canBeDirectlyWithdrawn: Boolean) = apply {
-    this.canBeDirectlyWithdrawn = { canBeDirectlyWithdrawn }
   }
 
   fun withReleaseType(releaseType: ReleaseTypeOption?) = apply {
