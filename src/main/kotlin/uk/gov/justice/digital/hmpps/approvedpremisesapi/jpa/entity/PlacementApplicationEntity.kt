@@ -170,6 +170,15 @@ data class PlacementApplicationEntity(
    */
   var authorisedDuration: Int? = null,
 
+  /**
+   * Default duration calculated for placements based upon logic defined in Cas1RequestForPlacementService.defaultDurations
+   *
+   * This will be provided for placement applications where the user cannot specify/determine duration themselves
+   *
+   * added in 2026-08 and has not been backfilled
+   */
+  var calculatedPlacementDuration: Int? = null,
+
   var expectedArrivalFlexible: Boolean? = null,
 
   @Enumerated(value = EnumType.STRING)

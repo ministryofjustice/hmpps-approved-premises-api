@@ -433,6 +433,7 @@ class Cas1PlacementApplicationServiceTest {
         releaseType = ReleaseTypeOption.licence,
         sentenceType = null,
         situationType = null,
+        calculatedPlacementDuration = 84,
       )
 
       val result = cas1PlacementApplicationService.submitApplication(
@@ -450,6 +451,7 @@ class Cas1PlacementApplicationServiceTest {
 
         assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
         assertThat(updatedPlacementApp.requestedDuration).isEqualTo(5)
+        assertThat(updatedPlacementApp.calculatedPlacementDuration).isEqualTo(84)
         assertThat(updatedPlacementApp.expectedArrivalFlexible).isTrue
         assertThat(updatedPlacementApp.authorisedDuration).isNull()
         assertThat(updatedPlacementApp.releaseType).isEqualTo(Cas1ReleaseType.licence)
@@ -494,6 +496,7 @@ class Cas1PlacementApplicationServiceTest {
         releaseType = ReleaseTypeOption.licence,
         sentenceType = null,
         situationType = null,
+        calculatedPlacementDuration = 84,
       )
 
       val result = cas1PlacementApplicationService.submitApplication(
@@ -509,6 +512,7 @@ class Cas1PlacementApplicationServiceTest {
         val updatedPlacementApp1 = it[0]
         assertThat(updatedPlacementApp1.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
         assertThat(updatedPlacementApp1.requestedDuration).isEqualTo(5)
+        assertThat(updatedPlacementApp1.calculatedPlacementDuration).isEqualTo(84)
         assertThat(updatedPlacementApp1.expectedArrivalFlexible).isFalse
         assertThat(updatedPlacementApp1.authorisedDuration).isNull()
         assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
@@ -520,6 +524,7 @@ class Cas1PlacementApplicationServiceTest {
         val updatedPlacementApp2 = it[1]
         assertThat(updatedPlacementApp2.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
         assertThat(updatedPlacementApp2.requestedDuration).isEqualTo(10)
+        assertThat(updatedPlacementApp2.calculatedPlacementDuration).isEqualTo(84)
         assertThat(updatedPlacementApp2.expectedArrivalFlexible).isNull()
         assertThat(updatedPlacementApp2.authorisedDuration).isNull()
         assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
@@ -531,6 +536,7 @@ class Cas1PlacementApplicationServiceTest {
         val updatedPlacementApp3 = it[2]
         assertThat(updatedPlacementApp3.expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
         assertThat(updatedPlacementApp3.requestedDuration).isEqualTo(15)
+        assertThat(updatedPlacementApp3.calculatedPlacementDuration).isEqualTo(84)
         assertThat(updatedPlacementApp3.expectedArrivalFlexible).isTrue
         assertThat(updatedPlacementApp3.authorisedDuration).isNull()
         assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)

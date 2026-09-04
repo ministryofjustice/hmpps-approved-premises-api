@@ -376,6 +376,7 @@ class Cas1PlacementApplicationService(
       releaseType = submitPlacementApplication.releaseType.let { Cas1ReleaseType.fromApiType(it) }
       sentenceType = submitPlacementApplication.sentenceType?.toString()
       situation = submitPlacementApplication.situationType?.toString()
+      calculatedPlacementDuration = submitPlacementApplication.calculatedPlacementDuration
     }
 
     submittedPlacementApplication.dueAt = cas1TaskDeadlineService.getDeadline(submittedPlacementApplication)

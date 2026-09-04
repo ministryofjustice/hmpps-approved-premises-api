@@ -15,4 +15,5 @@ data class SubmitPlacementApplication(
   val releaseType: ReleaseTypeOption,
   val sentenceType: SentenceTypeOption?,
   val situationType: SituationOption?,
+  val calculatedPlacementDuration: Int? = null,
 )

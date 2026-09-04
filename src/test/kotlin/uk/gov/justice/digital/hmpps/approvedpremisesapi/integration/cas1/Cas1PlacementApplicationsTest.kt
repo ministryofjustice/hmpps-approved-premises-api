@@ -719,6 +719,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
                   releaseType = ReleaseTypeOption.licence,
                   sentenceType = null,
                   situationType = null,
+                  calculatedPlacementDuration = 84,
                 ),
               )
               .exchange()
@@ -750,6 +751,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
             assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(cas1RequestedPlacementPeriod[0].duration)
+            assertThat(updatedPlacementApplication.calculatedPlacementDuration).isEqualTo(84)
             assertThat(updatedPlacementApplication.expectedArrival).isEqualTo(cas1RequestedPlacementPeriod[0].arrival)
             assertThat(updatedPlacementApplication.expectedArrivalFlexible).isTrue
 
@@ -831,6 +833,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             val updatedEntity1 = placementApplicationRepository.findByIdOrNull(createdApp1Id)!!
             assertThat(updatedEntity1.expectedArrival).isEqualTo(arrival1)
             assertThat(updatedEntity1.requestedDuration).isEqualTo(duration1)
+            assertThat(updatedEntity1.calculatedPlacementDuration).isNull()
             assertThat(updatedEntity1.expectedArrivalFlexible).isFalse
             assertThat(updatedEntity1.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
@@ -839,6 +842,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             val updatedEntity2 = placementApplicationRepository.findByIdOrNull(createdApp2Id)!!
             assertThat(updatedEntity2.expectedArrival).isEqualTo(arrival2)
             assertThat(updatedEntity2.requestedDuration).isEqualTo(duration2)
+            assertThat(updatedEntity2.calculatedPlacementDuration).isNull()
             assertThat(updatedEntity2.expectedArrivalFlexible).isTrue
             assertThat(updatedEntity2.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
@@ -847,6 +851,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             val updatedEntity3 = placementApplicationRepository.findByIdOrNull(createdApp3Id)!!
             assertThat(updatedEntity3.expectedArrival).isEqualTo(arrival3)
             assertThat(updatedEntity3.requestedDuration).isEqualTo(duration3)
+            assertThat(updatedEntity3.calculatedPlacementDuration).isNull()
             assertThat(updatedEntity3.expectedArrivalFlexible).isFalse
             assertThat(updatedEntity3.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
