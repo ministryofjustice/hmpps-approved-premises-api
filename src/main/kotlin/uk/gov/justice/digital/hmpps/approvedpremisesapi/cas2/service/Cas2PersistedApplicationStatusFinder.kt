@@ -10,4 +10,5 @@ class Cas2PersistedApplicationStatusFinder(
   private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2),
 ) {
   fun active(): List<Cas2PersistedApplicationStatus> = statusList.filter { it.isActive }
+  fun forName(name: String) = statusList.firstOrNull { it.name == name }
 }
