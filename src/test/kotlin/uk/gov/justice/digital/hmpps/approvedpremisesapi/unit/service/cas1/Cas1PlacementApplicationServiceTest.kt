@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -74,6 +75,7 @@ class Cas1PlacementApplicationServiceTest {
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val lockablePlacementApplicationRepository = mockk<LockablePlacementApplicationRepository>()
   private val jsonMapper = mockk<JsonMapper>()
+  private val tierService = mockk<TierService>()
 
   private val cas1PlacementApplicationService = Cas1PlacementApplicationService(
     placementApplicationRepository,
@@ -87,6 +89,7 @@ class Cas1PlacementApplicationServiceTest {
     Clock.systemDefaultZone(),
     lockablePlacementApplicationRepository,
     jsonMapper,
+    tierService,
   )
 
   @Nested
@@ -260,6 +263,7 @@ class Cas1PlacementApplicationServiceTest {
     @Test
     fun `Returns validation error if no dates defined`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { tierService.useTierV2() } returns true
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
@@ -281,6 +285,7 @@ class Cas1PlacementApplicationServiceTest {
     @Test
     fun `Returns validation error if 1 or more duration periods have 0 day duration`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { tierService.useTierV2() } returns true
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
@@ -315,6 +320,44 @@ class Cas1PlacementApplicationServiceTest {
       assertThatCasResult(result).isGeneralValidationError("1 or more requested placements have a duration of 0 days")
     }
 
+    @Test
+    fun `Returns validation error if 1 or more duration periods have null duration, tier v2`() {
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { tierService.useTierV2() } returns true
+
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = 5,
+            arrivalFlexible = true,
+          ),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2025, 4, 1),
+            duration = null,
+            arrivalFlexible = false,
+          ),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2026, 4, 1),
+            duration = 5,
+            arrivalFlexible = true,
+          ),
+        ),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+      )
+
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
+
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("1 or more requested placements have an undefined duration")
+    }
+
     @ParameterizedTest
     @CsvSource(
       "paroleDirectedLicence, paroleDirectedLicence, RELEASE_FOLLOWING_DECISION",
@@ -330,6 +373,7 @@ class Cas1PlacementApplicationServiceTest {
     )
     fun `Inferring placement type from release type`(releaseTypeOption: ReleaseTypeOption, cas1ReleaseType: Cas1ReleaseType, jpaPlacementType: String) {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { tierService.useTierV2() } returns true
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
@@ -376,6 +420,7 @@ class Cas1PlacementApplicationServiceTest {
     @Test
     fun `Triggers allocation and sets a due date`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { tierService.useTierV2() } returns true
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
@@ -412,6 +457,7 @@ class Cas1PlacementApplicationServiceTest {
     @Test
     fun `Saves a single date to a placement application, triggers emails and domain event`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { tierService.useTierV2() } returns true
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
@@ -464,8 +510,64 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
+    fun `Saves a single date to a placement application, triggers emails and domain event, allowing null duration for tier v3`() {
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { tierService.useTierV2() } returns false
+      every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
+      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+
+      every { userService.getDeliusUserNameForRequest() } returns "theUsername"
+      every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } just Runs
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
+
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = null,
+            arrivalFlexible = true,
+          ),
+        ),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+        calculatedPlacementDuration = 84,
+      )
+
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
+      )
+
+      assertThat(result is CasResult.Success).isTrue
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).hasSize(1)
+
+        val updatedPlacementApp = it[0]
+        assertThat(updatedPlacementApp.submissionGroupId).isNotNull()
+
+        assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
+        assertThat(updatedPlacementApp.requestedDuration).isNull()
+        assertThat(updatedPlacementApp.calculatedPlacementDuration).isEqualTo(84)
+        assertThat(updatedPlacementApp.expectedArrivalFlexible).isTrue
+        assertThat(updatedPlacementApp.authorisedDuration).isNull()
+        assertThat(updatedPlacementApp.releaseType).isEqualTo(Cas1ReleaseType.licence)
+
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
+        verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, null) }
+        verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
+      }
+    }
+
+    @Test
     fun `Saves multiple dates to individual placement applications and triggers emails and domain event per resultant placement application`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { tierService.useTierV2() } returns true
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { userService.getDeliusUserNameForRequest() } returns "theUsername"

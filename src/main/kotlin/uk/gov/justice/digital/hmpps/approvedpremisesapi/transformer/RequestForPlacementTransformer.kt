@@ -29,7 +29,7 @@ class RequestForPlacementTransformer(
     val requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementApplicationEntity.expectedArrival!!,
       arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
-      duration = placementApplicationEntity.requestedDuration!!,
+      duration = placementApplicationEntity.requestedDuration,
     )
     val authorisedPlacementPeriod = placementApplicationEntity.authorisedDuration?.let {
       Cas1AuthorisedPlacementPeriod(
@@ -94,6 +94,11 @@ class RequestForPlacementTransformer(
       arrivalFlexible = null,
       duration = placementRequestEntity.duration,
     )
+    val requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = placementRequestEntity.expectedArrival,
+      arrivalFlexible = null,
+      duration = placementRequestEntity.duration,
+    )
     val authorisedPlacementPeriod = Cas1AuthorisedPlacementPeriod(
       arrival = placementRequestEntity.expectedArrival,
       arrivalFlexible = null,
@@ -106,7 +111,7 @@ class RequestForPlacementTransformer(
       isWithdrawn = placementRequestEntity.isWithdrawn,
       type = RequestForPlacementType.automatic,
       canonicalPlacementPeriod = canonicalPlacementPeriod,
-      requestedPlacementPeriod = canonicalPlacementPeriod,
+      requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = authorisedPlacementPeriod,
       submittedAt = placementRequestEntity.createdAt.toInstant(),
       requestReviewedAt = placementRequestEntity.assessment.submittedAt?.toInstant(),

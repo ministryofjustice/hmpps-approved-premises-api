@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -33,6 +34,9 @@ class Cas1ApplicationValidationServiceTest {
 
   @MockK
   private lateinit var applicationRepository: ApprovedPremisesApplicationRepository
+
+  @MockK
+  private lateinit var tierService: TierService
 
   @InjectMockKs
   private lateinit var service: Cas1ApplicationValidationService
@@ -173,7 +177,7 @@ class Cas1ApplicationValidationServiceTest {
     }
 
     @Test
-    fun `Returns GeneralValidationError when duration and requestedPlacementDuration are not populated`() {
+    fun `Returns GeneralValidationError when tier v2 is in use and duration and requestedPlacementDuration are not populated`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -181,6 +185,7 @@ class Cas1ApplicationValidationServiceTest {
         .produce()
 
       every { applicationRepository.findByIdOrNull(applicationId) } returns application
+      every { tierService.useTierV2() } returns true
 
       val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
         duration = null,
@@ -210,6 +215,7 @@ class Cas1ApplicationValidationServiceTest {
         .produce()
 
       every { applicationRepository.findByIdOrNull(applicationId) } returns application
+      every { tierService.useTierV2() } returns true
 
       val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
         duration = 10,
@@ -238,6 +244,7 @@ class Cas1ApplicationValidationServiceTest {
         .produce()
 
       every { applicationRepository.findByIdOrNull(applicationId) } returns application
+      every { tierService.useTierV2() } returns true
 
       val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
         requestedPlacementDuration = 10,
@@ -294,7 +301,7 @@ class Cas1ApplicationValidationServiceTest {
     }
 
     @Test
-    fun `Returns Success with the application if no validation issues`() {
+    fun `Returns Success with the application if no validation issues, tier v2`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -302,6 +309,7 @@ class Cas1ApplicationValidationServiceTest {
         .produce()
 
       every { applicationRepository.findByIdOrNull(applicationId) } returns application
+      every { tierService.useTierV2() } returns true
 
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
@@ -315,6 +323,94 @@ class Cas1ApplicationValidationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = false,
         requestedPlacementDuration = 10,
+      )
+
+      val result = service.validateApplicationSubmission(
+        applicationId,
+        user,
+        defaultSubmitApprovedPremisesApplication.copy(
+          requestedPlacementDuration = 10,
+          requestedPlacementPeriod = null,
+        ),
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(application)
+      }
+    }
+
+    @Test
+    fun `Returns Success with the application if no validation issues, tier v3 with non-null duration`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+
+      every { applicationRepository.findByIdOrNull(applicationId) } returns application
+      every { tierService.useTierV2() } returns false
+
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        apType = ApType.normal,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = false,
+        requestedPlacementDuration = 10,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.now(),
+          arrivalFlexible = null,
+          duration = 10,
+        ),
+      )
+
+      val result = service.validateApplicationSubmission(
+        applicationId,
+        user,
+        defaultSubmitApprovedPremisesApplication.copy(
+          requestedPlacementDuration = 10,
+          requestedPlacementPeriod = null,
+        ),
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(application)
+      }
+    }
+
+    @Test
+    fun `Returns Success with the application if no validation issues, tier v3 with null duration`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+
+      every { applicationRepository.findByIdOrNull(applicationId) } returns application
+      every { tierService.useTierV2() } returns false
+
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        apType = ApType.normal,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = false,
+        requestedPlacementDuration = null,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.now(),
+          arrivalFlexible = null,
+          duration = null,
+        ),
       )
 
       val result = service.validateApplicationSubmission(

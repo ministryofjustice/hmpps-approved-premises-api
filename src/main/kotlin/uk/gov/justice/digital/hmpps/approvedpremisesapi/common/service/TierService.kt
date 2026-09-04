@@ -35,9 +35,13 @@ class TierService(
 
   fun getAvailableTiersV3(): List<AvailableTierDto> = TierV3Score.entries.map { AvailableTierDto(it.name) }
 
+  fun useTierV2() = !useTierV3()
+
+  fun useTierV3() = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
+
   fun getTier(crn: String): TierDto? {
     val normalizedCrn = crn.uppercase()
-    val useTierV3 = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
+    val useTierV3 = useTierV3()
 
     val localTier = getLocalTier(normalizedCrn, useTierV3)
     if (localTier != null) {
@@ -68,7 +72,7 @@ class TierService(
       return mapOf(crn to getTier(crn))
     }
 
-    val useTierV3 = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
+    val useTierV3 = useTierV3()
 
     val casesByCrn = caseRepository
       .findByCrnIn(normalisedCrns.toList())

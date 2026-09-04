@@ -4,6 +4,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -13,6 +14,7 @@ import java.util.UUID
 @Service
 class Cas1ApplicationValidationService(
   private val applicationRepository: ApprovedPremisesApplicationRepository,
+  private val tierService: TierService,
 ) {
 
   @SuppressWarnings("ReturnCount")
@@ -44,9 +46,13 @@ class Cas1ApplicationValidationService(
       return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
     }
 
-    val requestedDuration = submitApplication.requestedDuration() ?: return CasResult.GeneralValidationError(
-      "Either duration or requestedPlacementDuration should be provided",
-    )
+    val requestedDuration = submitApplication.requestedDuration()
+
+    if (tierService.useTierV2() && requestedDuration == null) {
+      return CasResult.GeneralValidationError(
+        "Either duration or requestedPlacementDuration should be provided",
+      )
+    }
 
     if (
       submitApplication.requestedPlacementPeriod != null &&
