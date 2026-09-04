@@ -651,6 +651,10 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       assertThat(result).isEqualTo(validationResult)
+
+      verify(exactly = 0) {
+        mockApplicationRepository.save(any())
+      }
     }
 
     @Test

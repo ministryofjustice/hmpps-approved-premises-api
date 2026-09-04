@@ -142,6 +142,8 @@ class Cas1PlacementRequestService(
       expectedArrival = placementApplicationEntity.placementDates()!!.expectedArrival,
       duration = placementApplicationEntity.placementDates()!!.duration,
     )
+
+    // this should probably be driven by the release type, as placementType is a deprecated concept
     val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
 
     this.createPlacementRequest(
