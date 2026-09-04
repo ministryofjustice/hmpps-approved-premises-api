@@ -15,6 +15,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
 import tools.jackson.databind.json.JsonMapper
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Inmate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -65,6 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationValidationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
@@ -90,6 +93,7 @@ class Cas1ApplicationCreationServiceTest {
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
   private val mockCaseService = mockk<CaseService>()
   private val mockOffenderDetailService = mockk<OffenderDetailService>()
+  private val mockCas1ApplicationValidationService = mockk<Cas1ApplicationValidationService>()
 
   private val applicationService = Cas1ApplicationCreationService(
     mockApplicationRepository,
@@ -108,6 +112,7 @@ class Cas1ApplicationCreationServiceTest {
     mockCas1CruManagementAreaRepository,
     mockCaseService,
     mockOffenderDetailService,
+    mockCas1ApplicationValidationService,
   )
 
   @Nested
@@ -631,179 +636,21 @@ class Cas1ApplicationCreationServiceTest {
       every { mockJsonMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
     }
 
-    @Test
-    fun `Returns NotFound when application doesn't exist`() {
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
-
-      assertThatCasResult(
-        applicationService.submitApplication(
-          applicationId,
-          defaultSubmitApprovedPremisesApplication,
-          user,
-          apAreaId = UUID.randomUUID(),
-        ),
-      ).isNotFound(expectedEntityType = "ApprovedPremisesApplicationEntity", expectedId = applicationId)
-    }
-
-    @Test
-    fun `Returns Unauthorised when application doesn't belong to request user`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withYieldedCreatedByUser { UserEntityFactory().withDefaultProbationRegion().produce() }
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-
-      assertThatCasResult(
-        applicationService.submitApplication(
-          applicationId,
-          defaultSubmitApprovedPremisesApplication,
-          user,
-          apAreaId = UUID.randomUUID(),
-        ),
-      ).isUnauthorised()
-    }
-
-    @Test
-    fun `Returns GeneralValidationError when application has already been submitted`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CasResultFactory#oneOfEachErrorType")
+    fun `Returns validation result if validation fails`(validationResult: CasResult.Error<ApprovedPremisesApplicationEntity>) {
+      every {
+        mockCas1ApplicationValidationService.validateApplicationSubmission(applicationId, user, defaultSubmitApprovedPremisesApplication)
+      } returns validationResult
 
       val result = applicationService.submitApplication(
         applicationId,
-        defaultSubmitApprovedPremisesApplication.copy(
-          requestedPlacementDuration = 10,
-          requestedPlacementPeriod = null,
-        ),
-        user,
-        apAreaId = UUID.randomUUID(),
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("This application has already been submitted")
-    }
-
-    @EnumSource(
-      value = ApprovedPremisesApplicationStatus::class,
-      mode = EnumSource.Mode.EXCLUDE,
-      names = [ "STARTED" ],
-    )
-    @ParameterizedTest
-    fun `Returns GeneralValidationError when application doesn't have status 'STARTED'`(state: ApprovedPremisesApplicationStatus) {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withStatus(state)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-
-      val result = applicationService.submitApplication(
-        applicationId,
-        defaultSubmitApprovedPremisesApplication.copy(
-          requestedPlacementDuration = 10,
-          requestedPlacementPeriod = null,
-        ),
-        user,
-        apAreaId = UUID.randomUUID(),
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("Only an application with the 'STARTED' status can be submitted")
-    }
-
-    @Test
-    fun `Returns GeneralValidationError when duration and requestedPlacementDuration are not populated`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockLockableApplicationRepository.acquirePessimisticLock(applicationId) } returns LockableApplicationEntity(applicationId)
-
-      val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
-        duration = null,
-        requestedPlacementDuration = null,
-        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-          arrival = LocalDate.now(),
-          duration = 11,
-          arrivalFlexible = null,
-        ),
-      )
-
-      val result = applicationService.submitApplication(
-        applicationId,
-        submitApplication,
+        defaultSubmitApprovedPremisesApplication,
         user,
         apAreaId = apArea.id,
       )
 
-      assertThatCasResult(result).isGeneralValidationError("Either duration or requestedPlacementDuration should be provided")
-    }
-
-    @Test
-    fun `Returns GeneralValidationError when duration does not match requestedPlacementPeriod duration`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockLockableApplicationRepository.acquirePessimisticLock(applicationId) } returns LockableApplicationEntity(applicationId)
-
-      val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
-        duration = 10,
-        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-          arrival = LocalDate.now(),
-          duration = 11,
-          arrivalFlexible = null,
-        ),
-      )
-
-      val result = applicationService.submitApplication(
-        applicationId,
-        submitApplication,
-        user,
-        apAreaId = apArea.id,
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("The requested placement period duration must match the duration specified in the application.")
-    }
-
-    @Test
-    fun `Returns GeneralValidationError when requestedPlacementDuration does not match requestedPlacementPeriod duration`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockLockableApplicationRepository.acquirePessimisticLock(applicationId) } returns LockableApplicationEntity(applicationId)
-
-      val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
-        requestedPlacementDuration = 10,
-        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-          arrival = LocalDate.now(),
-          duration = 11,
-          arrivalFlexible = null,
-        ),
-      )
-
-      val result = applicationService.submitApplication(
-        applicationId,
-        submitApplication,
-        user,
-        apAreaId = apArea.id,
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("The requested placement period duration must match the duration specified in the application.")
+      assertThat(result).isEqualTo(validationResult)
     }
 
     @Test
@@ -814,10 +661,8 @@ class Cas1ApplicationCreationServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockCas1ApplicationUserDetailsRepository.save(any()) } returns Cas1ApplicationUserDetailsEntityFactory().produce()
       every { mockCas1ApplicationDomainEventService.applicationSubmitted(any(), any(), any()) } just Runs
-      setupMocksForSuccess(application)
 
       val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
         requestedPlacementDuration = 10,
@@ -828,6 +673,8 @@ class Cas1ApplicationCreationServiceTest {
         ),
       )
 
+      setupMocksForSuccess(application, submitApplication)
+
       val result = applicationService.submitApplication(
         applicationId,
         submitApplication,
@@ -836,45 +683,6 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       assertThatCasResult(result).isSuccess()
-    }
-
-    @Test
-    fun `Returns GeneralValidationError when applicantIsNotCaseManager is true and no case manager details are provided`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-
-      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
-        translatedDocument = {},
-        apType = ApType.normal,
-        isWomensApplication = false,
-        isEmergencyApplication = false,
-        targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
-        type = "CAS1",
-        sentenceType = SentenceTypeOption.nonStatutory,
-        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
-        caseManagerIsNotApplicant = true,
-        requestedPlacementDuration = 10,
-      )
-
-      every { mockJsonMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
-
-      val result = applicationService.submitApplication(
-        applicationId,
-        defaultSubmitApprovedPremisesApplication.copy(
-          requestedPlacementDuration = 10,
-          requestedPlacementPeriod = null,
-        ),
-        user,
-        apAreaId = UUID.randomUUID(),
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
 
     @ParameterizedTest
@@ -910,7 +718,7 @@ class Cas1ApplicationCreationServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      setupMocksForSuccess(application)
+      setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
       every {
@@ -1006,7 +814,7 @@ class Cas1ApplicationCreationServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      setupMocksForSuccess(application)
+      setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
       every {
@@ -1088,7 +896,7 @@ class Cas1ApplicationCreationServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      setupMocksForSuccess(application)
+      setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
       every {
@@ -1164,7 +972,7 @@ class Cas1ApplicationCreationServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      setupMocksForSuccess(application)
+      setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
 
       val existingApplicantUserDetails = Cas1ApplicationUserDetailsEntity(
         UUID.randomUUID(),
@@ -1247,7 +1055,7 @@ class Cas1ApplicationCreationServiceTest {
         .withCaseManagerUserDetails(Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldCaseManEmail", "oldCaseManName", "oldCaseManPhone"))
         .produce()
 
-      setupMocksForSuccess(application)
+      setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
 
       val existingApplicantUserDetails = application.applicantUserDetails!!
       val existingCaseManagerUserDetails = application.caseManagerUserDetails!!
@@ -1270,9 +1078,14 @@ class Cas1ApplicationCreationServiceTest {
       verify { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) }
     }
 
-    private fun setupMocksForSuccess(application: ApprovedPremisesApplicationEntity) {
+    private fun setupMocksForSuccess(
+      application: ApprovedPremisesApplicationEntity,
+      submission: SubmitApprovedPremisesApplication,
+    ) {
       every { mockJsonMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every {
+        mockCas1ApplicationValidationService.validateApplicationSubmission(application.id, user, submission)
+      } returns CasResult.Success(application)
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockOffenderDetailService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
         InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),
@@ -1330,7 +1143,7 @@ class Cas1ApplicationCreationServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      setupMocksForSuccess(application)
+      setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
       every {
@@ -1396,7 +1209,7 @@ class Cas1ApplicationCreationServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      setupMocksForSuccess(application)
+      setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
       every {

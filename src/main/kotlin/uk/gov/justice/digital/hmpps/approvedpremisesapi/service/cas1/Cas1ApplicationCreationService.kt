@@ -58,6 +58,7 @@ class Cas1ApplicationCreationService(
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val caseService: CaseService,
   private val offenderDetailService: OffenderDetailService,
+  private val cas1ApplicationValidationService: Cas1ApplicationValidationService,
 ) {
 
   @Transactional
@@ -164,16 +165,10 @@ class Cas1ApplicationCreationService(
   ): CasResult<ApprovedPremisesApplicationEntity> {
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
 
-    var application = applicationRepository.findByIdOrNull(
-      applicationId,
-    ) ?: return CasResult.NotFound("ApprovedPremisesApplicationEntity", applicationId.toString())
-
-    if (application !is ApprovedPremisesApplicationEntity) {
-      return CasResult.GeneralValidationError("onlyCas1Supported")
-    }
-
-    validateApplicationSubmission(application, user, submitApplication)?.let {
-      return it
+    val validationResult = cas1ApplicationValidationService.validateApplicationSubmission(applicationId, user, submitApplication)
+    var application = when (validationResult) {
+      is CasResult.Success -> validationResult.value
+      else -> return validationResult
     }
 
     val inmateDetails = application.nomsNumber?.let { nomsNumber ->
@@ -241,48 +236,6 @@ class Cas1ApplicationCreationService(
     }
 
     return CasResult.Success(application)
-  }
-
-  @SuppressWarnings("ReturnCount")
-  private fun validateApplicationSubmission(
-    application: ApprovedPremisesApplicationEntity,
-    user: UserEntity,
-    submitApplication: SubmitApprovedPremisesApplication,
-  ): CasResult<ApprovedPremisesApplicationEntity>? {
-    if (application.createdByUser != user) {
-      return CasResult.Unauthorised()
-    }
-
-    if (application.status != ApprovedPremisesApplicationStatus.STARTED) {
-      return CasResult.GeneralValidationError("Only an application with the 'STARTED' status can be submitted")
-    }
-
-    if (application.submittedAt != null) {
-      return CasResult.GeneralValidationError("This application has already been submitted")
-    }
-
-    if (submitApplication.caseManagerIsNotApplicant == true && submitApplication.caseManagerUserDetails == null) {
-      return CasResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
-    }
-
-    if (application.data == null) {
-      return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
-    }
-
-    val requestedDuration = submitApplication.requestedDuration() ?: return CasResult.GeneralValidationError(
-      "Either duration or requestedPlacementDuration should be provided",
-    )
-
-    if (
-      submitApplication.requestedPlacementPeriod != null &&
-      requestedDuration != submitApplication.requestedPlacementPeriod.duration
-    ) {
-      return CasResult.GeneralValidationError(
-        "The requested placement period duration must match the duration specified in the application.",
-      )
-    }
-
-    return null
   }
 
   @SuppressWarnings("ReturnCount", "UnusedParameter")
