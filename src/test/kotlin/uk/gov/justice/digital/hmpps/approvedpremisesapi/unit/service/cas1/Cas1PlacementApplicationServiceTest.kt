@@ -725,10 +725,10 @@ class Cas1PlacementApplicationServiceTest {
     @ParameterizedTest
     @EnumSource(
       value = PlacementApplicationDecisionDto::class,
-      names = ["accepted"],
-      mode = EnumSource.Mode.EXCLUDE,
+      names = ["withdraw", "withdrawnByPp"],
+      mode = EnumSource.Mode.INCLUDE,
     )
-    fun `Rejecting sends a notification and returns successfully`(decision: PlacementApplicationDecisionDto) {
+    fun `Rejecting with withdrawal reasons errors`(decision: PlacementApplicationDecisionDto) {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .produce()
@@ -745,6 +745,36 @@ class Cas1PlacementApplicationServiceTest {
         summaryOfChanges = "summaryOfChanges",
         decisionSummary = "decisionSummary rejected",
       )
+
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+
+      val result = cas1PlacementApplicationService.recordDecision(
+        placementApplication.id,
+        placementApplicationDecisionEnvelope,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("Decision $decision is not supported")
+    }
+
+    @Test
+    fun `Rejecting sends a notification and returns successfully`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .withDecision(null)
+        .withCreatedByUser(createdByUser)
+        .produce()
+
+      val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
+        decision = PlacementApplicationDecisionDto.rejected,
+        summaryOfChanges = "summaryOfChanges",
+        decisionSummary = "decisionSummary rejected",
+      )
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -757,14 +787,7 @@ class Cas1PlacementApplicationServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        val expectedDecision = when (decision) {
-          PlacementApplicationDecisionDto.accepted -> PlacementApplicationDecision.ACCEPTED
-          PlacementApplicationDecisionDto.rejected -> PlacementApplicationDecision.REJECTED
-          PlacementApplicationDecisionDto.withdraw -> PlacementApplicationDecision.WITHDRAW
-          PlacementApplicationDecisionDto.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
-        }
-
-        assertThat(it.decision).isEqualTo(expectedDecision)
+        assertThat(it.decision).isEqualTo(PlacementApplicationDecision.REJECTED)
         assertThat(it.decisionMadeAt).isWithinTheLastMinute()
         assertThat(it.decisionSummary).isEqualTo("decisionSummary rejected")
 

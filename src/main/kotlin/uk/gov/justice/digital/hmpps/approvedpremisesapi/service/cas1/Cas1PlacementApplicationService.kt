@@ -466,7 +466,12 @@ class Cas1PlacementApplicationService(
       return CasResult.GeneralValidationError("This application has already had a decision set")
     }
 
-    if (placementApplicationDecisionEnvelope.decision == ApiPlacementApplicationDecision.accepted) {
+    val decisionDto = placementApplicationDecisionEnvelope.decision
+    if (decisionDto == ApiPlacementApplicationDecision.withdraw || decisionDto == ApiPlacementApplicationDecision.withdrawnByPp) {
+      return CasResult.GeneralValidationError("Decision $decisionDto is not supported")
+    }
+
+    if (decisionDto == ApiPlacementApplicationDecision.accepted) {
       val placementRequestResult =
         placementRequestService.createPlacementRequestsFromPlacementApplication(
           placementApplicationEntity,
@@ -481,18 +486,16 @@ class Cas1PlacementApplicationService(
     }
 
     placementApplicationEntity.apply {
-      decision = JpaPlacementApplicationDecision.valueOf(placementApplicationDecisionEnvelope.decision)
+      decision = JpaPlacementApplicationDecision.valueOf(decisionDto)
       decisionMadeAt = OffsetDateTime.now(clock)
       decisionSummary = placementApplicationDecisionEnvelope.decisionSummary
     }
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
-    when (placementApplicationDecisionEnvelope.decision) {
+    when (decisionDto) {
       ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplicationEntity)
       ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
-      ApiPlacementApplicationDecision.withdraw -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
-      ApiPlacementApplicationDecision.withdrawnByPp -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
     }
 
     cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
