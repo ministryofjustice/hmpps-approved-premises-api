@@ -121,6 +121,12 @@ data class PlacementApplicationEntity(
    */
   var withdrawalOccurredAt: OffsetDateTime? = null,
 
+  /**
+   * Before sentence and release type was captured on a placement application
+   * the PlacementType was used to determine the sort of placement
+   * being made. This can most likely be deprecated/removed as this information
+   * can be derived from [sentenceType], [releaseType] and [automatic]
+   */
   var placementType: PlacementType?,
 
   /**
@@ -152,21 +158,17 @@ data class PlacementApplicationEntity(
   var isWithdrawn: Boolean = false,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
-   * for authorised placement date
+   * If [submittedAt] is not null, this value will be set.
    */
   var expectedArrival: LocalDate? = null,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
-   * for authorised placement date
+   * Can be null even after submission if a duration could not be calculated ([calculatedPlacementDuration is null)
    */
   var requestedDuration: Int? = null,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
-   *
-   * for authorised placement date
+   * If [decision] is accepted, this value should be set
    */
   var authorisedDuration: Int? = null,
 
