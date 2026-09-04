@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -20,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenASubmittedCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
@@ -28,10 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
@@ -205,47 +204,21 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
     private fun returnsCas2v2UnexpiredApplications(userEntity: Cas2UserEntity, jwt: String) {
       val unexpiredSubset = setOf(
-        Pair("More information requested", UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")),
-        Pair("Awaiting decision", UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")),
-        Pair("On waiting list", UUID.fromString("a919097d-b324-471c-9834-756f255e87ea")),
-        Pair("Place offered", UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2")),
-        Pair("Offer accepted", UUID.fromString("fe254d88-ce1d-4cd8-8bd6-88de88f39019")),
-        Pair("Could not be placed", UUID.fromString("758eee61-2a6d-46b9-8bdd-869536d77f1b")),
-        Pair("Incomplete", UUID.fromString("4ad9bbfa-e5b0-456f-b746-146f7fd511dd")),
-        Pair("Offer declined or withdrawn", UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de")),
+        "moreInfoRequested",
+        "awaitingDecision",
+        "onWaitingList",
+        "placeOffered",
+        "offerAccepted",
+        "noPlaceOffered",
+        "incomplete",
+        "offerDeclined",
       )
 
       val expiredSubset = setOf(
-        Pair("Referral withdrawn", UUID.fromString("004e2419-9614-4c1e-a207-a8418009f23d")),
-        Pair("Referral cancelled", UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9")),
-        Pair("Awaiting arrival", UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")),
+        "withdrawn",
+        "cancelled",
+        "awaitingArrival",
       )
-
-      fun createApplication(
-        userEntity: Cas2UserEntity,
-        offenderDetails: OffenderDetailSummary,
-      ): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(userEntity)
-        withCrn(offenderDetails.otherIds.crn)
-        withCreatedAt(OffsetDateTime.now().minusDays(28))
-        withConditionalReleaseDate(LocalDate.now().plusDays(1))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
-
-      fun createStatusUpdate(
-        status: Pair<String, UUID>,
-        application: Cas2ApplicationEntity,
-      ): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
-        withLabel(status.first)
-        withStatusId(status.second)
-        withApplication(application)
-        withAssessor(
-          cas2UserEntityFactory.produceAndPersist {
-            withUserType(Cas2UserType.EXTERNAL)
-            withServiceOrigin(Cas2ServiceOrigin.BAIL)
-          },
-        )
-      }
 
       fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore(32)
       fun expiredDateTime() = unexpiredDateTime().minusDays(33)
@@ -255,30 +228,42 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
       givenAnOffender { offenderDetails, _ ->
         repeat(2) {
-          unexpiredApplicationIds.add(createApplication(userEntity, offenderDetails).id)
+          unexpiredApplicationIds.add(
+            givenAnUnsubmittedCas2Application(
+              createdBy = userEntity,
+              crn = offenderDetails.otherIds.crn,
+            )
+              .id,
+          )
         }
 
-        unexpiredSubset.union(expiredSubset).forEach {
-          val application = createApplication(userEntity, offenderDetails)
-          val statusUpdate = createStatusUpdate(it, application)
-          statusUpdate.createdAt = unexpiredDateTime()
-          cas2StatusUpdateRepository.save(statusUpdate)
+        unexpiredSubset.union(expiredSubset).forEach { statusName ->
+          val application = givenASubmittedCas2Application(
+            createdBy = userEntity,
+            crn = offenderDetails.otherIds.crn,
+            latestStatusName = statusName,
+            latestStatusSet = unexpiredDateTime(),
+          )
           unexpiredApplicationIds.add(application.id)
         }
 
-        unexpiredSubset.forEach {
-          val application = createApplication(userEntity, offenderDetails)
-          val statusUpdate = createStatusUpdate(it, application)
-          statusUpdate.createdAt = unexpiredDateTime()
-          cas2StatusUpdateRepository.save(statusUpdate)
+        unexpiredSubset.forEach { statusName ->
+          val application = givenASubmittedCas2Application(
+            createdBy = userEntity,
+            crn = offenderDetails.otherIds.crn,
+            latestStatusName = statusName,
+            latestStatusSet = unexpiredDateTime(),
+          )
           unexpiredApplicationIds.add(application.id)
         }
 
-        expiredSubset.forEach {
-          val application = createApplication(userEntity, offenderDetails)
-          val statusUpdate = createStatusUpdate(it, application)
-          statusUpdate.createdAt = expiredDateTime()
-          cas2StatusUpdateRepository.save(statusUpdate)
+        expiredSubset.forEach { statusName ->
+          val application = givenASubmittedCas2Application(
+            createdBy = userEntity,
+            crn = offenderDetails.otherIds.crn,
+            latestStatusName = statusName,
+            latestStatusSet = expiredDateTime(),
+          )
           expiredApplicationIds.add(application.id)
         }
 
@@ -298,7 +283,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
         val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
-        Assertions.assertThat(returnedApplicationIds == unexpiredApplicationIds).isTrue()
+        assertThat(returnedApplicationIds).isEqualTo(unexpiredApplicationIds)
       }
     }
 
@@ -416,7 +401,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
         // check transformers were able to return all fields
-        Assertions.assertThat(responseBody).anyMatch {
+        assertThat(responseBody).anyMatch {
           firstApplicationEntity.id == it.id &&
             firstApplicationEntity.crn == it.crn &&
             firstApplicationEntity.nomsNumber == it.nomsNumber &&
@@ -428,25 +413,25 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             firstApplicationEntity.createdByUser.name == it.createdByUserName
         }
 
-        Assertions.assertThat(responseBody).noneMatch {
+        assertThat(responseBody).noneMatch {
           thirdApplicationEntity.id == it.id
         }
 
-        Assertions.assertThat(responseBody).noneMatch {
+        assertThat(responseBody).noneMatch {
           otherCas2ApplicationEntity.id == it.id
         }
 
-        Assertions.assertThat(responseBody).noneMatch {
+        assertThat(responseBody).noneMatch {
           abandonedApplicationEntity.id == it.id
         }
 
-        Assertions.assertThat(responseBody[0].createdAt)
+        assertThat(responseBody[0].createdAt)
           .isEqualTo(secondApplicationEntity.createdAt.toInstant())
 
-        Assertions.assertThat(responseBody[0].latestStatusUpdate!!.label)
+        assertThat(responseBody[0].latestStatusUpdate!!.label)
           .isEqualTo(statusUpdate.label)
 
-        Assertions.assertThat(responseBody[1].createdAt)
+        assertThat(responseBody[1].createdAt)
           .isEqualTo(firstApplicationEntity.createdAt.toInstant())
       }
     }
@@ -498,12 +483,12 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             val responseBody =
               jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
-            Assertions.assertThat(responseBody.count()).isEqualTo(2)
-            Assertions.assertThat(responseBody).anyMatch {
+            assertThat(responseBody.count()).isEqualTo(2)
+            assertThat(responseBody).anyMatch {
               courtBailApplicationEntity.applicationOrigin == it.applicationOrigin
             }
 
-            Assertions.assertThat(responseBody).anyMatch {
+            assertThat(responseBody).anyMatch {
               prisonBailApplicationEntity.applicationOrigin == it.applicationOrigin
             }
           }
@@ -556,9 +541,9 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         val responseBodyPage1 =
           jsonMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
-        Assertions.assertThat(responseBodyPage1).size().isEqualTo(10)
+        assertThat(responseBodyPage1).size().isEqualTo(10)
 
-        Assertions.assertThat(isOrderedByCreatedAtDescending(responseBodyPage1)).isTrue()
+        assertThat(isOrderedByCreatedAtDescending(responseBodyPage1)).isTrue()
 
         val rawResponseBodyPage2 = webTestClient.get()
           .uri("/cas2/applications?page=2")
@@ -578,7 +563,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         val responseBodyPage2 =
           jsonMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
-        Assertions.assertThat(responseBodyPage2).size().isEqualTo(2)
+        assertThat(responseBodyPage2).size().isEqualTo(2)
       }
     }
 
@@ -809,22 +794,22 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
       val responseBody =
         jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
-      Assertions.assertThat(responseBody).noneMatch {
+      assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
       }
 
-      Assertions.assertThat(responseBody.filter { it.status == ApplicationStatus.submitted })
+      assertThat(responseBody.filter { it.status == ApplicationStatus.submitted })
         .allMatch {
           it.cohort == Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL
         }
 
-      Assertions.assertThat(responseBody.filter { it.status == ApplicationStatus.inProgress })
+      assertThat(responseBody.filter { it.status == ApplicationStatus.inProgress })
         .allMatch {
           it.cohort == Cas2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL
         }
 
       val uuids = responseBody.map { it.id }.toSet()
-      Assertions.assertThat(uuids).isEqualTo(submittedIds.union(unSubmittedIds))
+      assertThat(uuids).isEqualTo(submittedIds.union(unSubmittedIds))
     }
 
     @Test
@@ -843,14 +828,14 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
       val responseBody =
         jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
-      Assertions.assertThat(responseBody).noneMatch {
+      assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
       }
 
       val uuids = responseBody.map { it.id }.toSet()
-      Assertions.assertThat(uuids).isEqualTo(submittedIds)
-      Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
-      Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId)
+      assertThat(uuids).isEqualTo(submittedIds)
+      assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
+      assertThat(responseBody[0].latestStatusUpdate?.statusId)
         .isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
     }
 
@@ -871,9 +856,9 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
-      Assertions.assertThat(uuids).isEqualTo(submittedIds)
-      Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
-      Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId)
+      assertThat(uuids).isEqualTo(submittedIds)
+      assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
+      assertThat(responseBody[0].latestStatusUpdate?.statusId)
         .isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
     }
 
@@ -894,7 +879,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
-      Assertions.assertThat(uuids).isEqualTo(unSubmittedIds)
+      assertThat(uuids).isEqualTo(unSubmittedIds)
     }
   }
 
@@ -948,127 +933,127 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `get my submitted applications for prison referrals`() {
       val uuids1 = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=prisonBail")
-      Assertions.assertThat(uuids1).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
+      assertThat(uuids1).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
 
       val uuids2 = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser")
-      Assertions.assertThat(uuids2).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
+      assertThat(uuids2).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get my unsubmitted applications for prison referrals`() {
       val uuids1 = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=prisonBail")
-      Assertions.assertThat(uuids1).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id).toSet())
+      assertThat(uuids1).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id).toSet())
 
       val uuids2 = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=true")
-      Assertions.assertThat(uuids2).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id).toSet())
+      assertThat(uuids2).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get my submitted applications for court referrals`() {
       val uuids1 = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=courtBail")
-      Assertions.assertThat(uuids1).isEqualTo(listOf(primaryCourtBailSubmitted.id).toSet())
+      assertThat(uuids1).isEqualTo(listOf(primaryCourtBailSubmitted.id).toSet())
 
       val uuids2 = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=courtBail&limitByUser=true")
-      Assertions.assertThat(uuids2).isEqualTo(listOf(primaryCourtBailSubmitted.id).toSet())
+      assertThat(uuids2).isEqualTo(listOf(primaryCourtBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get my unsubmitted applications for court referrals`() {
       val uuids1 = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=courtBail")
-      Assertions.assertThat(uuids1).isEqualTo(listOf(primaryCourtBailUnsubmitted.id).toSet())
+      assertThat(uuids1).isEqualTo(listOf(primaryCourtBailUnsubmitted.id).toSet())
 
       val uuids2 = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=true")
-      Assertions.assertThat(uuids2).isEqualTo(listOf(primaryCourtBailUnsubmitted.id).toSet())
+      assertThat(uuids2).isEqualTo(listOf(primaryCourtBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get all submitted applications for prison referrals`() {
       val uuids = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser=false")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id, secondaryPrisonBailSubmitted.id, deliusPrisonBailSubmitted.id).toSet())
+      assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id, secondaryPrisonBailSubmitted.id, deliusPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get all unsubmitted applications for prison referrals`() {
       val uuids = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=false")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id, secondaryPrisonBailUnsubmitted.id, deliusPrisonBailUnsubmitted.id).toSet())
+      assertThat(uuids).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id, secondaryPrisonBailUnsubmitted.id, deliusPrisonBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get all submitted applications for court referrals`() {
       val uuids = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=courtBail&limitByUser=false")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailSubmitted.id, secondaryCourtBailSubmitted.id, deliusCourtBailSubmitted.id).toSet())
+      assertThat(uuids).isEqualTo(listOf(primaryCourtBailSubmitted.id, secondaryCourtBailSubmitted.id, deliusCourtBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get all unsubmitted applications for court referrals`() {
       val uuids = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=false")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailUnsubmitted.id, secondaryCourtBailUnsubmitted.id, deliusCourtBailUnsubmitted.id).toSet())
+      assertThat(uuids).isEqualTo(listOf(primaryCourtBailUnsubmitted.id, secondaryCourtBailUnsubmitted.id, deliusCourtBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get application by crn`() {
       val uuids = fetchApplications("/cas2/applications?limitByUser=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.crn}")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
+      assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get application by offender noms number`() {
       val uuids = fetchApplications("/cas2/applications?limitByUser=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
+      assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `fail to get application by offender noms number when created by other user and limit by user`() {
       val uuids1 = fetchApplications("/cas2/applications?crnOrNomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
-      Assertions.assertThat(uuids1.size).isEqualTo(0)
+      assertThat(uuids1.size).isEqualTo(0)
 
       val uuids2 = fetchApplications("/cas2/applications?limitByUser=true&crnOrNomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
-      Assertions.assertThat(uuids2.size).isEqualTo(0)
+      assertThat(uuids2.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender noms number when app origin is other source`() {
       val uuids1 = fetchApplications("/cas2/applications?applicationOrigin=courtBail&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
-      Assertions.assertThat(uuids1.size).isEqualTo(0)
+      assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender noms number when app is submitted and isSubmitted is false`() {
       val uuids1 = fetchApplications("/cas2/applications?isSubmitted=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
-      Assertions.assertThat(uuids1.size).isEqualTo(0)
+      assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender noms number when app is unsubmitted and isSubmitted is true`() {
       val uuids1 = fetchApplications("/cas2/applications?isSubmitted=true&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
-      Assertions.assertThat(uuids1.size).isEqualTo(0)
+      assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when created by other user and limit by user`() {
       val uuids1 = fetchApplications("/cas2/applications?crnOrNomsNumber=${secondaryPrisonBailSubmitted.crn}")
-      Assertions.assertThat(uuids1.size).isEqualTo(0)
+      assertThat(uuids1.size).isEqualTo(0)
 
       val uuids2 = fetchApplications("/cas2/applications?limitByUser=true&crnOrNomsNumber=${secondaryPrisonBailSubmitted.crn}")
-      Assertions.assertThat(uuids2.size).isEqualTo(0)
+      assertThat(uuids2.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app origin is other source`() {
       val uuids1 = fetchApplications("/cas2/applications?applicationOrigin=courtBail&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.crn}")
-      Assertions.assertThat(uuids1.size).isEqualTo(0)
+      assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app is submitted and isSubmitted is false`() {
       val uuids1 = fetchApplications("/cas2/applications?isSubmitted=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.crn}")
-      Assertions.assertThat(uuids1.size).isEqualTo(0)
+      assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app is unsubmitted and isSubmitted is true`() {
       val uuids1 = fetchApplications("/cas2/applications?isSubmitted=true&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.crn}")
-      Assertions.assertThat(uuids1.size).isEqualTo(0)
+      assertThat(uuids1.size).isEqualTo(0)
     }
 
     private fun fetchApplications(url: String): Set<UUID> {
@@ -1217,9 +1202,9 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               Cas2Application::class.java,
             )
 
-            Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
+            assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
 
-            Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
+            assertThat(responseBody.timelineEvents!!.map { event -> event.label })
               .isEqualTo(listOf("Application submitted"))
           }
         }
@@ -1319,9 +1304,9 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
                 Cas2Application::class.java,
               )
 
-              Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
+              assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
 
-              Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
+              assertThat(responseBody.timelineEvents!!.map { event -> event.label })
                 .isEqualTo(listOf("Application submitted"))
             }
           }
@@ -1506,7 +1491,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .isCreated
           .returnResult(Cas2Application::class.java)
 
-        Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
+        assertThat(result.responseHeaders["Location"]).anyMatch {
           it.matches(Regex("/cas2/applications/.+"))
         }
 
@@ -1598,8 +1583,8 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
         val result = jsonMapper.readValue(resultBody, Cas2Application::class.java)
 
-        Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
-        Assertions.assertThat(result.cohort).isEqualTo(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW)
+        assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+        assertThat(result.cohort).isEqualTo(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW)
       }
     }
   }
@@ -1688,8 +1673,8 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         val responseBody =
           jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
-        Assertions.assertThat(responseBody.size).isEqualTo(6)
-        Assertions.assertThat(
+        assertThat(responseBody.size).isEqualTo(6)
+        assertThat(
           submittedPrisonBailApplications.map { it.id.toString() }.sorted(),
         ).isEqualTo(
           responseBody.map { it.id.toString() }.sorted(),
