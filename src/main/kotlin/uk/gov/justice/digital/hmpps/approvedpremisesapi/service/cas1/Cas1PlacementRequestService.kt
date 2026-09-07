@@ -127,7 +127,7 @@ class Cas1PlacementRequestService(
     return CasResult.Success(placementRequest)
   }
 
-  fun createPlacementRequestsFromPlacementApplication(
+  fun createPlacementRequestFromPlacementApplication(
     placementApplicationEntity: PlacementApplicationEntity,
     notes: String?,
   ): CasResult<Unit> {

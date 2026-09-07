@@ -729,7 +729,7 @@ class Cas1PlacementApplicationServiceTest {
       )
 
       every {
-        placementRequestService.createPlacementRequestsFromPlacementApplication(any(), any())
+        placementRequestService.createPlacementRequestFromPlacementApplication(any(), any())
       } returns CasResult.Success(Unit)
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
@@ -747,7 +747,7 @@ class Cas1PlacementApplicationServiceTest {
         assertThat(it.decisionSummary).isEqualTo("decisionSummary accepted")
         assertThat(it.authorisedDuration).isEqualTo(7)
 
-        verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
+        verify { placementRequestService.createPlacementRequestFromPlacementApplication(placementApplication, "decisionSummary accepted") }
         verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
         verify {
           cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
