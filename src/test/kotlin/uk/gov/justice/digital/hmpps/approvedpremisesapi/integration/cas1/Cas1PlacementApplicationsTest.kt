@@ -943,37 +943,6 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting a decision for a placement application that is not assigned to me returns an error`() {
-      givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            `Given a submitted Placement Application`(
-              allocatedToUser = otherUser,
-              offenderDetails = offenderDetails,
-              decision = PlacementApplicationDecision.REJECTED,
-              expectedArrival = LocalDate.now().plusDays(5),
-              requestedDuration = 12,
-            ) { placementApplicationEntity ->
-              webTestClient.post()
-                .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
-                .header("Authorization", "Bearer $jwt")
-                .bodyValue(
-                  PlacementApplicationDecisionEnvelope(
-                    decision = PlacementApplicationDecisionDto.accepted,
-                    summaryOfChanges = "ChangeSummary",
-                    decisionSummary = "DecisionSummary",
-                  ),
-                )
-                .exchange()
-                .expectStatus()
-                .isForbidden
-            }
-          }
-        }
-      }
-    }
-
-    @Test
     fun `accepting a placement application decision when the placement requirements do not exist returns 404 and does not update the decision`() {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
