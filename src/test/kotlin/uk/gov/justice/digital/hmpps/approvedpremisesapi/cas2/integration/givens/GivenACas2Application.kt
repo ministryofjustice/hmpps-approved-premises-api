@@ -34,6 +34,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
   crn: String = "CRN_1",
   noms: String? = "NOMS_1",
   createdAt: OffsetDateTime = OffsetDateTime.now(),
+  abandonedAt: OffsetDateTime? = null,
 ): Cas2ApplicationEntity {
   val application = cas2ApplicationEntityFactory.produceAndPersist {
     withCreatedByUser(
@@ -49,6 +50,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
     withData("{}")
     withSubmittedAt(null)
     withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    withAbandonedAt(abandonedAt)
   }
 
   return application
