@@ -53,6 +53,7 @@ class Cas1PlacementApplicationService(
   private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
   private val jsonMapper: JsonMapper,
   private val tierService: TierService,
+  private val placementApplicationValidationService: Cas1PlacementApplicationValidationService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -446,31 +447,31 @@ class Cas1PlacementApplicationService(
   @Transactional
   fun recordDecision(
     id: UUID,
-    placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
+    decisionEnvelope: PlacementApplicationDecisionEnvelope,
   ): CasResult<PlacementApplicationEntity> {
     val user = userService.getUserForRequest()
 
     lockablePlacementApplicationRepository.acquirePessimisticLock(id)
 
-    val placementApplicationEntity =
-      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound(
-        entityType = "PlacementApplication",
-        id = id.toString(),
+    val validatedDecision = when (
+      val validationResult = placementApplicationValidationService.validateDecision(
+        id,
+        decisionEnvelope,
+        user,
       )
-
-    if (placementApplicationEntity.allocatedToUser != user) {
-      return CasResult.Unauthorised()
+    ) {
+      is CasResult.Success -> validationResult.value
+      is CasResult.Error -> return validationResult.reviseType()
     }
 
-    if (placementApplicationEntity.decision != null) {
-      return CasResult.GeneralValidationError("This application has already had a decision set")
-    }
+    val placementApplicationEntity = validatedDecision.placementApplication
+    val decisionDto = decisionEnvelope.decision
 
-    if (placementApplicationDecisionEnvelope.decision == ApiPlacementApplicationDecision.accepted) {
+    if (decisionDto == ApiPlacementApplicationDecision.accepted) {
       val placementRequestResult =
         placementRequestService.createPlacementRequestsFromPlacementApplication(
           placementApplicationEntity,
-          placementApplicationDecisionEnvelope.decisionSummary,
+          decisionEnvelope.decisionSummary,
         )
 
       if (placementRequestResult is CasResult.Error) {
@@ -481,27 +482,26 @@ class Cas1PlacementApplicationService(
     }
 
     placementApplicationEntity.apply {
-      decision = JpaPlacementApplicationDecision.valueOf(placementApplicationDecisionEnvelope.decision)
+      decision = JpaPlacementApplicationDecision.valueOf(decisionDto)
       decisionMadeAt = OffsetDateTime.now(clock)
-      decisionSummary = placementApplicationDecisionEnvelope.decisionSummary
+      decisionSummary = decisionEnvelope.decisionSummary
     }
 
-    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+    val savedPlacementApplication = placementApplicationRepository.save(placementApplicationEntity)
 
-    when (placementApplicationDecisionEnvelope.decision) {
-      ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplicationEntity)
-      ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
-      ApiPlacementApplicationDecision.withdraw -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
-      ApiPlacementApplicationDecision.withdrawnByPp -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
+    when (decisionDto) {
+      ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(savedPlacementApplication)
+      ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(savedPlacementApplication)
+      else -> error("Decision type $decisionDto is not supported")
     }
 
     cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
-      savedApplication,
+      savedPlacementApplication,
       user,
-      placementApplicationDecisionEnvelope,
+      decisionEnvelope,
     )
 
-    return CasResult.Success(savedApplication)
+    return CasResult.Success(savedPlacementApplication)
   }
 
   private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<CasResult<T>, PlacementApplicationEntity> {

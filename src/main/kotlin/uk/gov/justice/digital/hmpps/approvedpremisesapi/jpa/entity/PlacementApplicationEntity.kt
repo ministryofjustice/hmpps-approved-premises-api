@@ -121,6 +121,12 @@ data class PlacementApplicationEntity(
    */
   var withdrawalOccurredAt: OffsetDateTime? = null,
 
+  /**
+   * Before sentence and release type was captured on a placement application
+   * the PlacementType was used to determine the sort of placement
+   * being made. This can most likely be deprecated/removed as this information
+   * can be derived from [sentenceType], [releaseType] and [automatic]
+   */
   var placementType: PlacementType?,
 
   /**

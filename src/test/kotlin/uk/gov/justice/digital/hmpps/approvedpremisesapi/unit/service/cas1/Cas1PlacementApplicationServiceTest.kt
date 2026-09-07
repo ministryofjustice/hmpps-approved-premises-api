@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
@@ -49,6 +50,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationValidationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationValidationService.ValidatedDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
@@ -76,6 +79,7 @@ class Cas1PlacementApplicationServiceTest {
   private val lockablePlacementApplicationRepository = mockk<LockablePlacementApplicationRepository>()
   private val jsonMapper = mockk<JsonMapper>()
   private val tierService = mockk<TierService>()
+  private val cas1PlacementApplicationValidationService = mockk<Cas1PlacementApplicationValidationService>()
 
   private val cas1PlacementApplicationService = Cas1PlacementApplicationService(
     placementApplicationRepository,
@@ -90,6 +94,7 @@ class Cas1PlacementApplicationServiceTest {
     lockablePlacementApplicationRepository,
     jsonMapper,
     tierService,
+    cas1PlacementApplicationValidationService,
   )
 
   @Nested
@@ -652,27 +657,50 @@ class Cas1PlacementApplicationServiceTest {
 
   @Nested
   inner class DecisionTest {
-    lateinit var user: UserEntity
-    lateinit var createdByUser: UserEntity
+    val user = UserEntityFactory().withDefaults().produce()
+    val createdByUser = UserEntityFactory().withDefaults().produce()
 
     @BeforeEach
     fun setup() {
-      user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
       every { userService.getUserForRequest() } returns user
+    }
 
-      createdByUser = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CasResultFactory#oneOfEachErrorType")
+    fun `Returns validation result if validation fails`(validationResult: CasResult.Error<ValidatedDecision>) {
+      val placementApplication = PlacementApplicationEntityFactory().withDefaults().produce()
+
+      val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
+        decision = PlacementApplicationDecisionDto.accepted,
+        summaryOfChanges = "summaryOfChanges",
+        decisionSummary = "decisionSummary accepted",
+      )
+
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
+
+      every {
+        cas1PlacementApplicationValidationService.validateDecision(
+          placementApplication.id,
+          placementApplicationDecisionEnvelope,
+          user,
+        )
+      } returns validationResult
+
+      val result = cas1PlacementApplicationService.recordDecision(
+        placementApplication.id,
+        placementApplicationDecisionEnvelope,
+      )
+
+      assertThat(result).isEqualTo(validationResult)
+
+      verify(exactly = 0) {
+        placementApplicationRepository.save(any())
+      }
     }
 
     @Test
     fun `Accepting sends a notification and returns successfully`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .produce()
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
 
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
@@ -690,7 +718,16 @@ class Cas1PlacementApplicationServiceTest {
 
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
 
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every {
+        cas1PlacementApplicationValidationService.validateDecision(
+          placementApplication.id,
+          placementApplicationDecisionEnvelope,
+          user,
+        )
+      } returns CasResult.Success(
+        ValidatedDecision(placementApplication),
+      )
+
       every {
         placementRequestService.createPlacementRequestsFromPlacementApplication(any(), any())
       } returns CasResult.Success(Unit)
@@ -722,16 +759,9 @@ class Cas1PlacementApplicationServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource(
-      value = PlacementApplicationDecisionDto::class,
-      names = ["accepted"],
-      mode = EnumSource.Mode.EXCLUDE,
-    )
-    fun `Rejecting sends a notification and returns successfully`(decision: PlacementApplicationDecisionDto) {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .produce()
+    @Test
+    fun `Rejecting sends a notification and returns successfully`() {
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
 
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
@@ -741,12 +771,22 @@ class Cas1PlacementApplicationServiceTest {
         .produce()
 
       val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
-        decision = decision,
+        decision = PlacementApplicationDecisionDto.rejected,
         summaryOfChanges = "summaryOfChanges",
         decisionSummary = "decisionSummary rejected",
       )
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+
+      every {
+        cas1PlacementApplicationValidationService.validateDecision(
+          placementApplication.id,
+          placementApplicationDecisionEnvelope,
+          user,
+        )
+      } returns CasResult.Success(
+        ValidatedDecision(placementApplication),
+      )
+
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationEmailService.placementApplicationRejected(any()) } returns Unit
       every { cas1PlacementApplicationDomainEventService.placementApplicationAssessed(any(), any(), any()) } returns Unit
@@ -757,14 +797,7 @@ class Cas1PlacementApplicationServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        val expectedDecision = when (decision) {
-          PlacementApplicationDecisionDto.accepted -> PlacementApplicationDecision.ACCEPTED
-          PlacementApplicationDecisionDto.rejected -> PlacementApplicationDecision.REJECTED
-          PlacementApplicationDecisionDto.withdraw -> PlacementApplicationDecision.WITHDRAW
-          PlacementApplicationDecisionDto.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
-        }
-
-        assertThat(it.decision).isEqualTo(expectedDecision)
+        assertThat(it.decision).isEqualTo(PlacementApplicationDecision.REJECTED)
         assertThat(it.decisionMadeAt).isWithinTheLastMinute()
         assertThat(it.decisionSummary).isEqualTo("decisionSummary rejected")
 
