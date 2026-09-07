@@ -20,13 +20,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests.SubjectAccessRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelper
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -47,8 +49,12 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     const val SUBMITTED_AT_NO_TZ = "2021-10-19T16:00:00"
     const val ARRIVED_AT = "2021-09-20T16:00:00+00:00"
     const val ALLOCATED_AT = "2021-09-21T16:00:00+00:00"
+    const val ALLOCATED_AT_NO_TZ = "2021-09-21T16:00:00"
+    const val REALLOCATED_AT = "2021-09-25T16:00:00+00:00"
+    const val REALLOCATED_AT_NO_TZ = "2021-09-25T16:00:00"
     const val CREATED_AT_NO_TZ = "2021-09-18T16:00:00"
     const val DUE_AT = "2021-09-22T16:00:00+00:00"
+    const val DUE_AT_NO_TZ = "2021-09-22T16:00:00"
     const val DEPARTED_AT = "2021-09-23T16:00:00+00:00"
     const val NEW_DEPARTED_AT = "2021-09-24T16:00:00+00:00"
     const val CANCELLATION_DATE = "2021-09-25T16:00:00+00:00"
@@ -62,10 +68,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     const val EVENT_NUMBER = "1"
     const val OFFENCE_ID = "BEING_BAD"
     const val CONVICTION_ID = 2L
-    val RELEASE_TYPE_CONDITIONAL = Cas1ReleaseType.reReleasedPostRecall
-    const val WITHDRAWAL_REASON_NOT_WITHDRAWN = "NOT WITHDRAWN"
-    const val OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE = "NOT APPLICABLE"
-    const val SENTENCE_TYPE_CUSTODIAL = "CUSTODIAL"
     const val NAME = "Jeffity Jeff"
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
@@ -89,8 +91,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   protected fun cancellationJson(cancellation: Cas3CancellationEntity): String =
     """
       {
-          "crn": "${cancellation.booking.crn}",
-          "noms_number": "${cancellation.booking.nomsNumber}",
           "notes": "${cancellation.notes}",
           "cancellation_date": "$cancellationDateOnly",
           "cancellation_reason": "${cancellation.reason.name}",
@@ -102,8 +102,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   protected fun bookingExtensionJson(bookingExtension: Cas3ExtensionEntity): String =
     """
       {
-        "crn": "${bookingExtension.booking.crn}",
-        "noms_number": "${bookingExtension.booking.nomsNumber}",
         "previous_departure_date": "$previousDepartureDateOnly",
         "new_departure_date": "$newDepartureDateOnly",
         "notes": "${bookingExtension.notes}",
@@ -114,8 +112,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   protected fun bookingsJson(booking: Cas3BookingEntity): String =
     """
       {
-         "crn": "${booking.crn}",
-         "noms_number": "${booking.nomsNumber}",
          "arrival_date": "${booking.arrivalDate}",
          "departure_date": "${booking.departureDate}",
          "original_arrival_date": "${booking.originalArrivalDate}",
@@ -168,6 +164,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     )
 
     return cas3BookingEntityFactory.produceAndPersist {
+      withId(UUID.fromString("82f972cc-9e74-4a8c-b398-becb4c14b4c4"))
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber)
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
@@ -186,27 +183,55 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   fun risksJson(): String =
     """
       {
-          "roshRisks" : {
-            "status" : "NotFound",
-            "value" : null
+          "roshRisks": {
+                  "status": "Retrieved",
+                  "value": {
+                          "overallRisk": "Medium",
+                          "riskToChildren": "Medium",
+                          "riskToPublic": "Medium",
+                          "riskToKnownAdult": "Medium",
+                          "riskToStaff": "Medium",
+                          "lastUpdated": [
+                                  2026,
+                                  5,
+                                  15
+                          ]
+                  }
           },
-          "mappa" : {
-            "status" : "NotFound",
-            "value" : null
+          "mappa": {
+                  "status": "Retrieved",
+                  "value": {
+                          "level": "CAT A/LEVEL 1",
+                          "lastUpdated": [
+                                  2023,
+                                  6,
+                                  26
+                          ]
+                  }
           },
-          "tier" : {
-            "status" : "Retrieved",
-            "value" : {
-              "level" : "M1",
-              "lastUpdated" : [ 2023, 6, 26 ],
-              "version" : "V2"
-            }
+          "tier": {
+                  "status": "Retrieved",
+                  "value": {
+                          "level": "M1",
+                          "lastUpdated": [
+                                  2023,
+                                  6,
+                                  26
+                          ],
+                          "version": "V2"
+                  }
           },
-          "flags" : {
-            "status" : "NotFound",
-            "value" : null
+          "flags": {
+                  "status": "Retrieved",
+                  "value": [
+                          "Risk to Children",
+                          "Risk to Known Adult",
+                          "Risk to Prisoner",
+                          "Risk to Public",
+                          "Risk to Staff"
+                  ]
           }
-      }
+  }
     """.trimIndent()
 
   fun personRisks() = PersonRisksFactory()
@@ -219,36 +244,43 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
         ),
       ),
     ).withRoshRisks(
-      RiskWithStatus(status = RiskStatus.NotFound),
+      RiskWithStatus(
+        status = RiskStatus.Retrieved,
+        RoshRisks(
+          overallRisk = "Medium",
+          riskToChildren = "Medium",
+          riskToPublic = "Medium",
+          riskToKnownAdult = "Medium",
+          riskToStaff = "Medium",
+          lastUpdated = LocalDate.parse("2026-05-15"),
+        ),
+      ),
     ).withMappa(
-      RiskWithStatus(status = RiskStatus.NotFound),
+      RiskWithStatus(
+        status = RiskStatus.Retrieved,
+        Mappa(
+          level = "CAT A/LEVEL 1",
+          lastUpdated = LocalDate.parse("2023-06-26"),
+        ),
+      ),
     ).withFlags(
-      RiskWithStatus(status = RiskStatus.NotFound),
+      RiskWithStatus(
+        status = RiskStatus.Retrieved,
+        value = listOf("Risk to Children", "Risk to Known Adult", "Risk to Prisoner", "Risk to Public", "Risk to Staff"),
+      ),
     ).produce()
 
-  fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String =
-    """
+  fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String = """
       {
-        "crn": "${domainEvent.crn}",
         "type": "${domainEvent.type}",
         "occurred_at": "$ALLOCATED_AT",
         "created_at": "$CREATED_AT",
         "data": ${domainEvent.data},
-        "triggered_by_user": ${user?.let {"\"${it.name}\""} ?: "null"},
-        "noms_number": "${domainEvent.nomsNumber}"
-      }
-    """.trimIndent()
-
-  fun domainEventsMetadataJson(domainEvent: DomainEventEntity): String =
-    """
-      {
-        "crn": "${domainEvent.crn}",
-        "noms_number": "${domainEvent.nomsNumber}",
-        "created_at": "$CREATED_AT",
-        "name": "${MetaDataName.CAS1_REQUESTED_AP_TYPE}",
-        "value": "${ApprovedPremisesType.NORMAL}"
-      }
-    """.trimIndent()
+        "triggered_by_username": ${user?.let { "\"${it.deliusUsername}\"" } ?: "null"},
+        "application_submitted_at": "$SUBMITTED_AT",
+        "cas3_booking_premises_name": null,
+        "cas3_booking_arrival_date": null }
+  """.trimIndent()
 
   fun domainEventEntity(
     offender: OffenderDetailSummary,
@@ -257,24 +289,48 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     userId: UUID?,
     type: DomainEventType,
     serviceName: ServiceName = ServiceName.approvedPremises,
+    bookingId: UUID? = null,
+  ) = domainEventEntity(
+    params = DomainEventBuilderParams(offender, applicationId, assessmentId, userId, serviceName, bookingId),
+    type = type,
+  )
+
+  fun domainEventEntity(
+    params: DomainEventBuilderParams,
+    type: DomainEventType,
+    data: Any? = null,
   ): DomainEventEntity = domainEventFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withService(serviceName)
-    withCrn(offender.otherIds.crn)
-    withNomsNumber(offender.otherIds.nomsNumber)
-    withApplicationId(applicationId)
-    withAssessmentId(assessmentId)
+    withService(params.serviceName)
+    withCrn(params.offender.otherIds.crn)
+    withNomsNumber(params.offender.otherIds.nomsNumber)
+    withApplicationId(params.applicationId)
+    withAssessmentId(params.assessmentId)
     withType(type)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withOccurredAt(OffsetDateTime.parse(ALLOCATED_AT))
-    withData("{ }")
-    withTriggeredByUserId(userId)
+    withData(
+      data?.let {
+        jsonMapper.writeValueAsString(data)
+      } ?: " { } ",
+    )
+    withTriggeredByUserId(params.userId)
     withMetadata(
       mapOf(
         MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),
       ),
     )
+    withBookingId(params.bookingId)
   }
+
+  data class DomainEventBuilderParams(
+    val offender: OffenderDetailSummary,
+    val applicationId: UUID,
+    val assessmentId: UUID,
+    val userId: UUID?,
+    val serviceName: ServiceName,
+    val bookingId: UUID? = null,
+  )
 
   fun probationRegionEntity(
     name: String = "Probation Region ${randomStringMultiCaseWithNumbers(5)}",
@@ -283,8 +339,11 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withApArea(givenAnApArea(name = "Probation Area ${randomStringMultiCaseWithNumbers(5)}"))
   }
 
-  fun userEntity(): UserEntity = userEntityFactory.produceAndPersist {
+  fun userEntity(
+    username: String? = randomStringUpperCase(12),
+  ): UserEntity = userEntityFactory.produceAndPersist {
     withProbationRegion(givenAProbationRegion())
+    withDeliusUsername(username)
   }
 
   fun probationDeliveryUnitEntity(

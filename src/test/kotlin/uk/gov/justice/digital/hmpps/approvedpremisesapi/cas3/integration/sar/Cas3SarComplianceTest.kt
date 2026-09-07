@@ -2,11 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.LocalDate
 
 /**
@@ -20,6 +18,7 @@ import java.time.LocalDate
  * This class verifies CAS3's slice end-to-end against CAS3-specific fixtures
  * via [CasSarFixtureAsserter].
  */
+@SuppressWarnings("LongMethod")
 class Cas3SarComplianceTest : Cas3SarTestBase() {
 
   companion object {
@@ -37,8 +36,8 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
 
     const val EXPECTED_API_RESPONSE_PATH = "/sar/cas3-expected-api-response.json"
     const val EXPECTED_REPORT_PATH = "/sar/cas3-expected-report.html"
-    const val GENERATED_API_RESPONSE_FILENAME = "cas3-sar-api-response.json.log"
-    const val GENERATED_REPORT_FILENAME = "cas3-sar-report.html.log"
+    const val GENERATED_API_RESPONSE_FILENAME = "cas3-expected-api-response.json.log"
+    const val GENERATED_REPORT_FILENAME = "cas3-expected-report.html.log"
   }
 
   private val asserter by lazy {
@@ -58,7 +57,6 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     assessmentReferralUserNoteRepository.deleteAll()
     temporaryAccommodationAssessmentRepository.deleteAll()
     temporaryAccommodationApplicationRepository.deleteAll()
-    domainEventRepository.deleteAll()
   }
 
   private fun setupTestData() {
@@ -73,21 +71,14 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     val user = userEntityFactory.produceAndPersist {
       withName(TEST_CREATED_BY_USER_NAME)
       withProbationRegion(givenAProbationRegion())
+      withDeliusUsername(TEST_CREATED_BY_USER_NAME)
     }
     val assessor = userEntityFactory.produceAndPersist {
       withName(TEST_ASSESSOR_NAME)
       withProbationRegion(givenAProbationRegion())
+      withDeliusUsername("ASSESOR_USERNAME")
     }
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(
-      offenderDetails,
-      user,
-      dutyToReferLocalAuthorityAreaName = TEST_DUTY_TO_REFER_AREA,
-      probationRegionName = TEST_PROBATION_REGION,
-      probationDeliveryUnitName = "SAR-TEST-PDU-1",
-      data = CAS3_APPLICATION_DATA,
-      document = "null",
-    )
-    temporaryAccommodationApplicationEntity(
       offenderDetails,
       user,
       dutyToReferLocalAuthorityAreaName = TEST_DUTY_TO_REFER_AREA,
@@ -109,7 +100,6 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     )
     bookingExtensionEntity(booking)
     cancellationEntity(booking)
-    domainEventEntity(offenderDetails, temporaryAccommodationApplication.id, temporaryAccommodationAssessment.id, user.id, DomainEventType.CAS3_REFERRAL_SUBMITTED, ServiceName.temporaryAccommodation)
   }
 
   @Test

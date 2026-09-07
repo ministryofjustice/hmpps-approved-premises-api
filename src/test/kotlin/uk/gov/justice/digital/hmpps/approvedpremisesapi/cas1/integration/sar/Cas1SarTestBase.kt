@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar.Cas1SarComplianceTest.Companion.TEST_APPLICATION_CREATED_BY_USER_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
@@ -33,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
@@ -62,7 +62,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     const val ADDITIONAL_INFORMATION = "some additional information"
     const val CAS1_DATA_PATH = "db/seed/dev+test/cas1_application_data"
 
-    val TRANSFER_TYPE = TransferType.PLANNED
     val TRANSFER_REASON = TransferReason.movingPersonCloserToResettlementArea
 
     val CAS1_APPLICATION_DATA by lazy { readResource("$CAS1_DATA_PATH/application_data.json") }
@@ -77,10 +76,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
   protected fun spaceBookingsJson(booking: Cas1SpaceBookingEntity): String =
     """
       {
-         "crn": "${booking.crn}",
          "noms_number":  ${if (booking.application != null) "\"${booking.application!!.nomsNumber}\"" else "null"},
-         "canonical_arrival_date": ${if (booking.canonicalArrivalDate != null) "\"${booking.canonicalArrivalDate}\"" else null},
-         "canonical_departure_date": ${if (booking.canonicalDepartureDate != null) "\"${booking.canonicalDepartureDate}\"" else null},
          "expected_arrival_date": ${if (booking.expectedArrivalDate != null) "\"${booking.expectedArrivalDate}\"" else null},
          "expected_departure_date": ${if (booking.expectedDepartureDate != null) "\"${booking.expectedDepartureDate}\"" else null},
          "actual_arrival_date": ${if (booking.actualArrivalDate != null) "\"${booking.actualArrivalDate}\"" else null},
@@ -92,11 +88,9 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
          "non_arrival_reason": ${if (booking.nonArrivalReason != null) "\"${booking.nonArrivalReason!!.name}\"" else null},
          "tier": ${if (booking.application?.riskRatings?.tier?.value?.level != null) "\"${booking.application?.riskRatings?.tier?.value?.level}\"" else null},
          "created_at": "$CREATED_AT",
-         "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
          "key_worker_assigned_at": "$CREATED_AT",
-         "key_worker_name": "${booking.keyWorkerName}",
+         "key_worker_name": ${booking.keyWorkerName?.let { "\"${it.trim().substringAfterLast(' ')}\"" } ?: "null"},
          "premises_name": "${booking.premises.name}",
-         "person_name": ${if (booking.application != null) "\"${booking.application!!.name}\"" else "\"${booking.offlineApplication!!.name}\""},
          "delius_event_number": "${booking.deliusEventNumber}",
          "created_by_user_name":  ${booking.createdBy?.let { "\"${it.name}\"" }},
          "departure_reason": ${booking.departureReason?.let { "\"${it.name}\"" }},
@@ -107,7 +101,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
          "cancellation_occurred_at": ${if (booking.cancellationOccurredAt != null) "\"${booking.cancellationOccurredAt}\"" else null},
          "cancellation_recorded_at": "$CANCELLATION_DATE",
          "characteristics_property_names": "${booking.criteria?.let{ it.map { criteria -> criteria.propertyName}.sortedBy{ propertyName -> propertyName }.joinToString(",")}}",
-         "transfer_type": ${booking.transferType?.let { "\"${booking.transferType}\"" }},
          "additional_information": ${booking.additionalInformation?.let { "\"${it}\"" }},
          "transfer_reason": ${booking.transferReason?.let { "\"${it.name}\"" }}
       }
@@ -122,7 +115,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     moveOnCategory: MoveOnCategoryEntity? = null,
     cancellationReason: CancellationReasonEntity? = null,
     offlineApplication: OfflineApplicationEntity? = null,
-    transferType: TransferType? = null,
     additionalInformation: String? = null,
     transferReason: TransferReason? = null,
     createdByUser: UserEntity? = null,
@@ -150,8 +142,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
       withActualDepartureDate(LocalDate.parse(departedAtDateOnly))
       withActualDepartureTime(LocalTime.parse(departedAtTime))
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withKeyworkerStaffCode("KEYWORKERSTAFFCODE")
-      withKeyworkerName("KEYWORKERNAME")
+      withKeyworkerName("KEY WORKER SURNAME")
       withKeyworkerAssignedAt(OffsetDateTime.parse(CREATED_AT).toInstant())
       withCreatedBy(user)
       withDeliusEventNumber("DELIUSEVENTNUMBER")
@@ -171,7 +162,6 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
         ),
       )
       withOfflineApplication(offlineApplication)
-      withTransferType(transferType)
       withAdditionalInformation(additionalInformation)
       withTransferReason(transferReason)
     }
@@ -220,7 +210,9 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     data: String = DATA_JSON_SIMPLE,
     document: String = DOCUMENT_JSON_SIMPLE,
   ): ApprovedPremisesApplicationEntity {
-    val user = createdByUser ?: userEntity()
+    val user = createdByUser ?: userEntity(
+      username = TEST_APPLICATION_CREATED_BY_USER_NAME,
+    )
     val applicantUserDetails = cas1ApplicationUserDetailsEntity(applicantUserName)
     val caseManagerUserDetails = cas1CaseManagerUserDetailsEntity(caseManagerName)
     return approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -243,7 +235,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
       withIsEmergencyApplication(true)
       withTargetLocation(null)
       withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
-      withInmateInOutStatusOnSubmission(null)
+      withInmateInOutStatusOnSubmission("OUT")
       withSentenceType(SENTENCE_TYPE_CUSTODIAL)
       withNoticeType(Cas1ApplicationTimelinessCategory.emergency)
       withApType(ApprovedPremisesType.NORMAL)
@@ -261,7 +253,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun approvedPremisesAssessmentEntity(
     application: ApprovedPremisesApplicationEntity,
-    assessor: UserEntity = userEntity(),
+    assessor: UserEntity = userEntity("an assessor"),
     data: String = DATA_JSON_SIMPLE,
     document: String = DOCUMENT_JSON_SIMPLE,
   ): ApprovedPremisesAssessmentEntity = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -319,16 +311,17 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     withApplication(application)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
-    withDueAt(null)
+    withDueAt(OffsetDateTime.parse(DUE_AT))
     withData(data)
     withDocument(document)
-    withAllocatedToUser(null)
+    withAllocatedToUser(application.createdByUser)
+    withAllocatedAt(OffsetDateTime.parse(ALLOCATED_AT))
+    withReallocatedAt(OffsetDateTime.parse(REALLOCATED_AT))
     withCreatedByUser(application.createdByUser)
     withDecision(PlacementApplicationDecision.ACCEPTED)
     withDecisionMadeAt(OffsetDateTime.parse(DECISION_MADE_AT))
     withIsWithdrawn(true)
     withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
-    withReallocatedAt(null)
     withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
     withSentenceType(SENTENCE_TYPE_CUSTODIAL)
     withReleaseType(RELEASE_TYPE_CONDITIONAL)

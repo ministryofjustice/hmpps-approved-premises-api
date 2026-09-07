@@ -22,9 +22,6 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(applications) as json
       from ( 
         select
-        	ca.crn,
-        	ca.noms_number,
-        	ca."data",
         	ca."document",
         	nu."name" as created_by_user,
         	ca.created_at,
@@ -36,7 +33,6 @@ class Cas2v2SubjectAccessRequestRepository(
         	ca.conditional_release_date,
         	ca.abandoned_at,
           ca.application_origin,
-          ca.service_origin,
           CAST( ca.bail_hearing_date as DATE),
           CASE ca.cohort
             WHEN 'HDC' THEN 'Home Detention Curfew'
@@ -73,12 +69,9 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(assessments) as json
       from(
           select
-          	ca.crn,
-          	ca.noms_number,
           	caa.created_at,
-          	caa.assessor_name,
-          	caa.nacro_referral_id,
-          caa.service_origin
+          	REGEXP_REPLACE(TRIM(caa.assessor_name), '^.* ', '') as assessor_name,
+          	caa.nacro_referral_id
           from
           	cas_2_assessments caa
           inner join cas_2_applications ca 
@@ -104,8 +97,6 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(cas_2_application_notes) as json 
       from (
           select
-          	ca.crn,
-          	ca.noms_number,
           	cu."name" as created_by_user,
             can.body
           from cas_2_application_notes can 
@@ -121,105 +112,6 @@ class Cas2v2SubjectAccessRequestRepository(
       ) cas_2_application_notes
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
-    )
-    return toJsonString(result)
-  }
-
-  fun getStatusUpdates(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val result = jdbcTemplate.queryForMap(
-      """
-      select json_agg(cas_2_application_status_updates) as json 
-      from (
-          select
-              ca.crn,
-              ca.noms_number, 
-              eu."name" as assessor_name,
-              to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
-              csu.description ,
-              csu."label"
-          from cas_2_status_updates csu 
-          inner join cas_2_applications ca
-              on ca.id = csu.application_id and ca.service_origin = 'BAIL'
-          inner join cas_2_users eu
-              on eu.id = csu.cas2_user_assessor_id and eu.service_origin = 'BAIL'
-          where 
-          	(ca.crn = :crn
-          		or ca.noms_number = :noms_number )
-          and (:start_date::date is null or ca.created_at >= :start_date) 
-          and (:end_date::date is null or ca.created_at <= :end_date)
-      ) cas_2_application_status_updates
-      """.trimIndent(),
-      MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate),
-    )
-    return toJsonString(result)
-  }
-
-  fun getStatusUpdateDetails(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val result = jdbcTemplate.queryForMap(
-      """
-      select json_agg(cas_2_application_status_update_details) as json 
-      from (
-        select
-        	ca. crn,
-        	ca. noms_number, 
-        	csu."label" as status_label,
-        	csud."label" as detail_label,
-        	to_char(csud.created_at , 'YYYY-MM-DD HH24:MI:SS') as created_at 
-        from cas_2_status_updates csu 
-        inner join cas_2_status_update_details csud  
-        	on csu.id  = csud.status_update_id 
-        inner join cas_2_applications ca
-        	on ca.id =csu.application_id and ca.service_origin = 'BAIL'
-        inner join cas_2_users eu 
-        	on eu.id = csu.cas2_user_assessor_id and eu.service_origin = 'BAIL'
-        where 
-        	(ca.crn = :crn
-        		or ca.noms_number = :noms_number )
-        and (:start_date::date is null or ca.created_at >= :start_date) 
-        and (:end_date::date is null or ca.created_at <= :end_date)
-        ) cas_2_application_status_update_details
-      """.trimIndent(),
-      MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate),
-    )
-    return toJsonString(result)
-  }
-
-  override fun domainEvents(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceName: String,
-  ): String? {
-    val result = jdbcTemplate.queryForMap(
-      """
-           select json_agg(domain_events) as json from ( 
-               select 
-                 de.crn,
-                 de."type",
-                 de.occurred_at,
-                 de.created_at,
-                 de."data",
-                 u."name" as triggered_by_user,
-                 de.noms_number
-               from
-                     domain_events de 
-               left join cas_2_users u on 
-                     u.id = de.triggered_by_user_id
-                     and u.service_origin = 'BAIL'
-               where
-                  de.service = :service_name and
-                  (de.crn = :crn
-                        or de.noms_number = :noms_number )
-               and (:start_date::date is null or de.created_at >= :start_date)
-               and (:end_date::date is null or de.created_at <= :end_date) 
-           ) domain_events
-      """.trimIndent(),
-      MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate)
-        .addValue("service_name", serviceName),
     )
     return toJsonString(result)
   }

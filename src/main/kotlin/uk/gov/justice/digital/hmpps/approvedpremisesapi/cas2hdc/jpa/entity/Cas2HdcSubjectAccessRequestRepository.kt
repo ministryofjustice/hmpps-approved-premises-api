@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SubjectAccess
 import java.time.LocalDateTime
 
 @Repository
-class Cas2SubjectAccessRequestRepository(
+class Cas2HdcSubjectAccessRequestRepository(
   jdbcTemplate: NamedParameterJdbcTemplate,
 ) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
 
@@ -23,9 +23,6 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(applications) as json
       from ( 
         select
-        	ca.crn,
-        	ca.noms_number,
-        	ca."data",
         	ca."document",
         	cu."name" as created_by_user,
         	ca.created_at,
@@ -37,7 +34,6 @@ class Cas2SubjectAccessRequestRepository(
         	ca.conditional_release_date,
         	ca.abandoned_at,
           ca.application_origin,
-          ca.service_origin,
           CAST( ca.bail_hearing_date as DATE) 
         from
         	cas_2_applications ca
@@ -69,10 +65,8 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(assessments) as json
       from(
           select
-          	ca.crn,
-          	ca.noms_number,
           	caa.created_at,
-          	caa.assessor_name,
+          	REGEXP_REPLACE(TRIM(caa.assessor_name), '^.* ', '') as assessor_name,
           	caa.nacro_referral_id
           from
           	cas_2_assessments caa
@@ -105,8 +99,6 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(application_notes) as json 
       from (
           select
-          	ca.crn,
-          	ca.noms_number,
           	case 
           		when can.created_by_cas2_user_id is not null then cu."name"
           		else 'unknown'
@@ -124,80 +116,6 @@ class Cas2SubjectAccessRequestRepository(
       ) application_notes
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
-    )
-    return toJsonString(result)
-  }
-
-  fun getStatusUpdates(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceOrigin: String,
-  ): String? {
-    val result = jdbcTemplate.queryForMap(
-      """
-      select json_agg(application_status_updates) as json 
-      from (
-          select
-              ca.crn,
-              ca.noms_number, 
-              u."name" as assessor_name,
-              u.external_type as assessor_origin,
-              to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
-              csu.description ,
-              csu."label"
-          from cas_2_status_updates csu 
-          inner join cas_2_applications ca
-              on ca.id =csu.application_id and ca.service_origin = :service_origin
-          inner join cas_2_users u 
-              on u.id = csu.cas2_user_assessor_id  and u.user_type = 'EXTERNAL' and u.service_origin = :service_origin
-          where 
-          	(ca.crn = :crn
-          		or ca.noms_number = :noms_number )
-          and (:start_date::date is null or ca.created_at >= :start_date) 
-          and (:end_date::date is null or ca.created_at <= :end_date)
-      ) application_status_updates
-      """.trimIndent(),
-      MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
-    )
-    return toJsonString(result)
-  }
-
-  fun getStatusUpdateDetails(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceOrigin: String,
-  ): String? {
-    val result = jdbcTemplate.queryForMap(
-      """
-      select json_agg(application_status_update_details) as json 
-      from (
-        select
-        	ca. crn,
-        	ca. noms_number, 
-        	csu."label" as status_label,
-        	csud."label" as detail_label,
-        	to_char(csud.created_at , 'YYYY-MM-DD HH24:MI:SS') as created_at 
-        from cas_2_status_updates csu 
-        inner join cas_2_status_update_details csud  
-        	on csu.id  = csud.status_update_id 
-        inner join cas_2_applications ca 
-        	on ca.id =csu.application_id and ca.service_origin = :service_origin
-        inner join cas_2_users u 
-        	on u.id = csu.cas2_user_assessor_id and u.user_type = 'EXTERNAL' and u.service_origin = :service_origin
-        where 
-        	(ca.crn = :crn
-        		or ca.noms_number = :noms_number )
-        and (:start_date::date is null or ca.created_at >= :start_date) 
-        and (:end_date::date is null or ca.created_at <= :end_date)
-        ) application_status_update_details
-      """.trimIndent(),
-      MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
     )
     return toJsonString(result)
   }

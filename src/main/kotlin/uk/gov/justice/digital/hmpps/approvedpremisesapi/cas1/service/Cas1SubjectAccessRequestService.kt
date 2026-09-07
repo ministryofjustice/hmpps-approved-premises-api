@@ -17,14 +17,11 @@ class Cas1SubjectAccessRequestService(
     val apAssessmentClarificationNotesJson = cas1SubjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
 
     val apSpaceBookingsJson = cas1SubjectAccessRequestRepository.spaceBookings(crn, nomsNumber, startDate, endDate)
-    val domainEventsJson = cas1SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate)
-    val domainEventMetaDataJson = cas1SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate)
 
     val placementApplicationsJson = cas1SubjectAccessRequestRepository.placementApplications(crn, nomsNumber, startDate, endDate)
     val placementRequestsJson = cas1SubjectAccessRequestRepository.placementRequests(crn, nomsNumber, startDate, endDate)
     val placementRequirementsJson = cas1SubjectAccessRequestRepository.placementRequirements(crn, nomsNumber, startDate, endDate)
     val placementRequirementCriteriaJson = cas1SubjectAccessRequestRepository.placementRequirementsCriteria(crn, nomsNumber, startDate, endDate)
-    val offlineApplicationsJson = cas1SubjectAccessRequestRepository.offlineApplications(crn, nomsNumber, startDate, endDate)
     val bookingNotMadesJson = cas1SubjectAccessRequestRepository.bookingNotMades(crn, nomsNumber, startDate, endDate)
     val appealsJson = cas1SubjectAccessRequestRepository.appeals(crn, nomsNumber, startDate, endDate)
 
@@ -34,13 +31,10 @@ class Cas1SubjectAccessRequestService(
         apAssessmentsJson,
         apAssessmentClarificationNotesJson,
         apSpaceBookingsJson,
-        domainEventsJson,
-        domainEventMetaDataJson,
         placementApplicationsJson,
         placementRequestsJson,
         placementRequirementsJson,
         placementRequirementCriteriaJson,
-        offlineApplicationsJson,
         bookingNotMadesJson,
         appealsJson,
       ).all { it == null }
@@ -55,15 +49,12 @@ class Cas1SubjectAccessRequestService(
          "Assessments": ${ apAssessmentsJson ?: "[]"},
          "AssessmentClarificationNotes": ${ apAssessmentClarificationNotesJson ?: "[]"},
          "SpaceBookings": ${ apSpaceBookingsJson ?: "[]"},
-         "OfflineApplications": ${ offlineApplicationsJson ?: "[]"},
          "Appeals": ${ appealsJson ?: "[]"},
          "PlacementApplications": ${ placementApplicationsJson ?: "[]"},
          "PlacementRequests": ${ placementRequestsJson ?: "[]"},
          "PlacementRequirements": ${ placementRequirementsJson ?: "[]"},
          "PlacementRequirementCriteria": ${ placementRequirementCriteriaJson ?: "[]"},
-         "BookingNotMades": ${ bookingNotMadesJson ?: "[]"},
-         "DomainEvents": ${ domainEventsJson ?: "[]"},
-         "DomainEventsMetadata": ${ domainEventMetaDataJson ?: "[]"}
+         "BookingNotMades": ${ bookingNotMadesJson ?: "[]"}
       }
     """.trimIndent()
 

@@ -63,14 +63,6 @@ class BookingCancelledFactory : Factory<BookingCancelled> {
     this.premises = { premises }
   }
 
-  fun withArrivalOn(arrivalOn: LocalDate) = apply {
-    this.arrivalOn = { arrivalOn }
-  }
-
-  fun withDepartureOn(departureOn: LocalDate) = apply {
-    this.departureOn = { departureOn }
-  }
-
   fun withCancellationReason(cancellationReason: String) = apply {
     this.cancellationReason = { cancellationReason }
   }

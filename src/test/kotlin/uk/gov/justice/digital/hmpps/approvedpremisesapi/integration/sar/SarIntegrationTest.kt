@@ -50,10 +50,10 @@ class SarIntegrationTest : IntegrationTestBase() {
           .expectStatus().isOk
           .expectHeader().contentType("text/plain")
           .expectBody<String>().value { content ->
-            assert(content!!.contains("{{#ApprovedPremises}}"))
-            assert(content.contains("{{#TemporaryAccommodation}}"))
-            assert(content.contains("{{#ShortTermAccommodation}}"))
-            assert(content.contains("{{#BailAccommodation}}"))
+            assert(content!!.contains("{{#CAS1}}"))
+            assert(content.contains("{{#CAS3}}"))
+            assert(content.contains("{{#CAS2-HDC}}"))
+            assert(content.contains("{{#CAS2}}"))
           }
       }
     }

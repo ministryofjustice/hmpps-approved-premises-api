@@ -30,6 +30,10 @@ class Cas2ApplicationStatusUpdatedEventDetailsFactory : Factory<Cas2ApplicationS
     this.applicationUrl = { applicationUrl }
   }
 
+  fun withNewStatus(newStatus: Cas2Status) = apply {
+    this.newStatus = { newStatus }
+  }
+
   fun withPersonReference(personReference: PersonReference) = apply {
     this.personReference = { personReference }
   }
