@@ -1111,7 +1111,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
         reallocated = false,
         placementType = placementType,
         expectedArrival = LocalDate.now(),
-        duration = 12,
+        requestedDuration = 12,
       )
 
       block(placementApplication)
@@ -1180,7 +1180,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
           },
           submittedAt = OffsetDateTime.now(),
           expectedArrival = LocalDate.now(),
-          duration = 5,
+          requestedDuration = 5,
         ) { placementApplicationEntity ->
 
           webTestClient.post()
@@ -1205,7 +1205,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
           createdByUser = user,
           submittedAt = OffsetDateTime.now(),
           expectedArrival = LocalDate.now(),
-          duration = 5,
+          requestedDuration = 5,
         ) { placementApplicationEntity ->
           val rawResult = webTestClient.post()
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
@@ -1251,7 +1251,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             decision = null,
             submittedAt = OffsetDateTime.now(),
             expectedArrival = LocalDate.now(),
-            duration = 5,
+            requestedDuration = 5,
             allocatedToUser = assessor,
           ) { placementApplicationEntity ->
 
@@ -1312,7 +1312,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
               decision = null,
               submittedAt = OffsetDateTime.now(),
               expectedArrival = LocalDate.now(),
-              duration = 5,
+              requestedDuration = 5,
               allocatedToUser = assessor,
             ) { placementApplicationEntity ->
 
