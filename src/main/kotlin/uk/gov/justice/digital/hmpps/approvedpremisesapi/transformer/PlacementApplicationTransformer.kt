@@ -19,7 +19,6 @@ class PlacementApplicationTransformer(
   fun transformJpaToApi(jpa: PlacementApplicationEntity): PlacementApplication {
     val assessment = jpa.application.getLatestAssessment()!!
     val application = jpa.application
-    val placementDates = jpa.placementDates()?.toApiType()
 
     return PlacementApplication(
       id = jpa.id,
@@ -36,8 +35,6 @@ class PlacementApplicationTransformer(
       isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
       type = PlacementApplicationType.additional,
-      dates = placementDates,
-      placementDates = listOfNotNull(placementDates),
       requestedPlacementPeriod = jpa.expectedArrival?.let { arrival ->
         Cas1RequestedPlacementPeriod(
           arrival = arrival,
