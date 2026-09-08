@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 
-class Cas2v2ApplicationAbandonTest : IntegrationTestBase() {
+class Cas2ApplicationAbandonTest : IntegrationTestBase() {
   @MockkSpyBean lateinit var realApplicationRepository: Cas2ApplicationRepository
 
   val schema = """

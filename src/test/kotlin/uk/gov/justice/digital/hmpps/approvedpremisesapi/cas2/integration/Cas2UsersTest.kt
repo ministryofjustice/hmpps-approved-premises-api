@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2NomisUser
 
-class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
+class Cas2UsersTest : InitialiseDatabasePerClassTestBase() {
 
   @Nested
   inner class GetCurrentUserDetailsTest {

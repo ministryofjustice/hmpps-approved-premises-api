@@ -29,7 +29,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class Cas2v2StatusUpdateTest(
+class Cas2StatusUpdateTest(
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
 ) : IntegrationTestBase() {
 

@@ -39,7 +39,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas2v2ReportsTest : IntegrationTestBase() {
+class Cas2ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnExternalUsers {
