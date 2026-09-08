@@ -35,9 +35,10 @@ class Cas2ExternalApplicationServiceTest {
       val status = "finished"
       val user = Cas2UserEntityFactory()
         .produce()
+      val submittedAt = OffsetDateTime.now()
       val cas2applicationEntity = Cas2ApplicationEntityFactory()
         .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
+        .withSubmittedAt(submittedAt)
         .withCrn(crn)
         .withId(id)
         .withStatusUpdates(mutableListOf())
@@ -56,6 +57,7 @@ class Cas2ExternalApplicationServiceTest {
         application = Cas2ExternalApplicationDto(
           id = id,
           status = status,
+          submittedAt = submittedAt,
         ),
       )
       assertThat(result).isEqualTo(expected)
@@ -69,6 +71,7 @@ class Cas2ExternalApplicationServiceTest {
         application = Cas2ExternalApplicationDto(
           id = id,
           status = status,
+          submittedAt = null,
         ),
       )
       val user = Cas2UserEntityFactory()

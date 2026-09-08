@@ -26,6 +26,7 @@ class Cas2ExternalApplicationService(
         application = Cas2ExternalApplicationDto(
           id = mostRecent.id,
           status = mostRecent.statusUpdates?.firstOrNull()?.label,
+          submittedAt = mostRecent.submittedAt,
         ),
       )
     }

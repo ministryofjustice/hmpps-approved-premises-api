@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
+import java.time.OffsetDateTime
 import java.util.UUID
 
 data class Cas2SuitableApplication(
@@ -10,4 +11,5 @@ data class Cas2SuitableApplication(
 data class Cas2ExternalApplicationDto(
   val id: UUID,
   val status: String?,
+  val submittedAt: OffsetDateTime?,
 )
