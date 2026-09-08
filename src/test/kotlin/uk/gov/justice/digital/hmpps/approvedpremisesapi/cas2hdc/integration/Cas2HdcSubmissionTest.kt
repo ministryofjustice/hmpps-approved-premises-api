@@ -49,7 +49,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2SubmissionTest(
+class Cas2HdcSubmissionTest(
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) : IntegrationTestBase() {

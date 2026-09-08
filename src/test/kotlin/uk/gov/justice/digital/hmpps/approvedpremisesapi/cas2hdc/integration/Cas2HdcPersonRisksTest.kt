@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 import java.time.OffsetDateTime
 
-class Cas2PersonRisksTest : IntegrationTestBase() {
+class Cas2HdcPersonRisksTest : IntegrationTestBase() {
   @Test
   fun `Getting risks by CRN without a JWT returns 401`() {
     webTestClient.get()

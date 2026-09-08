@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOAsysMockAssessmentSummaryResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 
-class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
+class Cas2OASysTest : Cas2v2IntegrationTestBase() {
 
   @Nested
   @DisplayName("GET /cas2/people/{crn}/oasys/metadata")

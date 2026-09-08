@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.Mi
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2MigrateNotesTest : MigrationJobTestBase() {
+class Cas2HdcMigrateNotesTest : MigrationJobTestBase() {
 
   @MockkSpyBean
   lateinit var realNotesRepository: Cas2ApplicationNoteRepository

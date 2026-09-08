@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
 import java.time.LocalDate
 
-class Cas2PersonSearchTest : IntegrationTestBase() {
+class Cas2HdcPersonSearchTest : IntegrationTestBase() {
   @Nested
   inner class PeopleSearchGet {
 

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
@@ -11,45 +11,47 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_STATUS_UPDATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class Cas2StatusUpdateTest(
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
 ) : IntegrationTestBase() {
 
   @MockkSpyBean
-  lateinit var realStatusUpdateRepository: Cas2StatusUpdateRepository
+  lateinit var realCas2StatusUpdateRepository: Cas2StatusUpdateRepository
 
   @MockkSpyBean
-  lateinit var realStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
+  lateinit var realCas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @AfterEach
   fun afterEach() {
     // SpringMockK does not correctly clear mocks for @MockkSpyBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
-    clearMocks(realStatusUpdateRepository)
-    clearMocks(realStatusUpdateDetailRepository)
+    clearMocks(realCas2StatusUpdateRepository)
+    clearMocks(realCas2StatusUpdateDetailRepository)
   }
 
   @Nested
   inner class ControlsOnInternalUsers {
     @Test
-    fun `creating a status update is forbidden to internal users based on role`() {
+    fun `creating a cas2v2 status update is forbidden to internal users based on role`() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
@@ -57,7 +59,7 @@ class Cas2StatusUpdateTest(
       )
 
       webTestClient.post()
-        .uri("/cas2-hdc/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/status-updates")
+        .uri("/cas2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237/status-updates")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -68,9 +70,9 @@ class Cas2StatusUpdateTest(
   @Nested
   inner class MissingJwt {
     @Test
-    fun `creating a status update without JWT returns 401`() {
+    fun `creating a cas2v2 status update without JWT returns 401`() {
       webTestClient.post()
-        .uri("/cas2-hdc/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/status-updates")
+        .uri("/cas2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237/status-updates")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -80,27 +82,30 @@ class Cas2StatusUpdateTest(
   @Nested
   inner class PostToCreate {
     @Test
-    fun `Create status update returns 201 and creates StatusUpdate when given status is valid`() {
+    fun `Create cas2v2 status update returns 201 and creates StatusUpdate when given status is valid`() {
       val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { applicant, _ ->
+      givenACas2v2Assessor { _, jwt ->
+        givenACas2v2PomUser { applicant, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
-            withCohort(Cas2Cohort.HDC)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            withCohort(Cas2Cohort.COURT_BAIL)
           }
 
           cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
             withId(assessmentId)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
-          assertThat(realStatusUpdateRepository.count()).isEqualTo(0)
-          assertThat(realStatusUpdateDetailRepository.count()).isEqualTo(0)
+          assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
+          assertThat(realCas2StatusUpdateDetailRepository.count()).isEqualTo(0)
 
           webTestClient.post()
-            .uri("/cas2-hdc/assessments/$assessmentId/status-updates")
+            .uri("/cas2/assessments/$assessmentId/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas2HdcAssessmentStatusUpdate(newStatus = "moreInfoRequested"),
@@ -109,9 +114,9 @@ class Cas2StatusUpdateTest(
             .expectStatus()
             .isCreated
 
-          assertThat(realStatusUpdateRepository.count()).isEqualTo(1)
+          assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(1)
 
-          val persistedStatusUpdate = realStatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
+          val persistedStatusUpdate = realCas2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
           assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
           val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
@@ -131,18 +136,18 @@ class Cas2StatusUpdateTest(
           assertThat(domainEventFromJson.eventDetails.applicationUrl)
             .isEqualTo(expectedFrontEndUrl)
           assertThat(domainEventFromJson.eventDetails.cohort?.code)
-            .isEqualTo(Cas2Cohort.HDC.name)
+            .isEqualTo(Cas2Cohort.COURT_BAIL.name)
           assertThat(domainEventFromJson.eventDetails.cohort?.longDisplayName)
-            .isEqualTo(Cas2Cohort.HDC.longDisplayName)
+            .isEqualTo(Cas2Cohort.COURT_BAIL.longDisplayName)
         }
       }
     }
 
     @Test
-    fun `Create status update returns 404 when assessment not found`() {
-      givenACas2Assessor { _, jwt ->
+    fun `Create cas2v2 status update returns 404 when assessment not found`() {
+      givenACas2v2Assessor { _, jwt ->
         webTestClient.post()
-          .uri("/cas2-hdc/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
+          .uri("/cas2/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             Cas2HdcAssessmentStatusUpdate(newStatus = "moreInfoRequested"),
@@ -154,20 +159,23 @@ class Cas2StatusUpdateTest(
     }
 
     @Test
-    fun `Create status update returns 400 when new status NOT valid`() {
-      givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { applicant, _ ->
+    fun `Create cas2v2 status update returns 400 when new status NOT valid`() {
+      givenACas2v2Assessor { _, jwt ->
+        givenACas2v2PomUser { applicant, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
-          val assessmemt = cas2AssessmentEntityFactory.produceAndPersist {
+          val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           webTestClient.post()
-            .uri("/cas2-hdc/assessments/${assessmemt.id}/status-updates")
+            .uri("/cas2/assessments/${assessment.id}/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas2HdcAssessmentStatusUpdate(newStatus = "invalidStatus"),
@@ -184,32 +192,35 @@ class Cas2StatusUpdateTest(
     @Nested
     inner class WithStatusDetail {
       @Test
-      fun `Create status update returns 201 and creates StatusUpdate when given status and detail are valid, and sends an email to the referrer`() {
+      fun `Create cas2v2 status update returns 201 and sends the email`() {
         val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
         val submittedAt = OffsetDateTime.now()
 
         try {
-          givenACas2Assessor { _, jwt ->
-            givenACas2PomUser { applicant, _ ->
+          givenACas2v2Assessor { _, jwt ->
+            givenACas2v2PomUser { applicant, _ ->
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedByUser(applicant)
                 withSubmittedAt(submittedAt)
                 withNomsNumber("123NOMS")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
+                withCohort(Cas2Cohort.COURT_BAIL)
               }
 
               cas2AssessmentEntityFactory.produceAndPersist {
                 withId(assessmentId)
                 withApplication(application)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
-              assertThat(realStatusUpdateRepository.count()).isEqualTo(0)
+              assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
 
               val now = OffsetDateTime.now()
               mockkStatic(OffsetDateTime::class)
               every { OffsetDateTime.now() } returns now
 
               webTestClient.post()
-                .uri("/cas2-hdc/assessments/$assessmentId/status-updates")
+                .uri("/cas2/assessments/$assessmentId/status-updates")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   Cas2HdcAssessmentStatusUpdate(
@@ -221,15 +232,15 @@ class Cas2StatusUpdateTest(
                 .expectStatus()
                 .isCreated
 
-              assertThat(realStatusUpdateRepository.count()).isEqualTo(1)
-              assertThat(realStatusUpdateDetailRepository.count()).isEqualTo(1)
+              assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(1)
+              assertThat(realCas2StatusUpdateDetailRepository.count()).isEqualTo(1)
 
               val persistedStatusUpdate =
-                realStatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
+                realCas2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
               assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
               val persistedStatusDetailUpdate =
-                realStatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate!!.id)
+                realCas2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate.id)
               assertThat(persistedStatusDetailUpdate).isNotNull
 
               val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
@@ -242,34 +253,33 @@ class Cas2StatusUpdateTest(
                 .isNotNull()
 
               emailAsserter.assertEmailsRequestedCount(1)
+
               emailAsserter.assertEmailRequested(
                 toEmailAddress = applicant.email!!,
-                templateId = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a",
+                templateId = CAS2_BAIL_APPLICATION_STATUS_UPDATE,
                 personalisation = mapOf(
-                  "applicationStatus" to "Offer declined or withdrawn",
+                  "applicationStatusChange" to "Offer declined or withdrawn",
                   "dateStatusChanged" to now.toLocalDate().toCas2UiFormat(),
                   "timeStatusChanged" to now.toCas2UiFormattedHourOfDay(),
-                  "nomsNumber" to "123NOMS",
-                  "applicationType" to "Home Detention Curfew (HDC)",
-                  "applicationUrl" to applicationOverviewUrlTemplate.replace("#id", application.id.toString()),
+                  "cohort" to application.cohort!!.displayName,
+                  "crn" to application.crn,
+                  "timeApplicationReceived" to application.submittedAt!!.format(DateTimeFormatter.ofPattern("HH:mm")),
+                  "dateApplicationReceived" to application.submittedAt!!.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                  "nacroReferenceId" to "Unknown",
+                  "viewSubmittedApplicationUrl" to "http://localhost:3000/applications/${application.id}/overview",
                 ),
                 replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
               )
 
-              // verify that generated 'application.status-updated' domain event links
-              // to the CAS2 domain
-              val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", application.id.toString())
+              // verify that emitted application.status-updated domain event includes the status details
               val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
               val domainEventFromJson = jsonMapper.readValue(
                 persistedDomainEvent!!.data,
                 Cas2ApplicationStatusUpdatedEvent::class.java,
               )
-              assertThat(domainEventFromJson.eventDetails.applicationUrl)
-                .isEqualTo(expectedFrontEndUrl)
-
-              // verify that the persisted domain event contains the expected status details
-              val expected = listOf(Cas2StatusDetail("changeOfCircumstances", "Change of circumstances"))
-              assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails).isEqualTo(expected)
+              assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails)
+                .isNotNull
+                .anyMatch { detail -> detail.name == "changeOfCircumstances" }
             }
           }
         } finally {

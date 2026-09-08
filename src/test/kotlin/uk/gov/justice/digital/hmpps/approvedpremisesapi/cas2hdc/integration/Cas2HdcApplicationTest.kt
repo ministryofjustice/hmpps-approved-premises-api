@@ -56,7 +56,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.math.sign
 
-class Cas2ApplicationTest : IntegrationTestBase() {
+class Cas2HdcApplicationTest : IntegrationTestBase() {
   @MockkSpyBean
   lateinit var realApplicationRepository: Cas2ApplicationRepository
 

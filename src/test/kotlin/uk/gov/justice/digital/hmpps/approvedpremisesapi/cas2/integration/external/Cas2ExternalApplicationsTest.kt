@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.OffsetDateTime
 
-class Cas2v2ExternalApplicationsTest : IntegrationTestBase() {
+class Cas2ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
 
   @Nested
@@ -44,7 +44,7 @@ class Cas2v2ExternalApplicationsTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.external.Cas2v2ExternalApplicationsTest#isrCohorts")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.external.Cas2ExternalApplicationsTest#isrCohorts")
     fun `Get suitable application returns ok`(cohort: Cas2Cohort) {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
 
