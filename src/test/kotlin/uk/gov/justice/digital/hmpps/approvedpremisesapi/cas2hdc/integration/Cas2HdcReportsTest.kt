@@ -34,7 +34,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas2ReportsTest : IntegrationTestBase() {
+class Cas2HdcReportsTest : IntegrationTestBase() {
 
   @MockkSpyBean
   private lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository

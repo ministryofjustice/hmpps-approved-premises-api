@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 
-class Cas2ReferenceDataTest : IntegrationTestBase() {
+class Cas2HdcReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var statusTransformer: Cas2HdcApplicationStatusTransformer

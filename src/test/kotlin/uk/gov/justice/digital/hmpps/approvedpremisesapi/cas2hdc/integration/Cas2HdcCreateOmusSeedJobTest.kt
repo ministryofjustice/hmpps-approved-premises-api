@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManag
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class ShortTermAccommodationCreateOmusSeedJobTest : SeedTestBase() {
+class Cas2HdcCreateOmusSeedJobTest : SeedTestBase() {
 
   @Autowired
   override lateinit var offenderManagementUnitRepository: OffenderManagementUnitRepository

@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 
-class Cas2ApplicationAbandonTest : IntegrationTestBase() {
+class Cas2HdcApplicationAbandonTest : IntegrationTestBase() {
   @MockkSpyBean
   lateinit var realApplicationRepository: Cas2ApplicationRepository
 

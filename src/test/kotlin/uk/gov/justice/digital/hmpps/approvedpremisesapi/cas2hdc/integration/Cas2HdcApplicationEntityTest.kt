@@ -15,7 +15,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2ApplicationEntityTest : IntegrationTestBase() {
+class Cas2HdcApplicationEntityTest : IntegrationTestBase() {
 
   @Test
   fun `applicationAssignments are returned sorted by createdAt descending`() {

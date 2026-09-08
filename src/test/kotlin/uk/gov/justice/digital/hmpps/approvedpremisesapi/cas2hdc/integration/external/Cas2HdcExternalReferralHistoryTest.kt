@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
 
-class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
+class Cas2HdcExternalReferralHistoryTest : IntegrationTestBase() {
   private val crn = "ABC1234"
 
   @Nested

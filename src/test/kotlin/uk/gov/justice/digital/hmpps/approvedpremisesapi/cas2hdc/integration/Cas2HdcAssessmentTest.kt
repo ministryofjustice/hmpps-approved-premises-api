@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2AssessmentTest : IntegrationTestBase() {
+class Cas2HdcAssessmentTest : IntegrationTestBase() {
 
   @MockkSpyBean
   lateinit var realAssessmentRepository: Cas2AssessmentRepository

@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 
-class Cas2BackfillApplicationCohortIntegrationTest : MigrationJobTestBase() {
+class Cas2HdcBackfillApplicationCohortIntegrationTest : MigrationJobTestBase() {
 
   @Test
   fun `Successfully backfills application cohorts`() {
