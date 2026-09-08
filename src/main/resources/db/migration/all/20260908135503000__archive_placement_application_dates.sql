@@ -1,0 +1,1 @@
+ALTER TABLE placement_application_dates RENAME TO archived_placement_application_dates;
