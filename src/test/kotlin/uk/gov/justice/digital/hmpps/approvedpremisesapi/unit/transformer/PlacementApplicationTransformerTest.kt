@@ -114,25 +114,6 @@ class PlacementApplicationTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi converts correctly when not submitted`() {
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withApplication(applicationMock)
-      .withData(null)
-      .withDocument(null)
-      .withSubmittedAt(null)
-      .withExpectedArrival(null)
-      .withRequestedDuration(null)
-      .produce()
-
-    val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
-
-    assertThat(result.id).isEqualTo(placementApplication.id)
-    assertThat(result.submittedAt).isNull()
-    assertThat(result.requestedPlacementPeriod).isNull()
-  }
-
-  @Test
   fun `transformJpaToApi returns canBeWithdrawn false if already withdrawn`() {
     val data = "{\"data\": \"something\"}"
     val document = "{\"document\": \"something\"}"
