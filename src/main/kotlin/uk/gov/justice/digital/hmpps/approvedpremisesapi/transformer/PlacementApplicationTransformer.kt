@@ -39,7 +39,7 @@ class PlacementApplicationTransformer(
         Cas1RequestedPlacementPeriod(
           arrival = arrival,
           arrivalFlexible = jpa.expectedArrivalFlexible,
-          duration = jpa.requestedDuration!!,
+          duration = jpa.requestedDuration,
         )
       },
     )

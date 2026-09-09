@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.AuthorisedPlacementPeriodFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -656,7 +657,7 @@ class Cas1PlacementApplicationServiceTest {
   }
 
   @Nested
-  inner class DecisionTest {
+  inner class RecordDecisionTest {
     val user = UserEntityFactory().withDefaults().produce()
     val createdByUser = UserEntityFactory().withDefaults().produce()
 
@@ -699,13 +700,14 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Accepting sends a notification and returns successfully`() {
+    fun `Accepting sends a notification, records a domain event and creates a placement request`() {
       val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
 
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(user)
         .withDecision(null)
+        .withAuthorisedDuration(null)
         .withCreatedByUser(createdByUser)
         .withRequestedDuration(7)
         .produce()
@@ -725,13 +727,18 @@ class Cas1PlacementApplicationServiceTest {
           user,
         )
       } returns CasResult.Success(
-        ValidatedDecision(placementApplication),
+        ValidatedDecision.ValidatedAcceptance(
+          placementApplication = placementApplication,
+          authorisedPlacementPeriod = AuthorisedPlacementPeriodFactory()
+            .withDuration(25)
+            .produce(),
+        ),
       )
 
       every {
         placementRequestService.createPlacementRequestFromPlacementApplication(any(), any())
       } returns CasResult.Success(Unit)
-      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+      every { placementApplicationRepository.save(any()) } returnsArgument 0
 
       every { cas1PlacementApplicationEmailService.placementApplicationAccepted(any()) } returns Unit
       every { cas1PlacementApplicationDomainEventService.placementApplicationAssessed(any(), any(), any()) } returns Unit
@@ -745,7 +752,7 @@ class Cas1PlacementApplicationServiceTest {
         assertThat(it.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
         assertThat(it.decisionMadeAt).isWithinTheLastMinute()
         assertThat(it.decisionSummary).isEqualTo("decisionSummary accepted")
-        assertThat(it.authorisedDuration).isEqualTo(7)
+        assertThat(it.authorisedDuration).isEqualTo(25)
 
         verify { placementRequestService.createPlacementRequestFromPlacementApplication(placementApplication, "decisionSummary accepted") }
         verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
@@ -760,7 +767,7 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Rejecting sends a notification and returns successfully`() {
+    fun `Rejecting sends a notification and records a domain event`() {
       val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
 
       val placementApplication = PlacementApplicationEntityFactory()
@@ -784,7 +791,7 @@ class Cas1PlacementApplicationServiceTest {
           user,
         )
       } returns CasResult.Success(
-        ValidatedDecision(placementApplication),
+        ValidatedDecision.ValidatedRejection(placementApplication),
       )
 
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }

@@ -30,12 +30,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationValidationService.ValidatedDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto as ApiPlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
 @Service
@@ -465,9 +465,10 @@ class Cas1PlacementApplicationService(
     }
 
     val placementApplicationEntity = validatedDecision.placementApplication
-    val decisionDto = decisionEnvelope.decision
 
-    if (decisionDto == ApiPlacementApplicationDecision.accepted) {
+    if (validatedDecision is ValidatedDecision.ValidatedAcceptance) {
+      placementApplicationEntity.authorisedDuration = validatedDecision.authorisedPlacementPeriod.duration
+
       val placementRequestResult =
         placementRequestService.createPlacementRequestFromPlacementApplication(
           placementApplicationEntity,
@@ -477,22 +478,19 @@ class Cas1PlacementApplicationService(
       if (placementRequestResult is CasResult.Error) {
         return placementRequestResult.reviseType()
       }
-
-      placementApplicationEntity.authorisedDuration = placementApplicationEntity.requestedDuration
     }
 
     placementApplicationEntity.apply {
-      decision = JpaPlacementApplicationDecision.valueOf(decisionDto)
+      decision = JpaPlacementApplicationDecision.valueOf(decisionEnvelope.decision)
       decisionMadeAt = OffsetDateTime.now(clock)
       decisionSummary = decisionEnvelope.decisionSummary
     }
 
     val savedPlacementApplication = placementApplicationRepository.save(placementApplicationEntity)
 
-    when (decisionDto) {
-      ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(savedPlacementApplication)
-      ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(savedPlacementApplication)
-      else -> error("Decision type $decisionDto is not supported")
+    when (validatedDecision) {
+      is ValidatedDecision.ValidatedAcceptance -> cas1PlacementApplicationEmailService.placementApplicationAccepted(savedPlacementApplication)
+      is ValidatedDecision.ValidatedRejection -> cas1PlacementApplicationEmailService.placementApplicationRejected(savedPlacementApplication)
     }
 
     cas1PlacementApplicationDomainEventService.placementApplicationAssessed(

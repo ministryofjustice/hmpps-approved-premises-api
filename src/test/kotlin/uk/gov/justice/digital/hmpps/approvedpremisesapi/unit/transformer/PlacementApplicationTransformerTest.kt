@@ -114,6 +114,28 @@ class PlacementApplicationTransformerTest {
   }
 
   @Test
+  fun `converts correctly when submitting but requested duration is null`() {
+    val data = "{\"data\": \"something\"}"
+    val document = "{\"document\": \"something\"}"
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withApplication(applicationMock)
+      .withData(data)
+      .withDocument(document)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withExpectedArrivalFlexible(true)
+      .withExpectedArrival(LocalDate.of(2023, 12, 11))
+      .withRequestedDuration(null)
+      .produce()
+
+    val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
+
+    assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2023, 12, 11))
+    assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isEqualTo(true)
+    assertThat(result.requestedPlacementPeriod?.duration).isNull()
+  }
+
+  @Test
   fun `transformJpaToApi returns canBeWithdrawn false if already withdrawn`() {
     val data = "{\"data\": \"something\"}"
     val document = "{\"document\": \"something\"}"

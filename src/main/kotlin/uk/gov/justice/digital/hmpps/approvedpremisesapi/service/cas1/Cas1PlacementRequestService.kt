@@ -139,8 +139,8 @@ class Cas1PlacementRequestService(
     )
 
     val placementDates = PlacementDates(
-      expectedArrival = placementApplicationEntity.placementDates()!!.expectedArrival,
-      duration = placementApplicationEntity.placementDates()!!.duration,
+      expectedArrival = placementApplicationEntity.expectedArrival!!,
+      duration = placementApplicationEntity.authorisedDuration!!,
     )
 
     // this should probably be driven by the release type, as placementType is a deprecated concept

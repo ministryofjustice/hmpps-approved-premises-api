@@ -158,21 +158,17 @@ data class PlacementApplicationEntity(
   var isWithdrawn: Boolean = false,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
-   * for authorised placement date
+   * If [submittedAt] is not null, this value will be set.
    */
   var expectedArrival: LocalDate? = null,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
-   * for authorised placement date
+   * Can be null even after submission if a duration could not be calculated ([calculatedPlacementDuration] is null)
    */
   var requestedDuration: Int? = null,
 
   /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access
-   *
-   * for authorised placement date
+   * If [decision] is accepted, this value should be set
    */
   var authorisedDuration: Int? = null,
 
@@ -211,6 +207,7 @@ data class PlacementApplicationEntity(
 
   fun isBeingAssessed() = isActive() && decision == null
 
+  @Deprecated("This assumes requestedDuration is non null on submission, which is no longer necessarily the case")
   fun placementDates() = if (isSubmitted()) {
     Cas1PlacementDates(
       expectedArrival = expectedArrival!!,
