@@ -84,8 +84,6 @@ class PlacementApplicationTransformerTest {
     assertThat(result.isWithdrawn).isFalse
     assertThat(result.withdrawalReason).isNull()
     assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
-    assertThat(result.dates).isNull()
-    assertThat(result.placementDates).isEmpty()
     assertThat(result.requestedPlacementPeriod).isNull()
   }
 
@@ -109,36 +107,10 @@ class PlacementApplicationTransformerTest {
     assertThat(result.id).isEqualTo(placementApplication.id)
     assertThat(result.data).isEqualTo(jsonMapper.readTree(data))
     assertThat(result.document).isEqualTo(jsonMapper.readTree(document))
-    assertThat(result.dates!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
-    assertThat(result.dates.duration).isEqualTo(30)
-
-    assertThat(result.placementDates).hasSize(1)
-    assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
-    assertThat(result.placementDates[0].duration).isEqualTo(30)
 
     assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2023, 12, 11))
     assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isEqualTo(true)
     assertThat(result.requestedPlacementPeriod?.duration).isEqualTo(30)
-  }
-
-  @Test
-  fun `transformJpaToApi converts correctly when not submitted`() {
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withApplication(applicationMock)
-      .withData(null)
-      .withDocument(null)
-      .withSubmittedAt(null)
-      .withExpectedArrival(null)
-      .withRequestedDuration(null)
-      .produce()
-
-    val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
-
-    assertThat(result.id).isEqualTo(placementApplication.id)
-    assertThat(result.submittedAt).isNull()
-    assertThat(result.dates).isNull()
-    assertThat(result.placementDates).isEmpty()
   }
 
   @Test
