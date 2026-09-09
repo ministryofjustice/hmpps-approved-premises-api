@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
@@ -26,8 +27,16 @@ class Cas2ExternalApplicationService(
         application = Cas2ExternalApplicationDto(
           id = mostRecent.id,
           status = mostRecent.statusUpdates?.firstOrNull()?.label,
-          submittedAt = mostRecent.submittedAt,
         ),
+        id = mostRecent.id,
+        submittedApplication = if (mostRecent.submittedAt != null) {
+          Cas2ExternalSubmittedApplicationDto(
+            latestAssessmentStatus = mostRecent.statusUpdates?.firstOrNull()?.label,
+            submittedAt = mostRecent.submittedAt!!,
+          )
+        } else {
+          null
+        },
       )
     }
 }
