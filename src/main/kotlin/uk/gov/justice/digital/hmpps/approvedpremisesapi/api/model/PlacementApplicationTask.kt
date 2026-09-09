@@ -15,7 +15,7 @@ data class PlacementApplicationTask(
 
   @Deprecated("use requestedPlacementPeriod")
   @Schema(deprecated = true, description = "Use requestedPlacementPeriod")
-  @get:JsonProperty("dates", required = true) val dates: PlacementDates,
+  @get:JsonProperty("dates", required = false) val dates: PlacementDates?,
 
   @get:JsonProperty("taskType", required = true) override val taskType: TaskType,
 
