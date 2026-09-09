@@ -353,8 +353,8 @@ class Cas1PlacementApplicationService(
       return CasResult.GeneralValidationError("1 or more requested placements have an undefined duration")
     }
 
-    if (requestedPlacementPeriods.any { it.duration == 0 }) {
-      return CasResult.GeneralValidationError("1 or more requested placements have a duration of 0 days")
+    if (requestedPlacementPeriods.any { it.duration != null && it.duration <= 0 }) {
+      return CasResult.GeneralValidationError("1 or more requested placements have a duration of less than 1 day")
     }
 
     val translatedDocument = jsonMapper.writeValueAsString(submitPlacementApplication.translatedDocument)

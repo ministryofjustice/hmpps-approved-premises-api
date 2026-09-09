@@ -288,8 +288,9 @@ class Cas1PlacementApplicationServiceTest {
       assertThatCasResult(result).isGeneralValidationError("At least 1 requested placement periods is required")
     }
 
-    @Test
-    fun `Returns validation error if 1 or more duration periods have 0 day duration`() {
+    @CsvSource("0", "-1")
+    @ParameterizedTest
+    fun `Returns validation error if 1 or more duration periods have less than 1 day duration`(duration: Int) {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { tierService.useTierV2() } returns true
 
@@ -303,7 +304,7 @@ class Cas1PlacementApplicationServiceTest {
           ),
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.of(2025, 4, 1),
-            duration = 0,
+            duration = duration,
             arrivalFlexible = false,
           ),
           Cas1RequestedPlacementPeriod(
@@ -323,7 +324,7 @@ class Cas1PlacementApplicationServiceTest {
 
       )
 
-      assertThatCasResult(result).isGeneralValidationError("1 or more requested placements have a duration of 0 days")
+      assertThatCasResult(result).isGeneralValidationError("1 or more requested placements have a duration of less than 1 day")
     }
 
     @Test

@@ -5,10 +5,12 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementApplicationDecisionAcceptanceDto
@@ -45,11 +47,16 @@ class Cas1PlacementApplicationValidationServiceTest {
       .withUnitTestControlProbationRegion()
       .produce()
 
-    val baselinePlacementApplication = PlacementApplicationEntityFactory()
-      .withDefaults()
-      .withAllocatedToUser(allocatedToUser)
-      .withDecision(null)
-      .withCreatedByUser(createdByUser)
+    lateinit var baselinePlacementApplication: PlacementApplicationEntityFactory
+
+    @BeforeEach
+    fun setup() {
+      baselinePlacementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withAllocatedToUser(allocatedToUser)
+        .withDecision(null)
+        .withCreatedByUser(createdByUser)
+    }
 
     @Test
     fun `Return not found if can't be found`() {
@@ -193,7 +200,7 @@ class Cas1PlacementApplicationValidationServiceTest {
     }
 
     @Test
-    fun `Cannot change requested duration on acceptance, if set`() {
+    fun `Cannot change requested duration on acceptance, if set on request`() {
       val placementApplication = baselinePlacementApplication
         .withExpectedArrival(LocalDate.of(2014, 1, 2))
         .withExpectedArrivalFlexible(true)
@@ -222,6 +229,39 @@ class Cas1PlacementApplicationValidationServiceTest {
       )
 
       assertThatCasResult(result).isGeneralValidationError("Authorised duration must match the requested duration")
+    }
+
+    @CsvSource("0", "-1")
+    @ParameterizedTest
+    fun `Cannot set authorised duration to less than 1`(duration: Int) {
+      val placementApplication = baselinePlacementApplication
+        .withExpectedArrival(LocalDate.of(2014, 1, 2))
+        .withExpectedArrivalFlexible(true)
+        .withRequestedDuration(null)
+        .produce()
+
+      val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelopeFactory()
+        .withDecision(PlacementApplicationDecisionDto.accepted)
+        .withAcceptance(
+          Cas1PlacementApplicationDecisionAcceptanceDto(
+            Cas1AuthorisedPlacementPeriodFactory()
+              .withArrival(LocalDate.of(2014, 1, 2))
+              .withArrivalFlexible(true)
+              .withDuration(duration)
+              .produce(),
+          ),
+        )
+        .produce()
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+
+      val result = service.validateDecision(
+        placementApplication.id,
+        placementApplicationDecisionEnvelope,
+        allocatedToUser,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("Authorised duration must be greater than 0")
     }
 
     @Test

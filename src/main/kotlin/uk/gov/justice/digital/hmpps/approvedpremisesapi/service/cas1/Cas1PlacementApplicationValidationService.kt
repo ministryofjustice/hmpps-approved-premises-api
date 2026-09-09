@@ -17,7 +17,7 @@ class Cas1PlacementApplicationValidationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
 ) {
 
-  @SuppressWarnings("ReturnCount")
+  @SuppressWarnings("ReturnCount", "CyclomaticComplexMethod")
   fun validateDecision(
     id: UUID,
     decisionEnvelope: PlacementApplicationDecisionEnvelope,
@@ -56,6 +56,7 @@ class Cas1PlacementApplicationValidationService(
       }
 
       // the null handling is temporary and only required until the ui starts always providing a value for acceptance
+      // remove CyclomaticComplexMethod supression once null handling is removed
       val authorisedPlacementPeriod = decisionEnvelope.acceptance?.authorisedPlacementPeriod
         ?: Cas1AuthorisedPlacementPeriod(
           arrival = placementApplicationEntity.expectedArrival!!,
@@ -69,6 +70,10 @@ class Cas1PlacementApplicationValidationService(
 
       if (authorisedPlacementPeriod.arrivalFlexible != placementApplicationEntity.expectedArrivalFlexible) {
         return CasResult.GeneralValidationError("Cannot change the value set for 'arrivalFlexible'")
+      }
+
+      if (authorisedPlacementPeriod.duration <= 0) {
+        return CasResult.GeneralValidationError("Authorised duration must be greater than 0")
       }
 
       if (placementApplicationEntity.requestedDuration != null && authorisedPlacementPeriod.duration != placementApplicationEntity.requestedDuration) {
