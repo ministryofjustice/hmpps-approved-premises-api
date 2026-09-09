@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 
 class Cas2ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
@@ -50,7 +51,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
 
         val application = givenASubmittedCas2Application(
           crn = crn,
-          submittedAt = OffsetDateTime.now(),
+          submittedAt = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS),
           cohort = cohort,
           latestStatusName = "moreInfoRequested",
         )
@@ -60,6 +61,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           application = Cas2ExternalApplicationDto(
             status = "More information requested",
             id = application.id,
+            submittedAt = application.submittedAt,
           ),
         )
 
@@ -80,10 +82,11 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         val latestTime = OffsetDateTime.now()
         val oldestTime = latestTime.minusDays(2)
+        val submittedTime = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS)
 
         val latestApplication = givenASubmittedCas2Application(
           crn = crn,
-          submittedAt = OffsetDateTime.now(),
+          submittedAt = submittedTime,
           cohort = Cas2Cohort.ATCR,
           createdAt = latestTime,
           latestStatusName = "moreInfoRequested",
@@ -91,7 +94,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
 
         givenASubmittedCas2Application(
           crn = crn,
-          submittedAt = OffsetDateTime.now(),
+          submittedAt = submittedTime,
           cohort = Cas2Cohort.ATCR,
           createdAt = oldestTime,
         )
@@ -101,6 +104,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           application = Cas2ExternalApplicationDto(
             status = "More information requested",
             id = latestApplication.id,
+            submittedAt = latestApplication.submittedAt,
           ),
         )
 
