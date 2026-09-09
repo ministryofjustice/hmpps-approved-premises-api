@@ -19,6 +19,8 @@ performance:
     active: true
 
 style:
+  ForbiddenComment:
+    active: false
   MaxLineLength:
     maxLineLength: 220
   ReturnCount:
