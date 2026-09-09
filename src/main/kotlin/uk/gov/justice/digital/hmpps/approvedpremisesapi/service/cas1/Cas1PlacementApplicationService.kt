@@ -469,15 +469,10 @@ class Cas1PlacementApplicationService(
     if (validatedDecision is ValidatedDecision.ValidatedAcceptance) {
       placementApplicationEntity.authorisedDuration = validatedDecision.authorisedPlacementPeriod.duration
 
-      val placementRequestResult =
-        placementRequestService.createPlacementRequestFromPlacementApplication(
-          placementApplicationEntity,
-          decisionEnvelope.decisionSummary,
-        )
-
-      if (placementRequestResult is CasResult.Error) {
-        return placementRequestResult.reviseType()
-      }
+      placementRequestService.createPlacementRequestFromPlacementApplication(
+        placementApplicationEntity,
+        decisionEnvelope.decisionSummary,
+      )
     }
 
     placementApplicationEntity.apply {

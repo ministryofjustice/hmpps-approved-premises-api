@@ -130,13 +130,10 @@ class Cas1PlacementRequestService(
   fun createPlacementRequestFromPlacementApplication(
     placementApplicationEntity: PlacementApplicationEntity,
     notes: String?,
-  ): CasResult<Unit> {
+  ) {
     val placementRequirements = placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(
       placementApplicationEntity.application,
-    ) ?: return CasResult.NotFound(
-      "Placement Requirements",
-      placementApplicationEntity.application.id.toString(),
-    )
+    ) ?: error("Placement requirements not found for application ${placementApplicationEntity.application.id}")
 
     val placementDates = PlacementDates(
       expectedArrival = placementApplicationEntity.expectedArrival!!,
@@ -153,8 +150,6 @@ class Cas1PlacementRequestService(
       isParole = isParole,
       placementApplicationEntity = placementApplicationEntity,
     )
-
-    return CasResult.Success(Unit)
   }
 
   @Deprecated(

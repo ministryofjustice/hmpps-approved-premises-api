@@ -945,7 +945,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `accepting a placement application decision when the placement requirements do not exist returns 404 and does not update the decision`() {
+    fun `accepting a placement application decision when the placement requirements do not exist returns 500 and does not update the decision`() {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           `Given a submitted Placement Application`(
@@ -966,7 +966,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
               )
               .exchange()
               .expectStatus()
-              .isNotFound
+              .is5xxServerError
 
             val updatedPlacementApplication =
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!

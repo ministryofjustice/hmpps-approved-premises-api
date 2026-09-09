@@ -737,7 +737,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every {
         placementRequestService.createPlacementRequestFromPlacementApplication(any(), any())
-      } returns CasResult.Success(Unit)
+      } returns Unit
       every { placementApplicationRepository.save(any()) } returnsArgument 0
 
       every { cas1PlacementApplicationEmailService.placementApplicationAccepted(any()) } returns Unit
