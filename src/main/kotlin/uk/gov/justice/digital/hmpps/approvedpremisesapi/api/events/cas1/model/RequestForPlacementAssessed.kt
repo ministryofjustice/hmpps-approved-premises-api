@@ -24,7 +24,7 @@ data class RequestForPlacementAssessed(
   @get:JsonProperty("expectedArrival", required = true) val expectedArrival: java.time.LocalDate,
 
   @Schema(example = "7", required = true, description = "")
-  @get:JsonProperty("duration", required = true) val duration: Int,
+  @get:JsonProperty("duration", required = true) val duration: Int?,
 
   @Schema(example = "the decision was to accept", description = "")
   @get:JsonProperty("decisionSummary") val decisionSummary: String? = null,

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventRequestedPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
@@ -181,13 +182,19 @@ class Cas1DomainEventDescriber(
   private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPlacementApplicationWithdrawnEvent(domainEventSummary.id())
 
+    fun dateDescription(dates: EventRequestedPlacementDates) = if(dates.endDate != null) {
+      "${dates.startDate.toUiFormat()} to ${dates.endDate.toUiFormat()}"
+    } else {
+      dates.startDate.toUiFormat()
+    }
+
     val description = event.describe { data ->
       val dates = data.eventDetails.placementDates ?: emptyList()
       val reasonDescription = data.eventDetails.withdrawalReason.javaConstantNameToSentence()
 
       "A request for placement was withdrawn" +
         if (dates.isNotEmpty()) {
-          " for dates " + dates.joinToString(", ") { "${it.startDate.toUiFormat()} to ${it.endDate.toUiFormat()}" }
+          " for dates " + dates.joinToString(", ") { dateDescription(it) }
         } else {
           ""
         } +
@@ -275,9 +282,13 @@ class Cas1DomainEventDescriber(
     return "$prelude $allocatedToDescription $allocatedByDescription".trim()
   }
 
-  private fun buildRequestForPlacementDescription(expectedArrival: LocalDate, duration: Int, rejected: Boolean = false): String {
-    val endDate = expectedArrival.plusDays(duration.toLong())
-    return "The placement request ${if (rejected) "was" else "is"} for ${expectedArrival.toUiFormat()} to ${endDate.toUiFormat()} (${toWeekAndDayDurationString(duration)})"
+  private fun buildRequestForPlacementDescription(expectedArrival: LocalDate, duration: Int?, rejected: Boolean = false): String {
+    return if (duration != null) {
+      val endDate = expectedArrival.plusDays(duration.toLong())
+      "The placement request ${if (rejected) "was" else "is"} for ${expectedArrival.toUiFormat()} to ${endDate.toUiFormat()} (${toWeekAndDayDurationString(duration)})"
+    } else {
+      "The placement request ${if (rejected) "was" else "is"} for ${expectedArrival.toUiFormat()} with an unspecified duration"
+    }
   }
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)

@@ -18,7 +18,7 @@ data class PlacementApplicationAllocated(
 
   @get:JsonProperty("allocatedAt", required = true) val allocatedAt: java.time.Instant,
 
-  @get:JsonProperty("placementDates", required = true) val placementDates: List<DatePeriod>,
+  @get:JsonProperty("placementDates", required = true) val placementDates: List<EventRequestedPlacementDates>,
 
   @get:JsonProperty("allocatedTo") val allocatedTo: StaffMember? = null,
 

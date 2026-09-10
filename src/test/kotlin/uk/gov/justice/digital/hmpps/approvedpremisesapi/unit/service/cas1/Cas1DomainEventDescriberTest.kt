@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import com.sun.jdi.request.EventRequest
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -11,6 +12,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventRequestedPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
@@ -427,8 +429,8 @@ class Cas1DomainEventDescriberTest {
           .withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST.toString())
           .withPlacementDates(
             listOf(
-              DatePeriod(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)),
-              DatePeriod(LocalDate.of(2024, 5, 6), LocalDate.of(2024, 7, 8)),
+              EventRequestedPlacementDates(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)),
+              EventRequestedPlacementDates(LocalDate.of(2024, 5, 6), LocalDate.of(2024, 7, 8)),
             ),
           )
           .produce(),
@@ -605,7 +607,7 @@ class Cas1DomainEventDescriberTest {
         eventDetails = PlacementApplicationAllocatedFactory()
           .withPlacementDates(
             listOf(
-              DatePeriod(
+              EventRequestedPlacementDates(
                 LocalDate.of(2025, 3, 12),
                 LocalDate.of(2025, 3, 20),
               ),

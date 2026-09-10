@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableDatePeriodDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
@@ -1280,7 +1280,7 @@ class Cas1WithdrawalTest : IntegrationTestBase() {
 
   private fun nowPlusDays(days: Long) = LocalDate.now().plusDays(days)
 
-  private fun toDatePeriod(start: LocalDate, duration: Int) = DatePeriod(start, start.plusDays(duration.toLong()))
+  private fun toDatePeriod(start: LocalDate, duration: Int?) = WithdrawableDatePeriodDto(start, duration?.let { start.plusDays(it.toLong()) })
 
   fun toWithdrawable(application: ApplicationEntity) = Withdrawable(
     application.id,
@@ -1305,6 +1305,6 @@ class Cas1WithdrawalTest : IntegrationTestBase() {
   fun toWithdrawable(spaceBooking: Cas1SpaceBookingEntity) = Withdrawable(
     spaceBooking.id,
     WithdrawableType.spaceBooking,
-    listOf(DatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
+    listOf(WithdrawableDatePeriodDto(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
   )
 }

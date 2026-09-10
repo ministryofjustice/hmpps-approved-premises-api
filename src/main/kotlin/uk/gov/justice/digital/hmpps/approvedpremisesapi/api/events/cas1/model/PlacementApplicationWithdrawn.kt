@@ -26,5 +26,6 @@ data class PlacementApplicationWithdrawn(
   @Schema(example = "RELATED_APPLICATION_WITHDRAWN", required = true, description = "")
   @get:JsonProperty("withdrawalReason", required = true) val withdrawalReason: String,
 
-  @get:JsonProperty("placementDates") val placementDates: List<DatePeriod>? = null,
+  @Schema(example = "When this domain event was first defined a placement application could have multiple dates. For that reason we need to retain this list for when rendering old events on the timeline")
+  @get:JsonProperty("placementDates") val placementDates: List<EventRequestedPlacementDates>? = null,
 ) : Cas1DomainEventPayload

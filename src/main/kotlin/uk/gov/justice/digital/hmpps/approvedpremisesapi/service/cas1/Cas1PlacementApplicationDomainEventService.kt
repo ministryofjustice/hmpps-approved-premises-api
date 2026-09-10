@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventRequestedPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
@@ -140,7 +141,7 @@ class Cas1PlacementApplicationDomainEventService(
       withdrawalReason = placementApplication.withdrawalReason!!.name,
       placementDates = listOfNotNull(
         placementApplication.placementDates()?.let {
-          DatePeriod(
+          EventRequestedPlacementDates(
             it.expectedArrival,
             it.expectedDeparture(),
           )
@@ -190,7 +191,7 @@ class Cas1PlacementApplicationDomainEventService(
       allocatedTo = domainEventTransformer.toStaffMember(allocatedToUser),
       allocatedBy = allocatedByUser?.let { domainEventTransformer.toStaffMember(it) },
       placementDates = listOf(
-        DatePeriod(
+        EventRequestedPlacementDates(
           startDate = placementDates.expectedArrival,
           endDate = placementDates.expectedDeparture(),
         ),

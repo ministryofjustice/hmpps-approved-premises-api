@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableDatePeriodDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
@@ -50,7 +50,7 @@ class PlacementApplicationTransformer(
     type = WithdrawableType.placementApplication,
     dates = listOfNotNull(
       placementApplication.placementDates()?.let {
-        DatePeriod(it.expectedArrival, it.expectedDeparture())
+        WithdrawableDatePeriodDto(it.expectedArrival, it.expectedDeparture())
       },
     ),
   )

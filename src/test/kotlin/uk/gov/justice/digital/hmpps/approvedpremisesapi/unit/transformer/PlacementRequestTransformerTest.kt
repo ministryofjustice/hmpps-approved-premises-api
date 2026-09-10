@@ -10,7 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableDatePeriodDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
@@ -372,7 +372,7 @@ class PlacementRequestTransformerTest {
           id,
           WithdrawableType.placementRequest,
           listOf(
-            DatePeriod(
+            WithdrawableDatePeriodDto(
               LocalDate.of(2023, 12, 11),
               LocalDate.of(2024, 1, 10),
             ),

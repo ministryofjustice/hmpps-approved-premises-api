@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventRequestedPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ProbationArea
@@ -24,7 +25,7 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
   private var withdrawnByProbationArea: Yielded<ProbationArea> = { ProbationAreaFactory().produce() }
   private var withdrawnAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var withdrawalReason: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
-  private var placementDates: Yielded<List<DatePeriod>?> = { null }
+  private var placementDates: Yielded<List<EventRequestedPlacementDates>?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -49,14 +50,6 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
     this.submittedAt = { submittedAt }
   }
 
-  fun withWithdrawnByStaffMember(staffMember: StaffMember) = apply {
-    this.withdrawnByStaffMember = { staffMember }
-  }
-
-  fun withWithdrawnByProbationArea(probationArea: ProbationArea) = apply {
-    this.withdrawnByProbationArea = { probationArea }
-  }
-
   fun withWithdrawnAt(withdrawnAt: Instant) = apply {
     this.withdrawnAt = { withdrawnAt }
   }
@@ -65,7 +58,7 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
     this.withdrawalReason = { withdrawalReason }
   }
 
-  fun withPlacementDates(placementDates: List<DatePeriod>?) = apply {
+  fun withPlacementDates(placementDates: List<EventRequestedPlacementDates>?) = apply {
     this.placementDates = { placementDates }
   }
 

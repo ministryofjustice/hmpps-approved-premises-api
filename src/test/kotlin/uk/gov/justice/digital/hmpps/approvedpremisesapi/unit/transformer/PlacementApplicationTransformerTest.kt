@@ -5,7 +5,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableDatePeriodDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationType
@@ -174,7 +174,7 @@ class PlacementApplicationTransformerTest {
         id,
         WithdrawableType.placementApplication,
         listOf(
-          DatePeriod(
+          WithdrawableDatePeriodDto(
             LocalDate.of(2023, 12, 11),
             LocalDate.of(2024, 1, 10),
           ),

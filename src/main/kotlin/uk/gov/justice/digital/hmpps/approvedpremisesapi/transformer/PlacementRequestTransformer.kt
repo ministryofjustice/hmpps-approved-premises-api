@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableDatePeriodDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
@@ -71,7 +71,7 @@ class PlacementRequestTransformer(
   fun transformToWithdrawable(jpa: PlacementRequestEntity) = Withdrawable(
     jpa.id,
     WithdrawableType.placementRequest,
-    listOf(DatePeriod(jpa.expectedArrival, jpa.expectedDeparture())),
+    listOf(WithdrawableDatePeriodDto(jpa.expectedArrival, jpa.expectedDeparture())),
   )
 
   private fun characteristicToCriteria(characteristic: Cas1CharacteristicEntity): PlacementCriteria? = try {
