@@ -127,7 +127,7 @@ class Cas1PlacementRequestService(
     return CasResult.Success(placementRequest)
   }
 
-  fun createPlacementRequestsFromPlacementApplication(
+  fun createPlacementRequestFromPlacementApplication(
     placementApplicationEntity: PlacementApplicationEntity,
     notes: String?,
   ): CasResult<Unit> {
@@ -160,7 +160,7 @@ class Cas1PlacementRequestService(
   @Deprecated(
     """
     Because all new placement requests are now linked to a placement application, we should 
-    really be using the createPlacementRequestsFromPlacementApplication function as the entry point
+    really be using the createPlacementRequestFromPlacementApplication function as the entry point
     to create any placement requests. At that point this function will become private
     """,
   )

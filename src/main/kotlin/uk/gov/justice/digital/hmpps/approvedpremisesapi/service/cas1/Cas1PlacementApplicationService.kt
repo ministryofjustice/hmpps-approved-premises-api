@@ -469,7 +469,7 @@ class Cas1PlacementApplicationService(
 
     if (decisionDto == ApiPlacementApplicationDecision.accepted) {
       val placementRequestResult =
-        placementRequestService.createPlacementRequestsFromPlacementApplication(
+        placementRequestService.createPlacementRequestFromPlacementApplication(
           placementApplicationEntity,
           decisionEnvelope.decisionSummary,
         )

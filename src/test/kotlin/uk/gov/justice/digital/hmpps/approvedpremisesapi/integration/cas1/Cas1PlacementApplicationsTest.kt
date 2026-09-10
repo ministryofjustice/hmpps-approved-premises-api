@@ -876,10 +876,10 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class SubmitDecisionForPlacementApplicationTest {
+  inner class SubmitDecisionForPlacementApplication {
 
     @Test
-    fun `submitting a placement request application decision without a JWT returns 401`() {
+    fun `submitting a decision without a JWT returns 401`() {
       webTestClient.post()
         .uri("/cas1/placement-applications/${UUID.randomUUID()}/decision")
         .bodyValue(
@@ -895,7 +895,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting a placement application decision when the placement application does not exist returns 404`() {
+    fun `submitting a decision for a placement application that does not exist returns 404`() {
       givenAUser { _, jwt ->
         webTestClient.post()
           .uri("/cas1/placement-applications/${UUID.randomUUID()}/decision")
@@ -914,13 +914,15 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting a placement request application decision with a decision already set returns an error`() {
+    fun `submitting a decision when a decision already set returns an error`() {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           `Given a submitted Placement Application`(
             allocatedToUser = user,
             offenderDetails = offenderDetails,
             decision = PlacementApplicationDecision.REJECTED,
+            expectedArrival = LocalDate.now().plusDays(5),
+            requestedDuration = 12,
           ) { placementApplicationEntity ->
             webTestClient.post()
               .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
@@ -941,39 +943,15 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting a placement request application that is not assigned to me returns an error`() {
-      givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            `Given a submitted Placement Application`(
-              allocatedToUser = otherUser,
-              offenderDetails = offenderDetails,
-              decision = PlacementApplicationDecision.REJECTED,
-            ) { placementApplicationEntity ->
-              webTestClient.post()
-                .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
-                .header("Authorization", "Bearer $jwt")
-                .bodyValue(
-                  PlacementApplicationDecisionEnvelope(
-                    decision = PlacementApplicationDecisionDto.accepted,
-                    summaryOfChanges = "ChangeSummary",
-                    decisionSummary = "DecisionSummary",
-                  ),
-                )
-                .exchange()
-                .expectStatus()
-                .isForbidden
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `submitting a placement application decision when the placement requirements do not exist returns 404 and does not update the decision`() {
+    fun `accepting a placement application decision when the placement requirements do not exist returns 404 and does not update the decision`() {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
+          `Given a submitted Placement Application`(
+            allocatedToUser = user,
+            offenderDetails = offenderDetails,
+            expectedArrival = LocalDate.now().plusDays(5),
+            requestedDuration = 12,
+          ) { placementApplicationEntity ->
             webTestClient.post()
               .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
               .header("Authorization", "Bearer $jwt")
@@ -999,10 +977,16 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @CsvSource("ROTL,false", "ADDITIONAL_PLACEMENT,false", "RELEASE_FOLLOWING_DECISION,true")
-    fun `accepting a placement application decision records the decision, creates a placement request and sends an email`(placementType: PlacementType, isParole: Boolean) {
+    fun `submitting an acceptance records the decision, creates a placement request and sends an email`(placementType: PlacementType, isParole: Boolean) {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
+          `Given a submitted Placement Application`(
+            allocatedToUser = user,
+            offenderDetails = offenderDetails,
+            placementType = placementType,
+            expectedArrival = LocalDate.now().plusDays(5),
+            requestedDuration = 12,
+          ) { placementApplicationEntity ->
             `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
               `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
 
@@ -1026,19 +1010,20 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
                 assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
                 assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
                 assertThat(updatedPlacementApplication.decisionSummary).isEqualTo("DecisionSummary")
+                assertThat(updatedPlacementApplication.authorisedDuration).isEqualTo(12)
 
                 val createdPlacementRequests =
                   placementRequestTestRepository.findAllByApplication(placementApplicationEntity.application)
 
                 assertThat(createdPlacementRequests.size).isEqualTo(1)
 
-                val createdPlacementApplication = createdPlacementRequests[0]
+                val placementRequest = createdPlacementRequests[0]
 
-                assertThat(createdPlacementApplication.application.id).isEqualTo(placementApplicationEntity.application.id)
-                assertThat(createdPlacementApplication.expectedArrival).isEqualTo(createdPlacementApplication.expectedArrival)
-                assertThat(createdPlacementApplication.duration).isEqualTo(createdPlacementApplication.duration)
-                assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
-                assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+                assertThat(placementRequest.application.id).isEqualTo(placementApplicationEntity.application.id)
+                assertThat(placementRequest.expectedArrival).isEqualTo(LocalDate.now().plusDays(5))
+                assertThat(placementRequest.duration).isEqualTo(12)
+                assertThat(placementRequest.isParole).isEqualTo(isParole)
+                assertThat(placementRequest.placementRequirements.id).isEqualTo(placementRequirements.id)
                 assertThat(updatedPlacementApplication.decisionSummary).isEqualTo("DecisionSummary")
 
                 emailAsserter.assertEmailsRequestedCount(1)
@@ -1052,10 +1037,16 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @CsvSource("ROTL", "ADDITIONAL_PLACEMENT", "RELEASE_FOLLOWING_DECISION")
-    fun `rejecting a placement application decision records the decision and sends an email`(placementType: PlacementType) {
+    fun `submitting a rejection records the decision and sends an email`(placementType: PlacementType) {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
+          `Given a submitted Placement Application`(
+            allocatedToUser = user,
+            offenderDetails = offenderDetails,
+            placementType = placementType,
+            expectedArrival = LocalDate.now(),
+            requestedDuration = 12,
+          ) { placementApplicationEntity ->
             `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
               `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
 
@@ -1079,6 +1070,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
                 assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.REJECTED)
                 assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
                 assertThat(updatedPlacementApplication.decisionSummary).isEqualTo("DecisionSummary")
+                assertThat(updatedPlacementApplication.authorisedDuration).isNull()
 
                 val createdPlacementRequests =
                   placementRequestTestRepository.findAllByApplication(placementApplicationEntity.application)
@@ -1098,6 +1090,8 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
       offenderDetails: OffenderDetailSummary,
       decision: PlacementApplicationDecision? = null,
       placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
+      expectedArrival: LocalDate,
+      requestedDuration: Int,
       block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
     ) {
       val placementApplication = givenAPlacementApplication(
@@ -1110,8 +1104,8 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
         decision = decision,
         reallocated = false,
         placementType = placementType,
-        expectedArrival = LocalDate.now(),
-        duration = 12,
+        expectedArrival = expectedArrival,
+        requestedDuration = requestedDuration,
       )
 
       block(placementApplication)
@@ -1180,7 +1174,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
           },
           submittedAt = OffsetDateTime.now(),
           expectedArrival = LocalDate.now(),
-          duration = 5,
+          requestedDuration = 5,
         ) { placementApplicationEntity ->
 
           webTestClient.post()
@@ -1205,7 +1199,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
           createdByUser = user,
           submittedAt = OffsetDateTime.now(),
           expectedArrival = LocalDate.now(),
-          duration = 5,
+          requestedDuration = 5,
         ) { placementApplicationEntity ->
           val rawResult = webTestClient.post()
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
@@ -1251,7 +1245,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             decision = null,
             submittedAt = OffsetDateTime.now(),
             expectedArrival = LocalDate.now(),
-            duration = 5,
+            requestedDuration = 5,
             allocatedToUser = assessor,
           ) { placementApplicationEntity ->
 
@@ -1312,7 +1306,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
               decision = null,
               submittedAt = OffsetDateTime.now(),
               expectedArrival = LocalDate.now(),
-              duration = 5,
+              requestedDuration = 5,
               allocatedToUser = assessor,
             ) { placementApplicationEntity ->
 
