@@ -311,6 +311,22 @@ class Cas1TaskTransformerTest {
       assertThat(result.apType).isEqualTo(application.apType.asApiType())
     }
 
+    @Test
+    fun `Placement application is correctly transformer with null duration`() {
+      placementApplication.requestedDuration = null
+      placementApplication.expectedArrival = LocalDate.of(2024, 3, 23)
+      placementApplication.expectedArrivalFlexible = true
+
+      val result = taskTransformer.transformPlacementApplicationToTask(
+        placementApplication,
+        getPersonSummaryInfoResultForDiscriminatorType(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
+      )
+
+      assertThat(result.requestedPlacementPeriod).isEqualTo(
+        Cas1RequestedPlacementPeriod(LocalDate.of(2024, 3, 23), true, null),
+      )
+    }
+
     @ParameterizedTest
     @EnumSource(
       value = JpaPlacementType::class,

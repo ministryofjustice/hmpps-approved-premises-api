@@ -39,6 +39,7 @@ data class PlacementApplicationTask(
 
   @get:JsonProperty("outcome") val outcome: PlacementApplicationDecisionDto? = null,
 
+  @Schema(description = "Use requestedPlacementPeriod.arrival instead", deprecated = true)
   @get:JsonProperty("expectedArrivalDate") override val expectedArrivalDate: java.time.LocalDate? = null,
 
   @get:JsonProperty("allocatedToStaffMember") override val allocatedToStaffMember: ApprovedPremisesUser? = null,

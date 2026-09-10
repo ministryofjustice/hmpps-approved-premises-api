@@ -87,12 +87,12 @@ class Cas1TaskTransformer(
     probationDeliveryUnit = placementApplication.application.createdByUser.probationDeliveryUnit?.let {
       probationDeliveryUnitTransformer.transformJpaToApi(it)
     },
-    expectedArrivalDate = placementApplication.placementDates()!!.expectedArrival,
+    expectedArrivalDate = placementApplication.expectedArrival!!,
     apType = placementApplication.application.apType.asApiType(),
     requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementApplication.expectedArrival!!,
       arrivalFlexible = placementApplication.expectedArrivalFlexible,
-      duration = placementApplication.requestedDuration!!,
+      duration = placementApplication.requestedDuration,
     ),
   )
 
