@@ -11,7 +11,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventRequestedPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
@@ -115,7 +115,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
             assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
-            assertThat(it.schemaVersion).isEqualTo(2)
+            assertThat(it.schemaVersion).isEqualTo(3)
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
@@ -162,6 +162,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
             assertThat(it.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
+            assertThat(it.schemaVersion).isEqualTo(3)
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
@@ -237,6 +238,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
             assertThat(it.metadata).containsEntry(MetaDataName.CAS1_PLACEMENT_APPLICATION_ID, placementApplication.id.toString())
+            assertThat(it.schemaVersion).isEqualTo(2)
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
@@ -349,11 +351,11 @@ class Cas1PlacementApplicationDomainEventServiceTest {
         domainEventService.savePlacementApplicationAllocatedEvent(
           match {
             val data = it.data.eventDetails
-            println(data)
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
               it.nomsNumber == application.nomsNumber &&
+              it.schemaVersion == 2 &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.placementApplicationId == placementApplication.id &&
@@ -364,7 +366,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
               data.allocatedBy == allocatedBy &&
               data.allocatedTo == allocatedTo &&
               data.placementDates == listOf(
-                DatePeriod(
+                EventRequestedPlacementDates(
                   LocalDate.of(2024, 5, 3),
                   LocalDate.of(2024, 5, 10),
                 ),

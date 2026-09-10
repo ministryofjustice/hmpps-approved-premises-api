@@ -66,7 +66,7 @@ class Cas1WithdrawableTreeBuilder(
           placementApplication.placementDates()?.let {
             WithdrawableDatePeriod(
               startDate = it.expectedArrival,
-              endDate = it.expectedDeparture(),
+              endDate = it.expectedDeparture()!!,
             )
           },
         ),

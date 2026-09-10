@@ -12,6 +12,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventRequestedPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
@@ -429,7 +430,7 @@ class Cas1DomainEventDescriberTest {
   @Nested
   inner class PlacementApplicationWithdrawn {
     @Test
-    fun `Returns expected description for placement application withdrawn event with no dates`() {
+    fun `event with no dates`() {
       val domainEventSummary =
         DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
 
@@ -450,7 +451,7 @@ class Cas1DomainEventDescriberTest {
     }
 
     @Test
-    fun `Returns expected description for placement application withdrawn event with placement dates`() {
+    fun `event with single placement date`() {
       val domainEventSummary =
         DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
 
@@ -463,8 +464,64 @@ class Cas1DomainEventDescriberTest {
             .withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST.toString())
             .withPlacementDates(
               listOf(
-                DatePeriod(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)),
-                DatePeriod(LocalDate.of(2024, 5, 6), LocalDate.of(2024, 7, 8)),
+                EventRequestedPlacementDates(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)),
+              ),
+            )
+            .produce(),
+        )
+      }
+
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+
+      assertThat(result.description).isEqualTo(
+        "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024. The reason was: 'Duplicate placement request'",
+      )
+    }
+
+    @Test
+    fun `event with single placement date, no end date (null duration)`() {
+      val domainEventSummary =
+        DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
+
+      every { mockDomainEventService.getPlacementApplicationWithdrawnEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+        Cas1DomainEventEnvelope(
+          id = it,
+          timestamp = Instant.now(),
+          eventType = EventType.placementApplicationWithdrawn,
+          eventDetails = PlacementApplicationWithdrawnFactory()
+            .withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST.toString())
+            .withPlacementDates(
+              listOf(
+                EventRequestedPlacementDates(LocalDate.of(2024, 1, 2), null),
+              ),
+            )
+            .produce(),
+        )
+      }
+
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+
+      assertThat(result.description).isEqualTo(
+        "A request for placement was withdrawn for dates Tuesday 2 January 2024. The reason was: 'Duplicate placement request'",
+      )
+    }
+
+    @Test
+    fun `event with multiple placement dates (legacy)`() {
+      val domainEventSummary =
+        DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
+
+      every { mockDomainEventService.getPlacementApplicationWithdrawnEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+        Cas1DomainEventEnvelope(
+          id = it,
+          timestamp = Instant.now(),
+          eventType = EventType.placementApplicationWithdrawn,
+          eventDetails = PlacementApplicationWithdrawnFactory()
+            .withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST.toString())
+            .withPlacementDates(
+              listOf(
+                EventRequestedPlacementDates(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)),
+                EventRequestedPlacementDates(LocalDate.of(2024, 5, 6), LocalDate.of(2024, 7, 8)),
               ),
             )
             .produce(),
@@ -509,13 +566,14 @@ class Cas1DomainEventDescriberTest {
 
   @Nested
   inner class RequestForPlacementCreated {
+
     @ParameterizedTest
     @CsvSource(
       "rotl,Release on Temporary Licence (ROTL)",
       "releaseFollowingDecisions,Release directed following parole board or other hearing/decision",
       "additionalPlacement,An additional placement on an existing application",
     )
-    fun `Returns expected description for request for placement created event, for additional requests`(type: RequestForPlacementType, expectedTypeDescription: String) {
+    fun `event for additional requests`(type: RequestForPlacementType, expectedTypeDescription: String) {
       val domainEventSummary =
         DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
 
@@ -540,8 +598,39 @@ class Cas1DomainEventDescriberTest {
       )
     }
 
+    @ParameterizedTest
+    @CsvSource(
+      "rotl,Release on Temporary Licence (ROTL)",
+      "releaseFollowingDecisions,Release directed following parole board or other hearing/decision",
+      "additionalPlacement,An additional placement on an existing application",
+    )
+    fun `event for additional requests, unspecified duration`(type: RequestForPlacementType, expectedTypeDescription: String) {
+      val domainEventSummary =
+        DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
+
+      every { mockDomainEventService.getRequestForPlacementCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+        Cas1DomainEventEnvelope(
+          id = it,
+          timestamp = Instant.now(),
+          eventType = EventType.requestForPlacementCreated,
+          eventDetails = RequestForPlacementCreatedFactory()
+            .withRequestForPlacementType(type)
+            .withExpectedArrival(LocalDate.of(2025, 3, 12))
+            .withDuration(null)
+            .produce(),
+        )
+      }
+
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+
+      assertThat(result.description).isEqualTo(
+        "A placement was requested with the reason '$expectedTypeDescription'. " +
+          "The placement request is for Wednesday 12 March 2025 with an unspecified duration",
+      )
+    }
+
     @Test
-    fun `Returns expected description for request for placement created event, for initial request`() {
+    fun `event for initial request`() {
       val domainEventSummary =
         DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
 
@@ -565,13 +654,39 @@ class Cas1DomainEventDescriberTest {
           "The placement request is for Wednesday 12 March 2025 to Friday 28 March 2025 (2 weeks and 2 days)",
       )
     }
+
+    @Test
+    fun `event for initial request, with unspecified duration`() {
+      val domainEventSummary =
+        DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
+
+      every { mockDomainEventService.getRequestForPlacementCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+        Cas1DomainEventEnvelope(
+          id = it,
+          timestamp = Instant.now(),
+          eventType = EventType.requestForPlacementCreated,
+          eventDetails = RequestForPlacementCreatedFactory()
+            .withRequestForPlacementType(RequestForPlacementType.initial)
+            .withExpectedArrival(LocalDate.of(2025, 3, 12))
+            .withDuration(null)
+            .produce(),
+        )
+      }
+
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+
+      assertThat(result.description).isEqualTo(
+        "A placement was automatically requested after the application was assessed. " +
+          "The placement request is for Wednesday 12 March 2025 with an unspecified duration",
+      )
+    }
   }
 
   @Nested
   inner class RequestForPlacementAssessedTest {
     @ParameterizedTest
     @EnumSource(value = RequestForPlacementAssessed.Decision::class)
-    fun `Returns expected description for request for placement assessed event with summary`(decision: RequestForPlacementAssessed.Decision) {
+    fun `event with a decision summary`(decision: RequestForPlacementAssessed.Decision) {
       val domainEventSummary =
         DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
       val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
@@ -599,7 +714,7 @@ class Cas1DomainEventDescriberTest {
 
     @ParameterizedTest
     @EnumSource(value = RequestForPlacementAssessed.Decision::class)
-    fun `Returns expected description for request for placement assessed event without summary`(decision: RequestForPlacementAssessed.Decision) {
+    fun `event without a decision summary`(decision: RequestForPlacementAssessed.Decision) {
       val domainEventSummary =
         DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
       val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
@@ -624,6 +739,34 @@ class Cas1DomainEventDescriberTest {
         "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week).",
       )
     }
+
+    @ParameterizedTest
+    @EnumSource(value = RequestForPlacementAssessed.Decision::class)
+    fun `event without an expected duration`(decision: RequestForPlacementAssessed.Decision) {
+      val domainEventSummary =
+        DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
+      val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
+
+      every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+        Cas1DomainEventEnvelope(
+          id = it,
+          timestamp = Instant.now(),
+          eventType = EventType.requestForPlacementAssessed,
+          eventDetails = RequestForPlacementAssessedFactory()
+            .withDecision(decision)
+            .withDecisionSummary(null)
+            .withExpectedArrival(LocalDate.of(2024, 5, 3))
+            .withDuration(null)
+            .produce(),
+        )
+      }
+
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+
+      assertThat(result.description).isEqualTo(
+        "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 with an unspecified duration.",
+      )
+    }
   }
 
   @Nested
@@ -637,7 +780,7 @@ class Cas1DomainEventDescriberTest {
         "Carol,Derek,A request for placement was allocated to Carol C by Derek D for assessment",
       ],
     )
-    fun `Returns expected description for placement application allocated event`(
+    fun `events with and without allocation information`(
       allocatedTo: String?,
       allocatedBy: String?,
       expectedAllocationDescription: String,
@@ -653,7 +796,7 @@ class Cas1DomainEventDescriberTest {
           eventDetails = PlacementApplicationAllocatedFactory()
             .withPlacementDates(
               listOf(
-                DatePeriod(
+                EventRequestedPlacementDates(
                   LocalDate.of(2025, 3, 12),
                   LocalDate.of(2025, 3, 20),
                 ),
@@ -682,6 +825,46 @@ class Cas1DomainEventDescriberTest {
       val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
       assertThat(result.description).isEqualTo("$expectedAllocationDescription. The placement request is for Wednesday 12 March 2025 to Thursday 20 March 2025 (1 week and 1 day)")
+    }
+
+    @Test
+    fun `event with no end date (no duration)`() {
+      val domainEventSummary =
+        DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED)
+
+      every { mockDomainEventService.getPlacementApplicationAllocatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+        Cas1DomainEventEnvelope(
+          id = it,
+          timestamp = Instant.now(),
+          eventType = EventType.placementApplicationAllocated,
+          eventDetails = PlacementApplicationAllocatedFactory()
+            .withPlacementDates(
+              listOf(
+                EventRequestedPlacementDates(
+                  LocalDate.of(2025, 3, 12),
+                  null,
+                ),
+              ),
+            )
+            .withAllocatedTo(
+              StaffMemberFactory()
+                .withForenames("assess")
+                .withSurname("or")
+                .produce(),
+            )
+            .withAllocatedBy(
+              StaffMemberFactory()
+                .withForenames("assign")
+                .withSurname("or")
+                .produce(),
+            )
+            .produce(),
+        )
+      }
+
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+
+      assertThat(result.description).isEqualTo("A request for placement was allocated to assess or by assign or for assessment. The placement request is for Wednesday 12 March 2025 with an unspecified duration")
     }
   }
 
