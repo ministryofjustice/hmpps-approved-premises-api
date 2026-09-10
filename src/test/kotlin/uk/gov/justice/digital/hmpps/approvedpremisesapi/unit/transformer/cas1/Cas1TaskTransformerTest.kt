@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -302,12 +301,6 @@ class Cas1TaskTransformerTest {
       assertThat(result.tier).isEqualTo(mockTier)
       assertThat(result.personName).isEqualTo("First Last")
       assertThat(result.crn).isEqualTo(placementApplication.application.crn)
-      assertThat(result.dates).isEqualTo(
-        PlacementDates(LocalDate.of(2024, 3, 23), 12),
-      )
-      assertThat(result.placementDates).containsExactly(
-        PlacementDates(LocalDate.of(2024, 3, 23), 12),
-      )
       assertThat(result.requestedPlacementPeriod).isEqualTo(
         Cas1RequestedPlacementPeriod(LocalDate.of(2024, 3, 23), true, 12),
       )

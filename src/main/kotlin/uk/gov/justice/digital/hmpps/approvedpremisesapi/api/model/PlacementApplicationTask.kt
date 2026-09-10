@@ -13,10 +13,6 @@ data class PlacementApplicationTask(
 
   @get:JsonProperty("placementType", required = true) val placementType: PlacementType,
 
-  @Deprecated("use requestedPlacementPeriod")
-  @Schema(deprecated = true, description = "Use requestedPlacementPeriod")
-  @get:JsonProperty("dates", required = false) val dates: PlacementDates?,
-
   @get:JsonProperty("taskType", required = true) override val taskType: TaskType,
 
   @Schema(example = "6abb5fa3-e93f-4445-887b-30d081688f44", required = true, description = "")
@@ -40,10 +36,6 @@ data class PlacementApplicationTask(
   @get:JsonProperty("status", required = true) override val status: TaskStatus,
 
   @get:JsonProperty("apType", required = true) override val apType: ApType,
-
-  @Deprecated("use requestedPlacementPeriod")
-  @Schema(deprecated = true, description = "Use requestedPlacementPeriod")
-  @get:JsonProperty("placementDates") val placementDates: List<PlacementDates>? = null,
 
   @get:JsonProperty("outcome") val outcome: PlacementApplicationDecisionDto? = null,
 
