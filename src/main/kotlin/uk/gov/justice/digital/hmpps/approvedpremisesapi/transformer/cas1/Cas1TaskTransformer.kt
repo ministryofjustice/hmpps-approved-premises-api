@@ -80,8 +80,6 @@ class Cas1TaskTransformer(
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
-    dates = placementApplication.placementDates()!!.toApiType(),
-    placementDates = listOf(placementApplication.placementDates()!!.toApiType()),
     placementType = getPlacementType(placementApplication.placementType!!),
     apArea = getApArea(placementApplication.application),
     outcomeRecordedAt = placementApplication.decisionMadeAt?.toInstant(),
@@ -89,12 +87,12 @@ class Cas1TaskTransformer(
     probationDeliveryUnit = placementApplication.application.createdByUser.probationDeliveryUnit?.let {
       probationDeliveryUnitTransformer.transformJpaToApi(it)
     },
-    expectedArrivalDate = placementApplication.placementDates()!!.expectedArrival,
+    expectedArrivalDate = placementApplication.expectedArrival!!,
     apType = placementApplication.application.apType.asApiType(),
     requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementApplication.expectedArrival!!,
       arrivalFlexible = placementApplication.expectedArrivalFlexible,
-      duration = placementApplication.requestedDuration!!,
+      duration = placementApplication.requestedDuration,
     ),
   )
 
