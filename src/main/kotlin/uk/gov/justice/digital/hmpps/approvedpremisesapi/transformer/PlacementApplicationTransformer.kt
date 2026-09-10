@@ -50,7 +50,7 @@ class PlacementApplicationTransformer(
     type = WithdrawableType.placementApplication,
     dates = listOfNotNull(
       placementApplication.placementDates()?.let {
-        DatePeriod(it.expectedArrival, it.expectedDeparture())
+        DatePeriod(it.expectedArrival, it.expectedDeparture()!!)
       },
     ),
   )
