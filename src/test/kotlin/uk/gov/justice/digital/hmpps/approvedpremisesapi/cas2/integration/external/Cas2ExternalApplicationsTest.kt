@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenASubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -61,7 +62,11 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           application = Cas2ExternalApplicationDto(
             status = "More information requested",
             id = application.id,
-            submittedAt = application.submittedAt,
+          ),
+          id = application.id,
+          submittedApplication = Cas2ExternalSubmittedApplicationDto(
+            latestAssessmentStatus = "More information requested",
+            submittedAt = application.submittedAt!!,
           ),
         )
 
@@ -104,7 +109,11 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           application = Cas2ExternalApplicationDto(
             status = "More information requested",
             id = latestApplication.id,
-            submittedAt = latestApplication.submittedAt,
+          ),
+          id = latestApplication.id,
+          submittedApplication = Cas2ExternalSubmittedApplicationDto(
+            latestAssessmentStatus = "More information requested",
+            submittedAt = latestApplication.submittedAt!!,
           ),
         )
 

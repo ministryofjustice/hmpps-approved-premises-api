@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
@@ -57,6 +58,10 @@ class Cas2ExternalApplicationServiceTest {
         application = Cas2ExternalApplicationDto(
           id = id,
           status = status,
+        ),
+        id = id,
+        submittedApplication = Cas2ExternalSubmittedApplicationDto(
+          latestAssessmentStatus = status,
           submittedAt = submittedAt,
         ),
       )
@@ -66,14 +71,6 @@ class Cas2ExternalApplicationServiceTest {
     @Test
     fun `returns latest application (draft), providing view draft url`() {
       val status = null
-      val expected = Cas2SuitableApplication(
-        uiUrl = "http://frontend/applications/$id",
-        application = Cas2ExternalApplicationDto(
-          id = id,
-          status = status,
-          submittedAt = null,
-        ),
-      )
       val user = Cas2UserEntityFactory()
         .produce()
       val cas2applicationEntity = Cas2ApplicationEntityFactory()
@@ -84,7 +81,18 @@ class Cas2ExternalApplicationServiceTest {
         .produce()
 
       every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
+
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+
+      val expected = Cas2SuitableApplication(
+        uiUrl = "http://frontend/applications/$id",
+        application = Cas2ExternalApplicationDto(
+          id = id,
+          status = status,
+        ),
+        id = id,
+        submittedApplication = null,
+      )
       assertThat(result).isEqualTo(expected)
     }
 
