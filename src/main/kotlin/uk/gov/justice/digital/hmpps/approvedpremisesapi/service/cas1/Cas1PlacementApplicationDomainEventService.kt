@@ -12,12 +12,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.WithdrawnBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -81,19 +81,15 @@ class Cas1PlacementApplicationDomainEventService(
       requestForPlacementType = placementType,
     )
 
-    domainEventService.saveRequestForPlacementCreatedEvent(
-      SaveCas1DomainEvent(
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt,
-        data = RequestForPlacementCreatedEnvelope(
-          id = domainEventId,
-          timestamp = eventOccurredAt,
-          eventType = EventType.requestForPlacementCreated,
-          eventDetails = eventDetails,
-        ),
+        data = eventDetails,
         triggerSource = if (placementApplication.automatic) {
           TriggerSourceType.SYSTEM
         } else {

@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -37,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -973,32 +971,6 @@ class Cas1DomainEventServiceTest {
         domainEventServiceSpy.saveAndEmitForEnvelope(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
-        )
-      }
-    }
-
-    @Test
-    fun `saveRequestForPlacementCreatedEvent sends correct arguments to saveAndEmit`() {
-      val id = UUID.randomUUID()
-
-      val eventDetails = RequestForPlacementCreatedFactory().produce()
-      val domainEventEnvelope = mockk<RequestForPlacementCreatedEnvelope>()
-      val domainEvent = mockk<SaveCas1DomainEvent<RequestForPlacementCreatedEnvelope>>()
-
-      every { domainEvent.id } returns id
-      every { domainEvent.data } returns domainEventEnvelope
-      every { domainEventEnvelope.eventDetails } returns eventDetails
-
-      val domainEventServiceSpy = spyk(domainEventService)
-
-      every { domainEventServiceSpy.saveAndEmitForEnvelope(any(), any()) } returns Unit
-
-      domainEventServiceSpy.saveRequestForPlacementCreatedEvent(domainEvent)
-
-      verify {
-        domainEventServiceSpy.saveAndEmitForEnvelope(
-          domainEvent = domainEvent,
-          eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
         )
       }
     }

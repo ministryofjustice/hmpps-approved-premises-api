@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -102,14 +104,15 @@ class Cas1PlacementApplicationDomainEventServiceTest {
       )
 
       val staffMember = staffUserDetails.toStaffMember()
-      every { domainEventService.saveRequestForPlacementCreatedEvent(any()) } returns Unit
+      every { domainEventService.save(any()) } returns Unit
 
       service.placementApplicationSubmitted(placementApplication, createdByUserName = USERNAME)
 
       verify {
-        domainEventService.saveRequestForPlacementCreatedEvent(
+        domainEventService.save(
           withArg {
             assertThat(it.id).isNotNull()
+            assertThat(it.type).isEqualTo(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
             assertThat(it.applicationId).isEqualTo(application.id)
             assertThat(it.crn).isEqualTo(CRN)
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
@@ -117,7 +120,8 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
             assertThat(it.schemaVersion).isEqualTo(2)
 
-            val eventDetails = it.data.eventDetails
+            assertThat(it.data).isInstanceOf(RequestForPlacementCreated::class.java)
+            val eventDetails = it.data as RequestForPlacementCreated
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
             assertThat(eventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
             assertThat(eventDetails.requestForPlacementId).isEqualTo(placementApplication.id)
