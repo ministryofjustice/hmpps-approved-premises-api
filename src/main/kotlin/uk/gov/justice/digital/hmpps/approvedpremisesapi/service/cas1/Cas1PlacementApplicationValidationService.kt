@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1AuthorisedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.internal.AuthorisedPlacementPeriod
 import java.util.UUID
 
 @Service
@@ -15,7 +17,7 @@ class Cas1PlacementApplicationValidationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
 ) {
 
-  @SuppressWarnings("ReturnCount")
+  @SuppressWarnings("ReturnCount", "CyclomaticComplexMethod")
   fun validateDecision(
     id: UUID,
     decisionEnvelope: PlacementApplicationDecisionEnvelope,
@@ -40,14 +42,65 @@ class Cas1PlacementApplicationValidationService(
       return CasResult.GeneralValidationError("Decision $decisionDto is not supported")
     }
 
-    return CasResult.Success(
-      ValidatedDecision(
-        placementApplicationEntity,
-      ),
-    )
+    if (decisionDto == PlacementApplicationDecisionDto.rejected) {
+      return CasResult.Success(
+        ValidatedDecision.ValidatedRejection(
+          placementApplication = placementApplicationEntity,
+        ),
+      )
+    } else {
+      // once the ui starts providing a value for acceptance we'll change this validation to ensure
+      // acceptance value is always provided, regardless of requestedDuration
+      if (placementApplicationEntity.requestedDuration == null && decisionEnvelope.acceptance == null) {
+        return CasResult.GeneralValidationError("Acceptance with a duration is required when requested duration is null")
+      }
+
+      // the null handling is temporary and only required until the ui starts always providing a value for acceptance
+      // remove CyclomaticComplexMethod supression once null handling is removed
+      val authorisedPlacementPeriod = decisionEnvelope.acceptance?.authorisedPlacementPeriod
+        ?: Cas1AuthorisedPlacementPeriod(
+          arrival = placementApplicationEntity.expectedArrival!!,
+          arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
+          duration = placementApplicationEntity.requestedDuration!!,
+        )
+
+      if (authorisedPlacementPeriod.arrival != placementApplicationEntity.expectedArrival) {
+        return CasResult.GeneralValidationError("Cannot change arrival date")
+      }
+
+      if (authorisedPlacementPeriod.arrivalFlexible != placementApplicationEntity.expectedArrivalFlexible) {
+        return CasResult.GeneralValidationError("Cannot change the value set for 'arrivalFlexible'")
+      }
+
+      if (authorisedPlacementPeriod.duration <= 0) {
+        return CasResult.GeneralValidationError("Authorised duration must be greater than 0")
+      }
+
+      if (placementApplicationEntity.requestedDuration != null && authorisedPlacementPeriod.duration != placementApplicationEntity.requestedDuration) {
+        return CasResult.GeneralValidationError("Authorised duration must match the requested duration")
+      }
+
+      return CasResult.Success(
+        ValidatedDecision.ValidatedAcceptance(
+          placementApplicationEntity,
+          AuthorisedPlacementPeriod(
+            arrival = authorisedPlacementPeriod.arrival,
+            arrivalFlexible = authorisedPlacementPeriod.arrivalFlexible,
+            duration = authorisedPlacementPeriod.duration,
+          ),
+        ),
+      )
+    }
   }
 
-  data class ValidatedDecision(
-    val placementApplication: PlacementApplicationEntity,
-  )
+  sealed interface ValidatedDecision {
+    val placementApplication: PlacementApplicationEntity
+    data class ValidatedAcceptance(
+      override val placementApplication: PlacementApplicationEntity,
+      val authorisedPlacementPeriod: AuthorisedPlacementPeriod,
+    ) : ValidatedDecision
+    data class ValidatedRejection(
+      override val placementApplication: PlacementApplicationEntity,
+    ) : ValidatedDecision
+  }
 }

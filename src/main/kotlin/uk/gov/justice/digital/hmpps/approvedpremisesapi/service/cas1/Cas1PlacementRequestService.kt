@@ -130,17 +130,14 @@ class Cas1PlacementRequestService(
   fun createPlacementRequestFromPlacementApplication(
     placementApplicationEntity: PlacementApplicationEntity,
     notes: String?,
-  ): CasResult<Unit> {
+  ) {
     val placementRequirements = placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(
       placementApplicationEntity.application,
-    ) ?: return CasResult.NotFound(
-      "Placement Requirements",
-      placementApplicationEntity.application.id.toString(),
-    )
+    ) ?: error("Placement requirements not found for application ${placementApplicationEntity.application.id}")
 
     val placementDates = PlacementDates(
-      expectedArrival = placementApplicationEntity.placementDates()!!.expectedArrival,
-      duration = placementApplicationEntity.placementDates()!!.duration,
+      expectedArrival = placementApplicationEntity.expectedArrival!!,
+      duration = placementApplicationEntity.authorisedDuration!!,
     )
 
     // this should probably be driven by the release type, as placementType is a deprecated concept
@@ -153,8 +150,6 @@ class Cas1PlacementRequestService(
       isParole = isParole,
       placementApplicationEntity = placementApplicationEntity,
     )
-
-    return CasResult.Success(Unit)
   }
 
   @Deprecated(

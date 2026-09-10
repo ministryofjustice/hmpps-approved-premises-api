@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementApplicationDecisionAcceptanceDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.UpdatePlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1AuthorisedPlacementPeriodFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -943,7 +945,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `accepting a placement application decision when the placement requirements do not exist returns 404 and does not update the decision`() {
+    fun `accepting a placement application decision when the placement requirements do not exist returns 500 and does not update the decision`() {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           `Given a submitted Placement Application`(
@@ -964,7 +966,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
               )
               .exchange()
               .expectStatus()
-              .isNotFound
+              .is5xxServerError
 
             val updatedPlacementApplication =
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
@@ -998,6 +1000,84 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
                       decision = PlacementApplicationDecisionDto.accepted,
                       summaryOfChanges = "ChangeSummary",
                       decisionSummary = "DecisionSummary",
+                      acceptance = Cas1PlacementApplicationDecisionAcceptanceDto(
+                        Cas1AuthorisedPlacementPeriodFactory()
+                          .withDuration(12)
+                          .withArrival(LocalDate.now().plusDays(5))
+                          .withArrivalFlexible(placementApplicationEntity.expectedArrivalFlexible)
+                          .produce(),
+                      ),
+                    ),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+
+                val updatedPlacementApplication =
+                  placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
+
+                assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
+                assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
+                assertThat(updatedPlacementApplication.decisionSummary).isEqualTo("DecisionSummary")
+
+                val createdPlacementRequests =
+                  placementRequestTestRepository.findAllByApplication(placementApplicationEntity.application)
+
+                assertThat(createdPlacementRequests.size).isEqualTo(1)
+
+                val placementRequest = createdPlacementRequests[0]
+
+                assertThat(placementRequest.application.id).isEqualTo(placementApplicationEntity.application.id)
+                assertThat(placementRequest.expectedArrival).isEqualTo(LocalDate.now().plusDays(5))
+                assertThat(placementRequest.duration).isEqualTo(12)
+                assertThat(placementRequest.isParole).isEqualTo(isParole)
+                assertThat(placementRequest.placementRequirements.id).isEqualTo(placementRequirements.id)
+                assertThat(updatedPlacementApplication.decisionSummary).isEqualTo("DecisionSummary")
+
+                emailAsserter.assertEmailsRequestedCount(1)
+                emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_ACCEPTED_V2)
+
+                domainEventAsserter.assertDomainEventOfTypeStored(
+                  applicationId = placementApplicationEntity.application.id,
+                  DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @CsvSource("ROTL,false", "ADDITIONAL_PLACEMENT,false", "RELEASE_FOLLOWING_DECISION,true")
+    fun `submitting an acceptance records the decision, creates a placement request and sends an email, when requested duration is null`(placementType: PlacementType, isParole: Boolean) {
+      givenAUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          `Given a submitted Placement Application`(
+            allocatedToUser = user,
+            offenderDetails = offenderDetails,
+            placementType = placementType,
+            expectedArrival = LocalDate.now().plusDays(5),
+            requestedDuration = null,
+          ) { placementApplicationEntity ->
+            `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
+              `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
+
+                webTestClient.post()
+                  .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
+                  .header("Authorization", "Bearer $jwt")
+                  .bodyValue(
+                    PlacementApplicationDecisionEnvelope(
+                      decision = PlacementApplicationDecisionDto.accepted,
+                      summaryOfChanges = "ChangeSummary",
+                      decisionSummary = "DecisionSummary",
+                      acceptance = Cas1PlacementApplicationDecisionAcceptanceDto(
+                        Cas1AuthorisedPlacementPeriodFactory()
+                          .withDuration(12)
+                          .withArrival(LocalDate.now().plusDays(5))
+                          .withArrivalFlexible(placementApplicationEntity.expectedArrivalFlexible)
+                          .produce(),
+                      ),
                     ),
                   )
                   .exchange()
@@ -1028,6 +1108,11 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
 
                 emailAsserter.assertEmailsRequestedCount(1)
                 emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_ACCEPTED_V2)
+
+                domainEventAsserter.assertDomainEventOfTypeStored(
+                  applicationId = placementApplicationEntity.application.id,
+                  DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
+                )
               }
             }
           }
@@ -1091,7 +1176,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
       decision: PlacementApplicationDecision? = null,
       placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
       expectedArrival: LocalDate,
-      requestedDuration: Int,
+      requestedDuration: Int?,
       block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
     ) {
       val placementApplication = givenAPlacementApplication(
