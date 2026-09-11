@@ -13,12 +13,12 @@ import java.util.UUID
  * The tree can have the following edges:
  *
  * > Application
- * ---> Request for Placement
- * ------> Match Request
- * ---------> Placement (Booking or Space Booking)
- * ---> Match Request (For initial application dates)
- * ------> Placement (Booking or Space Booking)
- * ---> Placement (For adhoc placements - Booking only)
+ * ---> Placement Application
+ * ------> Placement Request
+ * ---------> Space Booking
+ * ---> Placement Request - these are legacy at this position in the tree, see [PlacementRequestEntity.isForLegacyInitialRequestForPlacement]
+ * ------> Space Booking
+ * ---> Space Booking - For legacy adhoc placements
  *
  * Note that whilst assessments are automatically withdrawn when
  * an application is withdrawn, that is not managed by the tree
@@ -66,7 +66,7 @@ class Cas1WithdrawableTreeBuilder(
           placementApplication.placementDates()?.let {
             WithdrawableDatePeriod(
               startDate = it.expectedArrival,
-              endDate = it.expectedDeparture()!!,
+              endDate = it.expectedDeparture(),
             )
           },
         ),
