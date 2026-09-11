@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventRequestedPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
@@ -18,7 +18,7 @@ class PlacementApplicationAllocatedFactory : Factory<PlacementApplicationAllocat
   private var placementApplicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var allocatedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
-  private var placementDates: Yielded<List<DatePeriod>> = { listOf(DatePeriod(startDate = LocalDate.now(), endDate = LocalDate.now().plusDays(1))) }
+  private var placementDates: Yielded<List<EventRequestedPlacementDates>> = { listOf(EventRequestedPlacementDates(startDate = LocalDate.now(), endDate = LocalDate.now().plusDays(1))) }
   private var allocatedTo: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
   private var allocatedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
@@ -28,10 +28,6 @@ class PlacementApplicationAllocatedFactory : Factory<PlacementApplicationAllocat
 
   fun withApplicationUrl(applicationUrl: String) = apply {
     this.applicationUrl = { applicationUrl }
-  }
-
-  fun withPlacementApplicationId(placementApplicationId: UUID) = apply {
-    this.placementApplicationId = { placementApplicationId }
   }
 
   fun withPersonReference(personReference: PersonReference) = apply {
@@ -46,7 +42,7 @@ class PlacementApplicationAllocatedFactory : Factory<PlacementApplicationAllocat
     this.allocatedAt = { allocatedAt }
   }
 
-  fun withPlacementDates(placementDates: List<DatePeriod>) = apply {
+  fun withPlacementDates(placementDates: List<EventRequestedPlacementDates>) = apply {
     this.placementDates = { placementDates }
   }
 
@@ -54,16 +50,8 @@ class PlacementApplicationAllocatedFactory : Factory<PlacementApplicationAllocat
     this.allocatedTo = { allocatedTo }
   }
 
-  fun withAllocatedTo(configuration: StaffMemberFactory.() -> Unit) = apply {
-    this.allocatedTo = { StaffMemberFactory().apply(configuration).produce() }
-  }
-
   fun withAllocatedBy(allocatedBy: StaffMember?) = apply {
     this.allocatedBy = { allocatedBy }
-  }
-
-  fun withAllocatedBy(configuration: StaffMemberFactory.() -> Unit) = apply {
-    this.allocatedBy = { StaffMemberFactory().apply(configuration).produce() }
   }
 
   override fun produce() = PlacementApplicationAllocated(

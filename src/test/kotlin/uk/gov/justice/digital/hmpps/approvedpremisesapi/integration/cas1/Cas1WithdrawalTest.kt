@@ -1298,7 +1298,7 @@ class Cas1WithdrawalTest : IntegrationTestBase() {
     placementApplication.id,
     WithdrawableType.placementApplication,
     listOfNotNull(
-      placementApplication.placementDates()?.let { toDatePeriod(it.expectedArrival, it.duration) },
+      placementApplication.placementDates()?.let { toDatePeriod(it.expectedArrival, it.duration!!) },
     ),
   )
 
