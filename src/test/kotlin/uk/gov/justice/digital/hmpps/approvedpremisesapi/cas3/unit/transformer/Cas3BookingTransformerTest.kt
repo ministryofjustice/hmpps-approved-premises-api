@@ -9,11 +9,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
@@ -46,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Ext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3OverstayTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3TurnaroundTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
@@ -56,9 +54,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import java.time.Instant
 import java.time.LocalDate
@@ -91,6 +90,15 @@ class Cas3BookingTransformerTest {
     mockBedspaceTransformer,
     mockCas3TurnaroundTransformer,
     mockWorkingDayService,
+  )
+
+  private val expectedPersonSummary = FullPersonSummary(
+    crn = "crn",
+    personType = PersonSummaryDiscriminator.fullPersonSummary,
+    name = "first last",
+    dateOfBirth = LocalDate.parse("2022-09-08"),
+    isRestricted = false,
+    tier = null,
   )
 
   private val premisesEntity = Cas3PremisesEntity(
@@ -163,10 +171,6 @@ class Cas3BookingTransformerTest {
     .withNomsNumber("NOMS321")
     .produce()
 
-  private val inmateDetail = InmateDetailFactory()
-    .withOffenderNo("NOMS321")
-    .produce()
-
   private val nullDepartureEntity: Cas3DepartureEntity? = null
   private val nullConfirmationEntity: Cas3ConfirmationEntity? = null
 
@@ -184,20 +188,7 @@ class Cas3BookingTransformerTest {
     every { mockBedspaceTransformer.transformJpaToCas3BedspaceSummary(bedspaceEntity) } returns bedspaceSummaryModel
     every { mockDepartureTransformer.transformJpaToApi(nullDepartureEntity) } returns null
 
-    every { mockPersonTransformer.personInfoResultToPerson(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail, tier = null)) } returns FullPerson(
-      type = PersonType.fullPerson,
-      crn = "crn",
-      name = "first last",
-      dateOfBirth = LocalDate.parse("2022-09-08"),
-      sex = "Male",
-      status = PersonStatus.inCommunity,
-      nomsNumber = "NOMS321",
-      nationality = "English",
-      religionOrBelief = null,
-      genderIdentity = null,
-      prisonName = null,
-      tier = null,
-    )
+    every { mockPersonTransformer.personSummaryInfoResultToPersonSummary(any()) } returns expectedPersonSummary
   }
 
   @AfterEach
@@ -213,26 +204,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.provisional,
@@ -275,26 +253,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       nonArrivalBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.notMinusArrived,
@@ -346,26 +311,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       arrivalBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.arrived,
@@ -419,26 +371,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       cancellationBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.cancelled,
@@ -537,26 +476,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       cancellationBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d"),
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.cancelled,
@@ -689,26 +615,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = bookingId,
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.closed,
@@ -890,26 +803,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = bookingId,
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
         status = Cas3BookingStatus.departed,
@@ -1092,26 +992,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = bookingId,
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = departedAt.toLocalDate(),
         status = Cas3BookingStatus.closed,
@@ -1321,26 +1208,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = bookingId,
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.closed,
@@ -1449,26 +1323,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       confirmationBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.confirmed,
@@ -1549,26 +1410,13 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
       Cas3Booking(
         id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-        person = FullPerson(
-          type = PersonType.fullPerson,
-          crn = "crn",
-          name = "first last",
-          dateOfBirth = LocalDate.parse("2022-09-08"),
-          sex = "Male",
-          status = PersonStatus.inCommunity,
-          nomsNumber = "NOMS321",
-          nationality = "English",
-          religionOrBelief = null,
-          genderIdentity = null,
-          prisonName = null,
-          tier = null,
-        ),
+        personSummary = expectedPersonSummary,
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.provisional,

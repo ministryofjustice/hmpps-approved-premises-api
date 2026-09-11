@@ -161,7 +161,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     ) {
       assertThat(applicationSummary).isNotNull()
       assertThat(applicationSummary?.id).isEqualTo(application.id)
-      assertThat(applicationSummary?.person?.crn).isEqualTo(application.crn)
+      assertThat(applicationSummary?.personSummary?.crn).isEqualTo(application.crn)
       assertThat(applicationSummary?.createdAt).isEqualTo(application.createdAt.toInstant())
       assertThat(applicationSummary?.createdByUserId).isEqualTo(application.createdByUser.id)
       assertThat(applicationSummary?.submittedAt).isEqualTo(application.submittedAt?.toInstant())
