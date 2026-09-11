@@ -4,14 +4,6 @@
   "ignoreDeps": ["postgres", "postgis", "redis"],
   "packageRules": [
     {
-      "description": "Ignore openapi version that breaks our swagger (see build.kts)",
-      "matchPackageNames": [
-        "org.springdoc:springdoc-openapi-starter-webmvc-ui",
-        "org.springdoc:springdoc-openapi-starter-common"
-      ],
-      "allowedVersions": "!/3.0.3/"
-    },
-    {
       "matchManagers": ["github-actions"],
       "matchFileNames": ["**/.github/workflows/**/*.ya?ml"],
       "matchUpdateTypes": ["minor", "patch"],
