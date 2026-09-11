@@ -929,6 +929,32 @@ class Cas2v2ApplicationServiceTest {
     }
   }
 
+  @Nested
+  inner class FindApplicationsByCrnAndCohorts {
+    @Test
+    fun `returns applications matching CRN and ISR cohorts`() {
+      val crn = "CRN123"
+      val applications = listOf(
+        Cas2ApplicationEntityFactory()
+          .withCreatedByUser(userWithUsername("someUser"))
+          .withCrn(crn)
+          .withCohort(Cas2Cohort.ATCR)
+          .produce(),
+      )
+
+      every {
+        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr())
+      } returns applications
+
+      val result = cas2ApplicationService.findSubmittedApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr())
+
+      assertThat(result).isEqualTo(applications)
+      verify(exactly = 1) {
+        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr())
+      }
+    }
+  }
+
   private fun userWithUsername(username: String) = Cas2UserEntityFactory()
     .withServiceOrigin(Cas2ServiceOrigin.BAIL)
     .withUsername(username)

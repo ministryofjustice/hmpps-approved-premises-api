@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 
 @Cas2ExternalController
 class Cas2ExternalReferralController(
@@ -20,7 +21,7 @@ class Cas2ExternalReferralController(
   fun getReferralsByCrn(
     @PathVariable crn: String,
   ): ResponseEntity<List<Cas2ReferralHistory>> = ResponseEntity.ok(
-    cas2ApplicationService.getSubmittedApplicationsByCrn(crn).map {
+    cas2ApplicationService.findSubmittedApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr()).map {
       cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(it)
     },
   )
