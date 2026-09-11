@@ -2,15 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
@@ -68,15 +65,9 @@ class PlacementRequestTransformer(
     return PlacementRequestStatus.notMatched
   }
 
-  fun transformToWithdrawable(jpa: PlacementRequestEntity) = Withdrawable(
-    jpa.id,
-    WithdrawableType.placementRequest,
-    listOf(DatePeriod(jpa.expectedArrival, jpa.expectedDeparture())),
-  )
-
   private fun characteristicToCriteria(characteristic: Cas1CharacteristicEntity): PlacementCriteria? = try {
     PlacementCriteria.valueOf(characteristic.propertyName!!)
-  } catch (exception: Exception) {
+  } catch (_: Exception) {
     null
   }
 
