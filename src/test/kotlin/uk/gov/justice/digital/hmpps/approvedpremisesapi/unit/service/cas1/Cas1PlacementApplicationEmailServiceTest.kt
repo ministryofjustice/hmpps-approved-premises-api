@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -68,15 +70,22 @@ class Cas1PlacementApplicationEmailServiceTest {
       mockEmailNotificationService.assertNoEmailsRequested()
     }
 
-    @Test
-    fun `placementApplicationSubmitted sends email to placement app creator if email address defined`() {
+    @CsvSource(
+      value = [ "10,2020-03-22", "null,undefined"],
+      nullValues = ["null"],
+    )
+    @ParameterizedTest
+    fun `placementApplicationSubmitted sends email to placement app creator if email address defined`(
+      duration: Int?,
+      expectedEndDate: String,
+    ) {
       val creator = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
+        .withDefaults()
         .withEmail(CREATOR_EMAIL)
         .produce()
 
       val assessor = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
+        .withDefaults()
         .withEmail(null)
         .produce()
 
@@ -88,7 +97,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withRequestedDuration(10)
+        .withRequestedDuration(duration)
         .produce()
 
       service.placementApplicationSubmitted(placementApplication)
@@ -100,7 +109,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         "crn" to TestConstants.CRN,
         "applicationArea" to AREA_NAME,
         "startDate" to "2020-03-12",
-        "endDate" to "2020-03-22",
+        "endDate" to expectedEndDate,
         "additionalDatesSet" to "no",
       )
 
@@ -141,8 +150,15 @@ class Cas1PlacementApplicationEmailServiceTest {
       mockEmailNotificationService.assertNoEmailsRequested()
     }
 
-    @Test
-    fun `placementApplicationAllocated sends email to placement app creator if email address defined`() {
+    @CsvSource(
+      value = [ "10,2020-03-22", "null,undefined"],
+      nullValues = ["null"],
+    )
+    @ParameterizedTest
+    fun `placementApplicationAllocated sends email to placement app creator if email address defined`(
+      duration: Int?,
+      expectedEndDate: String,
+    ) {
       val creator = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .withEmail(CREATOR_EMAIL)
@@ -161,7 +177,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withRequestedDuration(10)
+        .withRequestedDuration(duration)
         .produce()
 
       service.placementApplicationAllocated(placementApplication)
@@ -173,7 +189,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         "crn" to TestConstants.CRN,
         "applicationArea" to AREA_NAME,
         "startDate" to "2020-03-12",
-        "endDate" to "2020-03-22",
+        "endDate" to expectedEndDate,
         "additionalDatesSet" to "no",
       )
 
@@ -214,8 +230,15 @@ class Cas1PlacementApplicationEmailServiceTest {
       mockEmailNotificationService.assertNoEmailsRequested()
     }
 
-    @Test
-    fun `placementApplicationAccepted sends email to placement app creator if email address defined`() {
+    @CsvSource(
+      value = [ "10,2020-03-22", "null,undefined"],
+      nullValues = ["null"],
+    )
+    @ParameterizedTest
+    fun `placementApplicationAccepted sends email to placement app creator if email address defined`(
+      duration: Int?,
+      expectedEndDate: String,
+    ) {
       val creator = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .withEmail(CREATOR_EMAIL)
@@ -234,7 +257,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withRequestedDuration(10)
+        .withRequestedDuration(duration)
         .produce()
 
       service.placementApplicationAccepted(placementApplication)
@@ -246,7 +269,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         "crn" to TestConstants.CRN,
         "applicationArea" to AREA_NAME,
         "startDate" to "2020-03-12",
-        "endDate" to "2020-03-22",
+        "endDate" to expectedEndDate,
         "additionalDatesSet" to "no",
       )
 
