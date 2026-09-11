@@ -4,6 +4,7 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyMode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SendEmailRequestedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.LoggerExtension
@@ -27,9 +29,30 @@ class EmailNotificationServiceTest {
   private val mockGuestListNotificationClient = mockk<NotificationClient>()
   private val mockApplicationEventPublisher = mockk<ApplicationEventPublisher>()
   private val mockSentryService = mockk<SentryService>()
+  private val mockEnvironmentService = mockk<EnvironmentService>()
 
   @RegisterExtension
   var loggerExtension: LoggerExtension = LoggerExtension()
+
+  @Nested
+  inner class EnsureEmailOnlyEnabledInProd {
+
+    @Test
+    fun `if email enabled outside of prod, fail on startup`() {
+      every { mockEnvironmentService.isNotProd() } returns true
+
+      assertThatThrownBy {
+        createService(NotifyMode.ENABLED).ensureEmailOnlyEnabledInProd()
+      }.hasMessage("Sending email without an allow list should not be enabled outside of production")
+    }
+
+    @Test
+    fun `if email enabled in prod, continue without issues`() {
+      every { mockEnvironmentService.isNotProd() } returns false
+
+      createService(NotifyMode.ENABLED).ensureEmailOnlyEnabledInProd()
+    }
+  }
 
   @Nested
   inner class SendEmail {
@@ -461,17 +484,15 @@ class EmailNotificationServiceTest {
     }
   }
 
-  private fun createService(notifyMode: NotifyMode, logEmails: Boolean = false): EmailNotificationService {
-    val service = EmailNotificationService(
-      notifyConfig = NotifyConfig().apply {
-        this.mode = notifyMode
-        this.logEmails = logEmails
-      },
-      normalNotificationClient = mockNormalNotificationClient,
-      guestListNotificationClient = mockGuestListNotificationClient,
-      applicationEventPublisher = mockApplicationEventPublisher,
-      sentryService = mockSentryService,
-    )
-    return service
-  }
+  private fun createService(notifyMode: NotifyMode, logEmails: Boolean = false) = EmailNotificationService(
+    notifyConfig = NotifyConfig().apply {
+      this.mode = notifyMode
+      this.logEmails = logEmails
+    },
+    normalNotificationClient = mockNormalNotificationClient,
+    guestListNotificationClient = mockGuestListNotificationClient,
+    applicationEventPublisher = mockApplicationEventPublisher,
+    sentryService = mockSentryService,
+    environmentService = mockEnvironmentService,
+  )
 }
