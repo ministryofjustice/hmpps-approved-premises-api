@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -20,6 +21,7 @@ class EmailNotificationService(
   @Qualifier("guestListNotificationClient") private val guestListNotificationClient: NotificationClient?,
   private val applicationEventPublisher: ApplicationEventPublisher,
   private val sentryService: SentryService,
+  private val environmentService: EnvironmentService,
 ) : EmailNotifier {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -37,6 +39,13 @@ class EmailNotificationService(
     "Not a valid email address",
   )
 
+  @PostConstruct
+  fun ensureEmailOnlyEnabledInProd() {
+    if (notifyConfig.mode == NotifyMode.ENABLED && environmentService.isNotProd()) {
+      error("Sending email without an allow list should not be enabled outside of production")
+    }
+  }
+
   override fun sendEmail(
     recipientEmailAddress: String,
     templateId: String,
@@ -52,27 +61,28 @@ class EmailNotificationService(
     }
 
     try {
-      if (notifyConfig.mode == NotifyMode.DISABLED) {
-        log.info("Email sending is disabled")
-        return
-      }
-
-      if (notifyConfig.mode == NotifyMode.TEST_AND_GUEST_LIST) {
-        guestListNotificationClient!!.sendEmail(
-          templateId,
-          recipientEmailAddress,
-          personalisation,
-          reference,
-          replyToEmailId,
-        )
-      } else {
-        normalNotificationClient!!.sendEmail(
-          templateId,
-          recipientEmailAddress,
-          personalisation,
-          reference,
-          replyToEmailId,
-        )
+      when (notifyConfig.mode) {
+        NotifyMode.DISABLED -> {
+          log.info("Email sending is disabled")
+        }
+        NotifyMode.TEST_AND_GUEST_LIST -> {
+          guestListNotificationClient!!.sendEmail(
+            templateId,
+            recipientEmailAddress,
+            personalisation,
+            reference,
+            replyToEmailId,
+          )
+        }
+        NotifyMode.ENABLED -> {
+          normalNotificationClient!!.sendEmail(
+            templateId,
+            recipientEmailAddress,
+            personalisation,
+            reference,
+            replyToEmailId,
+          )
+        }
       }
     } catch (notificationClientException: NotificationClientException) {
       val templateName = resolveTemplateName(templateId)
