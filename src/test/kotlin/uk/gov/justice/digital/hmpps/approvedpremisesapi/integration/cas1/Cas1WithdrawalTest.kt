@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
@@ -13,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawableDatePeriodDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
@@ -59,7 +59,7 @@ import java.util.UUID
  * ```
  * application
  *  - assessment
- *    - placement request - these are legacy, see [PlacementRequestEntity.isForLegacyInitialRequestForPlacement]
+ *    - placement request - these are legacy at this position in the tree, see [PlacementRequestEntity.isForLegacyInitialRequestForPlacement]
  *      - space booking
  *    - placement application
  *      - placement request
@@ -755,7 +755,7 @@ class Cas1WithdrawalTest : IntegrationTestBase() {
             val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
             val placementApplication1 =
-              createPlacementApplication(application, DateSpan(now(), duration = 2), createdBy = placementAppCreator)
+              createPlacementApplication(application, DateSpan(now(), duration = null), createdBy = placementAppCreator)
             val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
             val booking1PendingArrival = givenACas1SpaceBooking(
               crn = application.crn,
@@ -1202,7 +1202,7 @@ class Cas1WithdrawalTest : IntegrationTestBase() {
     return application
   }
 
-  private data class DateSpan(val start: LocalDate, val duration: Int)
+  private data class DateSpan(val start: LocalDate, val duration: Int?)
 
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
@@ -1280,7 +1280,7 @@ class Cas1WithdrawalTest : IntegrationTestBase() {
 
   private fun nowPlusDays(days: Long) = LocalDate.now().plusDays(days)
 
-  private fun toDatePeriod(start: LocalDate, duration: Int) = DatePeriod(start, start.plusDays(duration.toLong()))
+  private fun toDatePeriod(start: LocalDate, duration: Int) = Cas1WithdrawableDatePeriodDto(start, start.plusDays(duration.toLong()))
 
   fun toWithdrawable(application: ApplicationEntity) = Withdrawable(
     application.id,
@@ -1305,6 +1305,6 @@ class Cas1WithdrawalTest : IntegrationTestBase() {
   fun toWithdrawable(spaceBooking: Cas1SpaceBookingEntity) = Withdrawable(
     spaceBooking.id,
     WithdrawableType.spaceBooking,
-    listOf(DatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
+    listOf(Cas1WithdrawableDatePeriodDto(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
   )
 }

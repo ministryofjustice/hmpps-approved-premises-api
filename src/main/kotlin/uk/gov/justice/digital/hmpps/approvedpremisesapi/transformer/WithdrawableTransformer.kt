@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawableDatePeriodDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 
@@ -18,6 +18,6 @@ class WithdrawableTransformer {
       WithdrawableEntityType.PlacementApplication -> WithdrawableType.placementApplication
       WithdrawableEntityType.SpaceBooking -> WithdrawableType.spaceBooking
     },
-    entity.dates.map { DatePeriod(it.startDate, it.endDate) },
+    entity.dates.map { Cas1WithdrawableDatePeriodDto(it.startDate, it.endDate) },
   )
 }
