@@ -101,7 +101,7 @@ class Cas1PlacementApplicationEmailService(
       "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
       "applicationArea" to application.apArea?.name,
       "startDate" to dates?.expectedArrival.toString(),
-      "endDate" to dates?.expectedDeparture().toString(),
+      "endDate" to (dates?.expectedDeparture()?.toString() ?: "undefined"),
       "additionalDatesSet" to "no",
     )
   }
