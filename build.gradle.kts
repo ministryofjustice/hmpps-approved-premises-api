@@ -70,7 +70,7 @@ dependencies {
 
   implementation("com.opencsv:opencsv:5.12.0")
 
-  val shedLockVersion = "7.9.0"
+  val shedLockVersion = "7.10.1"
   implementation("net.javacrumbs.shedlock:shedlock-spring:$shedLockVersion")
   implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:$shedLockVersion")
 
