@@ -46,11 +46,11 @@ class Cas1ApplicationValidationService(
       return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
     }
 
-    val requestedDuration = submitApplication.requestedDuration()
+    val requestedDuration = submitApplication.requestedPlacementDuration
 
     if (tierService.useTierV2() && requestedDuration == null) {
       return CasResult.GeneralValidationError(
-        "Either duration or requestedPlacementDuration should be provided",
+        "requestedPlacementDuration should be provided",
       )
     }
 

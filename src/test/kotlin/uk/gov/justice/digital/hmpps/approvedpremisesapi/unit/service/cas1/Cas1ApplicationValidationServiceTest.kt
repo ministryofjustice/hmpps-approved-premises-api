@@ -158,7 +158,6 @@ class Cas1ApplicationValidationServiceTest {
       every { applicationRepository.findByIdOrNull(applicationId) } returns application
 
       val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
-        duration = null,
         requestedPlacementDuration = null,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
           arrival = LocalDate.now(),
@@ -177,7 +176,7 @@ class Cas1ApplicationValidationServiceTest {
     }
 
     @Test
-    fun `Returns GeneralValidationError when tier v2 is in use and duration and requestedPlacementDuration are not populated`() {
+    fun `Returns GeneralValidationError when tier v2 is in use and requestedPlacementDuration is not populated`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -188,7 +187,6 @@ class Cas1ApplicationValidationServiceTest {
       every { tierService.useTierV2() } returns true
 
       val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
-        duration = null,
         requestedPlacementDuration = null,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
           arrival = LocalDate.now(),
@@ -203,36 +201,7 @@ class Cas1ApplicationValidationServiceTest {
         submitApplication,
       )
 
-      assertThatCasResult(result).isGeneralValidationError("Either duration or requestedPlacementDuration should be provided")
-    }
-
-    @Test
-    fun `Returns GeneralValidationError when duration does not match requestedPlacementPeriod duration`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-
-      every { applicationRepository.findByIdOrNull(applicationId) } returns application
-      every { tierService.useTierV2() } returns true
-
-      val submitApplication = defaultSubmitApprovedPremisesApplication.copy(
-        duration = 10,
-        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-          arrival = LocalDate.now(),
-          duration = 11,
-          arrivalFlexible = null,
-        ),
-      )
-
-      val result = service.validateApplicationSubmission(
-        applicationId,
-        user,
-        submitApplication,
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("The requested placement period duration must match the duration specified in the application.")
+      assertThatCasResult(result).isGeneralValidationError("requestedPlacementDuration should be provided")
     }
 
     @Test
