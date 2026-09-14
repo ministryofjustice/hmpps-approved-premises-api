@@ -89,13 +89,13 @@ class Cas2PersistedApplicationStatusFinderTest {
 
       val statuses = finder.all()
 
-      assertEquals(11, statuses.size, "Should return exactly 11 status updates")
+      assertEquals(9, statuses.size, "Should return exactly 9 status updates")
 
       val expectedDetailsSizes = mapOf(
         0 to 16,
-        7 to 10,
-        8 to 14,
-        9 to 12,
+        5 to 10,
+        6 to 14,
+        7 to 12,
       )
 
       statuses.forEachIndexed { index, status ->
@@ -132,13 +132,13 @@ class Cas2PersistedApplicationStatusFinderTest {
 
       val statuses = finder.all()
 
-      assertEquals(11, statuses.size, "Should return exactly 11 status updates")
+      assertEquals(9, statuses.size, "Should return exactly 9 status updates")
 
       val expectedDetailsSizes = mapOf(
         0 to 10,
+        5 to 9,
+        6 to 10,
         7 to 9,
-        8 to 10,
-        9 to 9,
       )
 
       statuses.forEachIndexed { index, status ->

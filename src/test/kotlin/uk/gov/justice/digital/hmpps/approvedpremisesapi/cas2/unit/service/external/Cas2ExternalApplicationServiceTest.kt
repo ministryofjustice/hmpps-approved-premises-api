@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -19,9 +21,11 @@ import java.util.UUID
 
 class Cas2ExternalApplicationServiceTest {
   private val mockCas2ApplicationRepository = mockk<Cas2ApplicationRepository>()
+  private val mockCas2PersistedApplicationStatusFinder = mockk<Cas2PersistedApplicationStatusFinder>()
 
   private val cas2ExternalApplicationService = Cas2ExternalApplicationService(
     mockCas2ApplicationRepository,
+    mockCas2PersistedApplicationStatusFinder,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -33,7 +37,43 @@ class Cas2ExternalApplicationServiceTest {
   inner class GetSuitableApplicationByCrn {
     @Test
     fun `returns latest application (submitted), providing view submitted url`() {
-      val status = "finished"
+      val status = null
+      val user = Cas2UserEntityFactory()
+        .produce()
+      val submittedAt = OffsetDateTime.now()
+      val cas2applicationEntity = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(submittedAt)
+        .withCrn(crn)
+        .withId(id)
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
+      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val expected = Cas2SuitableApplication(
+        uiUrl = "http://frontend/assess/applications/$id/overview",
+        application = Cas2ExternalApplicationDto(
+          id = id,
+          status = status,
+        ),
+        id = id,
+        submittedApplication = Cas2ExternalSubmittedApplicationDto(
+          latestAssessmentStatus = status,
+          submittedAt = submittedAt,
+        ),
+      )
+      assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    fun `returns latest application (awaitingDecision), providing view submitted url`() {
+      val status = Cas2PersistedApplicationStatus(
+        id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
+        name = "awaitingDecision",
+        label = "Awaiting decision",
+        description = "The CAS-2 team has the information they need and will make a decision.",
+      )
       val user = Cas2UserEntityFactory()
         .produce()
       val submittedAt = OffsetDateTime.now()
@@ -47,21 +87,23 @@ class Cas2ExternalApplicationServiceTest {
       val statusUpdate = Cas2StatusUpdateEntityFactory()
         .withApplication(cas2applicationEntity)
         .withAssessor(user)
-        .withLabel(status)
+        .withStatusId(status.id)
         .produce()
       cas2applicationEntity.statusUpdates!!.add(statusUpdate)
 
       every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
+      every { mockCas2PersistedApplicationStatusFinder.forId(status.id) } returns status
+
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
       val expected = Cas2SuitableApplication(
         uiUrl = "http://frontend/assess/applications/$id/overview",
         application = Cas2ExternalApplicationDto(
           id = id,
-          status = status,
+          status = statusUpdate.label,
         ),
         id = id,
         submittedApplication = Cas2ExternalSubmittedApplicationDto(
-          latestAssessmentStatus = status,
+          latestAssessmentStatus = status.name,
           submittedAt = submittedAt,
         ),
       )

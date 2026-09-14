@@ -135,20 +135,6 @@ object Cas2ApplicationStatusSeeding {
       description = "The accommodation offered has been accepted.",
     ),
     Cas2PersistedApplicationStatus(
-      id = UUID.fromString("758eee61-2a6d-46b9-8bdd-869536d77f1b"),
-      name = "noPlaceOffered",
-      label = "Could not be placed",
-      description = "The applicant could not be placed in Short-Term Accommodation (CAS-2).",
-      isActive = false,
-    ),
-    Cas2PersistedApplicationStatus(
-      id = UUID.fromString("4ad9bbfa-e5b0-456f-b746-146f7fd511dd"),
-      name = "incomplete",
-      label = "Incomplete",
-      description = "The application could not progress because the prison offender manager (POM) did not provide the requested information.",
-      isActive = false,
-    ),
-    Cas2PersistedApplicationStatus(
       id = UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"),
       name = "offerDeclined",
       label = "Offer declined or withdrawn",
