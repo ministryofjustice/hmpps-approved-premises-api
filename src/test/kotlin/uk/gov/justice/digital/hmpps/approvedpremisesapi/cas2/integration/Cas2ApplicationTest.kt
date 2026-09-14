@@ -209,8 +209,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         "onWaitingList",
         "placeOffered",
         "offerAccepted",
-        "noPlaceOffered",
-        "incomplete",
         "offerDeclined",
       )
 

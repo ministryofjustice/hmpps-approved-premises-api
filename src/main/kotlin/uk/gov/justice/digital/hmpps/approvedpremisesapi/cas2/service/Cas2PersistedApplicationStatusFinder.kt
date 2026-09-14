@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
+import java.util.UUID
 
 @Component
 class Cas2PersistedApplicationStatusFinder(
@@ -11,4 +12,5 @@ class Cas2PersistedApplicationStatusFinder(
 ) {
   fun active(): List<Cas2PersistedApplicationStatus> = statusList.filter { it.isActive }
   fun forName(name: String) = statusList.firstOrNull { it.name == name }
+  fun forId(id: UUID) = statusList.firstOrNull { it.id == id }
 }

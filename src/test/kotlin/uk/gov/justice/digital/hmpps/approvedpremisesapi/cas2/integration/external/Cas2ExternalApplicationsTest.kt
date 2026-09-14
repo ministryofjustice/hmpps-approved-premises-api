@@ -65,7 +65,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           ),
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
-            latestAssessmentStatus = "More information requested",
+            latestAssessmentStatus = "moreInfoRequested",
             submittedAt = application.submittedAt!!,
           ),
         )
@@ -112,7 +112,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           ),
           id = latestApplication.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
-            latestAssessmentStatus = "More information requested",
+            latestAssessmentStatus = "moreInfoRequested",
             submittedAt = latestApplication.submittedAt!!,
           ),
         )
