@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.7"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.8"
   kotlin("plugin.spring") version "2.4.10"
   kotlin("plugin.jpa") version "2.4.10"
   id("dev.detekt") version "2.0.0-alpha.6"
@@ -35,16 +35,7 @@ dependencies {
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.7.1-jre")
   implementation("org.javers:javers-core:7.11.8")
-
-  val springDocOpenApiStarterVersion = "3.0.2"
-  // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
-  // generated schema, making it incompatible with the typescript generators and in some
-  // places it was incorrect. We're pinning version 3.0.2 until a new version is available
-  // reverting this change, as proposed by https://github.com/springdoc/springdoc-openapi/pull/3276
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterVersion")
-  // this is a transitive dependency of uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-autoconfigure
-  // so we need to force a different version
-  implementation("org.springdoc:springdoc-openapi-starter-common:$springDocOpenApiStarterVersion")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
