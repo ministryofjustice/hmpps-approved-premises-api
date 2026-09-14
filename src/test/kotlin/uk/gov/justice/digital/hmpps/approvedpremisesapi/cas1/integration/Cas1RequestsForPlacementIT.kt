@@ -27,7 +27,7 @@ class Cas1RequestsForPlacementIT : IntegrationTestBase() {
     @Test
     fun `returns 401 without valid JWT`() {
       webTestClient.get()
-        .uri("/cas1/applications/${UUID.randomUUID()}/requests-for-placement/calc/durations?apType=${ApType.normal}&sentenceType=${SentenceTypeOption.standardDeterminate}")
+        .uri("/cas1/applications/${UUID.randomUUID()}/requests-for-placement/calc/durations?apType=${ApType.normal}&sentenceType=${SentenceTypeOption.standardDeterminate}&exceptionalApplication=false")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -44,7 +44,7 @@ class Cas1RequestsForPlacementIT : IntegrationTestBase() {
         givenACase(application.crn, tierV2 = TierFactory().produce(), tierV3 = null)
 
         val response = webTestClient.get()
-          .uri("/cas1/applications/${application.id}/requests-for-placement/calc/durations?apType=${ApType.mhapElliottHouse}&sentenceType=${SentenceTypeOption.standardDeterminate}")
+          .uri("/cas1/applications/${application.id}/requests-for-placement/calc/durations?apType=${ApType.mhapElliottHouse}&sentenceType=${SentenceTypeOption.standardDeterminate}&exceptionalApplication=false")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

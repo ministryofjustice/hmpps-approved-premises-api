@@ -23,12 +23,11 @@ class Cas1RequestsForPlacementController(
   @GetMapping(
     value = ["/applications/{applicationId}/requests-for-placement/calc/durations"],
   )
-  @SuppressWarnings("UnusedParameter")
   fun getRequestForPlacementDuration(
     @PathVariable applicationId: UUID,
     @RequestParam("apType") apType: ApType,
     @RequestParam("sentenceType") sentenceType: SentenceTypeOption,
-    @RequestParam("exceptionalApplication") exceptionalApplication: Boolean = false,
+    @RequestParam("exceptionalApplication") exceptionalApplication: Boolean,
   ): ResponseEntity<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
     val result = cas1RequestForPlacementService.defaultDurations(applicationId, apType, sentenceType, exceptionalApplication)
 
