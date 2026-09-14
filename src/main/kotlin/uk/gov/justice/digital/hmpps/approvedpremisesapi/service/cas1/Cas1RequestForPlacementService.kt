@@ -54,10 +54,7 @@ class Cas1RequestForPlacementService(
   }
 
   fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity?): CasResult<List<RequestForPlacement>> {
-    val application = applicationService.getApplication(applicationId)
-      ?: return CasResult.NotFound("Application", applicationId.toString())
-
-    check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
+    applicationService.getApplication(applicationId) ?: return CasResult.NotFound("Application", applicationId.toString())
 
     val placementApplications = cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(applicationId)
     val placementRequests = placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId)
