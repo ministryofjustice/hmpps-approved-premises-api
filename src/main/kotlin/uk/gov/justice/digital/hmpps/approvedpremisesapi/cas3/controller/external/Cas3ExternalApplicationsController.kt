@@ -20,7 +20,7 @@ class Cas3ExternalApplicationsController(
   ): ResponseEntity<Cas3SuitableApplication> = when (type) {
     "suitable" -> cas3ApplicationService.getSuitableApplicationByCrn(crn)
       ?.let { ResponseEntity.ok(it) }
-      ?: ResponseEntity.notFound().build()
+      ?: ResponseEntity.noContent().build()
     else -> ResponseEntity.badRequest().build()
   }
 
@@ -30,5 +30,5 @@ class Cas3ExternalApplicationsController(
     @PathVariable crn: String,
   ): ResponseEntity<Cas3ExternalLatestBookingDto> = cas3ApplicationService.getCurrentPremisesByCrn(crn)
     ?.let { ResponseEntity.ok(it) }
-    ?: ResponseEntity.notFound().build()
+    ?: ResponseEntity.noContent().build()
 }
