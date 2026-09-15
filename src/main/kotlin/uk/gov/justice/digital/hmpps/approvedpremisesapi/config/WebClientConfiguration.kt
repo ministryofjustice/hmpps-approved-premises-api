@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import io.netty.channel.ChannelOption
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -30,8 +29,6 @@ class WebClientConfiguration(
   @Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
   @Value("\${services.default.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
 ) {
-
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   @Bean
   fun authorizedClientManager(clients: ClientRegistrationRepository): OAuth2AuthorizedClientManager {
@@ -140,13 +137,10 @@ class WebClientConfiguration(
   fun prisonsApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String,
-    @Value("\${services.prisons-api.max-response-in-memory-size-bytes}") prisonApiMaxResponseInMemorySizeBytes: Int,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
     oauth2Client.setDefaultClientRegistrationId("prisons-api")
-
-    log.info("Using maxInMemorySize of $prisonApiMaxResponseInMemorySizeBytes bytes for Prison API Web Client")
 
     return WebClientConfig(
       WebClient.builder()
@@ -161,7 +155,7 @@ class WebClientConfiguration(
         )
         .exchangeStrategies(
           ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(prisonApiMaxResponseInMemorySizeBytes)
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
           }.build(),
         )
         .filter(ServletRequestResponseNonNullFilterFunction())
@@ -175,14 +169,11 @@ class WebClientConfiguration(
   fun prisonerAlertsApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
-    @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
     @Value("\${services.prisoner-alerts-api.timeout-ms}") tierApiUpstreamTimeoutMs: Long,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
     oauth2Client.setDefaultClientRegistrationId("prisoner-alerts-api")
-
-    log.info("Using maxInMemorySize of $prisonerAlertsApiMaxResponseInMemorySizeBytes bytes for Prisoner Alerts API Web Client")
 
     return WebClientConfig(
       WebClient.builder()
@@ -197,7 +188,7 @@ class WebClientConfiguration(
         )
         .exchangeStrategies(
           ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(prisonerAlertsApiMaxResponseInMemorySizeBytes)
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
           }.build(),
         )
         .filter(ServletRequestResponseNonNullFilterFunction())

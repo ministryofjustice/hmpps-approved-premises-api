@@ -2,10 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.AlertsPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.AlertsPagePageable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.AlertsPageSort
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PrisonerAlertFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.prisoneralerts.AlertsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
@@ -73,39 +70,8 @@ class PrisonerAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Getting ACCT alerts for a CRN returns OK with correct body`() {
     givenAUser { _, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val alerts = AlertsPage(
-          content = listOf(
-            PrisonerAlertFactory().produce(),
-            PrisonerAlertFactory().produce(),
-            PrisonerAlertFactory().produce(),
-          ),
-          totalElements = 3,
-          totalPages = 1,
-          first = true,
-          last = true,
-          size = 10,
-          number = 0,
-          numberOfElements = 3,
-          pageable = AlertsPagePageable(
-            offset = 0,
-            pageNumber = 0,
-            pageSize = 10,
-            paged = true,
-            unpaged = false,
-            sort = AlertsPageSort(
-              empty = false,
-              sorted = true,
-              unsorted = false,
-            ),
-          ),
-          sort = AlertsPageSort(
-            empty = false,
-            sorted = true,
-            unsorted = false,
-          ),
-          empty = false,
-        )
+      givenAnOffender { offenderDetails, _ ->
+        val alerts = AlertsPageFactory().produce()
 
         prisonerAlertsAPIMockSuccessfulAlertsCall(offenderDetails.otherIds.nomsNumber!!, "HA", alerts)
 
