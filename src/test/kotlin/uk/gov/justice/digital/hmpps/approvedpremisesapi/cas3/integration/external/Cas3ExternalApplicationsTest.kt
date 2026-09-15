@@ -140,7 +140,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withProbationDeliveryUnit(probationDeliveryUnitFactory.produceAndPersist { withProbationRegion(user.probationRegion) })
           }
 
-          val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+          cas3BedspaceEntityFactory.produceAndPersist {
             withPremises(premises)
           }
 
@@ -362,7 +362,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withCreatedAt(OffsetDateTime.now().minusDays(1))
           }
 
-          val olderClosedBookingEntity = cas3BookingEntityFactory.produceAndPersist {
+          cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
             withApplication(application)
@@ -466,7 +466,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
-          .isNotFound
+          .isNoContent
       }
     }
   }
@@ -509,7 +509,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .uri("/cas3/external/cases/$crn/premises/current")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus().isNoContent
         }
       }
     }
@@ -577,7 +577,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
-          .isNotFound
+          .isNoContent
       }
     }
   }
