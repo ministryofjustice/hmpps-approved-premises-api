@@ -62,13 +62,14 @@ class Cas1RequestForPlacementReportRepository(
     INNER JOIN approved_premises_applications apa ON apa.id = pap.application_id 
     INNER JOIN raw_applications_report ON raw_applications_report.application_id = pap.application_id
     INNER JOIN applications a ON a.id = apa.id
-    LEFT OUTER JOIN LATERAL (
-      SELECT assessments.*
+    LEFT JOIN (
+      SELECT DISTINCT ON (application_id)
+             *
       FROM assessments
-      WHERE application_id = a.id AND reallocated_at IS NULL
-      ORDER BY created_at DESC
-      LIMIT 1
-    ) latest_assessment on TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+      WHERE reallocated_at IS NULL
+      ORDER BY application_id, created_at DESC
+    ) latest_assessment ON latest_assessment.application_id = a.id
+    
     LEFT OUTER JOIN placement_requests pr ON pr.application_id = a.id AND 
                     pr.reallocated_at IS NULL AND 
                     pr.placement_application_id IS NULL
