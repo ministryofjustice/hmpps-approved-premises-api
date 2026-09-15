@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateNonAssignable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
@@ -87,7 +86,7 @@ class Cas2HdcApplicationsTransformer(
   fun transformJpaToCas2HdcReferralHistory(
     jpa: Cas2ApplicationEntity,
   ): Cas2HdcReferralHistory {
-    val latestStatusUpdate = getReferralHistoryStatus(jpa)
+    val latestStatusUpdate = jpa.getLatestStatusUpdate()
     val rejectionReason = latestStatusUpdate
       ?.takeIf { it.label in listOf(Cas2StatusUpdateNonAssignable.REFERRAL_CANCELLED.label, Cas2StatusUpdateNonAssignable.REFERRAL_WITHDRAWN.label) }
       ?.label
@@ -109,8 +108,6 @@ class Cas2HdcApplicationsTransformer(
       placementStatus = latestStatusUpdate?.label,
     )
   }
-
-  private fun getReferralHistoryStatus(jpa: Cas2ApplicationEntity): Cas2StatusUpdateEntity? = jpa.statusUpdates?.firstOrNull()
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {

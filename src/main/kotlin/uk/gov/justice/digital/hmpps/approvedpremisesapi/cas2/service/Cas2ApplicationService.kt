@@ -134,7 +134,7 @@ class Cas2ApplicationService(
     }
   }
 
-  fun getSubmittedApplicationsByCrn(crn: String): List<Cas2ApplicationEntity> = cas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
+  fun findSubmittedApplicationsByCrnAndCohorts(crn: String, cohorts: List<Cas2Cohort>): List<Cas2ApplicationEntity> = cas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, cohorts)
 
   @SuppressWarnings("TooGenericExceptionThrown")
   fun createCas2Application(

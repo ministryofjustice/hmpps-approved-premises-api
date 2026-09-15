@@ -86,6 +86,18 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
     nativeQuery = true,
   )
   fun findPreviouslyAssignedApplicationsInDifferentPrisonToUser(userId: UUID, userPrisonCode: String, serviceOrigin: String): List<UUID>
+
+  @Query(
+    """
+    SELECT a
+    FROM Cas2ApplicationEntity a
+    WHERE a.crn = :crn
+      AND a.cohort IN :cohorts
+      AND a.submittedAt IS NOT NULL
+    ORDER BY a.createdAt DESC
+    """,
+  )
+  fun findSubmittedApplicationsByCrnAndCohorts(crn: String, cohorts: List<Cas2Cohort>): List<Cas2ApplicationEntity>
 }
 
 @Repository
@@ -217,7 +229,9 @@ data class Cas2ApplicationEntity(
     )
   }
 
-  fun isMostRecentStatusUpdateANonAssignableStatus() = statusUpdates?.firstOrNull()
+  fun getLatestStatusUpdate(): Cas2StatusUpdateEntity? = statusUpdates?.firstOrNull()
+
+  fun isMostRecentStatusUpdateANonAssignableStatus() = getLatestStatusUpdate()
     ?.let { mostRecent -> mostRecent.label in Cas2StatusUpdateNonAssignable.entries.map { it.label } }
     ?: false
 }
