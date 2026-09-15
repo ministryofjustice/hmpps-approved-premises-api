@@ -12,7 +12,6 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction
-import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 import uk.gov.justice.hmpps.kotlin.auth.ServletRequestResponseNonNullFilterFunction
@@ -28,7 +27,6 @@ data class WebClientConfig(
 @Configuration
 class WebClientConfiguration(
   @Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
-  @Value("\${services.default.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -47,6 +45,7 @@ class WebClientConfiguration(
   @Bean(name = ["cas1UiWebClient"])
   fun cas1UiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.cas1-ui.base-url}") cas1UiBaseUrl: String,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
@@ -54,7 +53,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(cas1UiBaseUrl)
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
@@ -66,11 +65,6 @@ class WebClientConfiguration(
               .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
         .build(),
       retryOnReadTimeout = true,
     )
@@ -79,6 +73,7 @@ class WebClientConfiguration(
   @Bean(name = ["apDeliusContextApiWebClient"])
   fun apDeliusContextApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.ap-delius-context-api.base-url}") apDeliusContextApiBaseUrl: String,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
@@ -86,7 +81,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(apDeliusContextApiBaseUrl)
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
@@ -98,11 +93,6 @@ class WebClientConfiguration(
               .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
         .build(),
       retryOnReadTimeout = true,
     )
@@ -111,6 +101,7 @@ class WebClientConfiguration(
   @Bean(name = ["hmppsTierApiWebClient"])
   fun hmppsTierApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.hmpps-tier.base-url}") hmppsTierApiBaseUrl: String,
     @Value("\${services.hmpps-tier.timeout-ms}") tierApiUpstreamTimeoutMs: Long,
   ): WebClientConfig {
@@ -119,7 +110,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("hmpps-tier")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(hmppsTierApiBaseUrl)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -139,17 +130,15 @@ class WebClientConfiguration(
   @Bean(name = ["prisonsApiWebClient"])
   fun prisonsApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String,
-    @Value("\${services.prisons-api.max-response-in-memory-size-bytes}") prisonApiMaxResponseInMemorySizeBytes: Int,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
     oauth2Client.setDefaultClientRegistrationId("prisons-api")
 
-    log.info("Using maxInMemorySize of $prisonApiMaxResponseInMemorySizeBytes bytes for Prison API Web Client")
-
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(prisonsApiBaseUrl)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -158,11 +147,6 @@ class WebClientConfiguration(
               .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
               .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(prisonApiMaxResponseInMemorySizeBytes)
-          }.build(),
         )
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
@@ -174,18 +158,16 @@ class WebClientConfiguration(
   @Bean(name = ["prisonerAlertsApiWebClient"])
   fun prisonerAlertsApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
-    @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
     @Value("\${services.prisoner-alerts-api.timeout-ms}") tierApiUpstreamTimeoutMs: Long,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
     oauth2Client.setDefaultClientRegistrationId("prisoner-alerts-api")
 
-    log.info("Using maxInMemorySize of $prisonerAlertsApiMaxResponseInMemorySizeBytes bytes for Prisoner Alerts API Web Client")
-
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(prisonerAlertsApiBaseUrl)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -194,11 +176,6 @@ class WebClientConfiguration(
               .responseTimeout(Duration.ofMillis(tierApiUpstreamTimeoutMs))
               .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(tierApiUpstreamTimeoutMs).toMillis().toInt()),
           ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(prisonerAlertsApiMaxResponseInMemorySizeBytes)
-          }.build(),
         )
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
@@ -210,6 +187,7 @@ class WebClientConfiguration(
   @Bean(name = ["caseNotesWebClient"])
   fun caseNotesWebClient(
     authorizedClients: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.case-notes.base-url}") caseNotesBaseUrl: String,
     @Value("\${services.case-notes.timeout-ms}") caseNotesServiceUpstreamTimeoutMs: Long,
   ): WebClientConfig {
@@ -218,7 +196,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("case-notes")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(caseNotesBaseUrl)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -238,6 +216,7 @@ class WebClientConfiguration(
   @Bean(name = ["apOASysContextApiWebClient"])
   fun apOASysContextApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.ap-oasys-context-api.base-url}") apOASysContextApiBaseUrl: String,
     @Value("\${services.ap-oasys-context-api.timeout-ms}") apAndOasysUpstreamTimeoutMs: Long,
   ): WebClientConfig {
@@ -246,7 +225,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("ap-oasys-context")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(apOASysContextApiBaseUrl)
         .clientConnector(
           ReactorClientHttpConnector(
@@ -266,8 +245,9 @@ class WebClientConfiguration(
   @Bean(name = ["govUKBankHolidaysApiWebClient"])
   fun govUKBankHolidaysApiClient(
     @Value("\${services.gov-uk-bank-holidays-api.base-url}") govUKBankHolidaysApiBaseUrl: String,
+    webClientBuilder: WebClient.Builder,
   ): WebClientConfig = WebClientConfig(
-    WebClient.builder()
+    webClientBuilder
       .baseUrl(govUKBankHolidaysApiBaseUrl)
       .clientConnector(
         ReactorClientHttpConnector(
@@ -282,10 +262,11 @@ class WebClientConfiguration(
 
   @Bean(name = ["nomisUserRolesForRequesterApiWebClient"])
   fun nomisUserRolesForRequesterApiClient(
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
     @Value("\${services.nomis-user-roles-api.timeout-ms}") nomisUserRolesUpstreamTimeoutMs: Long,
   ): WebClientConfig = WebClientConfig(
-    WebClient.builder()
+    webClientBuilder
       .baseUrl(nomisUserRolesBaseUrl)
       .clientConnector(
         ReactorClientHttpConnector(
@@ -302,6 +283,7 @@ class WebClientConfiguration(
   @Bean(name = ["nomisUserRolesApiWebClient"])
   fun nomisUserRolesApiClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
@@ -309,7 +291,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("nomis-user-roles-api")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(nomisUserRolesBaseUrl)
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
@@ -324,20 +306,16 @@ class WebClientConfiguration(
               ),
           ),
         )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
         .build(),
     )
   }
 
   @Bean(name = ["manageUsersApiWebClient"])
   fun manageUsersApiClient(
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.manage-users-api.base-url}") manageUsersBaseUrl: String,
   ): WebClientConfig = WebClientConfig(
-    WebClient.builder()
+    webClientBuilder
       .baseUrl(manageUsersBaseUrl)
       .clientConnector(
         ReactorClientHttpConnector(
@@ -353,13 +331,14 @@ class WebClientConfiguration(
   @Bean(name = ["managePomCasesWebClient"])
   fun managePomCasesWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
     oauth2Client.setDefaultClientRegistrationId("manage-pom-cases")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
@@ -372,11 +351,6 @@ class WebClientConfiguration(
                 Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
               ),
           ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
         )
         .build(),
     )
@@ -384,6 +358,7 @@ class WebClientConfiguration(
 
   @Bean(name = ["nonAssociationsWebClient"])
   fun nonAssociationsWebClient(
+    webClientBuilder: WebClient.Builder,
     authorizedClientManager: OAuth2AuthorizedClientManager,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
@@ -391,7 +366,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("non-associations")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
         .clientConnector(
@@ -404,11 +379,6 @@ class WebClientConfiguration(
                 Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
               ),
           ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
         )
         .build(),
     )
@@ -417,6 +387,7 @@ class WebClientConfiguration(
   @Bean(name = ["prisonerSearchWebClient"])
   fun prisonerSearchWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.prisoner-search.base-url}") prisonSearchBaseUrl: String,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
@@ -424,7 +395,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("prisoner-search")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(prisonSearchBaseUrl)
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
@@ -439,11 +410,6 @@ class WebClientConfiguration(
               ),
           ),
         )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
         .build(),
     )
   }
@@ -451,6 +417,7 @@ class WebClientConfiguration(
   @Bean(name = ["licenceApiWebClient"])
   fun licenceApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.licence-api.base-url}") licenceApiBaseUrl: String,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
@@ -458,7 +425,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("cvl")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(licenceApiBaseUrl)
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
@@ -473,11 +440,6 @@ class WebClientConfiguration(
               ),
           ),
         )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
         .build(),
     )
   }
@@ -485,6 +447,7 @@ class WebClientConfiguration(
   @Bean(name = ["healthAndMedicationApiWebClient"])
   fun healthAndMedicationApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.health-and-medication-api.base-url}") healthAndMedicationApiBaseUrl: String,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
@@ -492,7 +455,7 @@ class WebClientConfiguration(
     oauth2Client.setDefaultClientRegistrationId("health-and-medication")
 
     return WebClientConfig(
-      WebClient.builder()
+      webClientBuilder
         .baseUrl(healthAndMedicationApiBaseUrl)
         .filter(ServletRequestResponseNonNullFilterFunction())
         .filter(oauth2Client)
@@ -506,11 +469,6 @@ class WebClientConfiguration(
                 Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
               ),
           ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
         )
         .build(),
     )
