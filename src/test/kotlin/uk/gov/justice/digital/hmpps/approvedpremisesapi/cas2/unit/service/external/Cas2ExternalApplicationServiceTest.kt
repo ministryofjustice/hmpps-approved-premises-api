@@ -5,7 +5,6 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
@@ -53,10 +52,6 @@ class Cas2ExternalApplicationServiceTest {
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
       val expected = Cas2SuitableApplication(
         uiUrl = "http://frontend/assess/applications/$id/overview",
-        application = Cas2ExternalApplicationDto(
-          id = id,
-          status = status,
-        ),
         id = id,
         submittedApplication = Cas2ExternalSubmittedApplicationDto(
           latestAssessmentStatus = status,
@@ -97,10 +92,6 @@ class Cas2ExternalApplicationServiceTest {
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
       val expected = Cas2SuitableApplication(
         uiUrl = "http://frontend/assess/applications/$id/overview",
-        application = Cas2ExternalApplicationDto(
-          id = id,
-          status = statusUpdate.label,
-        ),
         id = id,
         submittedApplication = Cas2ExternalSubmittedApplicationDto(
           latestAssessmentStatus = status.name,
@@ -112,7 +103,6 @@ class Cas2ExternalApplicationServiceTest {
 
     @Test
     fun `returns latest application (draft), providing view draft url`() {
-      val status = null
       val user = Cas2UserEntityFactory()
         .produce()
       val cas2applicationEntity = Cas2ApplicationEntityFactory()
@@ -128,10 +118,6 @@ class Cas2ExternalApplicationServiceTest {
 
       val expected = Cas2SuitableApplication(
         uiUrl = "http://frontend/applications/$id",
-        application = Cas2ExternalApplicationDto(
-          id = id,
-          status = status,
-        ),
         id = id,
         submittedApplication = null,
       )

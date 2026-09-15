@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
@@ -24,10 +23,6 @@ class Cas2ExternalApplicationService(
 
       Cas2SuitableApplication(
         uiUrl = getUiUrl(mostRecent),
-        application = Cas2ExternalApplicationDto(
-          id = mostRecent.id,
-          status = mostRecent.statusUpdates?.firstOrNull()?.label,
-        ),
         id = mostRecent.id,
         submittedApplication = getSubmittedApplication(mostRecent),
       )

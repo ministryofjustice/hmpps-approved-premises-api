@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenASubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
@@ -59,10 +58,6 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
 
         val suitableApplication = Cas2SuitableApplication(
           uiUrl = "http://localhost:3000/assess/applications/${application.id}/overview",
-          application = Cas2ExternalApplicationDto(
-            status = "More information requested",
-            id = application.id,
-          ),
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
             latestAssessmentStatus = "moreInfoRequested",
@@ -106,10 +101,6 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
 
         val suitableApplication = Cas2SuitableApplication(
           uiUrl = "http://localhost:3000/assess/applications/${latestApplication.id}/overview",
-          application = Cas2ExternalApplicationDto(
-            status = "More information requested",
-            id = latestApplication.id,
-          ),
           id = latestApplication.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
             latestAssessmentStatus = "moreInfoRequested",
