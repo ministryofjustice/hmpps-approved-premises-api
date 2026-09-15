@@ -627,7 +627,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
-          .isNotFound
+          .isNoContent
       }
     }
   }
@@ -781,7 +781,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               .header("Authorization", "Bearer $clientCredentialsJwt")
               .exchange()
               .expectStatus()
-              .isNotFound()
+              .isNoContent()
           }
         }
       }
@@ -795,7 +795,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
-          .isNotFound
+          .isNoContent
       }
     }
   }
