@@ -45,8 +45,21 @@ class Cas1RequestForPlacementService(
       TierV3Score.C,
     )
 
+    val TIER_SCORE_ABCD = listOf(
+      TierV3Score.A,
+      TierV3Score.B,
+      TierV3Score.C,
+      TierV3Score.D,
+    )
+
     val TIER_SCORE_D_TO_G = listOf(
       TierV3Score.D,
+      TierV3Score.E,
+      TierV3Score.F,
+      TierV3Score.G,
+    )
+
+    val TIER_SCORE_E_TO_G = listOf(
       TierV3Score.E,
       TierV3Score.F,
       TierV3Score.G,
@@ -119,29 +132,35 @@ class Cas1RequestForPlacementService(
     val male = !(criteria.application.isWomensApplication ?: error("Cannot calculate duration for application ${criteria.application.id} because isWomensApplication is not set"))
 
     val tierAbc = tierScore in TIER_SCORE_ABC
+    val tierAbcd = tierScore in TIER_SCORE_ABCD
     val tierDtoGWithException = tierScore in TIER_SCORE_D_TO_G && criteria.exceptionalApplication
+    val tierEtoGWithException = tierScore in TIER_SCORE_E_TO_G && criteria.exceptionalApplication
 
-    fun maleIppRestrictedRule(period: Period) = if (isIpp && male) {
-      if (tierAbc) {
+    fun fixedPeriodIfApplicable(period: Period) = if (male) {
+      if (isIpp && tierAbc) {
+        period
+      } else if (!isIpp && (tierAbc || tierDtoGWithException)) {
         period
       } else {
         null
       }
-    } else if (tierAbc || tierDtoGWithException) {
-      period
     } else {
-      null
+      if (tierAbcd || tierEtoGWithException) {
+        period
+      } else {
+        null
+      }
     }
 
     val period = when (apType) {
-      ApType.pipe -> maleIppRestrictedRule(Period.ofWeeks(26))
-      ApType.esap -> maleIppRestrictedRule(Period.ofWeeks(52))
+      ApType.pipe -> fixedPeriodIfApplicable(Period.ofWeeks(26))
+      ApType.esap -> fixedPeriodIfApplicable(Period.ofWeeks(52))
 
       ApType.mhapStJosephs,
       ApType.mhapElliottHouse,
       -> {
         if (male) {
-          maleIppRestrictedRule(Period.ofWeeks(26))
+          fixedPeriodIfApplicable(Period.ofWeeks(26))
         } else {
           null
         }
@@ -150,10 +169,10 @@ class Cas1RequestForPlacementService(
       ApType.normal,
       ApType.rfap,
       -> {
-        if (isIpp) {
-          maleIppRestrictedRule(Period.ofWeeks(16))
-        } else {
-          if (male) {
+        if (male) {
+          if (isIpp) {
+            fixedPeriodIfApplicable(Period.ofWeeks(16))
+          } else {
             when (tierScore) {
               TierV3Score.A -> Period.ofWeeks(16)
               TierV3Score.B -> Period.ofWeeks(12)
@@ -170,13 +189,9 @@ class Cas1RequestForPlacementService(
               TierV3Score.MISSING -> null
               TierV3Score.NOT_SUPERVISED -> null
             }
-          } else {
-            if (tierAbc || tierDtoGWithException) {
-              Period.ofWeeks(16)
-            } else {
-              null
-            }
           }
+        } else {
+          fixedPeriodIfApplicable(Period.ofWeeks(16))
         }
       }
     }
