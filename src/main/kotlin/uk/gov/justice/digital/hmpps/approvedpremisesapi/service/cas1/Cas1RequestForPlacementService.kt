@@ -103,7 +103,16 @@ class Cas1RequestForPlacementService(
     val sentenceType: SentenceTypeOption,
     val liveTier: TierDto,
     val exceptionalApplication: Boolean,
-  )
+  ) {
+    override fun toString(): String = "DurationCriteria(" +
+      "apType=${apType.name}, " +
+      "application=${application.id}, " +
+      "isWomensApplication=${application.isWomensApplication}, " +
+      "sentenceType=${sentenceType.name}, " +
+      "tierScore=${liveTier.tierScore}, " +
+      "exceptionalApplication=$exceptionalApplication" +
+      ")"
+  }
 
   @SuppressWarnings("MagicNumber")
   private fun defaultDurationTierV2(
