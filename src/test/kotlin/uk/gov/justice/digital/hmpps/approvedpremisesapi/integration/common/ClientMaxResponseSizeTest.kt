@@ -64,8 +64,6 @@ class ClientMaxResponseSizeTest : InitialiseDatabasePerClassTestBase() {
 
     val justUnderRequiredSize = (sizeInMb * 1024 * 1024) - 5_024
     val alertsRequiredToMeetLimit = justUnderRequiredSize / alertByteSize
-    return (0 until alertsRequiredToMeetLimit).map {
-      PrisonerAlertFactory().produce()
-    }
+    return List(alertsRequiredToMeetLimit) { alert }
   }
 }
