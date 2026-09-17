@@ -537,7 +537,19 @@ class Cas1RequestForPlacementServiceTest {
           verify {
             sentryService.captureErrorMessage(
               withArg { actual ->
-                assertThat(actual).startsWith("Could not calculate duration for criteria")
+                val expectedError = buildString {
+                  append("Could not calculate duration for criteria ")
+                  append("DurationCriteria(")
+                  append("apType=${expectation.apType.name}")
+                  append(", application=${application.id}")
+                  append(", isWomensApplication=${expectation.isWomensApplication}")
+                  append(", sentenceType=${expectation.sentenceType.name}")
+                  append(", tierScore=${expectation.tier}")
+                  append(", exceptionalApplication=${expectation.exceptionStatus}")
+                  append(")")
+                }
+
+                assertThat(actual).isEqualTo(expectedError)
               },
               "cas1-cant-calculate-duration",
             )
