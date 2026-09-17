@@ -66,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -318,6 +319,14 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                     riskToKnownAdult = "High",
                     riskToStaff = "High",
                     lastUpdated = null,
+                  ),
+                ),
+              )
+              withTier(
+                RiskWithStatus(
+                  value = RiskTier(
+                    level = "C",
+                    lastUpdated = LocalDate.now(),
                   ),
                 ),
               )
@@ -700,6 +709,14 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                   ),
                 ),
               )
+              withTier(
+                RiskWithStatus(
+                  value = RiskTier(
+                    level = "C",
+                    lastUpdated = LocalDate.now(),
+                  ),
+                ),
+              )
             }
             withPrisonNameAtReferral("HM Hounslow")
             withPersonReleaseDate(LocalDate.now())
@@ -792,6 +809,14 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                     riskToKnownAdult = "High",
                     riskToStaff = "High",
                     lastUpdated = null,
+                  ),
+                ),
+              )
+              withTier(
+                RiskWithStatus(
+                  value = RiskTier(
+                    level = "C",
+                    lastUpdated = LocalDate.now(),
                   ),
                 ),
               )
@@ -4053,6 +4078,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.releaseDate).isEqualTo(application.personReleaseDate)
     assertThat(actualReferralReportRow.updatedReleaseDate).isNull()
     assertThat(actualReferralReportRow.pdu).isEqualTo(application.probationDeliveryUnit?.name)
+    assertThat(actualReferralReportRow.tierOnApplicationCreation).isEqualTo("C")
   }
 
   private fun createTemporaryAccommodationAssessmentForStatus(
@@ -4068,7 +4094,18 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
       withArrivalDate(LocalDate.now().randomDateAfter(14))
       withSubmittedAt(submittedDate.atStartOfDay().atOffset(ZoneOffset.UTC))
       withCreatedAt(OffsetDateTime.now())
-      withRiskRatings { PersonRisksFactory().produce() }
+      withRiskRatings(
+        PersonRisksFactory()
+          .withTier(
+            RiskWithStatus(
+              value = RiskTier(
+                level = "C",
+                lastUpdated = LocalDate.now(),
+              ),
+            ),
+          )
+          .produce(),
+      )
     }
 
     val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
@@ -4149,6 +4186,14 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
               riskToKnownAdult = "High",
               riskToStaff = "High",
               lastUpdated = null,
+            ),
+          ),
+        )
+        withTier(
+          RiskWithStatus(
+            value = RiskTier(
+              level = "C",
+              lastUpdated = LocalDate.now(),
             ),
           ),
         )
