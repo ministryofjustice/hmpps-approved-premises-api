@@ -16,6 +16,12 @@ spring:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
 
+  http:
+    codecs:
+      # 3MB, defined by prison-api adjudications response,
+      # which is the largest response we expect to receive from any service
+      max-in-memory-size: 3MB
+
   profiles:
     group:
       test:
@@ -189,9 +195,6 @@ management:
 
 services:
   default:
-    # 3MB, defined by prison-api adjudications response,
-    # which is the largest response we expect to receive from any service
-    max-response-in-memory-size-bytes: 3145728
     timeout-ms: 10000
   hmpps-tier:
     base-url: http://localhost:9004
