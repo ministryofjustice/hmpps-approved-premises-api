@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResults
@@ -19,8 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
-@Cas3Controller
-@RequestMapping("/cas3/v2", headers = ["X-Service-Name=temporary-accommodation"])
+@Cas3v2Controller
 class Cas3v2ArchivePremisesController(
   private val cas3PremisesService: Cas3PremisesService,
   private val cas3PremisesTransformer: Cas3PremisesTransformer,
