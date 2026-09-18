@@ -26,8 +26,6 @@ generic-service:
     SERVER_PORT: "8080"
     SPRING_PROFILES_ACTIVE: "logstash"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
-    SPRING_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
-    SPRING_JPA_DATABASE: postgresql
     SPRING_DATASOURCE_URL: "jdbc:postgresql://${DB_HOST}/${DB_NAME}"
     SPRING_DATA_REDIS_PORT: 6379
     SPRING_DATA_REDIS_SSL_ENABLED: true

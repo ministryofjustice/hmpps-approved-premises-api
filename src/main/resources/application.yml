@@ -22,6 +22,7 @@ spring:
         - "stdout"
 
   datasource:
+    driverClassName: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
       connection-timeout: 15000
@@ -47,7 +48,6 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         cache:
           use_second_level_cache: true
         javax:
