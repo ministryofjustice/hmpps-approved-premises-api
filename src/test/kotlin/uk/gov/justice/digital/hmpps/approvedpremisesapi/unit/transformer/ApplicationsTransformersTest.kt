@@ -343,6 +343,23 @@ class ApplicationsTransformersTest {
   }
 
   @Test
+  fun `transformJpaToCas1Application with arrival date and null duration`() {
+    val application = approvedPremisesApplicationFactory
+      .withArrivalDate(OffsetDateTime.parse("2004-12-11T10:15:30Z"))
+      .withRequestedPlacementDuration(null)
+      .produce()
+
+    val result = applicationsTransformer.transformJpaToCas1Application(application, mockk())
+
+    assertThat(result.arrivalDate).isEqualTo(OffsetDateTime.parse("2004-12-11T10:15:30Z").toInstant())
+    assertThat(result.duration).isNull()
+    assertThat(result.requestedPlacementDuration).isNull()
+    assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2004, 12, 11))
+    assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isNull()
+    assertThat(result.requestedPlacementPeriod?.duration).isNull()
+  }
+
+  @Test
   fun `transformJpaToCas1Application maps an unknown sentenceType to null`() {
     val application = approvedPremisesApplicationFactory
       .withSentenceType("someUnknownSentenceType")
