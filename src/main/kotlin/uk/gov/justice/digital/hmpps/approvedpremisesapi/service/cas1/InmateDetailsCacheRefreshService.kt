@@ -26,6 +26,9 @@ data class InmateDetailsCacheRefreshResults(
   """
 }
 
+/**
+ * We are working on removing the need for this. See https://dsdmoj.atlassian.net/browse/FM-1136
+ */
 @SuppressWarnings("MagicNumber")
 @Service
 class InmateDetailsCacheRefreshService(
