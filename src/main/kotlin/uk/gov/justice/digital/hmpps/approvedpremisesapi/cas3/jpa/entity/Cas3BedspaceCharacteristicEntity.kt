@@ -5,6 +5,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
+import org.hibernate.annotations.Immutable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.ReferenceData
@@ -23,6 +24,7 @@ interface Cas3BedspaceCharacteristicRepository :
 @Entity
 @Table(name = "cas3_bedspace_characteristics")
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Immutable
 data class Cas3BedspaceCharacteristicEntity(
   @Id
   override val id: UUID,
