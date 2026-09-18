@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
@@ -38,6 +40,8 @@ class Cas1RequestForPlacementService(
   private val jsonMapper: JsonMapper,
   private val sentryService: SentryService,
 ) {
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
+
   companion object {
     val TIER_SCORE_ABC = listOf(
       TierV3Score.A,
@@ -208,6 +212,8 @@ class Cas1RequestForPlacementService(
     if (period == null) {
       sentryService.captureErrorMessage(message = "Could not calculate duration for criteria $criteria", groupId = "cas1-cant-calculate-duration")
     }
+
+    log.info("Have calculated duration as $period for criteria $criteria")
 
     return Cas1RequestsForPlacementDurationsCalculationResponseDto(period?.days, null)
   }
