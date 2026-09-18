@@ -82,13 +82,19 @@ class Cas1AssessmentTransformer(
     dueAt = ase.dueAt!!,
   )
 
-  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity, placementHistory: List<Cas1PlacementPairDto>): List<Cas1ReferralHistory> {
-    val application = entity.cas1Application()
+  fun transformDomainToApiCas1ReferralHistory(
+    application: ApprovedPremisesApplicationEntity,
+    placementHistory: List<Cas1PlacementPairDto>,
+  ): List<Cas1ReferralHistory> {
+    val latestAssessment = application.getLatestAssessment()
 
     val referralHistory = Cas1ReferralHistory(
-      id = entity.id,
-      applicationId = entity.application.id,
-      date = entity.submittedAt?.toLocalDate() ?: entity.createdAt.toLocalDate(),
+      id = latestAssessment?.id ?: application.id,
+      applicationId = application.id,
+      date = latestAssessment?.submittedAt?.toLocalDate()
+        ?: latestAssessment?.createdAt?.toLocalDate()
+        ?: application.submittedAt?.toLocalDate()
+        ?: application.createdAt.toLocalDate(),
       applicationStatus = application.status,
       type = ServiceType.CAS1,
       referralRejectionReason = null,
@@ -98,7 +104,7 @@ class Cas1AssessmentTransformer(
       placementAddress = null,
       placementStatus = null,
       requestForPlacementStatus = null,
-      uiUrl = cas1ApplicationUrlTemplate.replace("#id", entity.application.id.toString()),
+      uiUrl = cas1ApplicationUrlTemplate.replace("#id", application.id.toString()),
       withdrawalReason = null,
     )
 
