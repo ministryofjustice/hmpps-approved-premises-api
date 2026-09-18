@@ -31,23 +31,9 @@ data class Cas1Application(
 
   val isWomensApplication: Boolean? = null,
 
-  @Deprecated(message = "")
-  val isPipeApplication: Boolean? = null,
-
   val isEmergencyApplication: Boolean? = null,
 
-  @Deprecated(message = "")
-  val isEsapApplication: Boolean? = null,
-
   val apType: ApType? = null,
-
-  @Deprecated(message = "use requestedPlacementPeriod")
-  @Schema(deprecated = true, description = "use requestedPlacementPeriod")
-  val arrivalDate: Instant? = null,
-
-  @Deprecated("use requestedPlacementDuration")
-  @Schema(deprecated = true, description = "use requestedPlacementDuration")
-  val duration: Int?,
 
   @Schema(
     description = "The placement duration requested by the applicant, which may be the default duration if not overridden. " +
