@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Wi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -35,8 +37,9 @@ class Cas1PlacementApplicationDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val tierService: TierService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  val clock: Clock,
+  private val clock: Clock,
 ) {
 
   fun placementApplicationSubmitted(
@@ -50,6 +53,7 @@ class Cas1PlacementApplicationDomainEventService(
     val eventOccurredAt = Instant.now()
     val application = placementApplication.application
     val dates = placementApplication.placementDates()!!
+    val crn = application.crn
 
     val placementType = when (placementApplication.placementType!!) {
       PlacementType.ROTL -> RequestForPlacementType.rotl
@@ -70,7 +74,7 @@ class Cas1PlacementApplicationDomainEventService(
       applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
       requestForPlacementId = placementApplication.id,
       personReference = PersonReference(
-        crn = application.crn,
+        crn = crn,
         noms = application.nomsNumber ?: "Unknown NOMS Number",
       ),
       deliusEventNumber = application.eventNumber,
@@ -79,13 +83,14 @@ class Cas1PlacementApplicationDomainEventService(
       expectedArrival = dates.expectedArrival,
       duration = dates.duration,
       requestForPlacementType = placementType,
+      personTier = tierService.getTier(crn)?.toEventTier(),
     )
 
     domainEventService.saveRequestForPlacementCreatedEvent(
       SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
-        crn = application.crn,
+        crn = crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt,
         data = RequestForPlacementCreatedEnvelope(
@@ -99,7 +104,7 @@ class Cas1PlacementApplicationDomainEventService(
         } else {
           TriggerSourceType.USER
         },
-        schemaVersion = 3,
+        schemaVersion = 4,
       ),
     )
   }

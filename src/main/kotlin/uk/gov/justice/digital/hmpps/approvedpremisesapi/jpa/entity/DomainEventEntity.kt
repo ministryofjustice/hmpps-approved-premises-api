@@ -565,6 +565,10 @@ enum class DomainEventType(
           3,
           "duration may now be null",
         ),
+        DomainEventSchemaVersion(
+          4,
+          "added personTier",
+        ),
       ),
     ),
   ),

@@ -17,6 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -54,11 +57,13 @@ class Cas1PlacementApplicationDomainEventServiceTest {
   val domainEventService = mockk<Cas1DomainEventService>()
   val domainEventTransformer = mockk<DomainEventTransformer>()
   val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
+  private val mockTierService = mockk<TierService>()
 
   val service = Cas1PlacementApplicationDomainEventService(
     domainEventService,
     domainEventTransformer,
     apDeliusContextApiClient,
+    mockTierService,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     Clock.systemDefaultZone(),
   )
@@ -104,6 +109,9 @@ class Cas1PlacementApplicationDomainEventServiceTest {
       val staffMember = staffUserDetails.toStaffMember()
       every { domainEventService.saveRequestForPlacementCreatedEvent(any()) } returns Unit
 
+      val tierDto = TierDtoFactory().produce()
+      every { mockTierService.getTier(application.crn) } returns tierDto
+
       service.placementApplicationSubmitted(placementApplication, createdByUserName = USERNAME)
 
       verify {
@@ -115,7 +123,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
             assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
-            assertThat(it.schemaVersion).isEqualTo(3)
+            assertThat(it.schemaVersion).isEqualTo(4)
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
@@ -129,6 +137,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(eventDetails.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 3))
             assertThat(eventDetails.duration).isEqualTo(7)
             assertThat(eventDetails.requestForPlacementType).isEqualTo(expectedRequestForPlacementType)
+            assertThat(eventDetails.personTier).isEqualTo(tierDto.toEventTier())
           },
         )
       }
@@ -151,6 +160,9 @@ class Cas1PlacementApplicationDomainEventServiceTest {
 
       every { domainEventService.saveRequestForPlacementCreatedEvent(any()) } returns Unit
 
+      val tierDto = TierDtoFactory().produce()
+      every { mockTierService.getTier(application.crn) } returns tierDto
+
       service.placementApplicationSubmitted(placementApplication, createdByUserName = null)
 
       verify {
@@ -162,7 +174,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
             assertThat(it.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
-            assertThat(it.schemaVersion).isEqualTo(3)
+            assertThat(it.schemaVersion).isEqualTo(4)
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
@@ -176,6 +188,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(eventDetails.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 3))
             assertThat(eventDetails.duration).isEqualTo(8)
             assertThat(eventDetails.requestForPlacementType).isEqualTo(RequestForPlacementType.initial)
+            assertThat(eventDetails.personTier).isEqualTo(tierDto.toEventTier())
           },
         )
       }
