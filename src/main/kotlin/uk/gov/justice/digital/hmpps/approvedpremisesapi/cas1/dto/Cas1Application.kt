@@ -45,10 +45,6 @@ data class Cas1Application(
   @Schema(deprecated = true, description = "use requestedPlacementPeriod")
   val arrivalDate: Instant? = null,
 
-  @Deprecated("use requestedPlacementDuration")
-  @Schema(deprecated = true, description = "use requestedPlacementDuration")
-  val duration: Int?,
-
   @Schema(
     description = "The placement duration requested by the applicant, which may be the default duration if not overridden. " +
       "This will be available for any submitted application, even if there no is requestedPlacementPeriod is null",
