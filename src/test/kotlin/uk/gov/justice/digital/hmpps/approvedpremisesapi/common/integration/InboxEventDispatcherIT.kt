@@ -48,6 +48,19 @@ class InboxEventDispatcherIT : IntegrationTestBase() {
   }
 
   @Test
+  fun `fails an event without a handler`() {
+    inboxEventRepository.save(
+      buildPendingInboxEventEntity(
+        eventType = "OTHER",
+        eventOccurredAt = OffsetDateTime.now(ZoneOffset.UTC),
+        payload = "[]",
+      ),
+    )
+    inboxEventDispatcher.process()
+    inboxAsserter.assertFailedCount(1)
+  }
+
+  @Test
   fun `processes only maxEventsPerBatch events per invocation`() {
     dispatcherConfig.maxEventsPerBatch = 2
 
