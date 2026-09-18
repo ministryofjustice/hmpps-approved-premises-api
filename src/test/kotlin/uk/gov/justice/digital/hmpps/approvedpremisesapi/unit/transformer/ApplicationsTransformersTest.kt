@@ -311,7 +311,6 @@ class ApplicationsTransformersTest {
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.createdByUserName).isEqualTo(user.name)
-    assertThat(result.arrivalDate).isEqualTo(OffsetDateTime.parse("2004-12-11T10:15:30Z").toInstant())
     assertThat(result.requestedPlacementDuration).isEqualTo(52)
     assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2004, 12, 11))
     assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isNull()
@@ -335,7 +334,6 @@ class ApplicationsTransformersTest {
 
     val result = applicationsTransformer.transformJpaToCas1Application(application, mockk())
 
-    assertThat(result.arrivalDate).isNull()
     assertThat(result.requestedPlacementDuration).isEqualTo(52)
     assertThat(result.requestedPlacementPeriod).isNull()
   }
@@ -349,7 +347,6 @@ class ApplicationsTransformersTest {
 
     val result = applicationsTransformer.transformJpaToCas1Application(application, mockk())
 
-    assertThat(result.arrivalDate).isEqualTo(OffsetDateTime.parse("2004-12-11T10:15:30Z").toInstant())
     assertThat(result.requestedPlacementDuration).isNull()
     assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2004, 12, 11))
     assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isNull()

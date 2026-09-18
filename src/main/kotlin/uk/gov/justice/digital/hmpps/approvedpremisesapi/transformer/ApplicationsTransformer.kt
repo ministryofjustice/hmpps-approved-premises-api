@@ -177,7 +177,6 @@ class ApplicationsTransformer(
       submittedAt = applicationEntity.submittedAt?.toInstant(),
       isWomensApplication = applicationEntity.isWomensApplication,
       isPipeApplication = applicationEntity.isPipeApplication,
-      arrivalDate = arrivalDate?.toInstant(),
       requestedPlacementDuration = requestedPlacementDuration,
       requestedPlacementPeriod = arrivalDate?.let {
         Cas1RequestedPlacementPeriod(
