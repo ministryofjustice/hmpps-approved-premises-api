@@ -31,13 +31,7 @@ data class Cas1Application(
 
   val isWomensApplication: Boolean? = null,
 
-  @Deprecated(message = "")
-  val isPipeApplication: Boolean? = null,
-
   val isEmergencyApplication: Boolean? = null,
-
-  @Deprecated(message = "")
-  val isEsapApplication: Boolean? = null,
 
   val apType: ApType? = null,
 
