@@ -30,4 +30,6 @@ data class RequestForPlacementCreated(
   @get:JsonProperty("requestForPlacementType", required = true) val requestForPlacementType: RequestForPlacementType,
 
   @get:JsonProperty("createdBy") val createdBy: StaffMember? = null,
+
+  val personTier: EventTier? = null,
 ) : Cas1DomainEventPayload
