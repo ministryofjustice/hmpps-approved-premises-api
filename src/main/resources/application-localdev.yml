@@ -43,12 +43,8 @@ seed:
       noms-cas2v2: MDI
 
 spring:
-  datasource:
-    driverClassName: org.postgresql.Driver
   flyway:
     locations: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/dev,classpath:db/migration/all-except-integration
-  jpa:
-    database: postgresql
   output:
     ansi:
       enabled: ALWAYS

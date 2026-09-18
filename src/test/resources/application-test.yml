@@ -13,7 +13,6 @@ spring:
   datasource:
     username: api_user
     password: api_user_password
-    driverClassName: org.postgresql.Driver
     # see TestPropertiesInitializer and IntegrationTestDbManager
     url: "dynamically set per test"
   # if making changes here, also update TestPropertiesInitializer
@@ -21,7 +20,6 @@ spring:
     locations: classpath:db/migration/all,classpath:db/migration/integration
     clean-disabled: false
   jpa:
-    database: postgresql
     properties:
       hibernate:
         enable_lazy_load_no_trans: true
