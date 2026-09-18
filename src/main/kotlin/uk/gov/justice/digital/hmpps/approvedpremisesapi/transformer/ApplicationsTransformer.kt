@@ -184,7 +184,7 @@ class ApplicationsTransformer(
         Cas1RequestedPlacementPeriod(
           arrival = arrivalDate.toLocalDate(),
           arrivalFlexible = null,
-          duration = requestedPlacementDuration!!,
+          duration = requestedPlacementDuration,
         )
       },
       data = if (applicationEntity.data != null) jsonMapper.readTree(applicationEntity.data) else null,
