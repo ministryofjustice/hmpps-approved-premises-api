@@ -17,6 +17,10 @@ class PrisonsApiClient(
   jsonMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
+
+  /*
+   * We are working on removing the need for this. See https://dsdmoj.atlassian.net/browse/FM-1136
+   */
   private val inmateDetailsCacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "inmateDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),
