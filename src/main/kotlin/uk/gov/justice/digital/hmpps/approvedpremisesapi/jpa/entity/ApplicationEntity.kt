@@ -326,6 +326,7 @@ abstract class ApplicationEntity(
   @Version
   var version: Long = 1,
 ) {
+  fun isSubmitted() = submittedAt != null
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
 }
 
@@ -466,7 +467,6 @@ class ApprovedPremisesApplicationEntity(
     get() = apType == ApprovedPremisesType.ESAP
 
   fun getLatestPlacementRequest(): PlacementRequestEntity? = this.placementRequests.maxByOrNull { it.createdAt }
-  fun isSubmitted() = submittedAt != null
   val hasArrivalWithin28Days: Boolean
     get() = arrivalDate?.toLocalDate()?.let { arrival ->
       val today = LocalDate.now()

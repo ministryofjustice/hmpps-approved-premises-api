@@ -7,6 +7,10 @@ import com.fasterxml.jackson.annotation.JsonValue
 enum class ApplicationStatus(@get:JsonValue val value: String, val priority: Int) {
 
   rejected("rejected", 0),
+
+  /**
+   * Not submitted
+   */
   inProgress("inProgress", 1),
   submitted("submitted", 2),
   requestedFurtherInformation("requestedFurtherInformation", 3),
