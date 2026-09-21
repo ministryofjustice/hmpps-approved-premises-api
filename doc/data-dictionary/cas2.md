@@ -146,23 +146,6 @@ Table: `external_users` | Entity: `ExternalUserEntity`
 | `email` | text | String | no |  |  |  |  |
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
 
-### nomis_users
-
-Table: `nomis_users` | Entity: `NomisUserEntity`
-
-| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
-|--------|-----------|--------|----------|-----|-------------|--------------|-------|
-| `id` | uuid | UUID | no | PK |  |  | legacy; superseded by cas_2_users |
-| `nomis_username` | text | String | no |  |  |  |  |
-| `nomis_staff_id` | bigint | Long | no |  |  |  |  |
-| `name` | text | String | no |  |  |  |  |
-| `account_type` | text | String | no |  |  |  |  |
-| `is_enabled` | boolean | Boolean | no |  |  |  |  |
-| `is_active` | boolean | Boolean | no |  |  |  |  |
-| `email` | text | String? | yes |  |  |  |  |
-| `active_caseload_id` | text | String? | yes |  |  |  |  |
-| `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
-
 ## Query-backed projections (not physical tables)
 
 These entities are backed by database views or native queries; they are read-only and not physical tables.

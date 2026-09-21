@@ -39,8 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcExternalUsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcNomisUserEmailSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcNomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcShortTermAccommodationCreateOmusSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcUpdateAssessmentStatusSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcUsersSeedJob
@@ -84,7 +82,6 @@ class SeedService(
         SeedFileType.approvedPremisesRooms -> getBean(ApprovedPremisesRoomsSeedJob::class)
         SeedFileType.user -> getBean(UsersSeedJob::class)
         SeedFileType.usersBasic -> getBean(UsersBasicSeedJob::class)
-        SeedFileType.nomisUsers -> getBean(Cas2HdcNomisUsersSeedJob::class)
         SeedFileType.externalUsers -> getBean(Cas2HdcExternalUsersSeedJob::class)
         SeedFileType.cas2Applications -> getBean(Cas2HdcApplicationsSeedJob::class)
         SeedFileType.cas2v2Applications -> getBean(Cas2ApplicationsSeedJob::class)
@@ -117,7 +114,6 @@ class SeedService(
         SeedFileType.approvedPremisesUpdatePremisesSupportSpaceBooking -> getBean(Cas1UpdatePremisesSupportSpaceBookingSeedJob::class)
         SeedFileType.shortTermAccommodationCreateOmus -> getBean(Cas2HdcShortTermAccommodationCreateOmusSeedJob::class)
         SeedFileType.temporaryAccommodationAssignApplicationToPdu -> getBean(Cas3AssignApplicationToPduSeedJob::class)
-        SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2HdcNomisUserEmailSeedJob::class)
         SeedFileType.cas2UpdateAssessmentStatus -> getBean(Cas2HdcUpdateAssessmentStatusSeedJob::class)
         SeedFileType.approvedPremisesCancelOutOfServiceBeds -> getBean(Cas1CancelOutOfServiceBedsByPremisesJob::class)
         SeedFileType.approvedPremisesUpdateOutOfServiceBeds -> getBean(Cas1UpdateOutOfServiceBedsByPremisesJob::class)
