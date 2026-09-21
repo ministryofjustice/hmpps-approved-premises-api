@@ -43,6 +43,7 @@ class Cas1PersonalTimelineTransformer(
     isOfflineApplication = false,
     createdBy = userTransformer.transformJpaToApi(application.createdByUser, ServiceName.approvedPremises),
     timelineEvents = cas1TimelineEvents,
+    submittedAt = application.submittedAt?.toInstant(),
   )
 
   private fun transformOfflineApplication(
@@ -55,6 +56,7 @@ class Cas1PersonalTimelineTransformer(
     isOfflineApplication = true,
     createdBy = null,
     timelineEvents = cas1TimelineEvents,
+    submittedAt = application.createdAt.toInstant(),
   )
 }
 
