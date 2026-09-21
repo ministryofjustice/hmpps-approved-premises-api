@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 fun IntegrationTestBase.givenAnUnsubmittedCas2HdcApplication(
@@ -66,6 +67,7 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
   submittedAt: OffsetDateTime = OffsetDateTime.now(),
   latestStatus: Cas2AssessmentStatus? = null,
   latestStatusSet: OffsetDateTime = OffsetDateTime.now(),
+  conditionalReleaseDate: LocalDate? = null,
 ): Cas2ApplicationEntity {
   val application = cas2ApplicationEntityFactory.produceAndPersist {
     withCreatedByUser(
@@ -81,6 +83,7 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
     withData("{}")
     withSubmittedAt(submittedAt)
     withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    withConditionalReleaseDate(conditionalReleaseDate)
   }
 
   if (latestStatus != null) {
