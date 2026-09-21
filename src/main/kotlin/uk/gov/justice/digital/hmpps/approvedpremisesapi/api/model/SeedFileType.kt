@@ -8,7 +8,6 @@ enum class SeedFileType(@get:JsonValue val value: String) {
   approvedPremises("approved_premises"),
   approvedPremisesRooms("approved_premises_rooms"),
   user("user"),
-  externalUsers("external_users"),
   cas2Applications("cas2_applications"),
   cas2v2Applications("cas2v2_applications"),
   cas2v2Users("cas2v2_users"),
