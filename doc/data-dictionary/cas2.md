@@ -6,9 +6,7 @@ model; migrations are authoritative for physical column types and constraints.
 Dictionary data: [cas2.csv](./cas2.csv)
 
 CAS2 entities live in `cas2hdc/jpa/entity/` and `cas2/jpa/entity/`. The service is
-mid-migration: `cas_2_users` is the consolidated user model that supersedes the legacy
-`nomis_users` and `external_users` tables, and `cas_2_application_live_summary` is a
-read-only view-backed entity.
+mid-migration: `cas_2_users` is the user model
 
 ## Entity–Relationship Diagram
 
@@ -132,20 +130,6 @@ Table: `cas_2_users` | Entity: `Cas2UserEntity`
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
 | `service_origin` | text | Cas2ServiceOrigin | no |  | BAIL / HDC |  |  |
 
-### external_users
-
-Table: `external_users` | Entity: `ExternalUserEntity`
-
-| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
-|--------|-----------|--------|----------|-----|-------------|--------------|-------|
-| `id` | uuid | UUID | no | PK |  |  | legacy; superseded by cas_2_users |
-| `username` | text | String | no |  |  |  |  |
-| `is_enabled` | boolean | Boolean | no |  |  |  |  |
-| `origin` | text | String | no |  |  |  |  |
-| `name` | text | String | no |  |  |  |  |
-| `email` | text | String | no |  |  |  |  |
-| `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
-
 ## Query-backed projections (not physical tables)
 
 These entities are backed by database views or native queries; they are read-only and not physical tables.
@@ -188,4 +172,3 @@ See [db/migration/all/](../../src/main/resources/db/migration/all) for the view 
 | Entity packages | [cas2hdc/jpa/entity/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2hdc/jpa/entity), [cas2/jpa/entity/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2/jpa/entity) |
 | Migrations | [db/migration/all/](../../src/main/resources/db/migration/all) |
 
-> `nomis_users` and `external_users` are legacy and superseded by `cas_2_users`.
