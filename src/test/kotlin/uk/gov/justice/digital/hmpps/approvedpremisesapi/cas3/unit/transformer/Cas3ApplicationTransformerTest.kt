@@ -12,11 +12,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Cancell
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalCurrentApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPreviousBookingCancellationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPreviousBookingDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
@@ -110,7 +112,7 @@ class Cas3ApplicationTransformerTest {
 
     application.assessments = mutableListOf(assessment)
 
-    val expected = Cas3SuitableApplication(
+    val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
@@ -126,9 +128,20 @@ class Cas3ApplicationTransformerTest {
       previousBookings = null,
       premises = null,
       uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+      submittedApplication = Cas3ExternalSubmittedApplicationDto(
+        submittedDate = application.submittedAt!!.toLocalDate(),
+        submittedBy = Cas3StaffDto(
+          application.createdByUser.name,
+          application.createdByUser.deliusUsername,
+          application.createdByUser.deliusStaffCode,
+        ),
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+        assessmentRejectionReason = null,
+        latestBooking = null,
+      ),
     )
 
-    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, null)
+    val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, null)
 
     assertThat(result).isEqualTo(expected)
   }
@@ -160,7 +173,7 @@ class Cas3ApplicationTransformerTest {
 
     application.assessments = mutableListOf(assessment)
 
-    val expected = Cas3SuitableApplication(
+    val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
@@ -176,9 +189,20 @@ class Cas3ApplicationTransformerTest {
       previousBookings = null,
       premises = null,
       uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+      submittedApplication = Cas3ExternalSubmittedApplicationDto(
+        submittedDate = application.submittedAt!!.toLocalDate(),
+        submittedBy = Cas3StaffDto(
+          application.createdByUser.name,
+          application.createdByUser.deliusUsername,
+          application.createdByUser.deliusStaffCode,
+        ),
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.rejected,
+        assessmentRejectionReason = "Rejected reason",
+        latestBooking = null,
+      ),
     )
 
-    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, null)
+    val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, null)
 
     assertThat(result).isEqualTo(expected)
   }
@@ -211,7 +235,7 @@ class Cas3ApplicationTransformerTest {
       .withStatus(Cas3BookingStatus.arrived)
       .produce()
 
-    val expected = Cas3SuitableApplication(
+    val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
@@ -225,7 +249,7 @@ class Cas3ApplicationTransformerTest {
       bookingStatus = Cas3BookingStatus.arrived,
       bookingProvisionalOfferSentDate = null,
       previousBookings = emptyList(),
-      premises = Cas3ExternalLatestBookingDto(
+      premises = Cas3ExternalLatestBookingPremisesDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
         name = premises.name,
@@ -235,9 +259,32 @@ class Cas3ApplicationTransformerTest {
         postcode = premises.postcode,
       ),
       uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+      submittedApplication = Cas3ExternalSubmittedApplicationDto(
+        submittedDate = application.submittedAt!!.toLocalDate(),
+        submittedBy = Cas3StaffDto(
+          application.createdByUser.name,
+          application.createdByUser.deliusUsername,
+          application.createdByUser.deliusStaffCode,
+        ),
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+        assessmentRejectionReason = null,
+        latestBooking = Cas3ExternalLatestBookingDto(
+          status = booking.status,
+          premises = Cas3ExternalLatestBookingPremisesDto(
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            name = premises.name,
+            addressLine1 = premises.addressLine1,
+            addressLine2 = premises.addressLine2,
+            town = premises.town,
+            postcode = premises.postcode,
+          ),
+          provisionalOfferSentDate = null,
+        ),
+      ),
     )
 
-    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, listOf(booking))
+    val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, listOf(booking))
 
     assertThat(result).isEqualTo(expected)
   }
@@ -270,7 +317,7 @@ class Cas3ApplicationTransformerTest {
       .withStatus(Cas3BookingStatus.provisional)
       .produce()
 
-    val expected = Cas3SuitableApplication(
+    val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
@@ -284,7 +331,7 @@ class Cas3ApplicationTransformerTest {
       bookingStatus = Cas3BookingStatus.provisional,
       bookingProvisionalOfferSentDate = booking.createdAt.toLocalDate(),
       previousBookings = emptyList(),
-      premises = Cas3ExternalLatestBookingDto(
+      premises = Cas3ExternalLatestBookingPremisesDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
         name = premises.name,
@@ -294,9 +341,32 @@ class Cas3ApplicationTransformerTest {
         postcode = premises.postcode,
       ),
       uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+      submittedApplication = Cas3ExternalSubmittedApplicationDto(
+        submittedDate = application.submittedAt!!.toLocalDate(),
+        submittedBy = Cas3StaffDto(
+          application.createdByUser.name,
+          application.createdByUser.deliusUsername,
+          application.createdByUser.deliusStaffCode,
+        ),
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+        assessmentRejectionReason = null,
+        latestBooking = Cas3ExternalLatestBookingDto(
+          status = booking.status,
+          premises = Cas3ExternalLatestBookingPremisesDto(
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            name = premises.name,
+            addressLine1 = premises.addressLine1,
+            addressLine2 = premises.addressLine2,
+            town = premises.town,
+            postcode = premises.postcode,
+          ),
+          provisionalOfferSentDate = booking.createdAt.toLocalDate(),
+        ),
+      ),
     )
 
-    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, listOf(booking))
+    val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, listOf(booking))
 
     assertThat(result).isEqualTo(expected)
   }
@@ -338,7 +408,7 @@ class Cas3ApplicationTransformerTest {
       .withCreatedAt(OffsetDateTime.now().minusDays(2))
       .produce()
 
-    val expected = Cas3SuitableApplication(
+    val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
@@ -352,7 +422,7 @@ class Cas3ApplicationTransformerTest {
       bookingStatus = Cas3BookingStatus.arrived,
       bookingProvisionalOfferSentDate = null,
       previousBookings = listOf(Cas3ExternalPreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null)),
-      premises = Cas3ExternalLatestBookingDto(
+      premises = Cas3ExternalLatestBookingPremisesDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
         name = premises.name,
@@ -362,9 +432,32 @@ class Cas3ApplicationTransformerTest {
         postcode = premises.postcode,
       ),
       uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+      submittedApplication = Cas3ExternalSubmittedApplicationDto(
+        submittedDate = application.submittedAt!!.toLocalDate(),
+        submittedBy = Cas3StaffDto(
+          application.createdByUser.name,
+          application.createdByUser.deliusUsername,
+          application.createdByUser.deliusStaffCode,
+        ),
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+        assessmentRejectionReason = null,
+        latestBooking = Cas3ExternalLatestBookingDto(
+          status = booking.status,
+          premises = Cas3ExternalLatestBookingPremisesDto(
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            name = premises.name,
+            addressLine1 = premises.addressLine1,
+            addressLine2 = premises.addressLine2,
+            town = premises.town,
+            postcode = premises.postcode,
+          ),
+          provisionalOfferSentDate = null,
+        ),
+      ),
     )
 
-    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, listOf(booking, previousBooking))
+    val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, listOf(booking, previousBooking))
 
     assertThat(result).isEqualTo(expected)
   }
@@ -422,7 +515,7 @@ class Cas3ApplicationTransformerTest {
 
     previousCancelledBooking.cancellations = mutableListOf(cancellation)
 
-    val expected = Cas3SuitableApplication(
+    val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
@@ -445,7 +538,7 @@ class Cas3ApplicationTransformerTest {
           ),
         ),
       ),
-      premises = Cas3ExternalLatestBookingDto(
+      premises = Cas3ExternalLatestBookingPremisesDto(
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
         name = premises.name,
@@ -455,9 +548,32 @@ class Cas3ApplicationTransformerTest {
         postcode = premises.postcode,
       ),
       uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+      submittedApplication = Cas3ExternalSubmittedApplicationDto(
+        submittedDate = application.submittedAt!!.toLocalDate(),
+        submittedBy = Cas3StaffDto(
+          application.createdByUser.name,
+          application.createdByUser.deliusUsername,
+          application.createdByUser.deliusStaffCode,
+        ),
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+        assessmentRejectionReason = null,
+        latestBooking = Cas3ExternalLatestBookingDto(
+          status = booking.status,
+          premises = Cas3ExternalLatestBookingPremisesDto(
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            name = premises.name,
+            addressLine1 = premises.addressLine1,
+            addressLine2 = premises.addressLine2,
+            town = premises.town,
+            postcode = premises.postcode,
+          ),
+          provisionalOfferSentDate = null,
+        ),
+      ),
     )
 
-    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, listOf(booking, previousBooking, previousCancelledBooking))
+    val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, listOf(booking, previousBooking, previousCancelledBooking))
 
     assertThat(result).isEqualTo(expected)
   }

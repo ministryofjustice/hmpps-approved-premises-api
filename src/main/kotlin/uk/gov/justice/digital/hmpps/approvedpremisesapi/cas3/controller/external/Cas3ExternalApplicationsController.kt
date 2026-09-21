@@ -4,8 +4,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalCurrentApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
 
 @Cas3ExternalController
@@ -17,7 +17,7 @@ class Cas3ExternalApplicationsController(
   fun getApplicationsByCrnAndType(
     @PathVariable crn: String,
     @PathVariable type: String,
-  ): ResponseEntity<Cas3SuitableApplication> = when (type) {
+  ): ResponseEntity<Cas3ExternalCurrentApplicationDto> = when (type) {
     "suitable" -> cas3ApplicationService.getSuitableApplicationByCrn(crn)
       ?.let { ResponseEntity.ok(it) }
       ?: ResponseEntity.noContent().build()
@@ -28,7 +28,7 @@ class Cas3ExternalApplicationsController(
   @GetMapping("/cases/{crn}/premises/current")
   fun getCurrentPremisesByCrn(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas3ExternalLatestBookingDto> = cas3ApplicationService.getCurrentPremisesByCrn(crn)
+  ): ResponseEntity<Cas3ExternalLatestBookingPremisesDto> = cas3ApplicationService.getCurrentPremisesByCrn(crn)
     ?.let { ResponseEntity.ok(it) }
     ?: ResponseEntity.noContent().build()
 }
