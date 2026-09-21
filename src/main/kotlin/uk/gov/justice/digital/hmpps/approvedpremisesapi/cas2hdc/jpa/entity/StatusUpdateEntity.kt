@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -57,7 +58,7 @@ data class Cas2StatusUpdateEntity(
   var assessment: Cas2AssessmentEntity? = null,
 
   @OneToMany(mappedBy = "statusUpdate")
-  val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
+  var statusUpdateDetails: MutableList<Cas2StatusUpdateDetailEntity>? = null,
   var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
   companion object {
@@ -67,6 +68,8 @@ data class Cas2StatusUpdateEntity(
   override fun toString() = "Cas2StatusEntity: $id"
 
   fun status(): Cas2PersistedApplicationStatus = statusFinder.getById(statusId)
+
+  fun getStatus() = Cas2PersistedApplicationStatusFinder.forId(this.statusId)
 
   val assessmentStatus: Cas2AssessmentStatus?
     get() = status().status

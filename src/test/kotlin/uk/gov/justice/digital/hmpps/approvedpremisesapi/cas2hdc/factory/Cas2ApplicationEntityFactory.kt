@@ -139,7 +139,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.hdcEligibilityDate = { hdcEligibilityDate }
   }
 
-  fun withConditionalReleaseDate(conditionalReleaseDate: LocalDate) = apply {
+  fun withConditionalReleaseDate(conditionalReleaseDate: LocalDate?) = apply {
     this.conditionalReleaseDate = { conditionalReleaseDate }
   }
 

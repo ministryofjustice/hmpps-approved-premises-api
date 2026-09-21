@@ -22,7 +22,7 @@ class Cas2StatusUpdateEntityFactory : Factory<Cas2StatusUpdateEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var label: Yielded<String> = { "More information requested" }
   private var description: Yielded<String> = { "More information about the application has been requested" }
-  private var statusUpdateDetails: Yielded<List<Cas2StatusUpdateDetailEntity>?> = { null }
+  private var statusUpdateDetails: Yielded<MutableList<Cas2StatusUpdateDetailEntity>?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -56,7 +56,7 @@ class Cas2StatusUpdateEntityFactory : Factory<Cas2StatusUpdateEntity> {
     this.description = { description }
   }
 
-  fun withStatusUpdateDetails(details: List<Cas2StatusUpdateDetailEntity>) = apply {
+  fun withStatusUpdateDetails(details: MutableList<Cas2StatusUpdateDetailEntity>) = apply {
     this.statusUpdateDetails = { details }
   }
 

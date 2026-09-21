@@ -33,7 +33,6 @@ class Cas2StatusUpdateService(
   private val cas2StatusUpdateRepository: Cas2StatusUpdateRepository,
   private val cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: Cas2DomainEventService,
-  private val cas2PersistedApplicationStatusFinder: Cas2PersistedApplicationStatusFinder,
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,
   private val cas2ApplicationStatusUpdateEmailService: Cas2ApplicationStatusUpdateEmailService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
@@ -97,7 +96,7 @@ class Cas2StatusUpdateService(
     return CasResult.Success(createdStatusUpdate)
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = cas2PersistedApplicationStatusFinder.active()
+  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = Cas2PersistedApplicationStatusFinder.active()
     .find { status -> status.name == statusName }
 
   fun createStatusUpdatedDomainEvent(

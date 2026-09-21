@@ -10,10 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2
 @Cas2Controller
 class Cas2ReferenceDataController(
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) {
   @GetMapping("/reference-data/application-status")
-  fun referenceDataApplicationStatusGet(): ResponseEntity<List<Cas2ApplicationStatus>> = ResponseEntity.ok(transformToApi(statusFinder.active()))
+  fun referenceDataApplicationStatusGet(): ResponseEntity<List<Cas2ApplicationStatus>> = ResponseEntity.ok(transformToApi(Cas2PersistedApplicationStatusFinder.active()))
 
   private fun transformToApi(statusList: List<Cas2PersistedApplicationStatus>): List<Cas2ApplicationStatus> = statusList.map { status -> statusTransformer.transformV2ModelToApi(status) }
 }

@@ -8,6 +8,7 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -41,4 +42,6 @@ data class Cas2StatusUpdateDetailEntity(
   fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail = statusFinder.getById(statusId).statusDetails
     ?.find { detail -> detail.id == detailId }
     ?: error("Status detail with id $detailId not found")
+
+  fun getStatusDetail() = Cas2PersistedApplicationStatusFinder.forDetailId(id = this.statusUpdate.statusId, detailId = this.statusDetailId)
 }
