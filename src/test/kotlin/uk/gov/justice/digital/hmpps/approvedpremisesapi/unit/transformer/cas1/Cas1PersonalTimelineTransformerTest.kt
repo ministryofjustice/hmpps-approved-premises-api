@@ -46,6 +46,7 @@ class Cas1PersonalTimelineTransformerTest {
       assertThat(actual.isOfflineApplication).isFalse
       assertThat(actual.createdBy).isEqualTo(expectedUser)
       assertThat(actual.timelineEvents).isEqualTo(expectedTimelineEvents)
+      assertThat(actual.submittedAt).isEqualTo(expectedApplication.submittedAt?.toInstant())
     }
 
     private fun assertApplicationMatches(
@@ -59,6 +60,7 @@ class Cas1PersonalTimelineTransformerTest {
       assertThat(actual.isOfflineApplication).isTrue
       assertThat(actual.createdBy).isNull()
       assertThat(actual.timelineEvents).isEqualTo(expectedTimelineEvents)
+      assertThat(actual.submittedAt).isEqualTo(expectedApplication.createdAt.toInstant())
     }
   }
 

@@ -5,6 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -12,7 +13,7 @@ class OfflineApplicationEntityFactory : Factory<OfflineApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var service: Yielded<String> = { "approved-premises" }
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7).roundNanosToMillisToAccountForLossOfPrecisionInPostgres() }
   private var eventNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var name: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
 

@@ -18,4 +18,6 @@ data class Cas1ApplicationTimeline(
   @get:JsonProperty("status") val status: Cas1ApplicationStatus? = null,
 
   @get:JsonProperty("createdBy") val createdBy: User? = null,
+
+  @get:JsonProperty("submittedAt") val submittedAt: Instant? = null,
 )
