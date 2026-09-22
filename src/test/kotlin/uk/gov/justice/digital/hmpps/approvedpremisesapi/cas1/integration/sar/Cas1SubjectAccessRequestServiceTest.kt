@@ -476,7 +476,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
            "case_manager_name": ${application.caseManagerUserDetails?.name?.let { "\"${it.trim().substringAfterLast(' ')}\"" } ?: "null"},
            "case_manager_is_not_applicant" : true,
            "situation": "${SituationOption.bailSentence}",
-           "is_inapplicable": false,
            "licence_expiry_date": "$LICENCE_EXPIRY_DATE",
            "expired_reason": "$EXPIRED_REASON"
         }

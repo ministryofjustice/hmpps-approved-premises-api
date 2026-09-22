@@ -80,12 +80,16 @@
             </table>
             <table class="data-table">
                 <tr>
-                    <td class="data-column-50">Type of approved premises</td>
-                    <td class="data-column-50"></td>
+                    <td class="data-column-25">Type of approved premises</td>
+                    <td class="data-column-25">Situation</td>
+                    <td class="data-column-25">License Expiry Date</td>
+                    <td class="data-column-25">Expired Reason</td>
                 </tr>
                 <tr>
+                    <td>{{ optionalValue situation }}</td>
                     <td>{{ optionalValue ap_type }}</td>
-                    <td></td>
+                    <td>{{ optionalValue licence_expiry_date }}</td>
+                    <td>{{ optionalValue expired_reason }}</td>
                 </tr>
             </table>
 

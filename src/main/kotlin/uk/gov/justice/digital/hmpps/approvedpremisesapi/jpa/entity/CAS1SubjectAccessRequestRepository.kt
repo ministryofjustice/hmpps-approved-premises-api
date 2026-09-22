@@ -47,7 +47,6 @@ from
 		REGEXP_REPLACE(TRIM(case_manager."name"), '^.* ', '') as case_manager_name,
 		apa.case_manager_is_not_applicant,
     apa.situation,
-    apa.is_inapplicable,
     apa.licence_expiry_date,
     apa.expired_reason
 	from
