@@ -270,7 +270,12 @@
 
         <h3>Application Timeline</h3>
         {{#ApplicationTimeline}}
-            <table class="summary-list">{{#each .}}<tr><td>{{ @key }}</td><td>{{ this }}</td></tr>{{/each}}</table><br/>
+            <h4>Application Timeline Note</h4>
+            <table class="summary-list">
+                <tr><td>Created by user</td><td>{{ getUserLastName created_by_username }}</td></tr>
+                <tr><td>Created at</td><td>{{ optionalValue (formatDate created_at) }}</td></tr>
+                <tr><td>Note</td><td>{{ optionalValue body }}</td></tr>
+            </table>
         {{/ApplicationTimeline}}
         {{^ApplicationTimeline}}
             <p>No Data Held</p>

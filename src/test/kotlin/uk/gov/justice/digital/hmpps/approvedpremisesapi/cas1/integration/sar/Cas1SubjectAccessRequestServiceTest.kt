@@ -95,7 +95,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
 
-    val timelineNotes = applicationTimelineNoteEntity(application)
+    val timelineNotes = applicationTimelineNoteEntity(application, "This is a test note")
 
     val result = cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
@@ -488,7 +488,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       {
           "body":"${timelineNote.body}",
           "created_at":"$CREATED_AT_NO_TZ",
-          "user_name":"${timelineNote.createdBy?.name}"
+          "created_by_username":"${timelineNote.createdBy?.deliusUsername}"
       }
     """.trimIndent()
 

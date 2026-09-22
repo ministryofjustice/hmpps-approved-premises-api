@@ -96,7 +96,7 @@ from
       select
           atn.body,
           atn.created_at,
-          u."name" as user_name
+          u."delius_username" as created_by_username
       from
       application_timeline_notes atn
       inner join users u on

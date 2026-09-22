@@ -124,7 +124,8 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
 
     val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
 
-    applicationTimelineNoteEntity(application)
+    applicationTimelineNoteEntity(application, "Some random note about this application")
+    applicationTimelineNoteEntity(application, "An additional note about this application")
     approvedPremisesAssessmentClarificationNoteEntity(assessment)
     appealEntity(application, assessment)
 
