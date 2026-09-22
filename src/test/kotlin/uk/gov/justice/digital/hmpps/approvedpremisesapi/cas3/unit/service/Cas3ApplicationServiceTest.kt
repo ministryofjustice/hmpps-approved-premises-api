@@ -291,6 +291,7 @@ class Cas3ApplicationServiceTest {
           assessmentStatus = null,
           assessmentRejectionReason = null,
           latestBooking = null,
+          previousBookings = null,
         ),
       )
 
@@ -362,6 +363,7 @@ class Cas3ApplicationServiceTest {
           assessmentStatus = null,
           assessmentRejectionReason = null,
           latestBooking = null,
+          previousBookings = null,
         ),
       )
 
@@ -420,6 +422,7 @@ class Cas3ApplicationServiceTest {
           assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
           assessmentRejectionReason = null,
           latestBooking = null,
+          previousBookings = null,
         ),
       )
 
@@ -486,6 +489,7 @@ class Cas3ApplicationServiceTest {
           assessmentStatus = TemporaryAccommodationAssessmentStatus.rejected,
           assessmentRejectionReason = "Some reason",
           latestBooking = null,
+          previousBookings = null,
         ),
       )
 
@@ -582,6 +586,7 @@ class Cas3ApplicationServiceTest {
             ),
             provisionalOfferSentDate = booking.createdAt.toLocalDate(),
           ),
+          previousBookings = null,
         ),
       )
 
@@ -711,6 +716,17 @@ class Cas3ApplicationServiceTest {
               postcode = laterBooking.premises.postcode,
             ),
             provisionalOfferSentDate = laterBooking.createdAt.toLocalDate(),
+          ),
+          previousBookings = listOf(
+            Cas3ExternalPreviousBookingDto(bookingStatus = previousBooking.status, cancellation = null),
+            Cas3ExternalPreviousBookingDto(
+              bookingStatus = cancelledPreviousBooking.status,
+              cancellation =
+              Cas3ExternalPreviousBookingCancellationDto(
+                cancellationDate = previousBookingCancellation.createdAt.toLocalDate(),
+                cancellationReason = previousBookingCancellation.reason.name,
+              ),
+            ),
           ),
         ),
       )

@@ -84,6 +84,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               assessmentStatus = null,
               assessmentRejectionReason = null,
               latestBooking = null,
+              previousBookings = emptyList(),
             ),
           )
 
@@ -201,6 +202,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               assessmentStatus = TemporaryAccommodationAssessmentStatus.rejected,
               assessmentRejectionReason = rejectionReason.name,
               latestBooking = null,
+              previousBookings = emptyList(),
             ),
           )
 
@@ -295,6 +297,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
                   postcode = premises.postcode,
                 ),
               ),
+              previousBookings = emptyList(),
             ),
           )
 
@@ -389,6 +392,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
                   postcode = premises.postcode,
                 ),
               ),
+              previousBookings = emptyList(),
             ),
           )
 
@@ -527,6 +531,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
                   postcode = premises.postcode,
                 ),
               ),
+              previousBookings = listOf(olderClosedBookingDto, olderCancelledBookingDto),
             ),
           )
 

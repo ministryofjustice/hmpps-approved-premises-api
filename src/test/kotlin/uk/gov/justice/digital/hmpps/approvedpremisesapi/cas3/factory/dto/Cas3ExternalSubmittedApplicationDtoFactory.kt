@@ -26,5 +26,6 @@ class Cas3ExternalSubmittedApplicationDtoFactory : Factory<Cas3ExternalSubmitted
     assessmentStatus = assessmentStatus(),
     assessmentRejectionReason = assessmentRejectionReason(),
     latestBooking = null,
+    previousBookings = null,
   )
 }
