@@ -138,6 +138,7 @@ class Cas3ApplicationTransformerTest {
         assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
         assessmentRejectionReason = null,
         latestBooking = null,
+        previousBookings = null,
       ),
     )
 
@@ -199,6 +200,7 @@ class Cas3ApplicationTransformerTest {
         assessmentStatus = TemporaryAccommodationAssessmentStatus.rejected,
         assessmentRejectionReason = "Rejected reason",
         latestBooking = null,
+        previousBookings = null,
       ),
     )
 
@@ -281,6 +283,7 @@ class Cas3ApplicationTransformerTest {
           ),
           provisionalOfferSentDate = null,
         ),
+        previousBookings = emptyList(),
       ),
     )
 
@@ -363,6 +366,7 @@ class Cas3ApplicationTransformerTest {
           ),
           provisionalOfferSentDate = booking.createdAt.toLocalDate(),
         ),
+        previousBookings = emptyList(),
       ),
     )
 
@@ -454,6 +458,7 @@ class Cas3ApplicationTransformerTest {
           ),
           provisionalOfferSentDate = null,
         ),
+        previousBookings = listOf(Cas3ExternalPreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null)),
       ),
     )
 
@@ -569,6 +574,16 @@ class Cas3ApplicationTransformerTest {
             postcode = premises.postcode,
           ),
           provisionalOfferSentDate = null,
+        ),
+        previousBookings = listOf(
+          Cas3ExternalPreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null),
+          Cas3ExternalPreviousBookingDto(
+            bookingStatus = Cas3BookingStatus.cancelled,
+            cancellation = Cas3ExternalPreviousBookingCancellationDto(
+              cancellationDate = cancellation.createdAt.toLocalDate(),
+              cancellationReason = cancellation.reason.name,
+            ),
+          ),
         ),
       ),
     )

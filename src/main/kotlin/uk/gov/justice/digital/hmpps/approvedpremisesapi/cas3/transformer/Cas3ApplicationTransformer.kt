@@ -35,6 +35,7 @@ class Cas3ApplicationTransformer(
 ) {
   fun transformToExternalCurrentApplicationDto(application: TemporaryAccommodationApplicationEntity, bookings: List<Cas3BookingEntity>?): Cas3ExternalCurrentApplicationDto {
     val latestBooking = bookings?.firstOrNull()
+    val previousBookings = bookings?.drop(1)?.map { transformToPreviousBookingDto(it) }
     val latestAssessment = application.getLatestAssessment()
 
     val submittedApplication = if (application.isSubmitted()) {
@@ -50,6 +51,7 @@ class Cas3ApplicationTransformer(
             provisionalOfferSentDate = if (it.status == Cas3BookingStatus.provisional) it.createdAt.toLocalDate() else null,
           )
         },
+        previousBookings = previousBookings,
       )
     } else {
       null
@@ -65,7 +67,7 @@ class Cas3ApplicationTransformer(
       assessmentStatus = submittedApplication?.assessmentStatus,
       bookingStatus = submittedApplication?.latestBooking?.status,
       bookingProvisionalOfferSentDate = submittedApplication?.latestBooking?.provisionalOfferSentDate,
-      previousBookings = bookings?.drop(1)?.map { transformToPreviousBookingDto(it) },
+      previousBookings = previousBookings,
       premises = submittedApplication?.latestBooking?.premises,
       uiUrl = cas3ApplicationFullUrlTemplate.replace("#applicationId", application.id.toString()),
     )

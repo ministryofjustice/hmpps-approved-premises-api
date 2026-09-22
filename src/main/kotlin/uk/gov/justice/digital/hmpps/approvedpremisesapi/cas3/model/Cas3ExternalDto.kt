@@ -26,6 +26,7 @@ data class Cas3ExternalCurrentApplicationDto(
   val bookingStatus: Cas3BookingStatus?,
   @Schema(deprecated = true)
   val bookingProvisionalOfferSentDate: LocalDate?,
+  @Schema(deprecated = true)
   val previousBookings: List<Cas3ExternalPreviousBookingDto>?,
   @Schema(deprecated = true, description = "This is the most recent booking for the application, could arguably be named 'latestBooking' or 'mostRecentBooking' but 'premises' is the name used in SAS.")
   val premises: Cas3ExternalLatestBookingPremisesDto?,
@@ -47,6 +48,7 @@ data class Cas3ExternalSubmittedApplicationDto(
   @Schema(description = "Will only be defined if the assessmentStatus is 'rejected'")
   val assessmentRejectionReason: String?,
   val latestBooking: Cas3ExternalLatestBookingDto?,
+  val previousBookings: List<Cas3ExternalPreviousBookingDto>?,
 ) {
   init {
     requireXor(
