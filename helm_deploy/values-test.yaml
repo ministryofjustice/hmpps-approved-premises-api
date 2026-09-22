@@ -16,7 +16,8 @@ generic-service:
     tlsSecretName: hmpps-approved-premises-api-test-cert
 
   env:
-    JAVA_TOOL_OPTIONS: "-Xmx1024m"
+    APPLICATIONINSIGHTS_STATSBEAT_DISABLED: "true"
+    JAVA_TOOL_OPTIONS: "$(JAVA_PROXY_TOOL_OPTIONS) -Xmx1024m"
     SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_ROLE_NAME: approved-premises-api-test
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
@@ -116,6 +117,11 @@ generic-service:
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
       NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
       NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
+    hmpps-envoy-https-proxy-env:
+      HTTP_PROXY: "HTTP_PROXY"
+      HTTPS_PROXY: "HTTPS_PROXY"
+      NO_PROXY: "NO_PROXY"
+      JAVA_PROXY_TOOL_OPTIONS: "JAVA_PROXY_TOOL_OPTIONS"
 
 # These alerts are provided by https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/README.md
 generic-prometheus-alerts:
