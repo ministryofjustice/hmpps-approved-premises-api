@@ -32,7 +32,7 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
-      "created_by_user": "${applicationNotes.createdByUser.name}",
+      "created_by_user": "${applicationNotes.createdByUser.username}",
       "body": "${applicationNotes.body}"
   }
   """.trimIndent()
@@ -48,7 +48,7 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
   protected fun cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
 {
   "document": ${application.document},
-  "created_by_user": "${application.createdByUser.name}",
+  "created_by_user": "${application.createdByUser.username}",
   "created_at": "$CREATED_AT",
   "submitted_at": "$SUBMITTED_AT",
   "referring_prison_code": "${application.referringPrisonCode}",

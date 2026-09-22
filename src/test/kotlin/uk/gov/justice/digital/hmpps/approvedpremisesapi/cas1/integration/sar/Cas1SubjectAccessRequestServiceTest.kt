@@ -423,8 +423,8 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "placement_type": "${PlacementType.ADDITIONAL_PLACEMENT}",
         "is_withdrawn": ${placementApplication.isWithdrawn},
         "withdrawal_reason": "${placementApplication.withdrawalReason}",
-        "created_by_user": "${placementApplication.createdByUser.name}",
-        "allocated_user": "${placementApplication.allocatedToUser?.name}",
+        "created_by_user": "${placementApplication.createdByUser.deliusUsername}",
+        "allocated_user": "${placementApplication.allocatedToUser?.deliusUsername}",
         "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
         "release_type": "$RELEASE_TYPE_CONDITIONAL",
         "requested_duration": $REQUESTED_DURATION,
@@ -443,7 +443,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
           "decision" : "${appeal.decision}",
           "decision_detail": "${appeal.decisionDetail}" ,
           "appeal_created_at": "$CREATED_AT" ,
-          "created_by_user" :  "${appeal.createdBy.name}"
+          "created_by_user" :  "${appeal.createdBy.deliusUsername}"
       }
     """.trimIndent()
 
@@ -523,7 +523,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "query": "${clarificationNote.query}",
         "response": "${clarificationNote.response}",
         "response_received_on": "$RESPONSE_RECEIVED_AT",
-        "created_by_user": "${clarificationNote.createdByUser.name}"
+        "created_by_user": "${clarificationNote.createdByUser.deliusUsername}"
       }
     """.trimIndent()
 

@@ -91,7 +91,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
          "key_worker_name": ${booking.keyWorkerName?.let { "\"${it.trim().substringAfterLast(' ')}\"" } ?: "null"},
          "premises_name": "${booking.premises.name}",
          "delius_event_number": "${booking.deliusEventNumber}",
-         "created_by_user_name":  ${booking.createdBy?.let { "\"${it.name}\"" }},
+         "created_by_user_name":  ${booking.createdBy?.let { "\"${it.deliusUsername}\"" }},
          "departure_reason": ${booking.departureReason?.let { "\"${it.name}\"" }},
          "departure_notes": ${if (booking.departureNotes != null) "\"${booking.departureNotes}\"" else null},
          "move_on_category": ${booking.departureMoveOnCategory?.let { "\"${it.name}\"" }},

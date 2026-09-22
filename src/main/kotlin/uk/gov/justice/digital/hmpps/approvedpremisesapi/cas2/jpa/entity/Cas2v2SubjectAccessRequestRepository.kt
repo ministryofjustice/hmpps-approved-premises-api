@@ -23,7 +23,7 @@ class Cas2v2SubjectAccessRequestRepository(
       from ( 
         select
         	ca."document",
-        	nu."name" as created_by_user,
+        	nu."username" as created_by_user,
         	ca.created_at,
         	ca.submitted_at,
         	ca.referring_prison_code,
@@ -97,7 +97,7 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(cas_2_application_notes) as json 
       from (
           select
-          	cu."name" as created_by_user,
+          	cu."username" as created_by_user,
             can.body
           from cas_2_application_notes can 
           inner join cas_2_applications ca on

@@ -109,8 +109,8 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       withDeliusUsername(TEST_ASSESSOR_USERNAME)
     }
     val spaceBookingCreatedByUser = userEntityFactory.produceAndPersist {
-      withName(TEST_SPACE_BOOKING_CREATED_BY_USER_NAME)
       withProbationRegion(givenAProbationRegion())
+      withDeliusUsername(TEST_SPACE_BOOKING_CREATED_BY_USER_NAME)
     }
 
     val application = approvedPremisesApplicationEntity(
