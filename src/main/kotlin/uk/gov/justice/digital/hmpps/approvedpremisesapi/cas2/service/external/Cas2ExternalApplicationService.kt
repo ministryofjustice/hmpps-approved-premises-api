@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
@@ -12,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2C
 @Service
 class Cas2ExternalApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
-  private val cas2PersistedApplicationStatusFinder: Cas2PersistedApplicationStatusFinder,
 
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
@@ -32,9 +30,7 @@ class Cas2ExternalApplicationService(
     val latestAssessmentStatus = mostRecent
       .statusUpdates
       ?.firstOrNull()
-      ?.statusId
-      ?.let { cas2PersistedApplicationStatusFinder.forId(it) }
-      ?.name
+      ?.assessmentStatus
 
     Cas2ExternalSubmittedApplicationDto(
       latestAssessmentStatus = latestAssessmentStatus,

@@ -10,6 +10,6 @@ data class Cas2SuitableApplication(
 )
 
 data class Cas2ExternalSubmittedApplicationDto(
-  val latestAssessmentStatus: String?,
+  val latestAssessmentStatus: Cas2AssessmentStatus?,
   val submittedAt: OffsetDateTime,
 )

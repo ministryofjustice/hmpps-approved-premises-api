@@ -11,6 +11,7 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import java.time.OffsetDateTime
@@ -66,4 +67,7 @@ data class Cas2StatusUpdateEntity(
   override fun toString() = "Cas2StatusEntity: $id"
 
   fun status(): Cas2PersistedApplicationStatus = statusFinder.getById(statusId)
+
+  val assessmentStatus: Cas2AssessmentStatus?
+    get() = status().status
 }
