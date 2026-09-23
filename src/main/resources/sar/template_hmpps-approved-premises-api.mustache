@@ -172,7 +172,7 @@
             {{#document}}
                 <p><b>Offender Assessment System Import</b></p>
                 {{#oasys-import}}
-                    <table class="summary-list">{{#each .}}<tr><td>{{ @key }}</td><td>{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td>{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/oasys-import}}
                 {{^oasys-import}}
                     <p>No Data Held</p>
@@ -188,7 +188,7 @@
 
                 <p><b>Move on</b></p>
                 {{#move-on}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-75">{{ @key }}</td><td class="data-column-25">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/move-on}}
                 {{^move-on}}
                     <p>No Data Held</p>
@@ -196,7 +196,7 @@
 
                 <p><b>Access and Healthcare</b></p>
                 {{#access-and-healthcare}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-75">{{ @key }}</td><td class="data-column-25">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/access-and-healthcare}}
                 {{^access-and-healthcare}}
                     <p>No Data Held</p>
@@ -204,7 +204,7 @@
 
                 <p><b>Attach Required Documents</b></p>
                 {{#attach-required-documents}}
-                    <table class="summary-list">{{#each .}}<tr><td>{{ @key }}</td><td>{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/attach-required-documents}}
                 {{^attach-required-documents}}
                     <p>No Data Held</p>
@@ -212,7 +212,7 @@
 
                 <p><b>Type of Approve Premises</b></p>
                 {{#type-of-ap}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-75">{{ @key }}</td><td class="data-column-25">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/type-of-ap}}
                 {{^type-of-ap}}
                     <p>No Data Held</p>
@@ -220,7 +220,7 @@
 
                 <p><b>Basic Information</b></p>
                 {{#basic-information}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-75">{{ @key }}</td><td class="data-column-25">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/basic-information}}
                 {{^basic-information}}
                     <p>No Data Held</p>
@@ -228,7 +228,7 @@
 
                 <p><b>Further Considerations</b></p>
                 {{#further-considerations}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-75">{{ @key }}</td><td class="data-column-25">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/further-considerations}}
                 {{^further-considerations}}
                     <p>No Data Held</p>
@@ -252,7 +252,7 @@
 
                 <p><b>Location Factors</b></p>
                 {{#location-factors}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-75">{{ @key }}</td><td class="data-column-25">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/location-factors}}
                 {{^location-factors}}
                     <p>No Data Held</p>
@@ -394,7 +394,7 @@
             {{#document}}
                 <p><b>Make a Decision</b></p>
                 {{#make-a-decision}}
-                    <table class="summary-list">{{#each .}}<tr><td>{{ @key }}</td><td>{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/make-a-decision}}
                 {{^make-a-decision}}
                     <p>No Data Held</p>
@@ -402,7 +402,7 @@
 
                 <p><b>Required Actions</b></p>
                 {{#required-actions}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-80">{{ @key }}</td><td class="data-column-20">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/required-actions}}
                 {{^required-actions}}
                     <p>No Data Held</p>
@@ -410,7 +410,7 @@
 
                 <p><b>Matching Information</b></p>
                 {{#matching-information}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-80">{{ @key }}</td><td class="data-column-20">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/matching-information}}
                 {{^matching-information}}
                     <p>No Data Held</p>
@@ -418,7 +418,7 @@
 
                 <p><b>Suitability Assessment</b></p>
                 {{#suitability-assessment}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-80">{{ @key }}</td><td class="data-column-20">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/suitability-assessment}}
                 {{^suitability-assessment}}
                     <p>No Data Held</p>
@@ -426,7 +426,7 @@
 
                 <p><b>Review Application</b></p>
                 {{#review-application}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-80">{{ @key }}</td><td class="data-column-20">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/review-application}}
                 {{^review-application}}
                     <p>No Data Held</p>
@@ -434,7 +434,7 @@
 
                 <p><b>Sufficient Information</b></p>
                 {{#sufficient-information}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-80">{{ @key }}</td><td class="data-column-20">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/sufficient-information}}
                 {{^sufficient-information}}
                     <p>No Data Held</p>
@@ -571,7 +571,7 @@
             {{#document}}
                 <p><b>Request a Placement</b></p>
                 {{#request-a-placement}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-75">{{ @key }}</td><td class="data-column-25">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/request-a-placement}}
                 {{^request-a-placement}}
                     <p>No Data Held</p>
