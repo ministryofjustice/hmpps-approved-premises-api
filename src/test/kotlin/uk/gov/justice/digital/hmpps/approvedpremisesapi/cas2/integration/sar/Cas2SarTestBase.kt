@@ -126,10 +126,11 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
   protected fun cas2NomisUserEntity(
     serviceOrigin: Cas2ServiceOrigin = Cas2ServiceOrigin.HDC,
     name: String = randomStringMultiCaseWithNumbers(12),
+    username: String = TEST_CREATED_BY_USER_NAME,
   ) = cas2UserEntityFactory.produceAndPersist {
     withName(name)
     withEmail(randomEmailAddress())
-    withUsername(TEST_CREATED_BY_USER_NAME)
+    withUsername(username)
     withActiveNomisCaseloadId(randomStringMultiCaseWithNumbers(3))
     withNomisStaffCode(9L)
     withNomisStaffIdentifier(90L)

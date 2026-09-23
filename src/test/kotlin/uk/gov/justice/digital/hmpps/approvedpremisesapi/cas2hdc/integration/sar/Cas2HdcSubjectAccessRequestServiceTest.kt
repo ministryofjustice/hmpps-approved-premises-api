@@ -93,7 +93,8 @@ class Cas2HdcSubjectAccessRequestServiceTest : Cas2SarTestBase() {
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
 
-    val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
+    val noteUser = cas2NomisUserEntity(username = "note_user")
+    val applicationNotes = cas2ApplicationNoteEntity(application, assessment, noteUser)
 
     val result = cas2HdcSubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,
