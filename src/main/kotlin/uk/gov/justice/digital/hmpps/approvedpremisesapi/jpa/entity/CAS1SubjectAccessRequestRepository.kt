@@ -47,7 +47,6 @@ from
 		REGEXP_REPLACE(TRIM(case_manager."name"), '^.* ', '') as case_manager_name,
 		apa.case_manager_is_not_applicant,
     apa.situation,
-    apa.is_inapplicable,
     apa.licence_expiry_date,
     apa.expired_reason
 	from
@@ -61,9 +60,6 @@ from
 	left join 
         users app_user on
 		    app_user.id = a.created_by_user_id
-	left join 
-        users created_by_user on
-		    created_by_user.id = a.created_by_user_id
 	where
 		(a.crn = :crn
 			or a.noms_number = :noms_number )
@@ -97,7 +93,7 @@ from
       select
           atn.body,
           atn.created_at,
-          u."name" as user_name
+          u."delius_username" as created_by_username
       from
       application_timeline_notes atn
       inner join users u on
@@ -182,7 +178,7 @@ from
         acn.query,
         acn.response,
         acn.response_received_on,
-        u."name" as created_by_user
+        u."delius_username" as created_by_user
       from
         assessment_clarification_notes acn
       inner join assessments a
@@ -248,8 +244,8 @@ from
             end as placement_type,
             pa.is_withdrawn,
             pa.withdrawal_reason,
-            cu."name" as created_by_user,
-            au."name" as allocated_user
+            cu."delius_username" as created_by_user,
+            au."delius_username" as allocated_user
           from
             placement_applications pa
           inner join applications a on
@@ -461,7 +457,7 @@ from
               a.decision ,
               a.decision_detail,
               a.created_at as appeal_created_at,
-              u."name" as created_by_user     
+              u."delius_username" as created_by_user     
             from appeals a
               inner join users u on
               u.id = a.created_by_user_id
@@ -513,7 +509,7 @@ from
             REGEXP_REPLACE(TRIM(b.key_worker_name), '^.* ', '') as key_worker_name,
             p."name" as premises_name,
             b.delius_event_number,
-            u.name as created_by_user_name,
+            u.delius_username as created_by_user_name,
             dr.name as departure_reason,
             b.departure_notes,
             moc.name as move_on_category,

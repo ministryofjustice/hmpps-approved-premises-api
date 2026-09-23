@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SubjectAccess
 import java.time.LocalDateTime
 
 @Repository
-class Cas2v2SubjectAccessRequestRepository(
+class Cas2SubjectAccessRequestRepository(
   jdbcTemplate: NamedParameterJdbcTemplate,
 ) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
 
@@ -23,7 +23,7 @@ class Cas2v2SubjectAccessRequestRepository(
       from ( 
         select
         	ca."document",
-        	nu."name" as created_by_user,
+        	nu."username" as created_by_user,
         	ca.created_at,
         	ca.submitted_at,
         	ca.referring_prison_code,
@@ -97,13 +97,13 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(cas_2_application_notes) as json 
       from (
           select
-          	cu."name" as created_by_user,
+          	cu."username" as created_by_user,
             can.body
           from cas_2_application_notes can 
           inner join cas_2_applications ca on
           	ca.id  = can.application_id and ca.service_origin = 'BAIL'
           left join cas_2_users cu on 
-            cu.id = ca.created_by_cas2_user_id and cu.service_origin = 'BAIL'
+            cu.id = can.created_by_cas2_user_id and cu.service_origin = 'BAIL'
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )

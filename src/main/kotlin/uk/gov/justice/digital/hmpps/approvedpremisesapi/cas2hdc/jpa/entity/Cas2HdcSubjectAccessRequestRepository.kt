@@ -24,7 +24,7 @@ class Cas2HdcSubjectAccessRequestRepository(
       from ( 
         select
         	ca."document",
-        	cu."name" as created_by_user,
+        	cu."username" as created_by_user,
         	ca.created_at,
         	ca.submitted_at,
         	ca.referring_prison_code,
@@ -100,7 +100,7 @@ class Cas2HdcSubjectAccessRequestRepository(
       from (
           select
           	case 
-          		when can.created_by_cas2_user_id is not null then cu."name"
+          		when can.created_by_cas2_user_id is not null then cu."username"
           		else 'unknown'
           	end as created_by_user,
           	can.body

@@ -94,11 +94,12 @@ class Cas2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
   fun `Get CAS2 v2 Information - Application with Note`() {
     val (offenderDetails, _) = givenAnOffender()
     val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL)
+    val noteUser = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL, username = "note_user")
 
     val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
     val assessment = cas2AssessmentEntity(application, Cas2ServiceOrigin.BAIL)
 
-    val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
+    val applicationNotes = cas2ApplicationNoteEntity(application, assessment, noteUser)
 
     val result = cas2SubjectAccessRequestService.getSarResult(
       offenderDetails.otherIds.crn,

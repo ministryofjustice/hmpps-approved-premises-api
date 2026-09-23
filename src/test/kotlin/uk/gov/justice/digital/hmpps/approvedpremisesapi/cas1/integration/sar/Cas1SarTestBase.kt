@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
@@ -92,7 +91,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
          "key_worker_name": ${booking.keyWorkerName?.let { "\"${it.trim().substringAfterLast(' ')}\"" } ?: "null"},
          "premises_name": "${booking.premises.name}",
          "delius_event_number": "${booking.deliusEventNumber}",
-         "created_by_user_name":  ${booking.createdBy?.let { "\"${it.name}\"" }},
+         "created_by_user_name":  ${booking.createdBy?.let { "\"${it.deliusUsername}\"" }},
          "departure_reason": ${booking.departureReason?.let { "\"${it.name}\"" }},
          "departure_notes": ${if (booking.departureNotes != null) "\"${booking.departureNotes}\"" else null},
          "move_on_category": ${booking.departureMoveOnCategory?.let { "\"${it.name}\"" }},
@@ -275,18 +274,11 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     withReasonForLateApplication(LATE_APPLICATION_REASON)
   }
 
-  protected fun applicationTimelineNoteEntity(application: ApprovedPremisesApplicationEntity): ApplicationTimelineNoteEntity = applicationTimelineNoteEntityFactory.produceAndPersist {
+  protected fun applicationTimelineNoteEntity(application: ApprovedPremisesApplicationEntity, note: String): ApplicationTimelineNoteEntity = applicationTimelineNoteEntityFactory.produceAndPersist {
     withApplicationId(application.id)
-    withBody("Some random note about this application")
+    withBody(note)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withCreatedBy(application.createdByUser)
-  }
-
-  protected fun offlineApplicationEntity(offenderDetails: OffenderDetailSummary): OfflineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
-    withService(ServiceName.approvedPremises.value)
-    withCrn(offenderDetails.otherIds.crn)
-    withEventNumber("1")
-    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
   }
 
   protected fun appealEntity(
