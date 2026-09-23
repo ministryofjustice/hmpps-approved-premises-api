@@ -86,8 +86,8 @@
                     <td class="data-column-25">Expired Reason</td>
                 </tr>
                 <tr>
-                    <td>{{ optionalValue situation }}</td>
                     <td>{{ optionalValue ap_type }}</td>
+                    <td>{{ optionalValue situation }}</td>
                     <td>{{ optionalValue licence_expiry_date }}</td>
                     <td>{{ optionalValue expired_reason }}</td>
                 </tr>
@@ -172,7 +172,7 @@
             {{#document}}
                 <p><b>Offender Assessment System Import</b></p>
                 {{#oasys-import}}
-                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td>{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
+                    <table class="summary-list">{{#each .}}<tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ optionalValue this }}</td></tr>{{/each}}</table><br/>
                 {{/oasys-import}}
                 {{^oasys-import}}
                     <p>No Data Held</p>
