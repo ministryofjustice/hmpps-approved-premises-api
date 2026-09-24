@@ -5,9 +5,11 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -18,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.insertHdcDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
@@ -48,7 +49,6 @@ class Cas2StartupScript(
   private val cas2assessmentRepository: Cas2AssessmentRepository,
   private val cas2ApplicationService: Cas2ApplicationService,
   private val cas2StatusUpdateService: Cas2StatusUpdateService,
-  private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
 ) {
   fun script() {
     seedLogger.info("Running Start up Script for CAS2v2")
@@ -132,7 +132,7 @@ class Cas2StartupScript(
     cas2StatusUpdateService.createStatusUpdatedDomainEvent(update)
   }
 
-  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]
+  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = Cas2PersistedApplicationStatusFinder.active(ServiceName.cas2)[idx]
 
   private fun createAssessment(application: Cas2ApplicationEntity) {
     val id = UUID.randomUUID()

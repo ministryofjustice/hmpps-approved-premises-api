@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -135,7 +136,7 @@ class Cas2HdcStatusUpdateService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt
     val application = statusUpdate.application
-    val newStatus = statusUpdate.status()
+    val newStatus = statusUpdate.status(ServiceName.cas2)
     val assessor = statusUpdate.assessor
 
     domainEventService.saveApplicationStatusUpdatedDomainEvent(

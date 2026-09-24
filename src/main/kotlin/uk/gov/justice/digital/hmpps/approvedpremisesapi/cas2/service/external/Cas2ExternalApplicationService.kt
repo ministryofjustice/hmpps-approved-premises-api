@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
@@ -57,14 +58,13 @@ class Cas2ExternalApplicationService(
       .statusUpdates
       ?.firstOrNull()
 
-
-    val offerDeclinedReason = if (statusUpdate?.assessmentStatus == "offerDeclined") {
+    val offerDeclinedReason = if (statusUpdate?.assessmentStatus == Cas2AssessmentStatus.OFFER_DECLINED) {
       statusUpdate.statusUpdateDetails?.first()?.getStatusDetail()?.name
     } else {
       null
     }
 
-    val cancelledReason = if (statusUpdate?.assessmentStatus == "cancelled") {
+    val cancelledReason = if (statusUpdate?.assessmentStatus == Cas2AssessmentStatus.CANCELLED) {
       statusUpdate.statusUpdateDetails?.first()?.getStatusDetail()?.name
     } else {
       null

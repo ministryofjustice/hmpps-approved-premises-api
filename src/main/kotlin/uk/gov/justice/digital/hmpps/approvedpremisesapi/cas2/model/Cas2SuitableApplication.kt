@@ -21,7 +21,7 @@ data class Cas2ExternalSubmittedApplicationDto(
 ) {
   init {
     requireXor(
-      latestAssessmentStatus == "cancelled",
+      latestAssessmentStatus == Cas2AssessmentStatus.CANCELLED,
       cancelledReason == null,
     ) {
       "Cancelled reason must be provided if and only if status is `cancelled`"
@@ -30,7 +30,7 @@ data class Cas2ExternalSubmittedApplicationDto(
 
   init {
     requireXor(
-      latestAssessmentStatus == "offerDeclined",
+      latestAssessmentStatus == Cas2AssessmentStatus.OFFER_DECLINED,
       offerDeclinedReason == null,
     ) {
       "Offer declined reason must be provided if and only if status is `offerDeclined`"

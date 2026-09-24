@@ -71,27 +71,27 @@ class Cas2ExternalApplicationServiceTest {
 
     @Test
     fun `returns current application (withdrawn, with statusDetails), providing view submitted url`() {
-        val statusId = UUID.fromString("004e2419-9614-4c1e-a207-a8418009f23d")
-        val statusDetailId = UUID.fromString("e4a2391e-e847-427a-a913-51e0b0ad9f52")
+      val statusId = UUID.fromString("004e2419-9614-4c1e-a207-a8418009f23d")
+      val statusDetailId = UUID.fromString("e4a2391e-e847-427a-a913-51e0b0ad9f52")
 
-        val cas2applicationEntity = setUpApplicationWithStatusDetail(statusId, statusDetailId)
+      val cas2applicationEntity = setUpApplicationWithStatusDetail(statusId, statusDetailId)
 
-        val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
 
-        val submittedApplication = Cas2ExternalSubmittedApplicationDto(
-          latestAssessmentStatus = "withdrawn",
-          submittedAt = cas2applicationEntity.submittedAt!!,
-          offerDeclinedReason = null,
-          cancelledReason = null,
-        )
+      val submittedApplication = Cas2ExternalSubmittedApplicationDto(
+        latestAssessmentStatus = Cas2AssessmentStatus.WITHDRAWN,
+        submittedAt = cas2applicationEntity.submittedAt!!,
+        offerDeclinedReason = null,
+        cancelledReason = null,
+      )
 
-        val expected = setUpExpectedApplication(
-          cas2applicationEntity = cas2applicationEntity,
-          submittedApplication = submittedApplication,
-          uiUrl = "http://frontend/assess/applications/${cas2applicationEntity.id}/overview",
-        )
+      val expected = setUpExpectedApplication(
+        cas2applicationEntity = cas2applicationEntity,
+        submittedApplication = submittedApplication,
+        uiUrl = "http://frontend/assess/applications/${cas2applicationEntity.id}/overview",
+      )
 
-        assertThat(result).isEqualTo(expected)
+      assertThat(result).isEqualTo(expected)
     }
 
     @Test
@@ -111,7 +111,7 @@ class Cas2ExternalApplicationServiceTest {
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
 
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
-        latestAssessmentStatus = "awaitingDecision",
+        latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_DECISION,
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = null,
@@ -136,7 +136,7 @@ class Cas2ExternalApplicationServiceTest {
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
 
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
-        latestAssessmentStatus = "cancelled",
+        latestAssessmentStatus = Cas2AssessmentStatus.CANCELLED,
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = "createdInError",
@@ -161,7 +161,7 @@ class Cas2ExternalApplicationServiceTest {
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
 
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
-        latestAssessmentStatus = "offerDeclined",
+        latestAssessmentStatus = Cas2AssessmentStatus.OFFER_DECLINED,
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = "areaUnsuitable",
         cancelledReason = null,
@@ -211,7 +211,7 @@ class Cas2ExternalApplicationServiceTest {
 
       val newerCas2applicationEntity = setUpApplication(
         conditionalReleaseDate = today.minusDays(1),
-        createdAt = now
+        createdAt = now,
       )
 
       val olderCas2applicationEntity = Cas2ApplicationEntityFactory()
