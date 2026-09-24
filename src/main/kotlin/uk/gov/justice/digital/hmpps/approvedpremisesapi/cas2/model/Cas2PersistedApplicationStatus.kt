@@ -3,15 +3,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 import java.util.UUID
 
 data class Cas2PersistedApplicationStatus(
-  val id: UUID,
   val status: Cas2AssessmentStatus,
-  val label: String,
-  val description: String,
-  val statusDetails: List<Cas2PersistedApplicationStatusDetail>? = null,
-  val isActive: Boolean = true,
+  val statusDetails: List<Cas2AssessmentStatusDetail>? = null,
 ) {
   val name: String
-    get() = status.value
+    get() = status.lowerCaseName
+  val id: UUID
+    get() = status.id
+  val description: String
+    get() = status.description
+  val label: String
+    get() = status.label
 
-  fun findStatusDetailOnStatus(detailName: String) = statusDetails?.find { detail -> detail.name == detailName }
+  fun findStatusDetailOnStatus(detailName: String) = statusDetails?.find { detail -> detail.lowerCaseName == detailName }
 }

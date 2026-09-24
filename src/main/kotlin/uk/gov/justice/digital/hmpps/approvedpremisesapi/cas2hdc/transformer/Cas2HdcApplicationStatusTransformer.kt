@@ -4,8 +4,8 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatusDetail
 
@@ -29,24 +29,24 @@ class Cas2HdcApplicationStatusTransformer {
       ?: emptyList(),
   )
 
-  fun transformStatusDetailModelToApi(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2HdcApplicationStatusDetail = Cas2HdcApplicationStatusDetail(
+  fun transformStatusDetailModelToApi(statusDetail: Cas2AssessmentStatusDetail): Cas2HdcApplicationStatusDetail = Cas2HdcApplicationStatusDetail(
     id = statusDetail.id,
-    name = statusDetail.name,
+    name = statusDetail.lowerCaseName,
     label = statusDetail.label,
   )
 
-  fun transformV2StatusDetailModelToApi(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2ApplicationStatusDetail = Cas2ApplicationStatusDetail(
+  fun transformV2StatusDetailModelToApi(statusDetail: Cas2AssessmentStatusDetail): Cas2ApplicationStatusDetail = Cas2ApplicationStatusDetail(
     id = statusDetail.id,
-    name = statusDetail.name,
+    name = statusDetail.lowerCaseName,
     label = statusDetail.label,
   )
 
-  fun transformStatusDetailListToDetailItemList(statusDetailsList: List<Cas2PersistedApplicationStatusDetail>): List<Cas2StatusDetail> = statusDetailsList.map { status ->
+  fun transformStatusDetailListToDetailItemList(statusDetailsList: List<Cas2AssessmentStatusDetail>): List<Cas2StatusDetail> = statusDetailsList.map { status ->
     transformStatusDetailToStatusDetailItem(status)
   }
 
-  fun transformStatusDetailToStatusDetailItem(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2StatusDetail = Cas2StatusDetail(
-    name = statusDetail.name,
+  fun transformStatusDetailToStatusDetailItem(statusDetail: Cas2AssessmentStatusDetail): Cas2StatusDetail = Cas2StatusDetail(
+    name = statusDetail.lowerCaseName,
     label = statusDetail.label,
   )
 }

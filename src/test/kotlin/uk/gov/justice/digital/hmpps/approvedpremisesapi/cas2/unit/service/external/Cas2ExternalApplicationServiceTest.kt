@@ -63,12 +63,7 @@ class Cas2ExternalApplicationServiceTest {
 
     @Test
     fun `returns latest application (awaitingDecision), providing view submitted url`() {
-      val status = Cas2PersistedApplicationStatus(
-        id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
-        status = Cas2AssessmentStatus.AWAITING_DECISION,
-        label = "Awaiting decision",
-        description = "The CAS-2 team has the information they need and will make a decision.",
-      )
+      val status = Cas2AssessmentStatus.AWAITING_DECISION
       val user = Cas2UserEntityFactory()
         .produce()
       val submittedAt = OffsetDateTime.now()
@@ -87,14 +82,17 @@ class Cas2ExternalApplicationServiceTest {
       cas2applicationEntity.statusUpdates!!.add(statusUpdate)
 
       every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
-      every { mockCas2PersistedApplicationStatusFinder.forId(status.id) } returns status
+      every { mockCas2PersistedApplicationStatusFinder.forId(status.id) } returns Cas2PersistedApplicationStatus(
+        status = status,
+        statusDetails = null,
+      )
 
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
       val expected = Cas2SuitableApplication(
         uiUrl = "http://frontend/assess/applications/$id/overview",
         id = id,
         submittedApplication = Cas2ExternalSubmittedApplicationDto(
-          latestAssessmentStatus = status.status,
+          latestAssessmentStatus = status,
           submittedAt = submittedAt,
         ),
       )
