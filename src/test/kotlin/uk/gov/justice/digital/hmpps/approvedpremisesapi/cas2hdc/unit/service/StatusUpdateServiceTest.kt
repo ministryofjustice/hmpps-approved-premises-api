@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -86,7 +87,7 @@ class StatusUpdateServiceTest {
 
   val activeStatus = Cas2PersistedApplicationStatus(
     id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
-    name = "activeStatusName",
+    status = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
     label = "",
     description = "",
     isActive = true,
@@ -100,7 +101,7 @@ class StatusUpdateServiceTest {
   )
   val activeStatusWithDetail = Cas2PersistedApplicationStatus(
     id = UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"),
-    name = "activeStatusWithDetail",
+    status = Cas2AssessmentStatus.OFFER_DECLINED,
     label = "",
     description = "",
     statusDetails = listOf(
@@ -126,7 +127,7 @@ class StatusUpdateServiceTest {
 
     @Test
     fun `returns true when the given newStatus is valid`() {
-      val validUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = "activeStatusName")
+      val validUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = "moreInfoRequested")
 
       assertThat(cas2HdcStatusUpdateService.isValidStatus(validUpdate)).isTrue()
     }

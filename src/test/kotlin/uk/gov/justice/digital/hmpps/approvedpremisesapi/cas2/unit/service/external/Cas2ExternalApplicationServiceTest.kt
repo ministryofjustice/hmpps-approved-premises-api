@@ -5,6 +5,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
@@ -24,7 +25,6 @@ class Cas2ExternalApplicationServiceTest {
 
   private val cas2ExternalApplicationService = Cas2ExternalApplicationService(
     mockCas2ApplicationRepository,
-    mockCas2PersistedApplicationStatusFinder,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -65,7 +65,7 @@ class Cas2ExternalApplicationServiceTest {
     fun `returns latest application (awaitingDecision), providing view submitted url`() {
       val status = Cas2PersistedApplicationStatus(
         id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
-        name = "awaitingDecision",
+        status = Cas2AssessmentStatus.AWAITING_DECISION,
         label = "Awaiting decision",
         description = "The CAS-2 team has the information they need and will make a decision.",
       )
@@ -94,7 +94,7 @@ class Cas2ExternalApplicationServiceTest {
         uiUrl = "http://frontend/assess/applications/$id/overview",
         id = id,
         submittedApplication = Cas2ExternalSubmittedApplicationDto(
-          latestAssessmentStatus = status.name,
+          latestAssessmentStatus = status.status,
           submittedAt = submittedAt,
         ),
       )

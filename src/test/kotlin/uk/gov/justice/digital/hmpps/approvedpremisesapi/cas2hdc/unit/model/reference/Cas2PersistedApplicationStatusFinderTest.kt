@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import java.util.UUID
@@ -172,20 +173,20 @@ class Cas2PersistedApplicationStatusFinderTest {
   private fun statusList(): List<Cas2PersistedApplicationStatus> = listOf(
     Cas2PersistedApplicationStatus(
       id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
-      name = "moreInfoRequested",
+      status = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
       label = "",
       description = "",
     ),
     Cas2PersistedApplicationStatus(
       id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
-      name = "awaitingDecision",
+      status = Cas2AssessmentStatus.AWAITING_DECISION,
       label = "",
       description = "",
       isActive = false,
     ),
     Cas2PersistedApplicationStatus(
       id = UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2"),
-      name = "placeOffered",
+      status = Cas2AssessmentStatus.PLACE_OFFERED,
       label = "",
       description = "",
     ),

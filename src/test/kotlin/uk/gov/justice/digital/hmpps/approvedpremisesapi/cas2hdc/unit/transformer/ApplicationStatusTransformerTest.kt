@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.unit.transforme
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatus
@@ -23,7 +24,7 @@ class ApplicationStatusTransformerTest {
       fun `returns the expected properties from the internal _model_`() {
         val internalModel = Cas2PersistedApplicationStatus(
           id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
-          name = "cancelled",
+          status = Cas2AssessmentStatus.CANCELLED,
           label = "Referral cancelled",
           description = "The application has been cancelled.",
           statusDetails = listOf(
@@ -62,7 +63,7 @@ class ApplicationStatusTransformerTest {
       fun `returns the expected properties from the internal _model_`() {
         val internalModel = Cas2PersistedApplicationStatus(
           id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
-          name = "cancelled",
+          status = Cas2AssessmentStatus.CANCELLED,
           label = "Referral cancelled",
           description = "The application has been cancelled.",
           isActive = true,

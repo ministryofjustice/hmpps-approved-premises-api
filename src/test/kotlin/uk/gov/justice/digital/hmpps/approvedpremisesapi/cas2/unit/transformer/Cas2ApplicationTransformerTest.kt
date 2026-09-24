@@ -11,14 +11,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.LatestCas2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2StatusUpdateTransformer
@@ -45,7 +44,6 @@ class Cas2ApplicationTransformerTest {
   private val mockCas2TimelineEventsTransformer = mockk<Cas2TimelineEventsTransformer>()
   private val mockCas2AssessmentsTransformer = mockk<Cas2AssessmentsTransformer>()
   private val mockOffenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
-  private val mockCas2PersistedApplicationStatusFinder = mockk<Cas2PersistedApplicationStatusFinder>()
   private val objectMapper = JsonMapperFactory.createJackson3JsonMapper()
 
   private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
@@ -56,7 +54,6 @@ class Cas2ApplicationTransformerTest {
     mockCas2TimelineEventsTransformer,
     mockCas2AssessmentsTransformer,
     mockOffenderManagementUnitRepository,
-    mockCas2PersistedApplicationStatusFinder,
     "http://frontend/assess/applications/#applicationId/overview",
   )
 
@@ -309,7 +306,7 @@ class Cas2ApplicationTransformerTest {
   inner class TransformJpaToCas2ReferralHistory {
     @Test
     fun `transforms a JPA application to referral history correctly using status name`() {
-      val statusId = UUID.randomUUID()
+      val statusId = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9")
       val application = submittedCas2ApplicationFactory
         .withAssessment(Cas2AssessmentEntityFactory().withServiceOrigin(Cas2ServiceOrigin.BAIL).produce())
         .withReferringPrisonCode("BRI")
@@ -325,15 +322,7 @@ class Cas2ApplicationTransformerTest {
 
       application.statusUpdates = mutableListOf(statusUpdate)
 
-      val status = Cas2PersistedApplicationStatus(
-        id = statusId,
-        name = "cancelled",
-        label = "Referral cancelled",
-        description = "desc",
-      )
-
       val omu = OffenderManagementUnitEntityFactory().withPrisonName("HMP Bristol").produce()
-      every { mockCas2PersistedApplicationStatusFinder.forId(statusId) } returns status
       every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns omu
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
@@ -343,7 +332,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.type).isEqualTo(ServiceType.CAS2v2)
       assertThat(result.applicationSubmittedDate).isEqualTo(application.submittedAt!!.toLocalDate())
       assertThat(result.applicationLastUpdatedDate).isEqualTo(statusUpdate.createdAt.toLocalDate())
-      assertThat(result.applicationStatus).isEqualTo("cancelled")
+      assertThat(result.applicationStatus).isEqualTo(Cas2AssessmentStatus.CANCELLED)
       assertThat(result.referralRejectionReason).isEqualTo("cancelled")
       assertThat(result.localAuthorityArea).isEqualTo("HMP Bristol")
       assertThat(result.pdu).isEqualTo("Area 1, Area 2")
@@ -354,7 +343,7 @@ class Cas2ApplicationTransformerTest {
 
     @Test
     fun `transforms a JPA application to referral history correctly when withdrawn`() {
-      val statusId = UUID.randomUUID()
+      val statusId = UUID.fromString("004e2419-9614-4c1e-a207-a8418009f23d")
       val application = submittedCas2ApplicationFactory
         .withAssessment(Cas2AssessmentEntityFactory().withServiceOrigin(Cas2ServiceOrigin.BAIL).produce())
         .withReferringPrisonCode("BRI")
@@ -369,14 +358,6 @@ class Cas2ApplicationTransformerTest {
 
       application.statusUpdates = mutableListOf(statusUpdate)
 
-      val status = Cas2PersistedApplicationStatus(
-        id = statusId,
-        name = "withdrawn",
-        label = "Referral withdrawn",
-        description = "desc",
-      )
-
-      every { mockCas2PersistedApplicationStatusFinder.forId(statusId) } returns status
       every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
@@ -386,7 +367,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.type).isEqualTo(ServiceType.CAS2v2)
       assertThat(result.applicationSubmittedDate).isEqualTo(application.submittedAt!!.toLocalDate())
       assertThat(result.applicationLastUpdatedDate).isEqualTo(statusUpdate.createdAt.toLocalDate())
-      assertThat(result.applicationStatus).isEqualTo("withdrawn")
+      assertThat(result.applicationStatus).isEqualTo(Cas2AssessmentStatus.WITHDRAWN)
       assertThat(result.referralRejectionReason).isEqualTo("withdrawn")
       assertThat(result.localAuthorityArea).isEqualTo("BRI")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
@@ -396,7 +377,7 @@ class Cas2ApplicationTransformerTest {
 
     @Test
     fun `transforms a JPA application to referral history correctly when not rejected`() {
-      val statusId = UUID.randomUUID()
+      val statusId = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")
 
       val application = submittedCas2ApplicationFactory
         .withAssessment(Cas2AssessmentEntityFactory().withServiceOrigin(Cas2ServiceOrigin.BAIL).produce())
@@ -412,14 +393,6 @@ class Cas2ApplicationTransformerTest {
 
       application.statusUpdates = mutableListOf(statusUpdate)
 
-      val status = Cas2PersistedApplicationStatus(
-        id = statusId,
-        name = "awaitingDecision",
-        label = "Awaiting decision",
-        description = "desc",
-      )
-
-      every { mockCas2PersistedApplicationStatusFinder.forId(statusId) } returns status
       every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
@@ -429,7 +402,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.type).isEqualTo(ServiceType.CAS2v2)
       assertThat(result.applicationSubmittedDate).isEqualTo(application.submittedAt!!.toLocalDate())
       assertThat(result.applicationLastUpdatedDate).isEqualTo(statusUpdate.createdAt.toLocalDate())
-      assertThat(result.applicationStatus).isEqualTo("awaitingDecision")
+      assertThat(result.applicationStatus).isEqualTo(Cas2AssessmentStatus.AWAITING_DECISION)
       assertThat(result.referralRejectionReason).isNull()
       assertThat(result.localAuthorityArea).isEqualTo("BRI")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
