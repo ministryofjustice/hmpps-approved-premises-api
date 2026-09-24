@@ -14,15 +14,12 @@ class Cas2ReferenceDataTest : IntegrationTestBase() {
   lateinit var statusTransformer: Cas2HdcApplicationStatusTransformer
 
   @Autowired
-  lateinit var cas2v2statusFinder: Cas2PersistedApplicationStatusFinder
-
-  @Autowired
   lateinit var cas2statusFinder: Cas2HdcPersistedApplicationStatusFinder
 
   @Test
   fun `All available application status options are returned`() {
     val expectedStatusOptions = jsonMapper.writeValueAsString(
-      cas2v2statusFinder.active().map { status -> statusTransformer.transformModelToApi(status) },
+      Cas2PersistedApplicationStatusFinder.active().map { status -> statusTransformer.transformModelToApi(status) },
     )
 
     val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt()
