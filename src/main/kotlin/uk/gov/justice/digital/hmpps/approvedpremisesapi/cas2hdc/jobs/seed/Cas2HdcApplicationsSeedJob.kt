@@ -5,7 +5,8 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding.activeStatuses
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -17,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.insertHdcDates
 import java.io.IOException
@@ -33,7 +33,6 @@ class Cas2HdcApplicationsSeedJob(
   private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
-  private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
 ) : SeedJob<Cas2HdcApplicationSeedCsvRow>(
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "submittedAt", "statusUpdates", "location"),
 ) {
@@ -151,7 +150,7 @@ class Cas2HdcApplicationsSeedJob(
     application.assessment = assessment
   }
 
-  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]
+  private fun findStatusAtPosition(idx: Int): Cas2AssessmentStatus = activeStatuses()[idx]
 
   private fun dataFor(state: String, nomsNumber: String): String {
     if (state != "NOT_STARTED") {

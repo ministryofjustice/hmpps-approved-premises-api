@@ -2,30 +2,38 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding.statusDetailsByStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatusDetail
 
 @Component("Cas2ApplicationStatusTransformer")
 class Cas2HdcApplicationStatusTransformer {
-  fun transformModelToApi(status: Cas2PersistedApplicationStatus): Cas2HdcApplicationStatus = Cas2HdcApplicationStatus(
+  fun transformModelToApi(status: Cas2AssessmentStatus): Cas2HdcApplicationStatus = Cas2HdcApplicationStatus(
     id = status.id,
-    name = status.name,
+    name = status.apiName,
     label = status.label,
     description = status.description,
-    statusDetails = status.statusDetails?.map { statusDetail -> transformStatusDetailModelToApi(statusDetail) }
+    statusDetails = statusDetailsByStatus(
+      service = ServiceName.cas2,
+      status = status,
+    )?.map { statusDetail -> transformStatusDetailModelToApi(statusDetail) }
       ?: emptyList(),
   )
 
-  fun transformV2ModelToApi(status: Cas2PersistedApplicationStatus): Cas2ApplicationStatus = Cas2ApplicationStatus(
+  fun transformV2ModelToApi(status: Cas2AssessmentStatus): Cas2ApplicationStatus = Cas2ApplicationStatus(
     id = status.id,
-    name = status.name,
+    name = status.apiName,
     label = status.label,
     description = status.description,
-    statusDetails = status.statusDetails?.map { statusDetail -> transformV2StatusDetailModelToApi(statusDetail) }
+    statusDetails = statusDetailsByStatus(
+      service = ServiceName.cas2v2,
+      status = status,
+    )?.map { statusDetail -> transformV2StatusDetailModelToApi(statusDetail) }
       ?: emptyList(),
   )
 

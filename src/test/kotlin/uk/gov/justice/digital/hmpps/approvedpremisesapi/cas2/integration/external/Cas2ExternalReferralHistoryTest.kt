@@ -4,9 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -245,7 +243,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
     cohort: Cas2Cohort? = Cas2Cohort.ATCR,
     createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   ): Cas2ApplicationEntity {
-    val actualStatusId = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2).first { it.label == label }.id
+    val actualStatusId = Cas2AssessmentStatus.entries.first { it.label == label }.id
     val statusApplication = cas2ApplicationEntityFactory.produceAndPersist {
       withCreatedAt(createdAt)
       withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())

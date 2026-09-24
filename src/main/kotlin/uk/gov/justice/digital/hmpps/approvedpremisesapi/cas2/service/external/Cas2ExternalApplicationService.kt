@@ -30,7 +30,7 @@ class Cas2ExternalApplicationService(
     val latestAssessmentStatus = mostRecent
       .statusUpdates
       ?.firstOrNull()
-      ?.assessmentStatus
+      ?.status
 
     Cas2ExternalSubmittedApplicationDto(
       latestAssessmentStatus = latestAssessmentStatus?.apiName,

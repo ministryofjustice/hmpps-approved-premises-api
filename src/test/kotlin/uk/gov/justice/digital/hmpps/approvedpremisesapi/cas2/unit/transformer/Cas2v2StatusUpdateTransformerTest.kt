@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdateDetail
@@ -42,7 +42,7 @@ class Cas2v2StatusUpdateTransformerTest {
 
   @Test
   fun `transforms JPA Cas2v2StatusUpdate db entity to API representation`() {
-    val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2).random()
+    val status = Cas2AssessmentStatus.entries.random()
     val assessor = Cas2UserEntityFactory()
       .withServiceOrigin(Cas2ServiceOrigin.BAIL)
       .produce()
@@ -54,7 +54,7 @@ class Cas2v2StatusUpdateTransformerTest {
 
     val expectedRepresentation = Cas2StatusUpdate(
       id = jpaEntity.id,
-      name = status.name,
+      name = status.apiName,
       label = jpaEntity.label,
       description = jpaEntity.description,
       updatedBy = mockCas2UserApi,
@@ -86,7 +86,7 @@ class Cas2v2StatusUpdateTransformerTest {
       .withStatusDetailId(UUID.fromString("3df29b1b-e2fc-4df7-b4b8-0527cd9e3a6f"))
       .withStatusUpdate(mockStatusUpdate)
       .produce()
-    val transformation = cas2StatusUpdateTransformer.transformStatusUpdateDetailsJpaToApi(updateDetail)
+    val transformation = cas2StatusUpdateTransformer.transformStatusUpdateDetailsJpaToApi(updateDetail, ServiceName.cas2v2)
 
     Assertions.assertThat(transformation).isEqualTo(cas2StatusUpdateDetail)
   }

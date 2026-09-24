@@ -54,7 +54,7 @@ class TimelineEventsTransformerTest {
       val statusWithDetailCreatedAt = OffsetDateTime.now().minusDays(1)
       val statusUpdateWithDetailsEntity = Cas2StatusUpdateEntityFactory()
         .withStatusUpdateDetails(
-          listOf(
+          mutableListOf(
             Cas2StatusUpdateDetailEntity(
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),

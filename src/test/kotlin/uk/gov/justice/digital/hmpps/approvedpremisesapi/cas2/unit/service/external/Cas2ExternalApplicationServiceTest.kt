@@ -7,9 +7,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -21,7 +19,6 @@ import java.util.UUID
 
 class Cas2ExternalApplicationServiceTest {
   private val mockCas2ApplicationRepository = mockk<Cas2ApplicationRepository>()
-  private val mockCas2PersistedApplicationStatusFinder = mockk<Cas2PersistedApplicationStatusFinder>()
 
   private val cas2ExternalApplicationService = Cas2ExternalApplicationService(
     mockCas2ApplicationRepository,
@@ -82,10 +79,6 @@ class Cas2ExternalApplicationServiceTest {
       cas2applicationEntity.statusUpdates!!.add(statusUpdate)
 
       every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
-      every { mockCas2PersistedApplicationStatusFinder.forId(status.id) } returns Cas2PersistedApplicationStatus(
-        status = status,
-        statusDetails = null,
-      )
 
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
       val expected = Cas2SuitableApplication(
