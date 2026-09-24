@@ -35,6 +35,7 @@ class Cas2PersistedApplicationStatusFinderTest {
 
   @Nested
   inner class Active {
+    // Currently, all statuses are active, so it returns the same as all
     @Test
     fun `returns only the ACTIVE statuses`() {
       val finder = Cas2HdcPersistedApplicationStatusFinder(statusList())
@@ -42,6 +43,7 @@ class Cas2PersistedApplicationStatusFinderTest {
       assertThat(finder.active().map { it.name }).isEqualTo(
         listOf(
           "moreInfoRequested",
+          "awaitingDecision",
           "placeOffered",
         ),
       )
@@ -172,23 +174,13 @@ class Cas2PersistedApplicationStatusFinderTest {
 
   private fun statusList(): List<Cas2PersistedApplicationStatus> = listOf(
     Cas2PersistedApplicationStatus(
-      id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
       status = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
-      label = "",
-      description = "",
     ),
     Cas2PersistedApplicationStatus(
-      id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
       status = Cas2AssessmentStatus.AWAITING_DECISION,
-      label = "",
-      description = "",
-      isActive = false,
     ),
     Cas2PersistedApplicationStatus(
-      id = UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2"),
       status = Cas2AssessmentStatus.PLACE_OFFERED,
-      label = "",
-      description = "",
     ),
   )
 }
