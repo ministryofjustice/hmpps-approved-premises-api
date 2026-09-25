@@ -73,7 +73,7 @@ dependencies {
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.11")
-  testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.3")
+  testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.4.2")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.8.1")
