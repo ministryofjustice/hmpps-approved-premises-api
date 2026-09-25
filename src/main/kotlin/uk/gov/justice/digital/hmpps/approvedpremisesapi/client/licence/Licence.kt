@@ -193,6 +193,7 @@ enum class ElectronicMonitoringType {
   ATTENDANCE_AT_APPOINTMENTS,
   ALCOHOL_MONITORING,
   ALCOHOL_ABSTINENCE,
+  RESTRICTION_ZONE,
   ;
 
   companion object {
