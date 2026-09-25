@@ -41,6 +41,10 @@ class ApDeliusContextApiClient(
     path = "/probation-cases/$crn/details"
   }
 
+  /**
+   * If a CRN/NOMS isn't found, there will be no corresponding entry for it in the response
+   * (i.e. a 404 represents an invalid URL, not a missing CRN/NOMS)
+   */
   fun getCaseSummaries(crnsOrNomsNumbers: List<String>) = getRequest<CaseSummaries> {
     path = "/probation-cases/summaries"
     body = crnsOrNomsNumbers
