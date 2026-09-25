@@ -84,6 +84,10 @@ data class BespokeCondition(
     value = SingleUploadAdditionalCondition::class,
     name = ConditionTypes.SINGLE_UPLOAD,
   ),
+  JsonSubTypes.Type(
+    value = MultipleUploadAdditionalCondition::class,
+    name = ConditionTypes.MULTIPLE_UPLOAD,
+  ),
 )
 sealed interface AdditionalCondition {
   val id: Long
@@ -140,10 +144,23 @@ data class SingleUploadAdditionalCondition(
   override val type: String = ConditionTypes.SINGLE_UPLOAD
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(ConditionTypes.MULTIPLE_UPLOAD)
+data class MultipleUploadAdditionalCondition(
+  override val id: Long,
+  override val category: String,
+  override val code: String,
+  override val text: String,
+  val hasImageUpload: Boolean,
+) : AdditionalCondition {
+  override val type: String = ConditionTypes.MULTIPLE_UPLOAD
+}
+
 object ConditionTypes {
   const val ELECTRONIC_MONITORING = "ELECTRONIC_MONITORING"
   const val MULTIPLE_EXCLUSION_ZONE = "MULTIPLE_EXCLUSION_ZONE"
   const val SINGLE_UPLOAD = "SINGLE_UPLOAD"
+  const val MULTIPLE_UPLOAD = "MULTIPLE_UPLOAD"
   const val STANDARD = "STANDARD"
 }
 
@@ -176,6 +193,7 @@ enum class ElectronicMonitoringType {
   ATTENDANCE_AT_APPOINTMENTS,
   ALCOHOL_MONITORING,
   ALCOHOL_ABSTINENCE,
+  RESTRICTION_ZONE,
   ;
 
   companion object {

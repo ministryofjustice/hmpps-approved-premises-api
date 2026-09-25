@@ -47,6 +47,13 @@ class ElectronicMonitoringTypeTest {
   }
 
   @Test
+  fun `can deserialize RESTRICTION_ZONE from mixed case and underscores`() {
+    val json = "\"restriction_zone\""
+    val result = jsonMapper.readValue<ElectronicMonitoringType>(json)
+    assertThat(result).isEqualTo(ElectronicMonitoringType.RESTRICTION_ZONE)
+  }
+
+  @Test
   fun `throws exception for unknown type`() {
     val json = "\"UNKNOWN\""
     val exception = assertThrows<com.fasterxml.jackson.databind.exc.ValueInstantiationException> {

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceSt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleExclusionZoneAdditionalCondition
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleUploadAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdditionalConditionFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApConditionsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LicenceConditionsFactory
@@ -174,6 +175,7 @@ class PersonLicenceTest : IntegrationTestBase() {
       AdditionalConditionFactory().withType(ConditionTypes.STANDARD).produce(),
       AdditionalConditionFactory().withType(ConditionTypes.ELECTRONIC_MONITORING).produce(),
       AdditionalConditionFactory().withType(ConditionTypes.MULTIPLE_EXCLUSION_ZONE).produce(),
+      AdditionalConditionFactory().withType(ConditionTypes.MULTIPLE_UPLOAD).produce(),
     )
 
     val licence = LicenceFactory()
@@ -210,10 +212,12 @@ class PersonLicenceTest : IntegrationTestBase() {
     assertThat(response.conditions.apConditions.additional[0]).isInstanceOf(GenericAdditionalCondition::class.java)
     assertThat(response.conditions.apConditions.additional[1]).isInstanceOf(ElectronicMonitoringAdditionalConditionWithRestriction::class.java)
     assertThat(response.conditions.apConditions.additional[2]).isInstanceOf(MultipleExclusionZoneAdditionalCondition::class.java)
+    assertThat(response.conditions.apConditions.additional[3]).isInstanceOf(MultipleUploadAdditionalCondition::class.java)
 
     assertThat(response.conditions.pssConditions.additional[0]).isInstanceOf(GenericAdditionalCondition::class.java)
     assertThat(response.conditions.pssConditions.additional[1]).isInstanceOf(ElectronicMonitoringAdditionalConditionWithRestriction::class.java)
     assertThat(response.conditions.pssConditions.additional[2]).isInstanceOf(MultipleExclusionZoneAdditionalCondition::class.java)
+    assertThat(response.conditions.pssConditions.additional[3]).isInstanceOf(MultipleUploadAdditionalCondition::class.java)
 
     assertThat(response).isEqualTo(licence)
   }
