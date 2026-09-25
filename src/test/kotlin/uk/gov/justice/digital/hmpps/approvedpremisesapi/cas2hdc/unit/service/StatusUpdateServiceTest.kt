@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
@@ -86,32 +86,20 @@ class StatusUpdateServiceTest {
   )
 
   val activeStatus = Cas2PersistedApplicationStatus(
-    id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
     status = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
-    label = "",
-    description = "",
-    isActive = true,
   )
   private val applicationStatusUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = activeStatus.name)
 
-  val statusDetail = Cas2PersistedApplicationStatusDetail(
-    id = UUID.fromString("390e81d4-2ace-4e76-a9e3-5efa47be606e"),
-    name = "exampleStatusDetail",
-    label = "",
-  )
+  val statusDetail = Cas2AssessmentStatusDetail.APPLICANT_UNABLE_TO_AFFORD_RENT
   val activeStatusWithDetail = Cas2PersistedApplicationStatus(
-    id = UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"),
     status = Cas2AssessmentStatus.OFFER_DECLINED,
-    label = "",
-    description = "",
     statusDetails = listOf(
       statusDetail,
     ),
-    isActive = true,
   )
   private val applicationStatusUpdateWithDetail = Cas2HdcAssessmentStatusUpdate(
     newStatus = activeStatusWithDetail.name,
-    newStatusDetails = listOf(statusDetail.name),
+    newStatusDetails = listOf(statusDetail.lowerCaseName),
   )
 
   private val activeStatusList = listOf(activeStatus, activeStatusWithDetail)

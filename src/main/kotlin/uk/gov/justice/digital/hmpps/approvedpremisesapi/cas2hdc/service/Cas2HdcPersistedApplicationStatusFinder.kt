@@ -12,7 +12,7 @@ class Cas2HdcPersistedApplicationStatusFinder(
 ) {
   fun all(): List<Cas2PersistedApplicationStatus> = statusList
 
-  fun active(): List<Cas2PersistedApplicationStatus> = statusList.filter { it.isActive }
+  fun active(): List<Cas2PersistedApplicationStatus> = statusList.filter { it.status.isActive }
 
   fun getById(id: UUID): Cas2PersistedApplicationStatus = statusList.find { status -> status.id == id }
     ?: error("Status with id $id not found")

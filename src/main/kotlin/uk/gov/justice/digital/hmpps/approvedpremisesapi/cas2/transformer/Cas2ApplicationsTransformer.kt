@@ -99,7 +99,7 @@ class Cas2ApplicationsTransformer(
     val latestStatus = latestStatusUpdate?.assessmentStatus
     val rejectionReason = latestStatus
       ?.takeIf { it in listOf(Cas2AssessmentStatus.CANCELLED, Cas2AssessmentStatus.WITHDRAWN) }
-      ?.value
+      ?.lowerCaseName
 
     val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode ?: throw IllegalStateException("Missing placement address for CAS2v2 application ${jpa.id}")
