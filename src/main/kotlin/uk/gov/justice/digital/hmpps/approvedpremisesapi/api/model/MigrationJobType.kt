@@ -26,6 +26,6 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   updateCas3ArchiveUnarchiveDomainEventDetails("update_cas3_archive_unarchive_domain_event_details"),
   updateCas3BedspaceStartDate("update_cas3_bedspace_start_date"),
   cas2BackfillApplicationCohorts("cas2_backfill_application_cohorts"),
-  backfillCases("backfill_cases"),
+  refreshCases("refresh_cases"),
   replayFailedInboxEvents("replay_failed_inbox_events"),
 }
