@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
@@ -32,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
@@ -68,7 +66,6 @@ class StatusUpdateServiceTest {
     .produce()
   private val applicationId = application.id
   val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
-  private val mockStatusFinder = mockk<Cas2HdcPersistedApplicationStatusFinder>()
   private val applicationUrlTemplate = "http://example.com/application-status-updated/#eventId"
   private val applicationOverviewUrlTemplate = "http://example.com/application/#id/overview"
 
@@ -78,35 +75,25 @@ class StatusUpdateServiceTest {
     mockStatusUpdateDetailRepository,
     mockDomainEventService,
     mockEmailNotificationService,
-    mockStatusFinder,
     mockStatusTransformer,
     cas2HdcEmailService,
     applicationUrlTemplate,
     applicationOverviewUrlTemplate,
   )
 
-  val activeStatus = Cas2PersistedApplicationStatus(
-    status = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
-  )
-  private val applicationStatusUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = activeStatus.name)
+  val activeStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED
 
-  val statusDetail = Cas2AssessmentStatusDetail.APPLICANT_UNABLE_TO_AFFORD_RENT
-  val activeStatusWithDetail = Cas2PersistedApplicationStatus(
-    status = Cas2AssessmentStatus.OFFER_DECLINED,
-    statusDetails = listOf(
-      statusDetail,
-    ),
-  )
+  private val applicationStatusUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = activeStatus.apiName)
+
+  val statusDetail = Cas2AssessmentStatusDetail.APPLICANT_DETAILS
+
   private val applicationStatusUpdateWithDetail = Cas2HdcAssessmentStatusUpdate(
-    newStatus = activeStatusWithDetail.name,
+    newStatus = activeStatus.apiName,
     newStatusDetails = listOf(statusDetail.apiName),
   )
 
-  private val activeStatusList = listOf(activeStatus, activeStatusWithDetail)
-
   @BeforeEach
   fun setup() {
-    every { mockStatusFinder.active() } returns activeStatusList
     every { mockStatusTransformer.transformStatusDetailListToDetailItemList(any()) } returns emptyList()
   }
 
@@ -255,7 +242,7 @@ class StatusUpdateServiceTest {
             .withApplication(application)
             .withAssessment(assessment)
             .withAssessor(assessor)
-            .withStatusId(activeStatusWithDetail.id)
+            .withStatusId(activeStatus.id)
             .produce()
 
           val cas2StatusUpdateDetailEntity = Cas2StatusUpdateDetailEntity(
@@ -301,7 +288,10 @@ class StatusUpdateServiceTest {
         @Test
         fun `saves a status update entity with detail and emits a domain event`() {
           every { mockStatusTransformer.transformStatusDetailListToDetailItemList(listOf(statusDetail)) } returns listOf(
-            Cas2StatusDetail("exampleStatusDetail", ""),
+            Cas2StatusDetail(
+              name = statusDetail.apiName,
+              label = statusDetail.label,
+            ),
           )
           every { cas2HdcEmailService.getReferrerEmail(any()) } returns assessment.application.createdByUser.email
 
@@ -314,7 +304,7 @@ class StatusUpdateServiceTest {
           verify {
             mockStatusUpdateRepository.save(
               match {
-                it.statusId == activeStatusWithDetail.id
+                it.statusId == activeStatus.id
               },
             )
           }
@@ -347,11 +337,11 @@ class StatusUpdateServiceTest {
                     noms = "NOMSABC",
                   ) &&
                   it.data.eventDetails.newStatus == Cas2Status(
-                    name = "offerDeclined",
-                    label = "Offer declined or withdrawn",
-                    description = "The accommodation offered has been declined or withdrawn.",
+                    name = Cas2AssessmentStatus.MORE_INFO_REQUESTED.apiName,
+                    label = Cas2AssessmentStatus.MORE_INFO_REQUESTED.label,
+                    description = Cas2AssessmentStatus.MORE_INFO_REQUESTED.description,
                     statusDetails = listOf(
-                      Cas2StatusDetail("exampleStatusDetail", ""),
+                      Cas2StatusDetail(statusDetail.apiName, statusDetail.label),
                     ),
                   )
               },

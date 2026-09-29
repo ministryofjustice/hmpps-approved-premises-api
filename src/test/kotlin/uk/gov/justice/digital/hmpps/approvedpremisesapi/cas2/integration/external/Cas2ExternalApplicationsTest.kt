@@ -54,7 +54,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           crn = crn,
           submittedAt = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS),
           cohort = cohort,
-          latestStatusName = "moreInfoRequested",
+          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
         )
 
         val suitableApplication = Cas2SuitableApplication(
@@ -90,7 +90,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           submittedAt = submittedTime,
           cohort = Cas2Cohort.ATCR,
           createdAt = latestTime,
-          latestStatusName = "moreInfoRequested",
+          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
         )
 
         givenASubmittedCas2Application(

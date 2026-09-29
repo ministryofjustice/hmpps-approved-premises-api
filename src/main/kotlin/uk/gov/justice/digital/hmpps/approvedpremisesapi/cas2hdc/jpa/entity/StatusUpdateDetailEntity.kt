@@ -7,8 +7,10 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding.statusDetailsByStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -32,13 +34,10 @@ data class Cas2StatusUpdateDetailEntity(
 
   var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
-  companion object {
-    private val statusFinder = Cas2HdcPersistedApplicationStatusFinder()
-  }
-
   override fun toString() = "Cas2StatusDetailEntity: $id"
 
-  fun statusDetail(statusId: UUID, detailId: UUID): Cas2AssessmentStatusDetail = statusFinder.getById(statusId).statusDetails
-    ?.find { detail -> detail.id == detailId }
-    ?: error("Status detail with id $detailId not found")
+  fun statusDetail(statusId: UUID, detailId: UUID, service: ServiceName): Cas2AssessmentStatusDetail {
+    val status = Cas2AssessmentStatus.entries.find { it.id == statusId } ?: throw IllegalStateException("Status not found for id $statusId")
+    return statusDetailsByStatus(status, service)?.find { it.id == detailId } ?: throw IllegalStateException("Status detail not found for id $detailId")
+  }
 }

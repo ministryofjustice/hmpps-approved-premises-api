@@ -11,9 +11,8 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -57,17 +56,12 @@ data class Cas2StatusUpdateEntity(
   var assessment: Cas2AssessmentEntity? = null,
 
   @OneToMany(mappedBy = "statusUpdate")
-  val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
+  val statusUpdateDetails: MutableList<Cas2StatusUpdateDetailEntity>? = null,
   var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
-  companion object {
-    private val statusFinder = Cas2HdcPersistedApplicationStatusFinder()
-  }
 
   override fun toString() = "Cas2StatusEntity: $id"
 
-  fun status(): Cas2PersistedApplicationStatus = statusFinder.getById(statusId)
-
-  val assessmentStatus: Cas2AssessmentStatus?
-    get() = status().status
+  val status: Cas2AssessmentStatus
+    get() = Cas2ApplicationStatusSeeding.statusById(statusId) ?: throw IllegalStateException("Status not found for id $statusId")
 }

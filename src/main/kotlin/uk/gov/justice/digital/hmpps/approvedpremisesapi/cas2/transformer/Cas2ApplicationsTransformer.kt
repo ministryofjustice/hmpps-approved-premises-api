@@ -96,7 +96,7 @@ class Cas2ApplicationsTransformer(
     jpa: Cas2ApplicationEntity,
   ): Cas2ReferralHistory {
     val latestStatusUpdate = jpa.getLatestStatusUpdate()
-    val latestStatus = latestStatusUpdate?.assessmentStatus
+    val latestStatus = latestStatusUpdate?.status
     val rejectionReason = latestStatus
       ?.takeIf { it in listOf(Cas2AssessmentStatus.CANCELLED, Cas2AssessmentStatus.WITHDRAWN) }
       ?.apiName

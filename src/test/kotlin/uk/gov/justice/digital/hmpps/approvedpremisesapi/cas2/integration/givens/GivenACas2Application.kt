@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
@@ -64,7 +64,7 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
   nomsNumber: String = "NOMS_1",
   createdAt: OffsetDateTime = OffsetDateTime.now().minusDays(5),
   submittedAt: OffsetDateTime = OffsetDateTime.now(),
-  latestStatusName: String? = null,
+  latestStatus: Cas2AssessmentStatus? = null,
   latestStatusSet: OffsetDateTime = OffsetDateTime.now(),
 ): Cas2ApplicationEntity {
   val application = cas2ApplicationEntityFactory.produceAndPersist {
@@ -83,13 +83,11 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
     withServiceOrigin(Cas2ServiceOrigin.BAIL)
   }
 
-  if (latestStatusName != null) {
-    val status = Cas2PersistedApplicationStatusFinder().forName(latestStatusName) ?: error("Could not find status for name $latestStatusName")
-
+  if (latestStatus != null) {
     cas2StatusUpdateEntityFactory.produceAndPersist {
-      withLabel(status.label)
-      withDescription(status.description)
-      withStatusId(status.id)
+      withLabel(latestStatus.label)
+      withDescription(latestStatus.description)
+      withStatusId(latestStatus.id)
       withApplication(application)
       withCreatedAt(latestStatusSet)
       withAssessor(
