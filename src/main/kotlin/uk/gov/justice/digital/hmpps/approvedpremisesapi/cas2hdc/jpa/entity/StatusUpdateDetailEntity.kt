@@ -36,8 +36,8 @@ data class Cas2StatusUpdateDetailEntity(
 ) {
   override fun toString() = "Cas2StatusDetailEntity: $id"
 
-  fun statusDetail(statusId: UUID, detailId: UUID, service: ServiceName): Cas2AssessmentStatusDetail {
+  fun statusDetail(statusId: UUID, service: ServiceName): Cas2AssessmentStatusDetail {
     val status = Cas2AssessmentStatus.entries.find { it.id == statusId } ?: throw IllegalStateException("Status not found for id $statusId")
-    return statusDetailsByStatus(status, service)?.find { it.id == detailId } ?: throw IllegalStateException("Status detail not found for id $detailId")
+    return statusDetailsByStatus(status, service)?.find { it.id == this.statusDetailId } ?: throw IllegalStateException("Status detail not found for id ${this.statusDetailId}")
   }
 }

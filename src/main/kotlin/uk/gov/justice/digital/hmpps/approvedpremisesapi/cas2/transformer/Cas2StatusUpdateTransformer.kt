@@ -29,7 +29,7 @@ class Cas2StatusUpdateTransformer(
 
   fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity, service: ServiceName): Cas2StatusUpdateDetail = Cas2StatusUpdateDetail(
     id = jpa.id,
-    name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId, service).apiName,
+    name = jpa.statusDetail(jpa.statusUpdate.statusId, service).apiName,
     label = jpa.label,
   )
 

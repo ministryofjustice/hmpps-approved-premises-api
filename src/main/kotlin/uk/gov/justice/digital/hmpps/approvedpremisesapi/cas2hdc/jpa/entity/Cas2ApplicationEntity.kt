@@ -41,9 +41,9 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   fun findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn: String): List<Cas2ApplicationEntity>
 
   @Query(
-    "SELECT a FROM Cas2ApplicationEntity a WHERE a.crn = :crn and a.cohort in :cohorts and a.abandonedAt is null order by a.createdAt desc limit 1",
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.crn = :crn and a.cohort in :cohorts and a.abandonedAt is null order by a.createdAt desc",
   )
-  fun findLatestApplication(crn: String, cohorts: List<Cas2Cohort>): Cas2ApplicationEntity?
+  fun findApplicationsByCohortNewestFirst(crn: String, cohorts: List<Cas2Cohort>): List<Cas2ApplicationEntity>
 
   @Query(
     "SELECT id, application_origin FROM cas_2_applications WHERE cohort IS NULL",
