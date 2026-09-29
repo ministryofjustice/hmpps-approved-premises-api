@@ -33,7 +33,7 @@ class Cas2ExternalApplicationService(
       ?.assessmentStatus
 
     Cas2ExternalSubmittedApplicationDto(
-      latestAssessmentStatus = latestAssessmentStatus,
+      latestAssessmentStatus = latestAssessmentStatus?.apiName,
       submittedAt = mostRecent.submittedAt!!,
     )
   } else {

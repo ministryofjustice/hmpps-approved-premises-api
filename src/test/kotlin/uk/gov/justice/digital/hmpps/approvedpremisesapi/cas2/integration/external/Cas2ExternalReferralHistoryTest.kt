@@ -67,7 +67,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               type = type,
               id = application1.assessment!!.id,
               applicationId = application1.id,
-              applicationStatus = Cas2AssessmentStatus.CANCELLED,
+              applicationStatus = Cas2AssessmentStatus.CANCELLED.apiName,
               applicationSubmittedDate = application1.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application1.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "cancelled",
@@ -81,7 +81,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               type = type,
               id = application2.assessment!!.id,
               applicationId = application2.id,
-              applicationStatus = Cas2AssessmentStatus.CANCELLED,
+              applicationStatus = Cas2AssessmentStatus.CANCELLED.apiName,
               applicationSubmittedDate = application2.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application2.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "cancelled",
@@ -95,7 +95,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               type = type,
               id = application3.assessment!!.id,
               applicationId = application3.id,
-              applicationStatus = Cas2AssessmentStatus.CANCELLED,
+              applicationStatus = Cas2AssessmentStatus.CANCELLED.apiName,
               applicationSubmittedDate = application3.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application3.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "cancelled",
@@ -109,7 +109,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               type = type,
               id = application4.assessment!!.id,
               applicationId = application4.id,
-              applicationStatus = Cas2AssessmentStatus.WITHDRAWN,
+              applicationStatus = Cas2AssessmentStatus.WITHDRAWN.apiName,
               applicationSubmittedDate = application4.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application4.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "withdrawn",
@@ -123,7 +123,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               type = type,
               id = application5.assessment!!.id,
               applicationId = application5.id,
-              applicationStatus = Cas2AssessmentStatus.WITHDRAWN,
+              applicationStatus = Cas2AssessmentStatus.WITHDRAWN.apiName,
               applicationSubmittedDate = application5.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application5.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "withdrawn",
@@ -174,7 +174,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
 
           val matched = response!!.first { it.id == withdrawnApplication.assessment!!.id }
           assertThat(matched.referralRejectionReason).isEqualTo("withdrawn")
-          assertThat(matched.applicationStatus).isEqualTo(Cas2AssessmentStatus.WITHDRAWN)
+          assertThat(matched.applicationStatus).isEqualTo(Cas2AssessmentStatus.WITHDRAWN.apiName)
           assertThat(matched.pdu).isEqualTo("South East")
           assertThat(matched.referredBy).isEqualTo(user.name)
           assertThat(matched.localAuthorityArea).isEqualTo(omu.prisonName)

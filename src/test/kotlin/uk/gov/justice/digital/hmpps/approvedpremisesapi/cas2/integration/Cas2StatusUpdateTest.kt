@@ -125,7 +125,7 @@ class Cas2StatusUpdateTest(
             }
           assertThat(appliedStatus!!.name).isEqualTo("moreInfoRequested")
 
-          // verify that generated 'application.status-updated' domain event links
+          // verify that the generated 'application.status-updated' domain event links
           // to the CAS2 domain
           val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", application.id.toString())
           val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()

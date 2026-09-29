@@ -61,7 +61,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           uiUrl = "http://localhost:3000/assess/applications/${application.id}/overview",
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
-            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
+            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED.apiName,
             submittedAt = application.submittedAt!!,
           ),
         )
@@ -104,7 +104,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           uiUrl = "http://localhost:3000/assess/applications/${latestApplication.id}/overview",
           id = latestApplication.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
-            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
+            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED.apiName,
             submittedAt = latestApplication.submittedAt!!,
           ),
         )

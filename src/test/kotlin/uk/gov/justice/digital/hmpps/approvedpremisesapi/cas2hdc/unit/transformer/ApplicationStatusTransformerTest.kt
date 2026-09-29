@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
@@ -23,18 +23,8 @@ class ApplicationStatusTransformerTest {
       @Test
       fun `returns the expected properties from the internal _model_`() {
         val internalModel = Cas2PersistedApplicationStatus(
-          id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
           status = Cas2AssessmentStatus.CANCELLED,
-          label = "Referral cancelled",
-          description = "The application has been cancelled.",
-          statusDetails = listOf(
-            Cas2PersistedApplicationStatusDetail(
-              id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
-              name = "changeOfCircumstances",
-              label = "Change of circumstances",
-            ),
-          ),
-          isActive = true,
+          statusDetails = listOf(Cas2AssessmentStatusDetail.CREATED_IN_ERROR),
         )
 
         val apiRepresentation = transformer.transformModelToApi(internalModel)
@@ -46,9 +36,9 @@ class ApplicationStatusTransformerTest {
             label = "Referral cancelled",
             statusDetails = listOf(
               Cas2HdcApplicationStatusDetail(
-                id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
-                name = "changeOfCircumstances",
-                label = "Change of circumstances",
+                id = UUID.fromString("d1d96185-d92a-450b-b47f-bcce50356eed"),
+                name = "createdInError",
+                label = "Created in error",
               ),
             ),
             description = "The application has been cancelled.",
@@ -62,11 +52,7 @@ class ApplicationStatusTransformerTest {
       @Test
       fun `returns the expected properties from the internal _model_`() {
         val internalModel = Cas2PersistedApplicationStatus(
-          id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
           status = Cas2AssessmentStatus.CANCELLED,
-          label = "Referral cancelled",
-          description = "The application has been cancelled.",
-          isActive = true,
         )
 
         val apiRepresentation = transformer.transformModelToApi(internalModel)

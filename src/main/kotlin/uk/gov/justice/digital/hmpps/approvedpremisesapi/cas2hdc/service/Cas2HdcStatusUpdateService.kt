@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
@@ -131,7 +131,7 @@ class Cas2HdcStatusUpdateService(
   private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = statusFinder.active()
     .find { status -> status.name == statusName }
 
-  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2PersistedApplicationStatusDetail> = emptyList()) {
+  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2AssessmentStatusDetail> = emptyList()) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt
     val application = statusUpdate.application

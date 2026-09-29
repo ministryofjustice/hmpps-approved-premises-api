@@ -8,7 +8,7 @@ data class Cas2ReferralHistory(
   val type: ServiceType,
   val id: UUID,
   val applicationId: UUID,
-  val applicationStatus: Cas2AssessmentStatus?,
+  val applicationStatus: String?,
   val applicationSubmittedDate: LocalDate,
   val applicationLastUpdatedDate: LocalDate?,
   val referralRejectionReason: String?,
