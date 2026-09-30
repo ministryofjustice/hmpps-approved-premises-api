@@ -19,11 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
-import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class Cas2ExternalApplicationServiceTest {
@@ -33,7 +30,6 @@ class Cas2ExternalApplicationServiceTest {
     mockCas2ApplicationRepository,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
-    Clock.systemDefaultZone(),
   )
 
   val crn = "ADAFD"
@@ -60,14 +56,6 @@ class Cas2ExternalApplicationServiceTest {
       )
 
       assertThat(result).isEqualTo(expected)
-    }
-
-    @Test
-    fun `returns null when latest application has a conditional release date in the past`() {
-      setUpApplication(LocalDate.now().minusDays(1))
-
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
-      assertThat(result).isNull()
     }
 
     @Test
@@ -187,7 +175,7 @@ class Cas2ExternalApplicationServiceTest {
         .withStatusUpdates(mutableListOf())
         .produce()
 
-      every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
+      every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
 
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
 
@@ -200,64 +188,8 @@ class Cas2ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `returns older application when newer application is ineligible`() {
-      val user = Cas2UserEntityFactory()
-        .produce()
-
-      val today = LocalDate.now()
-      val now = today
-        .atStartOfDay(ZoneOffset.UTC)
-        .toOffsetDateTime()
-        .truncatedTo(ChronoUnit.MICROS)
-
-      val newerCas2applicationEntity = setUpApplication(
-        conditionalReleaseDate = today.minusDays(1),
-        createdAt = now,
-      )
-
-      val olderCas2applicationEntity = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCreatedAt(newerCas2applicationEntity.createdAt.minusMonths(1))
-        .withCrn(crn)
-        .withStatusUpdates(mutableListOf())
-        .produce()
-
-      every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(
-        newerCas2applicationEntity,
-        olderCas2applicationEntity,
-      )
-
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
-
-      val expected = setUpExpectedApplication(
-        cas2applicationEntity = olderCas2applicationEntity,
-        uiUrl = "http://frontend/applications/${olderCas2applicationEntity.id}",
-      )
-
-      assertThat(result).isEqualTo(expected)
-    }
-
-    @Test
-    fun `returns null when latest draft application is more than 2 months old`() {
-      val user = Cas2UserEntityFactory()
-        .produce()
-      val cas2applicationEntity = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(crn)
-        .withStatusUpdates(mutableListOf())
-        .withCreatedAt(OffsetDateTime.now().minusMonths(2))
-        .produce()
-
-      every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
-
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
-
-      assertThat(result).isNull()
-    }
-
-    @Test
     fun `returns no application when none exists for crn`() {
-      every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf()
+      every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns null
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
       assertThat(result).isEqualTo(null)
     }
@@ -323,7 +255,7 @@ class Cas2ExternalApplicationServiceTest {
       .withStatusUpdates(mutableListOf())
       .produce()
 
-    every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
+    every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
 
     return cas2applicationEntity
   }
