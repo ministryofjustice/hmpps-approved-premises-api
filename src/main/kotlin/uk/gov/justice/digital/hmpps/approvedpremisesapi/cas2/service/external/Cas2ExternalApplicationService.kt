@@ -12,26 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import java.time.Clock
-import java.time.OffsetDateTime
 
 @Service
 class Cas2ExternalApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
-  private val clock: Clock,
 ) {
 
-  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? = cas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr())
-    .firstOrNull {
-      val now = OffsetDateTime.now(clock)
-      val nullReleaseExpiryLimit = 2L
-      when {
-        it.conditionalReleaseDate != null -> it.conditionalReleaseDate!! >= now.toLocalDate()
-        else -> it.createdAt >= now.minusMonths(nullReleaseExpiryLimit)
-      }
-    }
+  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? = cas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr())
     ?.let { mostRecent ->
 
       Cas2SuitableApplication(

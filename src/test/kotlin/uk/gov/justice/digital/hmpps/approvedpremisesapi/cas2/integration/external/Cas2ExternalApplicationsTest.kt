@@ -151,54 +151,6 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get suitable application returns null when applications have a conditional release date in the past`() {
-      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-        val latestTime = OffsetDateTime.now()
-        val submittedTime = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS)
-
-        val latestApplication = givenASubmittedCas2Application(
-          crn = crn,
-          submittedAt = submittedTime,
-          cohort = Cas2Cohort.ATCR,
-          createdAt = latestTime,
-          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
-          conditionalReleaseDate = LocalDate.now().minusDays(1),
-        )
-
-        webTestClient.get()
-          .uri("/cas2/external/cases/${latestApplication.crn}/applications/suitable")
-          .header("Authorization", "Bearer $clientCredentialsJwt")
-          .exchange()
-          .expectStatus()
-          .isNoContent
-      }
-    }
-
-    @Test
-    fun `Get suitable application returns null when applications have a null conditional release date and were created more than 2 months in the past`() {
-      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-        val latestTime = OffsetDateTime.now().minusMonths(2)
-        val submittedTime = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS)
-
-        val latestApplication = givenASubmittedCas2Application(
-          crn = crn,
-          submittedAt = submittedTime,
-          cohort = Cas2Cohort.ATCR,
-          createdAt = latestTime,
-          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
-          conditionalReleaseDate = null,
-        )
-
-        webTestClient.get()
-          .uri("/cas2/external/cases/${latestApplication.crn}/applications/suitable")
-          .header("Authorization", "Bearer $clientCredentialsJwt")
-          .exchange()
-          .expectStatus()
-          .isNoContent
-      }
-    }
-
-    @Test
     fun `Get suitable application returns no content if all applications are abandoned`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
 
