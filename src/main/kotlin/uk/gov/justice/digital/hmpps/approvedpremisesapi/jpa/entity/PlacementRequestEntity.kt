@@ -177,6 +177,8 @@ data class PlacementRequestEntity(
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementRequestWithdrawalReason?,
 
+  var withdrawalOccurredAt: OffsetDateTime? = null,
+
   @Version
   var version: Long = 1,
 ) {

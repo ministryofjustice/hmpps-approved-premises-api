@@ -249,6 +249,7 @@ class Cas1PlacementRequestService(
       WithdrawableEntityType.PlacementRequest -> userProvidedReason
       WithdrawableEntityType.SpaceBooking -> throw InternalServerErrorProblem("Withdrawing a Booking should not cascade to PlacementRequests")
     }
+    placementRequest.withdrawalOccurredAt = OffsetDateTime.now(clock)
 
     placementRequestRepository.save(placementRequest)
 

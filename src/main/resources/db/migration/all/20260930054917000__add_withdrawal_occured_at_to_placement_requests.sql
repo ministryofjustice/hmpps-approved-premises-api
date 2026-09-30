@@ -1,0 +1,2 @@
+ALTER TABLE placement_requests
+ADD COLUMN withdrawal_occurred_at TIMESTAMPTZ NULL;
