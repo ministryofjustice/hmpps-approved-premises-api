@@ -7,8 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -22,7 +20,6 @@ import java.util.UUID
 class Cas1AssessmentEmailService(
   private val emailNotifier: Cas1EmailNotifier,
   private val workingDayService: WorkingDayService,
-  private val featureFlagService: FeatureFlagService,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
@@ -109,16 +106,10 @@ class Cas1AssessmentEmailService(
     }
   }
 
-  private fun getAssessmentRejectionTemplate(rejectionReason: Cas1AssessmentRejectionReasonDto?): String {
-    val useAlternativeAccommodationTemplate =
-      isAlternativeAccommodationRejectionReason(rejectionReason) &&
-        featureFlagService.getBooleanFlag(FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES)
-
-    return if (useAlternativeAccommodationTemplate) {
-      Cas1NotifyTemplates.ASSESSMENT_REJECTED_ALTERNATIVE_ACCOMMODATION
-    } else {
-      Cas1NotifyTemplates.ASSESSMENT_REJECTED
-    }
+  private fun getAssessmentRejectionTemplate(rejectionReason: Cas1AssessmentRejectionReasonDto?): String = if (isAlternativeAccommodationRejectionReason(rejectionReason)) {
+    Cas1NotifyTemplates.ASSESSMENT_REJECTED_ALTERNATIVE_ACCOMMODATION
+  } else {
+    Cas1NotifyTemplates.ASSESSMENT_REJECTED
   }
 
   private fun isAlternativeAccommodationRejectionReason(rejectionReason: Cas1AssessmentRejectionReasonDto?) = rejectionReason in setOf(

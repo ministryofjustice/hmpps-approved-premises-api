@@ -12,7 +12,6 @@ interface FeatureFlagService {
 
   companion object {
     const val FEATURE_FLAG_USE_TIER_V3: String = "use-tier-v3"
-    const val FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES: String = "isr-cas1-email-changes-enabled"
   }
 }
 
