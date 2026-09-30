@@ -585,6 +585,7 @@ class Cas3ApplicationServiceTest {
               postcode = booking.premises.postcode,
             ),
             provisionalOfferSentDate = booking.createdAt.toLocalDate(),
+            cancellation = null,
           ),
           previousBookings = null,
         ),
@@ -716,6 +717,7 @@ class Cas3ApplicationServiceTest {
               postcode = laterBooking.premises.postcode,
             ),
             provisionalOfferSentDate = laterBooking.createdAt.toLocalDate(),
+            cancellation = null,
           ),
           previousBookings = listOf(
             Cas3ExternalPreviousBookingDto(bookingStatus = previousBooking.status, cancellation = null),

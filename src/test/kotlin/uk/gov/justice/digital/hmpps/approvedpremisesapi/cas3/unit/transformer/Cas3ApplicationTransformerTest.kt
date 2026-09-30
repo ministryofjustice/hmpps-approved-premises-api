@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Tem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectionReasonEntityFactory
@@ -37,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
@@ -282,6 +284,106 @@ class Cas3ApplicationTransformerTest {
             postcode = premises.postcode,
           ),
           provisionalOfferSentDate = null,
+          cancellation = null,
+        ),
+        previousBookings = emptyList(),
+      ),
+    )
+
+    val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, listOf(booking))
+
+    assertThat(result).isEqualTo(expected)
+  }
+
+  @Test
+  fun `transformToCas3SuitableApplication transforms correctly with a cancelled booking`() {
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withArrivalDate(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce(),
+          )
+          .produce()
+      }
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+    val premises = Cas3PremisesEntityFactory().produce()
+    val booking = Cas3BookingEntityFactory()
+      .withApplication(application)
+      .withDefaults()
+      .withPremises(premises)
+      .withStatus(Cas3BookingStatus.cancelled)
+      .produce()
+
+    val cancellation = Cas3CancellationEntityFactory()
+      .withReason(
+        CancellationReasonEntityFactory()
+          .withName("Oops! I made a mistake")
+          .produce(),
+      )
+      .withBooking(booking)
+      .withDate(LocalDate.now())
+      .produce()
+
+    booking.cancellations.add(cancellation)
+
+    val expected = Cas3ExternalCurrentApplicationDto(
+      id = application.id,
+      applicationStatus = ApplicationStatus.submitted,
+      applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+      applicationSubmittedBy = Cas3StaffDto(
+        application.createdByUser.name,
+        application.createdByUser.deliusUsername,
+        application.createdByUser.deliusStaffCode,
+      ),
+      applicationRejectedReason = null,
+      assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+      bookingStatus = Cas3BookingStatus.cancelled,
+      bookingProvisionalOfferSentDate = null,
+      previousBookings = emptyList(),
+      premises = Cas3ExternalLatestBookingPremisesDto(
+        startDate = booking.arrivalDate,
+        endDate = booking.departureDate,
+        name = premises.name,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+      ),
+      uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
+      submittedApplication = Cas3ExternalSubmittedApplicationDto(
+        submittedDate = application.submittedAt!!.toLocalDate(),
+        submittedBy = Cas3StaffDto(
+          application.createdByUser.name,
+          application.createdByUser.deliusUsername,
+          application.createdByUser.deliusStaffCode,
+        ),
+        assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+        assessmentRejectionReason = null,
+        latestBooking = Cas3ExternalLatestBookingDto(
+          status = booking.status,
+          premises = Cas3ExternalLatestBookingPremisesDto(
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            name = premises.name,
+            addressLine1 = premises.addressLine1,
+            addressLine2 = premises.addressLine2,
+            town = premises.town,
+            postcode = premises.postcode,
+          ),
+          provisionalOfferSentDate = null,
+          cancellation = Cas3ExternalPreviousBookingCancellationDto(
+            cancellationDate = booking.cancellations.first().date,
+            cancellationReason = booking.cancellations.first().reason.name,
+          ),
         ),
         previousBookings = emptyList(),
       ),
@@ -365,6 +467,7 @@ class Cas3ApplicationTransformerTest {
             postcode = premises.postcode,
           ),
           provisionalOfferSentDate = booking.createdAt.toLocalDate(),
+          cancellation = null,
         ),
         previousBookings = emptyList(),
       ),
@@ -457,6 +560,7 @@ class Cas3ApplicationTransformerTest {
             postcode = premises.postcode,
           ),
           provisionalOfferSentDate = null,
+          cancellation = null,
         ),
         previousBookings = listOf(Cas3ExternalPreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null)),
       ),
@@ -515,7 +619,7 @@ class Cas3ApplicationTransformerTest {
     val cancellation = Cas3CancellationEntityFactory()
       .withDefaults()
       .withBooking(previousCancelledBooking)
-      .withCreatedAt(OffsetDateTime.now().minusDays(3))
+      .withDate(LocalDate.now().minusDays(3))
       .produce()
 
     previousCancelledBooking.cancellations = mutableListOf(cancellation)
@@ -538,7 +642,7 @@ class Cas3ApplicationTransformerTest {
         Cas3ExternalPreviousBookingDto(
           bookingStatus = Cas3BookingStatus.cancelled,
           cancellation = Cas3ExternalPreviousBookingCancellationDto(
-            cancellationDate = cancellation.createdAt.toLocalDate(),
+            cancellationDate = cancellation.date,
             cancellationReason = cancellation.reason.name,
           ),
         ),
@@ -574,13 +678,14 @@ class Cas3ApplicationTransformerTest {
             postcode = premises.postcode,
           ),
           provisionalOfferSentDate = null,
+          cancellation = null,
         ),
         previousBookings = listOf(
           Cas3ExternalPreviousBookingDto(bookingStatus = Cas3BookingStatus.closed, cancellation = null),
           Cas3ExternalPreviousBookingDto(
             bookingStatus = Cas3BookingStatus.cancelled,
             cancellation = Cas3ExternalPreviousBookingCancellationDto(
-              cancellationDate = cancellation.createdAt.toLocalDate(),
+              cancellationDate = cancellation.date,
               cancellationReason = cancellation.reason.name,
             ),
           ),

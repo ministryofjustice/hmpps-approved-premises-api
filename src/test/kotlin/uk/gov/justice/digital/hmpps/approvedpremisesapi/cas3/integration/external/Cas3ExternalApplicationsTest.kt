@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Externa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalCurrentApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPreviousBookingCancellationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
@@ -58,6 +59,42 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withSubmittedAt(OffsetDateTime.now())
           }
 
+          temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withDecision(AssessmentDecision.ACCEPTED)
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+            withProbationDeliveryUnit(probationDeliveryUnitFactory.produceAndPersist { withProbationRegion(user.probationRegion) })
+          }
+
+          val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val latestBookingEntity = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+            withCrn(crn)
+            withArrivalDate(LocalDate.now().minusDays(21))
+            withDepartureDate(LocalDate.now().minusDays(14))
+            withStatus(Cas3BookingStatus.cancelled)
+            withCreatedAt(OffsetDateTime.now().minusDays(3))
+          }
+
+          val cancellation = cas3CancellationEntityFactory.produceAndPersist {
+            withBooking(latestBookingEntity)
+            withReason(
+              cancellationReasonEntityFactory
+                .produceAndPersist {
+                  withName("Test Cancellation Reason")
+                },
+            )
+            withDate(LocalDate.now().minusDays(3))
+          }
+
           val suitableApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
@@ -68,11 +105,19 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               application.createdByUser.deliusStaffCode,
             ),
             applicationRejectedReason = null,
-            assessmentStatus = null,
-            bookingStatus = null,
+            assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+            bookingStatus = latestBookingEntity.status,
             bookingProvisionalOfferSentDate = null,
             previousBookings = emptyList(),
-            premises = null,
+            premises = Cas3ExternalLatestBookingPremisesDto(
+              startDate = latestBookingEntity.arrivalDate,
+              endDate = latestBookingEntity.departureDate,
+              name = premises.name,
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+            ),
             uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
             submittedApplication = Cas3ExternalSubmittedApplicationDto(
               submittedDate = application.submittedAt!!.toLocalDate(),
@@ -81,9 +126,25 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
                 application.createdByUser.deliusUsername,
                 application.createdByUser.deliusStaffCode,
               ),
-              assessmentStatus = null,
+              assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
               assessmentRejectionReason = null,
-              latestBooking = null,
+              latestBooking = Cas3ExternalLatestBookingDto(
+                status = Cas3BookingStatus.cancelled,
+                provisionalOfferSentDate = null,
+                premises = Cas3ExternalLatestBookingPremisesDto(
+                  startDate = latestBookingEntity.arrivalDate,
+                  endDate = latestBookingEntity.departureDate,
+                  name = premises.name,
+                  addressLine1 = premises.addressLine1,
+                  addressLine2 = premises.addressLine2,
+                  town = premises.town,
+                  postcode = premises.postcode,
+                ),
+                cancellation = Cas3ExternalPreviousBookingCancellationDto(
+                  cancellationDate = cancellation.date,
+                  cancellationReason = cancellation.reason.name,
+                ),
+              ),
               previousBookings = emptyList(),
             ),
           )
@@ -287,6 +348,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               latestBooking = Cas3ExternalLatestBookingDto(
                 status = booking.status,
                 provisionalOfferSentDate = null,
+                cancellation = null,
                 premises = Cas3ExternalLatestBookingPremisesDto(
                   startDate = booking.arrivalDate,
                   endDate = booking.departureDate,
@@ -382,6 +444,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               latestBooking = Cas3ExternalLatestBookingDto(
                 status = booking.status,
                 provisionalOfferSentDate = booking.createdAt.toLocalDate(),
+                cancellation = null,
                 premises = Cas3ExternalLatestBookingPremisesDto(
                   startDate = booking.arrivalDate,
                   endDate = booking.departureDate,
@@ -467,7 +530,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val olderCancelledBookingCancellation = cas3CancellationEntityFactory.produceAndPersist {
             withBooking(olderCancelledBookingEntity)
             withReason(cancellationReasonEntityFactory.produceAndPersist())
-            withCreatedAt(OffsetDateTime.now().minusDays(3))
+            withDate(LocalDate.now().minusDays(3))
           }
 
           val olderClosedBookingDto = Cas3ExternalPreviousBookingDtoFactory()
@@ -479,7 +542,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .withBookingStatus(Cas3BookingStatus.cancelled)
             .withCancellation(
               Cas3ExternalPreviousBookingCancellationDtoFactory()
-                .withCancellationDate(olderCancelledBookingCancellation.createdAt.toLocalDate())
+                .withCancellationDate(olderCancelledBookingCancellation.date)
                 .withCancellationReason(olderCancelledBookingCancellation.reason.name)
                 .produce(),
             )
@@ -521,6 +584,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               latestBooking = Cas3ExternalLatestBookingDto(
                 status = latestBooking.status,
                 provisionalOfferSentDate = null,
+                cancellation = null,
                 premises = Cas3ExternalLatestBookingPremisesDto(
                   startDate = latestBooking.arrivalDate,
                   endDate = latestBooking.departureDate,
