@@ -287,6 +287,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               latestBooking = Cas3ExternalLatestBookingDto(
                 status = booking.status,
                 provisionalOfferSentDate = null,
+                cancellation = null,
                 premises = Cas3ExternalLatestBookingPremisesDto(
                   startDate = booking.arrivalDate,
                   endDate = booking.departureDate,
@@ -382,6 +383,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               latestBooking = Cas3ExternalLatestBookingDto(
                 status = booking.status,
                 provisionalOfferSentDate = booking.createdAt.toLocalDate(),
+                cancellation = null,
                 premises = Cas3ExternalLatestBookingPremisesDto(
                   startDate = booking.arrivalDate,
                   endDate = booking.departureDate,
@@ -521,6 +523,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               latestBooking = Cas3ExternalLatestBookingDto(
                 status = latestBooking.status,
                 provisionalOfferSentDate = null,
+                cancellation = null,
                 premises = Cas3ExternalLatestBookingPremisesDto(
                   startDate = latestBooking.arrivalDate,
                   endDate = latestBooking.departureDate,

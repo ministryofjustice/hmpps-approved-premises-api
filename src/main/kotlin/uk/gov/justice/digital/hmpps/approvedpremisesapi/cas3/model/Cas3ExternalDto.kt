@@ -64,6 +64,7 @@ data class Cas3ExternalLatestBookingDto(
   val status: Cas3BookingStatus?,
   val provisionalOfferSentDate: LocalDate?,
   val premises: Cas3ExternalLatestBookingPremisesDto,
+  val cancellation: Cas3ExternalPreviousBookingCancellationDto?,
 )
 
 data class Cas3ExternalLatestBookingPremisesDto(
