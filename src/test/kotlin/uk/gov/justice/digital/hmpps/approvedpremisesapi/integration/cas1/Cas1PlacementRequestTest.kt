@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -1941,6 +1942,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
             assertThat(persistedPlacementRequest.isWithdrawn).isTrue
             assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+            assertThat(persistedPlacementRequest.withdrawalOccurredAt).isWithinTheLastMinute()
 
             snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN)
 
