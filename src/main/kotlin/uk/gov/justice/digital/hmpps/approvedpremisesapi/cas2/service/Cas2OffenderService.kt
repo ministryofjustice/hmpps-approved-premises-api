@@ -32,6 +32,7 @@ class Cas2OffenderService(
     val caseSummaryList = when (val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))) {
       is ClientResult.Success -> caseSummaries.body.cases
       is ClientResult.Failure.StatusCode -> when (caseSummaries.status) {
+        // this isn't technically correct because we should get an empty response if offender not found. instead, this should be treated as an unexpected error
         HttpStatus.NOT_FOUND -> return emitMessageAndCreateNotFound("Person not found ($nomisIdOrCrn) via the Delius Integration Api", nomisIdOrCrn)
         HttpStatus.FORBIDDEN -> return Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
         else -> {
@@ -47,6 +48,7 @@ class Cas2OffenderService(
     }
 
     if (caseSummaryList.isEmpty()) {
+      log.warn("Person information for $nomisIdOrCrn not found via the Delius Integration Api")
       return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = nomisIdOrCrn)
     }
 

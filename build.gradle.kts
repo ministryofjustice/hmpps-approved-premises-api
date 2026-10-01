@@ -20,7 +20,7 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  val hmppsSpringBootStarterVersion = "3.0.2"
+  val hmppsSpringBootStarterVersion = "3.0.3"
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsSpringBootStarterVersion")
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
@@ -73,7 +73,7 @@ dependencies {
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.11")
-  testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.3")
+  testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.4.2")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.8.1")
@@ -83,7 +83,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
-  testImplementation("org.zalando:logbook-spring-boot-starter:4.1.0")
+  testImplementation("org.zalando:logbook-spring-boot-starter:4.2.0")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
     exclude(group = "io.swagger.core.v3")

@@ -333,6 +333,7 @@ url-templates:
     cas2v2:
       application: http://localhost:3000/applications/#id
       application-overview: http://localhost:3000/applications/#id/overview
+      application-start: http://localhost:3000/new-cohorts/applications/before-you-start
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
     cas3:
       referral-full: http://localhost:3000/referrals/#applicationId/full

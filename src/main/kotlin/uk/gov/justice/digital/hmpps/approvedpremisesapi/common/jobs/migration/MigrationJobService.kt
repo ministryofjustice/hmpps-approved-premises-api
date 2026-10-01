@@ -65,7 +65,7 @@ class MigrationJobService(
         MigrationJobType.updateCas3ArchiveUnarchiveDomainEventDetails -> getBean(Cas3UpdateArchiveUnarchiveDomainEventDetailsJob::class)
         MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedspaceStartDateJob::class)
         MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2HdcBackfillApplicationCohortJob::class)
-        MigrationJobType.backfillCases -> getBean(BackfillCasesJob::class)
+        MigrationJobType.refreshCases -> getBean(RefreshCasesJob::class)
         MigrationJobType.replayFailedInboxEvents -> getBean(ReplayFailedInboxEventsMigrationJob::class)
       }
 

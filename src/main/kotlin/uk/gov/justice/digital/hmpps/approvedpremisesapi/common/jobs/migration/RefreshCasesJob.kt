@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as
 
 @Component
 @SuppressWarnings("MaxLineLength")
-class BackfillCasesJob(
+class RefreshCasesJob(
   private val caseRepository: CaseRepository,
   private val offenderService: OffenderService,
   private val hmppsTierApiClient: HMPPSTierApiClient,
@@ -97,18 +97,13 @@ class BackfillCasesJob(
   }
 
   private fun updateExistingCase(dto: BackfillCaseSummaryMigrationDto) {
-    if (dto.hasTierV2 && dto.hasTierV3) {
-      return
-    }
-
     val normalizedCrn = dto.crn.uppercase()
-    migrationLogger.info("Updating missing tiers for CRN $normalizedCrn")
+    migrationLogger.info("Updating tiers for CRN $normalizedCrn")
 
     val existingCase = caseRepository.findByCrn(normalizedCrn)!!
 
     existingCase.apply {
-      if (!dto.hasTierV2) tierV2 = fetchTierOrNull(normalizedCrn, TierVersion.V2)
-      if (!dto.hasTierV3) tierV3 = fetchTierOrNull(normalizedCrn, TierVersion.V3)
+      tierV3 = fetchTierOrNull(normalizedCrn, TierVersion.V3)
       lastUpdatedAt = OffsetDateTime.now()
     }
 

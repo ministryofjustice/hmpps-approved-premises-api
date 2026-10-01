@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceCo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleExclusionZoneAdditionalCondition
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleUploadAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.PssConditions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.SingleUploadAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.StandardCondition
@@ -161,6 +162,13 @@ class AdditionalConditionFactory : Factory<AdditionalCondition> {
       hasImageUpload = true,
     )
     ConditionTypes.SINGLE_UPLOAD -> SingleUploadAdditionalCondition(
+      id = this.id(),
+      text = this.text(),
+      code = this.code(),
+      category = this.category(),
+      hasImageUpload = true,
+    )
+    ConditionTypes.MULTIPLE_UPLOAD -> MultipleUploadAdditionalCondition(
       id = this.id(),
       text = this.text(),
       code = this.code(),

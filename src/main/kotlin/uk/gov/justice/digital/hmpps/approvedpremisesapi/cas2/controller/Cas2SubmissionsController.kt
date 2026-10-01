@@ -100,6 +100,8 @@ class Cas2SubmissionsController(
     application: Cas2ApplicationEntity,
   ): Cas2SubmittedApplication {
     val personInfo = when (val cas2v2OffenderSearchResult = cas2OffenderService.getPersonByNomisIdOrCrn(application.crn)) {
+      // This isn't really correct because crn isn't included in the URL. It would be preferred if we could indicate
+      // to the UI that the offender couldn't be found so the user can continue working with the application
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${application.crn}")

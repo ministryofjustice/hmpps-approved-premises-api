@@ -96,10 +96,10 @@ class Cas2ApplicationsTransformer(
     jpa: Cas2ApplicationEntity,
   ): Cas2ReferralHistory {
     val latestStatusUpdate = jpa.getLatestStatusUpdate()
-    val latestStatus = latestStatusUpdate?.assessmentStatus
+    val latestStatus = latestStatusUpdate?.status
     val rejectionReason = latestStatus
       ?.takeIf { it in listOf(Cas2AssessmentStatus.CANCELLED, Cas2AssessmentStatus.WITHDRAWN) }
-      ?.value
+      ?.apiName
 
     val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode ?: throw IllegalStateException("Missing placement address for CAS2v2 application ${jpa.id}")
@@ -108,7 +108,7 @@ class Cas2ApplicationsTransformer(
       id = jpa.assessment!!.id,
       applicationId = jpa.id,
       type = ServiceType.CAS2v2,
-      applicationStatus = latestStatus,
+      applicationStatus = latestStatus?.apiName,
       applicationSubmittedDate = jpa.submittedAt!!.toLocalDate(),
       applicationLastUpdatedDate = latestStatusUpdate?.createdAt?.toLocalDate(),
       referralRejectionReason = rejectionReason,

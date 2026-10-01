@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceSt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleExclusionZoneAdditionalCondition
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleUploadAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.SingleUploadAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdditionalConditionFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApConditionsFactory
@@ -120,6 +121,7 @@ class LicenceServiceTest {
         AdditionalConditionFactory().withType(ConditionTypes.ELECTRONIC_MONITORING).produce(),
         AdditionalConditionFactory().withType(ConditionTypes.MULTIPLE_EXCLUSION_ZONE).produce(),
         AdditionalConditionFactory().withType(ConditionTypes.SINGLE_UPLOAD).produce(),
+        AdditionalConditionFactory().withType(ConditionTypes.MULTIPLE_UPLOAD).produce(),
       )
 
       val licence = LicenceFactory()
@@ -149,18 +151,20 @@ class LicenceServiceTest {
       assertThatCasResult(result).isSuccess().with {
         assertThat(it).isEqualTo(licence)
         val apAdditional = it.conditions.apConditions.additional
-        assertThat(apAdditional).hasSize(4)
+        assertThat(apAdditional).hasSize(5)
         assertThat(apAdditional[0]).isInstanceOf(GenericAdditionalCondition::class.java)
         assertThat(apAdditional[1]).isInstanceOf(ElectronicMonitoringAdditionalConditionWithRestriction::class.java)
         assertThat(apAdditional[2]).isInstanceOf(MultipleExclusionZoneAdditionalCondition::class.java)
         assertThat(apAdditional[3]).isInstanceOf(SingleUploadAdditionalCondition::class.java)
+        assertThat(apAdditional[4]).isInstanceOf(MultipleUploadAdditionalCondition::class.java)
 
         val pssAdditional = it.conditions.pssConditions.additional
-        assertThat(pssAdditional).hasSize(4)
+        assertThat(pssAdditional).hasSize(5)
         assertThat(pssAdditional[0]).isInstanceOf(GenericAdditionalCondition::class.java)
         assertThat(pssAdditional[1]).isInstanceOf(ElectronicMonitoringAdditionalConditionWithRestriction::class.java)
         assertThat(pssAdditional[2]).isInstanceOf(MultipleExclusionZoneAdditionalCondition::class.java)
         assertThat(pssAdditional[3]).isInstanceOf(SingleUploadAdditionalCondition::class.java)
+        assertThat(pssAdditional[4]).isInstanceOf(MultipleUploadAdditionalCondition::class.java)
       }
     }
 

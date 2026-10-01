@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
@@ -333,6 +334,7 @@ class Cas1PlacementRequestServiceTest {
       )
 
       assertThat(result is CasResult.Success).isTrue
+      assertThat(placementRequest.withdrawalOccurredAt).isWithinTheLastMinute()
 
       verify {
         placementRequestRepository.save(

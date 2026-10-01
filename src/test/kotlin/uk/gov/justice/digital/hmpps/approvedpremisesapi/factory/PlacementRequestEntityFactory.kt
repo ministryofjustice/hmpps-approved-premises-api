@@ -30,6 +30,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var placementApplication: () -> PlacementApplicationEntity? = { null }
   private var withdrawalReason: Yielded<PlacementRequestWithdrawalReason?> = { null }
+  private var withdrawalOccurredAt: Yielded<OffsetDateTime?> = { null }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
 
   fun withDefaults() = apply {
@@ -90,6 +91,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.withdrawalReason = { withdrawalReason }
   }
 
+  fun withWithdrawalOccurredAt(withdrawalOccurredAt: OffsetDateTime?) = apply {
+    this.withdrawalOccurredAt = { withdrawalOccurredAt }
+  }
+
   fun withDueAt(dueAt: OffsetDateTime?) = apply {
     this.dueAt = { dueAt }
   }
@@ -109,5 +114,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     isWithdrawn = this.isWithdrawn(),
     placementApplication = this.placementApplication(),
     withdrawalReason = this.withdrawalReason(),
+    withdrawalOccurredAt = this.withdrawalOccurredAt(),
   )
 }

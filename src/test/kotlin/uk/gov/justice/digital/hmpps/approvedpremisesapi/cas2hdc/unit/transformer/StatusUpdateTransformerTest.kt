@@ -6,8 +6,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExternalUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -42,17 +41,19 @@ class StatusUpdateTransformerTest {
     every { mockCas2HdcExternalUserTransformer.transformJpaToApi(ofType()) } returns mockExternalUserApi
   }
 
+  @Test
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by NomisUser`() {
-    val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random()
+    val status = Cas2AssessmentStatus.entries.random()
 
     val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)
       .withApplication(submittedApplicationWithNomisUser)
+      .withAssessor(user)
       .produce()
 
     val expectedRepresentation = Cas2HdcStatusUpdate(
       id = jpaEntity.id,
-      name = status.name,
+      name = status.apiName,
       label = jpaEntity.label,
       description = jpaEntity.description,
       updatedBy = mockExternalUserApi,
@@ -67,7 +68,7 @@ class StatusUpdateTransformerTest {
 
   @Test
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by Cas2User of type delius`() {
-    val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random()
+    val status = Cas2AssessmentStatus.entries.random()
     val assessor = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
     val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)
@@ -77,7 +78,7 @@ class StatusUpdateTransformerTest {
 
     val expectedRepresentation = Cas2HdcStatusUpdate(
       id = jpaEntity.id,
-      name = status.name,
+      name = status.apiName,
       label = jpaEntity.label,
       description = jpaEntity.description,
       updatedBy = mockExternalUserApi,

@@ -10,13 +10,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
 class Cas2ExternalApplicationsTest : IntegrationTestBase() {
@@ -49,20 +53,34 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.external.Cas2ExternalApplicationsTest#isrCohorts")
     fun `Get suitable application returns ok`(cohort: Cas2Cohort) {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        val today = LocalDate.now()
+        val createAt = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
 
         val application = givenASubmittedCas2Application(
           crn = crn,
           submittedAt = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS),
           cohort = cohort,
-          latestStatusName = "moreInfoRequested",
+          createdAt = createAt,
+          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
         )
 
         val suitableApplication = Cas2SuitableApplication(
           uiUrl = "http://localhost:3000/assess/applications/${application.id}/overview",
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
-            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
+            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED.apiName,
             submittedAt = application.submittedAt!!,
+            offerDeclinedReason = null,
+            cancelledReason = null,
+          ),
+          createdAt = application.createdAt,
+          cohort = application.cohort?.apiType,
+          createdBy = Cas2StaffDto(
+            username = application.createdByUser.username,
+            deliusStaffCode = application.createdByUser.deliusStaffCode,
+            name = application.createdByUser.name,
+            nomisStaffId = application.createdByUser.nomisStaffId,
+            userType = Cas2UserTypeDto.valueOf(application.createdByUser.userType.name),
           ),
         )
 
@@ -81,7 +99,8 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
     @Test
     fun `Get suitable application returns latest application`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-        val latestTime = OffsetDateTime.now()
+        val today = LocalDate.now()
+        val latestTime = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
         val oldestTime = latestTime.minusDays(2)
         val submittedTime = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS)
 
@@ -90,7 +109,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           submittedAt = submittedTime,
           cohort = Cas2Cohort.ATCR,
           createdAt = latestTime,
-          latestStatusName = "moreInfoRequested",
+          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
         )
 
         givenASubmittedCas2Application(
@@ -104,8 +123,19 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           uiUrl = "http://localhost:3000/assess/applications/${latestApplication.id}/overview",
           id = latestApplication.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
-            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
+            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED.apiName,
             submittedAt = latestApplication.submittedAt!!,
+            offerDeclinedReason = null,
+            cancelledReason = null,
+          ),
+          createdAt = latestApplication.createdAt,
+          cohort = latestApplication.cohort?.apiType,
+          createdBy = Cas2StaffDto(
+            username = latestApplication.createdByUser.username,
+            deliusStaffCode = latestApplication.createdByUser.deliusStaffCode,
+            name = latestApplication.createdByUser.name,
+            nomisStaffId = latestApplication.createdByUser.nomisStaffId,
+            userType = Cas2UserTypeDto.valueOf(latestApplication.createdByUser.userType.name),
           ),
         )
 
@@ -162,17 +192,17 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .isNoContent
       }
     }
-  }
 
-  @Test
-  fun `Get suitable application returns not found if no cas2 applications exist`() {
-    givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-      webTestClient.get()
-        .uri("/cas2/external/cases/$crn/applications/suitable")
-        .header("Authorization", "Bearer $clientCredentialsJwt")
-        .exchange()
-        .expectStatus()
-        .isNoContent
+    @Test
+    fun `Get suitable application returns not found if no cas2 applications exist`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        webTestClient.get()
+          .uri("/cas2/external/cases/$crn/applications/suitable")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .exchange()
+          .expectStatus()
+          .isNoContent
+      }
     }
   }
 
