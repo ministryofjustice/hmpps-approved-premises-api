@@ -324,9 +324,10 @@ class Cas3ApplicationTransformerTest {
       .produce()
 
     val cancellation = Cas3CancellationEntityFactory()
-      .withReason(CancellationReasonEntityFactory()
-        .withName("Oops! I made a mistake")
-        .produce()
+      .withReason(
+        CancellationReasonEntityFactory()
+          .withName("Oops! I made a mistake")
+          .produce(),
       )
       .withBooking(booking)
       .withDate(LocalDate.now())
