@@ -25,4 +25,25 @@ class Cas2ExternalUrlTest : IntegrationTestBase() {
       }
     }
   }
+
+  @Test
+  fun `Returns 401 without valid JWT`() {
+    webTestClient.get()
+      .uri("/cas2/external/url-templates")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Returns 403 when user not authorized`() {
+    givenAUser { _, jwt ->
+      webTestClient.get()
+        .uri("/cas2/external/url-templates")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
 }
