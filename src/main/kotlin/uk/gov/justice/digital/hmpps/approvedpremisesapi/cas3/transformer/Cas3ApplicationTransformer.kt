@@ -49,6 +49,7 @@ class Cas3ApplicationTransformer(
             status = it.status,
             premises = transformToCas3PremisesSummary(it),
             provisionalOfferSentDate = if (it.status == Cas3BookingStatus.provisional) it.createdAt.toLocalDate() else null,
+            cancellation = transformToCas3ExternalPreviousBookingCancellationDto(it),
           )
         },
         previousBookings = previousBookings,
@@ -143,15 +144,17 @@ class Cas3ApplicationTransformer(
 
   private fun transformToPreviousBookingDto(bookingEntity: Cas3BookingEntity): Cas3ExternalPreviousBookingDto = Cas3ExternalPreviousBookingDto(
     bookingStatus = bookingEntity.status,
-    cancellation = if (bookingEntity.isCancelled) {
-      Cas3ExternalPreviousBookingCancellationDto(
-        cancellationDate = bookingEntity.cancellation!!.createdAt.toLocalDate(),
-        cancellationReason = bookingEntity.cancellation!!.reason.name,
-      )
-    } else {
-      null
-    },
+    cancellation = transformToCas3ExternalPreviousBookingCancellationDto(bookingEntity),
   )
+
+  private fun transformToCas3ExternalPreviousBookingCancellationDto(bookingEntity: Cas3BookingEntity) = if (bookingEntity.isCancelled) {
+    Cas3ExternalPreviousBookingCancellationDto(
+      cancellationDate = bookingEntity.cancellation!!.createdAt.toLocalDate(),
+      cancellationReason = bookingEntity.cancellation!!.reason.name,
+    )
+  } else {
+    null
+  }
 
   private fun transformToStaffDto(user: UserEntity) = Cas3StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 }
