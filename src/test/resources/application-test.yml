@@ -62,6 +62,12 @@ spring:
             client-secret: clientsecret
             client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
+          document-management-api:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
   cache:
     type: none
 
@@ -151,6 +157,8 @@ services:
   licence-api:
     base-url: http://localhost:#WIREMOCK_PORT
   health-and-medication-api:
+    base-url: http://localhost:#WIREMOCK_PORT
+  document-management-api:
     base-url: http://localhost:#WIREMOCK_PORT
   cas1-ui:
     base-url: http://localhost:#WIREMOCK_PORT
