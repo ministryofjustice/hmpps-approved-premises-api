@@ -293,4 +293,20 @@ class WebClientConfiguration(
         connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
       ),
   )
+
+  @Bean(name = ["documentManagementApiWebClient"])
+  fun documentManagementApiWebClient(
+    webClientBuilder: WebClient.Builder,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.document-management-api.base-url}") documentManagementApiBaseUrl: String,
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "document-management-api",
+        url = documentManagementApiBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+  )
 }
