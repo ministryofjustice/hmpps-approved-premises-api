@@ -1,13 +1,17 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.external
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenASubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ArrivalDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
@@ -16,8 +20,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASarClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -151,54 +158,6 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get suitable application returns null when applications have a conditional release date in the past`() {
-      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-        val latestTime = OffsetDateTime.now()
-        val submittedTime = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS)
-
-        val latestApplication = givenASubmittedCas2Application(
-          crn = crn,
-          submittedAt = submittedTime,
-          cohort = Cas2Cohort.ATCR,
-          createdAt = latestTime,
-          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
-          conditionalReleaseDate = LocalDate.now().minusDays(1),
-        )
-
-        webTestClient.get()
-          .uri("/cas2/external/cases/${latestApplication.crn}/applications/suitable")
-          .header("Authorization", "Bearer $clientCredentialsJwt")
-          .exchange()
-          .expectStatus()
-          .isNoContent
-      }
-    }
-
-    @Test
-    fun `Get suitable application returns null when applications have a null conditional release date and were created more than 2 months in the past`() {
-      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-        val latestTime = OffsetDateTime.now().minusMonths(2)
-        val submittedTime = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS)
-
-        val latestApplication = givenASubmittedCas2Application(
-          crn = crn,
-          submittedAt = submittedTime,
-          cohort = Cas2Cohort.ATCR,
-          createdAt = latestTime,
-          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
-          conditionalReleaseDate = null,
-        )
-
-        webTestClient.get()
-          .uri("/cas2/external/cases/${latestApplication.crn}/applications/suitable")
-          .header("Authorization", "Bearer $clientCredentialsJwt")
-          .exchange()
-          .expectStatus()
-          .isNoContent
-      }
-    }
-
-    @Test
     fun `Get suitable application returns no content if all applications are abandoned`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
 
@@ -250,6 +209,161 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isNoContent
+      }
+    }
+  }
+
+  @Nested
+  inner class Cas2ExternalArrivalsTest {
+
+    @Test
+    fun `Returns 401 unauthorised if jwt is invalid`() {
+      webTestClient.post()
+        .uri("/cas2/external/cases/CRN123/applications/1fd64d01-79ed-44d9-9cfe-98176fae517e/arrival")
+        .header("Authorization", "Bearer invalid")
+        .bodyValue(
+          Cas2ArrivalDto(
+            arrivalDateTime = Instant.now(),
+            arrivedByUsername = "username",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Returns 403 forbidden if jwt is valid but the client does not have the right role`() {
+      givenASarClientCredentialsApiCall { clientCredentialsJwt ->
+        webTestClient.post()
+          .uri("/cas2/external/cases/CRN123/applications/1fd64d01-79ed-44d9-9cfe-98176fae517e/arrival")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .bodyValue(
+            Cas2ArrivalDto(
+              arrivalDateTime = Instant.now(),
+              arrivedByUsername = "username",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Returns 404 not found if the CRN does not exist`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        webTestClient.post()
+          .uri("/cas2/external/cases/CRN123/applications/1fd64d01-79ed-44d9-9cfe-98176fae517e/arrival")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .bodyValue(
+            Cas2ArrivalDto(
+              arrivalDateTime = Instant.now(),
+              arrivedByUsername = "username",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Returns 404 not found if the application is not found`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+
+        val application = givenASubmittedCas2Application(
+          crn = "CRN123",
+        )
+
+        webTestClient.post()
+          .uri("/cas2/external/cases/CRN456/applications/${application.id}/arrival")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .bodyValue(
+            Cas2ArrivalDto(
+              arrivalDateTime = Instant.now(),
+              arrivedByUsername = "username",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Returns 400 bad request if the arrival datetime is in the future`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+
+        val crn = "CRN123"
+        val arrivalDateTime = Instant.now().plusSeconds(3600)
+        val arrivedByUsername = "username"
+
+        val application = givenASubmittedCas2Application(crn = crn)
+
+        cas2AssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+        }
+
+        webTestClient.post()
+          .uri("/cas2/external/cases/$crn/applications/${application.id}/arrival")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .bodyValue(
+            Cas2ArrivalDto(
+              arrivalDateTime = arrivalDateTime,
+              arrivedByUsername = arrivedByUsername,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+      }
+    }
+
+    @Test
+    fun `Returns OK and creates a domain event when recording arrival`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+
+        val crn = "CRN123"
+        val arrivalDateTime = Instant.parse("2025-12-04T12:53:10Z")
+        val arrivedByUsername = "username"
+
+        val application = givenASubmittedCas2Application(crn = crn)
+
+        cas2AssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+        }
+
+        webTestClient.post()
+          .uri("/cas2/external/cases/$crn/applications/${application.id}/arrival")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .bodyValue(
+            Cas2ArrivalDto(
+              arrivalDateTime = arrivalDateTime,
+              arrivedByUsername = arrivedByUsername,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+
+        val persistedEvent = domainEventAsserter.assertDomainEventOfTypeStored(
+          application.id,
+          DomainEventType.CAS2_PERSON_ARRIVED,
+        )
+
+        assertThat(persistedEvent.crn).isEqualTo(crn)
+        assertThat(persistedEvent.applicationId).isEqualTo(application.id)
+        assertThat(persistedEvent.type).isEqualTo(DomainEventType.CAS2_PERSON_ARRIVED)
+
+        val arrivalEvent = jsonMapper.readValue<Cas2ArrivalEvent>(persistedEvent.data)
+        assertThat(arrivalEvent.id).isNotNull()
+        assertThat(arrivalEvent.timestamp).isNotNull()
+        assertThat(arrivalEvent.eventType).isEqualTo(EventType.arrived)
+
+        val arrivalEventDetails = arrivalEvent.eventDetails
+        assertThat(arrivalEventDetails.arrivalDateTime).isEqualTo(arrivalDateTime)
+        assertThat(arrivalEventDetails.arrivedByUsername).isEqualTo(arrivedByUsername)
       }
     }
   }

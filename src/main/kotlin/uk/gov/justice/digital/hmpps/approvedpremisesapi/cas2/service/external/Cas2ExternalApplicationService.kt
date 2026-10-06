@@ -2,6 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
@@ -12,26 +15,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import java.time.Clock
-import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import java.time.Instant
+import java.util.UUID
 
 @Service
 class Cas2ExternalApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
+  private val cas2ExternalDomainEventService: Cas2ExternalDomainEventService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
-  private val clock: Clock,
 ) {
 
-  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? = cas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr())
-    .firstOrNull {
-      val now = OffsetDateTime.now(clock)
-      val nullReleaseExpiryLimit = 2L
-      when {
-        it.conditionalReleaseDate != null -> it.conditionalReleaseDate!! >= now.toLocalDate()
-        else -> it.createdAt >= now.minusMonths(nullReleaseExpiryLimit)
-      }
-    }
+  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? = cas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr())
     ?.let { mostRecent ->
 
       Cas2SuitableApplication(
@@ -53,6 +50,44 @@ class Cas2ExternalApplicationService(
         ),
       )
     }
+
+  fun recordArrival(crn: String, applicationId: UUID, arrivedByUsername: String, arrivalDateTime: Instant): CasResult<Unit> {
+    val applications = cas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
+
+    if (applications.isEmpty()) {
+      return CasResult.NotFound("CRN", crn)
+    } else if (!applications.contains(applications.firstOrNull { it.id == applicationId })) {
+      return CasResult.NotFound("application", applicationId.toString())
+    }
+
+    if (arrivalDateTime.isAfter(Instant.now())) {
+      return CasResult.FieldValidationError(mapOf(arrivalDateTime.toString() to "cannot be in the future"))
+    }
+
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+
+    cas2ExternalDomainEventService.saveArrivalDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = applicationId,
+        crn = crn,
+        nomsNumber = null,
+        occurredAt = eventOccurredAt,
+        data = Cas2ArrivalEvent(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = EventType.arrived,
+          eventDetails = Cas2ArrivalEventDetails(
+            arrivalDateTime = arrivalDateTime,
+            arrivedByUsername = arrivedByUsername,
+          ),
+        ),
+      ),
+    )
+
+    return CasResult.Success(Unit)
+  }
 
   private fun getSubmittedApplication(mostRecent: Cas2ApplicationEntity) = if (mostRecent.submittedAt != null) {
     val statusUpdate = mostRecent

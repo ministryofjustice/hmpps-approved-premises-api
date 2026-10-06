@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -19,21 +20,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
-import java.time.Clock
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class Cas2ExternalApplicationServiceTest {
   private val mockCas2ApplicationRepository = mockk<Cas2ApplicationRepository>()
+  private val mockCas2ExternalDomainEventService = mockk<Cas2ExternalDomainEventService>()
 
   private val cas2ExternalApplicationService = Cas2ExternalApplicationService(
     mockCas2ApplicationRepository,
+    mockCas2ExternalDomainEventService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
-    Clock.systemDefaultZone(),
   )
 
   val crn = "ADAFD"
@@ -60,14 +61,6 @@ class Cas2ExternalApplicationServiceTest {
       )
 
       assertThat(result).isEqualTo(expected)
-    }
-
-    @Test
-    fun `returns null when latest application has a conditional release date in the past`() {
-      setUpApplication(LocalDate.now().minusDays(1))
-
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
-      assertThat(result).isNull()
     }
 
     @Test
@@ -187,7 +180,7 @@ class Cas2ExternalApplicationServiceTest {
         .withStatusUpdates(mutableListOf())
         .produce()
 
-      every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
+      every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
 
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
 
@@ -200,66 +193,92 @@ class Cas2ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `returns older application when newer application is ineligible`() {
-      val user = Cas2UserEntityFactory()
-        .produce()
-
-      val today = LocalDate.now()
-      val now = today
-        .atStartOfDay(ZoneOffset.UTC)
-        .toOffsetDateTime()
-        .truncatedTo(ChronoUnit.MICROS)
-
-      val newerCas2applicationEntity = setUpApplication(
-        conditionalReleaseDate = today.minusDays(1),
-        createdAt = now,
-      )
-
-      val olderCas2applicationEntity = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCreatedAt(newerCas2applicationEntity.createdAt.minusMonths(1))
-        .withCrn(crn)
-        .withStatusUpdates(mutableListOf())
-        .produce()
-
-      every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(
-        newerCas2applicationEntity,
-        olderCas2applicationEntity,
-      )
-
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
-
-      val expected = setUpExpectedApplication(
-        cas2applicationEntity = olderCas2applicationEntity,
-        uiUrl = "http://frontend/applications/${olderCas2applicationEntity.id}",
-      )
-
-      assertThat(result).isEqualTo(expected)
-    }
-
-    @Test
-    fun `returns null when latest draft application is more than 2 months old`() {
-      val user = Cas2UserEntityFactory()
-        .produce()
-      val cas2applicationEntity = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(crn)
-        .withStatusUpdates(mutableListOf())
-        .withCreatedAt(OffsetDateTime.now().minusMonths(2))
-        .produce()
-
-      every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
-
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
-
-      assertThat(result).isNull()
-    }
-
-    @Test
     fun `returns no application when none exists for crn`() {
-      every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf()
+      every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns null
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
       assertThat(result).isEqualTo(null)
+    }
+  }
+
+  @Nested
+  inner class PostArrival {
+    @Test
+    fun `returns not found when no valid applications exist for the crn`() {
+      val applicationId = UUID.randomUUID()
+
+      every {
+        mockCas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
+      } returns emptyList()
+
+      val result = cas2ExternalApplicationService.recordArrival(crn, applicationId, "username", Instant.now())
+
+      assertThat(result).isEqualTo(CasResult.NotFound<Unit>("CRN", crn))
+    }
+
+    @Test
+    fun `returns not found when application is not associated with the crn`() {
+      val applicationId = UUID.randomUUID()
+      val otherApplication = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .withCrn(crn)
+        .withId(UUID.randomUUID())
+        .withSubmittedAt(OffsetDateTime.now())
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      every {
+        mockCas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
+      } returns listOf(otherApplication)
+
+      val result = cas2ExternalApplicationService.recordArrival(crn, applicationId, "username", Instant.now())
+
+      assertThat(result).isEqualTo(CasResult.NotFound<Unit>("application", applicationId.toString()))
+    }
+
+    @Test
+    fun `returns fail when the arrival datetime is in the future`() {
+      val applicationId = UUID.randomUUID()
+      val application = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .withCrn(crn)
+        .withId(applicationId)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      every {
+        mockCas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
+      } returns listOf(application)
+
+      every { mockCas2ExternalDomainEventService.saveArrivalDomainEvent(any()) } answers { mockk() }
+
+      val futureDatetime = Instant.now().plusSeconds(3600)
+
+      val result = cas2ExternalApplicationService.recordArrival(crn, applicationId, "username", futureDatetime)
+
+      assertThat(result).isEqualTo(CasResult.FieldValidationError<Unit>(mapOf(futureDatetime.toString() to "cannot be in the future")))
+    }
+
+    @Test
+    fun `returns success when the crn has the matching application`() {
+      val applicationId = UUID.randomUUID()
+      val application = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .withCrn(crn)
+        .withId(applicationId)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      every {
+        mockCas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
+      } returns listOf(application)
+
+      every { mockCas2ExternalDomainEventService.saveArrivalDomainEvent(any()) } answers { mockk() }
+
+      val result = cas2ExternalApplicationService.recordArrival(crn, applicationId, "username", Instant.now())
+
+      assertThat(result).isEqualTo(CasResult.Success(Unit))
     }
   }
 
@@ -323,7 +342,7 @@ class Cas2ExternalApplicationServiceTest {
       .withStatusUpdates(mutableListOf())
       .produce()
 
-    every { mockCas2ApplicationRepository.findApplicationsByCohortNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
+    every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2applicationEntity
 
     return cas2applicationEntity
   }
