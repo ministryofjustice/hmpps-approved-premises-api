@@ -79,7 +79,7 @@ class Cas2ExternalApplicationService(
           timestamp = eventOccurredAt,
           eventType = EventType.arrived,
           eventDetails = Cas2ArrivalEventDetails(
-            arrivalDateTime = arrivalDateTime,
+            markedAsArrivedDateTime = arrivalDateTime,
             arrivedByUsername = arrivedByUsername,
           ),
         ),
