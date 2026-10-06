@@ -28,7 +28,7 @@ class Cas2ExternalApplicationsController(
     ?.let { ResponseEntity.ok(it) }
     ?: ResponseEntity.noContent().build()
 
-  @Operation(summary = "Create a new arrival")
+  @Operation(summary = "Mark a person as arrived")
   @PostMapping("/cases/{crn}/applications/{applicationId}/arrival")
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   fun createArrival(
@@ -36,7 +36,7 @@ class Cas2ExternalApplicationsController(
     @PathVariable applicationId: UUID,
     @RequestBody body: Cas2ArrivalDto,
   ): ResponseEntity<Unit> {
-    val casResult = cas2ExternalApplicationService.recordArrival(crn, applicationId, body.arrivedByUsername, body.arrivalDateTime)
+    val casResult = cas2ExternalApplicationService.recordArrival(crn, applicationId, body.arrivedByUsername, body.markedAsArrivedDateTime)
 
     ensureEntityFromCasResultIsSuccess(casResult)
 

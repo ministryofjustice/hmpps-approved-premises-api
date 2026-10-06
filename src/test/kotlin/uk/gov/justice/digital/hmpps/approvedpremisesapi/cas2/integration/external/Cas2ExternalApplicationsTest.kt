@@ -223,7 +223,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         .header("Authorization", "Bearer invalid")
         .bodyValue(
           Cas2ArrivalDto(
-            arrivalDateTime = Instant.now(),
+            markedAsArrivedDateTime = Instant.now(),
             arrivedByUsername = "username",
           ),
         )
@@ -240,7 +240,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = Instant.now(),
+              markedAsArrivedDateTime = Instant.now(),
               arrivedByUsername = "username",
             ),
           )
@@ -258,7 +258,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = Instant.now(),
+              markedAsArrivedDateTime = Instant.now(),
               arrivedByUsername = "username",
             ),
           )
@@ -281,7 +281,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = Instant.now(),
+              markedAsArrivedDateTime = Instant.now(),
               arrivedByUsername = "username",
             ),
           )
@@ -310,7 +310,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = arrivalDateTime,
+              markedAsArrivedDateTime = arrivalDateTime,
               arrivedByUsername = arrivedByUsername,
             ),
           )
@@ -339,7 +339,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = arrivalDateTime,
+              markedAsArrivedDateTime = arrivalDateTime,
               arrivedByUsername = arrivedByUsername,
             ),
           )
@@ -362,7 +362,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         assertThat(arrivalEvent.eventType).isEqualTo(EventType.arrived)
 
         val arrivalEventDetails = arrivalEvent.eventDetails
-        assertThat(arrivalEventDetails.arrivalDateTime).isEqualTo(arrivalDateTime)
+        assertThat(arrivalEventDetails.markedAsArrivedDateTime).isEqualTo(arrivalDateTime)
         assertThat(arrivalEventDetails.arrivedByUsername).isEqualTo(arrivedByUsername)
       }
     }
