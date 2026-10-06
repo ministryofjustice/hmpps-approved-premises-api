@@ -373,7 +373,6 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
-  isr-cas1-email-changes-enabled: false
 
 domain-events:
   listener:
