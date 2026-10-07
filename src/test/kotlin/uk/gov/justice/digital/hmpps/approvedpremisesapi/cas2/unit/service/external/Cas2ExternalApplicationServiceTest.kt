@@ -5,6 +5,9 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
@@ -21,6 +24,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -28,11 +36,15 @@ import java.util.UUID
 
 class Cas2ExternalApplicationServiceTest {
   private val mockCas2ApplicationRepository = mockk<Cas2ApplicationRepository>()
+  private val mockDomainEventRepository = mockk<DomainEventRepository>()
   private val mockCas2ExternalDomainEventService = mockk<Cas2ExternalDomainEventService>()
+  private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
 
   private val cas2ExternalApplicationService = Cas2ExternalApplicationService(
     mockCas2ApplicationRepository,
+    mockDomainEventRepository,
     mockCas2ExternalDomainEventService,
+    jsonMapper,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -52,6 +64,7 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = null,
+        markedAsArrivedDateTime = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -77,6 +90,7 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = null,
+        markedAsArrivedDateTime = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -109,6 +123,7 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = null,
+        markedAsArrivedDateTime = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -134,6 +149,7 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = Cas2AssessmentStatusDetail.CREATED_IN_ERROR.name,
+        markedAsArrivedDateTime = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -159,6 +175,7 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = Cas2AssessmentStatusDetail.AREA_UNSUITABLE.name,
         cancelledReason = null,
+        markedAsArrivedDateTime = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -197,6 +214,114 @@ class Cas2ExternalApplicationServiceTest {
       every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns null
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
       assertThat(result).isEqualTo(null)
+    }
+
+    @Test
+    fun `Returns null markedAsArrivedDateTime when latestAssessmentStatus is AWAITING_ARRIVAL but no arrival event exists`() {
+      val awaitingArrivalStatusId = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")
+
+      val cas2ApplicationEntity = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .withCrn(crn)
+        .withSubmittedAt(OffsetDateTime.parse("2025-12-03T10:15:30+01:00"))
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      cas2ApplicationEntity.statusUpdates!!.add(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(cas2ApplicationEntity)
+          .withAssessor(Cas2UserEntityFactory().produce())
+          .withStatusId(awaitingArrivalStatusId)
+          .produce(),
+      )
+
+      every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2ApplicationEntity
+      every {
+        mockDomainEventRepository.findByApplicationIdAndType(cas2ApplicationEntity.id, DomainEventType.CAS2_PERSON_ARRIVED)
+      } returns emptyList()
+
+      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+
+      assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isNull()
+    }
+
+    @Test
+    fun `Returns null markedAsArrivedDateTime when latestAssessmentStatus is not AWAITING_ARRIVAL and arrival event exists for the application`() {
+      val placeOfferedStatusId = UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2")
+
+      val cas2ApplicationEntity = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .withCrn(crn)
+        .withSubmittedAt(OffsetDateTime.parse("2025-12-03T10:15:30+01:00"))
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      cas2ApplicationEntity.statusUpdates!!.add(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(cas2ApplicationEntity)
+          .withAssessor(Cas2UserEntityFactory().produce())
+          .withStatusId(placeOfferedStatusId)
+          .produce(),
+      )
+
+      val arrivalEvent = mockk<DomainEventEntity>()
+
+      every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2ApplicationEntity
+      every {
+        mockDomainEventRepository.findByApplicationIdAndType(cas2ApplicationEntity.id, DomainEventType.CAS2_PERSON_ARRIVED)
+      } returns listOf(arrivalEvent)
+
+      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+
+      assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isNull()
+    }
+
+    @Test
+    fun `Returns non null markedAsArrivedDateTime when latestAssessmentStatus status is AWAITING_ARRIVAL and arrival event exists`() {
+      val awaitingArrivalStatusId = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")
+      val expectedArrivedDateTime = Instant.parse("2025-12-03T10:15:30Z")
+      val eventId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000")
+
+      val cas2ApplicationEntity = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .withCrn(crn)
+        .withSubmittedAt(OffsetDateTime.parse("2024-08-17T11:25:31+01:00"))
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      cas2ApplicationEntity.statusUpdates!!.add(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(cas2ApplicationEntity)
+          .withAssessor(Cas2UserEntityFactory().produce())
+          .withStatusId(awaitingArrivalStatusId)
+          .produce(),
+      )
+
+      val cas2ArrivalEvent = Cas2ArrivalEvent(
+        id = eventId,
+        timestamp = expectedArrivedDateTime,
+        eventType = EventType.arrived,
+        eventDetails = Cas2ArrivalEventDetails(
+          markedAsArrivedDateTime = expectedArrivedDateTime,
+          arrivedByUsername = "testuser",
+        ),
+      )
+
+      val arrivalEvent = DomainEventEntityFactory()
+        .withApplicationId(cas2ApplicationEntity.id)
+        .withType(DomainEventType.CAS2_PERSON_ARRIVED)
+        .withCrn(crn)
+        .withData(jsonMapper.writeValueAsString(cas2ArrivalEvent))
+        .produce()
+
+      every { mockCas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr()) } returns cas2ApplicationEntity
+      every {
+        mockDomainEventRepository.findByApplicationIdAndType(cas2ApplicationEntity.id, DomainEventType.CAS2_PERSON_ARRIVED)
+      } returns listOf(arrivalEvent)
+
+      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+
+      assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isEqualTo(expectedArrivedDateTime)
     }
   }
 

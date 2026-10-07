@@ -25,6 +25,7 @@ class Cas2ExternalDtoTest {
           offerDeclinedReason = null,
           cancelledReason = null,
           submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
+          markedAsArrivedDateTime = null,
         )
       }
       assertThat(thrown).isNull()
@@ -43,6 +44,7 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = "a reason",
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
+            markedAsArrivedDateTime = null,
           )
         }
         assertThat(thrown).hasMessage("Cancelled reason must be provided if and only if status is `cancelled`")
@@ -56,6 +58,7 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = "a reason",
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
+            markedAsArrivedDateTime = null,
           )
         }
         assertThat(thrown).isNull()
@@ -69,6 +72,7 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
+            markedAsArrivedDateTime = null,
           )
         }
         assertThat(thrown).hasMessage("Cancelled reason must be provided if and only if status is `cancelled`")
@@ -88,6 +92,7 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = "a reason",
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
+            markedAsArrivedDateTime = null,
           )
         }
         assertThat(thrown).hasMessage("Offer declined reason must be provided if and only if status is `offerDeclined`")
@@ -102,6 +107,7 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = "a reason",
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
+            markedAsArrivedDateTime = null,
           )
         }
         assertThat(thrown).hasMessage("Cancelled reason must be provided if and only if status is `cancelled`")
@@ -115,6 +121,7 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = "a reason",
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
+            markedAsArrivedDateTime = null,
           )
         }
         assertThat(thrown).isNull()
@@ -128,6 +135,7 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
+            markedAsArrivedDateTime = null,
           )
         }
         assertThat(thrown).hasMessage("Offer declined reason must be provided if and only if status is `offerDeclined`")

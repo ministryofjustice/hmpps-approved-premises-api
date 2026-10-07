@@ -171,6 +171,8 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
 
+  fun findByApplicationIdAndType(applicationId: UUID, type: DomainEventType): List<DomainEventEntity>
+
   @Query(
     """
     SELECT d

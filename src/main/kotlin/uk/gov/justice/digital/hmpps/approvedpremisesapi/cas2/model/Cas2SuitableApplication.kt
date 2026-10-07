@@ -40,11 +40,10 @@ data class Cas2ExternalSubmittedApplicationDto(
   }
 
   init {
-    requireXor(
-      latestAssessmentStatus == Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName,
-      markedAsArrivedDateTime == null,
+    require(
+      latestAssessmentStatus == Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName || markedAsArrivedDateTime == null,
     ) {
-      "Marked as arrived date time must be provided if and only if status is `awaitingArrival`"
+      "Marked as arrived date time can only be provided when status is `awaitingArrival`"
     }
   }
 }
