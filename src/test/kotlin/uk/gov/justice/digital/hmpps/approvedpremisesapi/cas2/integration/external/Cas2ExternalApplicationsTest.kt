@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenASubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ArrivalDto
@@ -24,11 +25,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 class Cas2ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
@@ -58,7 +61,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.external.Cas2ExternalApplicationsTest#isrCohorts")
-    fun `Get suitable application returns ok`(cohort: Cas2Cohort) {
+    fun `Get suitable application returns ok when status is AWAITING_ARRIVAL but not marked as arrived`(cohort: Cas2Cohort) {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         val today = LocalDate.now()
         val createAt = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
@@ -68,17 +71,82 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           submittedAt = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS),
           cohort = cohort,
           createdAt = createAt,
-          latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
+          latestStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL,
         )
 
         val suitableApplication = Cas2SuitableApplication(
           uiUrl = "http://localhost:3000/assess/applications/${application.id}/overview",
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
-            latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED.apiName,
+            latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName,
             submittedAt = application.submittedAt!!,
             offerDeclinedReason = null,
             cancelledReason = null,
+            markedAsArrivedDateTime = null,
+          ),
+          createdAt = application.createdAt,
+          cohort = application.cohort?.apiType,
+          createdBy = Cas2StaffDto(
+            username = application.createdByUser.username,
+            deliusStaffCode = application.createdByUser.deliusStaffCode,
+            name = application.createdByUser.name,
+            nomisStaffId = application.createdByUser.nomisStaffId,
+            userType = Cas2UserTypeDto.valueOf(application.createdByUser.userType.name),
+          ),
+        )
+
+        val response = webTestClient.get()
+          .uri("/cas2/external/cases/${application.crn}/applications/suitable")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsObject<Cas2SuitableApplication>()
+
+        assertThat(response).isEqualTo(suitableApplication)
+      }
+    }
+
+    @Test
+    fun `Get suitable application returns ok when status is AWAITING_ARRIVAL and is marked as arrived`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        val today = LocalDate.now()
+        val createAt = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
+
+        val application = givenASubmittedCas2Application(
+          crn = crn,
+          submittedAt = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS),
+          cohort = Cas2Cohort.HCRD,
+          createdAt = createAt,
+          latestStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL,
+        )
+
+        val cas2ArrivalEvent = Cas2ArrivalEvent(
+          id = UUID.fromString("5c8b0804-229d-4f66-bd90-6d7262246d4d"),
+          timestamp = Instant.now(),
+          eventType = EventType.arrived,
+          eventDetails = Cas2ArrivalEventDetails(
+            markedAsArrivedDateTime = Instant.parse("2025-12-04T12:53:10Z"),
+            arrivedByUsername = "testuser",
+          ),
+        )
+
+        domainEventFactory.produceAndPersist {
+          withApplicationId(application.id)
+          withCrn(crn)
+          withType(DomainEventType.CAS2_PERSON_ARRIVED)
+          withData(jsonMapper.writeValueAsString(cas2ArrivalEvent))
+        }
+
+        val suitableApplication = Cas2SuitableApplication(
+          uiUrl = "http://localhost:3000/assess/applications/${application.id}/overview",
+          id = application.id,
+          submittedApplication = Cas2ExternalSubmittedApplicationDto(
+            latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName,
+            submittedAt = application.submittedAt!!,
+            offerDeclinedReason = null,
+            cancelledReason = null,
+            markedAsArrivedDateTime = Instant.parse("2025-12-04T12:53:10Z"),
           ),
           createdAt = application.createdAt,
           cohort = application.cohort?.apiType,
@@ -134,6 +202,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
             submittedAt = latestApplication.submittedAt!!,
             offerDeclinedReason = null,
             cancelledReason = null,
+            markedAsArrivedDateTime = null,
           ),
           createdAt = latestApplication.createdAt,
           cohort = latestApplication.cohort?.apiType,
@@ -148,6 +217,64 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
 
         val response = webTestClient.get()
           .uri("/cas2/external/cases/${latestApplication.crn}/applications/suitable")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsObject<Cas2SuitableApplication>()
+        assertThat(response).isEqualTo(suitableApplication)
+      }
+    }
+
+    @Test
+    fun `Get suitable application excludes applications that have had a status of AWAITING_ARRIVAL for more than 32 days`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        val today = LocalDate.now()
+        val latestTime = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
+        val oldestTime = latestTime.minusDays(2)
+        val submittedTime = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS)
+
+        val olderApplicationLaterStatusUpdate = givenASubmittedCas2Application(
+          crn = crn,
+          submittedAt = submittedTime,
+          cohort = Cas2Cohort.ATCR,
+          createdAt = oldestTime,
+          latestStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL,
+          latestStatusSet = OffsetDateTime.now().minusDays(32),
+        )
+
+        givenASubmittedCas2Application(
+          crn = crn,
+          submittedAt = submittedTime,
+          cohort = Cas2Cohort.ATCR,
+          createdAt = latestTime,
+          latestStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL,
+          latestStatusSet = OffsetDateTime.now().minusDays(33),
+        )
+
+        val suitableApplication = Cas2SuitableApplication(
+          uiUrl = "http://localhost:3000/assess/applications/${olderApplicationLaterStatusUpdate.id}/overview",
+          id = olderApplicationLaterStatusUpdate.id,
+          submittedApplication = Cas2ExternalSubmittedApplicationDto(
+            latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName,
+            submittedAt = olderApplicationLaterStatusUpdate.submittedAt!!,
+            offerDeclinedReason = null,
+            cancelledReason = null,
+            markedAsArrivedDateTime = null,
+          ),
+          createdAt = olderApplicationLaterStatusUpdate.createdAt,
+          cohort = olderApplicationLaterStatusUpdate.cohort?.apiType,
+          createdBy = Cas2StaffDto(
+            username = olderApplicationLaterStatusUpdate.createdByUser.username,
+            deliusStaffCode = olderApplicationLaterStatusUpdate.createdByUser.deliusStaffCode,
+            name = olderApplicationLaterStatusUpdate.createdByUser.name,
+            nomisStaffId = olderApplicationLaterStatusUpdate.createdByUser.nomisStaffId,
+            userType = Cas2UserTypeDto.valueOf(olderApplicationLaterStatusUpdate.createdByUser.userType.name),
+          ),
+        )
+
+        val response = webTestClient.get()
+          .uri("/cas2/external/cases/$crn/applications/suitable")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
@@ -223,7 +350,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         .header("Authorization", "Bearer invalid")
         .bodyValue(
           Cas2ArrivalDto(
-            arrivalDateTime = Instant.now(),
+            markedAsArrivedDateTime = Instant.now(),
             arrivedByUsername = "username",
           ),
         )
@@ -240,7 +367,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = Instant.now(),
+              markedAsArrivedDateTime = Instant.now(),
               arrivedByUsername = "username",
             ),
           )
@@ -258,7 +385,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = Instant.now(),
+              markedAsArrivedDateTime = Instant.now(),
               arrivedByUsername = "username",
             ),
           )
@@ -281,7 +408,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = Instant.now(),
+              markedAsArrivedDateTime = Instant.now(),
               arrivedByUsername = "username",
             ),
           )
@@ -310,7 +437,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = arrivalDateTime,
+              markedAsArrivedDateTime = arrivalDateTime,
               arrivedByUsername = arrivedByUsername,
             ),
           )
@@ -339,7 +466,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .bodyValue(
             Cas2ArrivalDto(
-              arrivalDateTime = arrivalDateTime,
+              markedAsArrivedDateTime = arrivalDateTime,
               arrivedByUsername = arrivedByUsername,
             ),
           )
@@ -362,7 +489,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         assertThat(arrivalEvent.eventType).isEqualTo(EventType.arrived)
 
         val arrivalEventDetails = arrivalEvent.eventDetails
-        assertThat(arrivalEventDetails.arrivalDateTime).isEqualTo(arrivalDateTime)
+        assertThat(arrivalEventDetails.markedAsArrivedDateTime).isEqualTo(arrivalDateTime)
         assertThat(arrivalEventDetails.arrivedByUsername).isEqualTo(arrivedByUsername)
       }
     }

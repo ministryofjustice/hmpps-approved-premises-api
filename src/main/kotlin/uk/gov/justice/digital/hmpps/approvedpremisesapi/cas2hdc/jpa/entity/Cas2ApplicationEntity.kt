@@ -25,12 +25,16 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
+
+private const val AWAITING_ARRIVAL_EXCLUSION_DAYS = 32L
 
 @Suppress("TooManyFunctions")
 @Repository
@@ -41,9 +45,29 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   fun findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn: String): List<Cas2ApplicationEntity>
 
   @Query(
-    "SELECT a FROM Cas2ApplicationEntity a WHERE a.crn = :crn and a.cohort in :cohorts and a.abandonedAt is null order by a.createdAt desc limit 1",
+    """
+      SELECT a FROM Cas2ApplicationEntity a
+      WHERE a.crn = :crn
+        AND a.cohort IN :cohorts
+        AND a.abandonedAt IS NULL
+        AND (
+            NOT EXISTS (
+            SELECT 1 FROM Cas2StatusUpdateEntity su
+            WHERE su.application = a
+              AND su.statusId = :statusId
+              AND su.createdAt < :cutOffDatetime
+          )
+        )
+      ORDER BY a.createdAt DESC
+      LIMIT 1
+    """,
   )
-  fun findLatestApplication(crn: String, cohorts: List<Cas2Cohort>): Cas2ApplicationEntity?
+  fun findLatestApplication(
+    crn: String,
+    cohorts: List<Cas2Cohort>,
+    statusId: UUID? = Cas2AssessmentStatus.AWAITING_ARRIVAL.id,
+    cutOffDatetime: OffsetDateTime? = OffsetDateTime.now().truncatedTo(ChronoUnit.DAYS).minusDays(AWAITING_ARRIVAL_EXCLUSION_DAYS),
+  ): Cas2ApplicationEntity?
 
   @Query(
     "SELECT id, application_origin FROM cas_2_applications WHERE cohort IS NULL",

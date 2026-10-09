@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEventDetails
@@ -16,6 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.time.Instant
 import java.util.UUID
@@ -23,7 +26,9 @@ import java.util.UUID
 @Service
 class Cas2ExternalApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
+  private val domainEventRepository: DomainEventRepository,
   private val cas2ExternalDomainEventService: Cas2ExternalDomainEventService,
+  private val jsonMapper: JsonMapper,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -79,7 +84,7 @@ class Cas2ExternalApplicationService(
           timestamp = eventOccurredAt,
           eventType = EventType.arrived,
           eventDetails = Cas2ArrivalEventDetails(
-            arrivalDateTime = arrivalDateTime,
+            markedAsArrivedDateTime = arrivalDateTime,
             arrivedByUsername = arrivedByUsername,
           ),
         ),
@@ -112,11 +117,21 @@ class Cas2ExternalApplicationService(
       null
     }
 
+    val markedAsArrivedDateTime = if (statusUpdate?.status == Cas2AssessmentStatus.AWAITING_ARRIVAL) {
+      domainEventRepository.findByApplicationIdAndType(mostRecent.id, DomainEventType.CAS2_PERSON_ARRIVED)
+        .firstOrNull()
+        ?.data
+        ?.let { jsonMapper.readValue(it, Cas2ArrivalEvent::class.java).eventDetails.markedAsArrivedDateTime }
+    } else {
+      null
+    }
+
     Cas2ExternalSubmittedApplicationDto(
       latestAssessmentStatus = statusUpdate?.status?.apiName,
       submittedAt = mostRecent.submittedAt!!,
       offerDeclinedReason = offerDeclinedReason,
       cancelledReason = cancelledReason,
+      markedAsArrivedDateTime = markedAsArrivedDateTime,
     )
   } else {
     null
