@@ -373,6 +373,7 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
+  data-science-reports-scheduled-job-enabled: false
 
 domain-events:
   listener:
