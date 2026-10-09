@@ -19,13 +19,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASarClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -131,7 +131,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           ),
         )
 
-        domainEventFactory.produceAndPersist() {
+        domainEventFactory.produceAndPersist {
           withApplicationId(application.id)
           withCrn(crn)
           withType(DomainEventType.CAS2_PERSON_ARRIVED)
@@ -217,6 +217,64 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
 
         val response = webTestClient.get()
           .uri("/cas2/external/cases/${latestApplication.crn}/applications/suitable")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsObject<Cas2SuitableApplication>()
+        assertThat(response).isEqualTo(suitableApplication)
+      }
+    }
+
+    @Test
+    fun `Get suitable application excludes applications that have had a status of AWAITING_ARRIVAL for more than 32 days`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        val today = LocalDate.now()
+        val latestTime = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
+        val oldestTime = latestTime.minusDays(2)
+        val submittedTime = OffsetDateTime.parse("2023-01-01T00:00:00Z").truncatedTo(ChronoUnit.MICROS)
+
+        val olderApplicationLaterStatusUpdate = givenASubmittedCas2Application(
+          crn = crn,
+          submittedAt = submittedTime,
+          cohort = Cas2Cohort.ATCR,
+          createdAt = oldestTime,
+          latestStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL,
+          latestStatusSet = OffsetDateTime.now().minusDays(32),
+        )
+
+        givenASubmittedCas2Application(
+          crn = crn,
+          submittedAt = submittedTime,
+          cohort = Cas2Cohort.ATCR,
+          createdAt = latestTime,
+          latestStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL,
+          latestStatusSet = OffsetDateTime.now().minusDays(33),
+        )
+
+        val suitableApplication = Cas2SuitableApplication(
+          uiUrl = "http://localhost:3000/assess/applications/${olderApplicationLaterStatusUpdate.id}/overview",
+          id = olderApplicationLaterStatusUpdate.id,
+          submittedApplication = Cas2ExternalSubmittedApplicationDto(
+            latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName,
+            submittedAt = olderApplicationLaterStatusUpdate.submittedAt!!,
+            offerDeclinedReason = null,
+            cancelledReason = null,
+            markedAsArrivedDateTime = null,
+          ),
+          createdAt = olderApplicationLaterStatusUpdate.createdAt,
+          cohort = olderApplicationLaterStatusUpdate.cohort?.apiType,
+          createdBy = Cas2StaffDto(
+            username = olderApplicationLaterStatusUpdate.createdByUser.username,
+            deliusStaffCode = olderApplicationLaterStatusUpdate.createdByUser.deliusStaffCode,
+            name = olderApplicationLaterStatusUpdate.createdByUser.name,
+            nomisStaffId = olderApplicationLaterStatusUpdate.createdByUser.nomisStaffId,
+            userType = Cas2UserTypeDto.valueOf(olderApplicationLaterStatusUpdate.createdByUser.userType.name),
+          ),
+        )
+
+        val response = webTestClient.get()
+          .uri("/cas2/external/cases/$crn/applications/suitable")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
