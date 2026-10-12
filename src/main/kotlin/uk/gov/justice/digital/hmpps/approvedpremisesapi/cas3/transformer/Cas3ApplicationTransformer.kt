@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -37,13 +38,14 @@ class Cas3ApplicationTransformer(
     val latestBooking = bookings?.firstOrNull()
     val previousBookings = bookings?.drop(1)?.map { transformToPreviousBookingDto(it) }
     val latestAssessment = application.getLatestAssessment()
+    val latestAssessmentStatus = latestAssessment?.deriveAssessmentStatus()
 
     val submittedApplication = if (application.isSubmitted()) {
       Cas3ExternalSubmittedApplicationDto(
         submittedDate = application.submittedAt?.toLocalDate()!!,
         submittedBy = transformToStaffDto(application.createdByUser),
-        assessmentStatus = latestAssessment?.deriveAssessmentStatus(),
-        assessmentRejectionReason = latestAssessment?.referralRejectionReason?.name,
+        assessmentStatus = latestAssessmentStatus,
+        assessmentRejectionReason = if (latestAssessmentStatus == TemporaryAccommodationAssessmentStatus.rejected) latestAssessment.referralRejectionReason?.name else null,
         latestBooking = latestBooking?.let {
           Cas3ExternalLatestBookingDto(
             status = it.status,
