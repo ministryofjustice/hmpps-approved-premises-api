@@ -165,6 +165,123 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get suitable application with historic rejection reason returns ok`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withCrn(crn)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withDecision(AssessmentDecision.ACCEPTED)
+            withReferralRejectionReason(referralRejectionReasonEntityFactory.produceAndPersist { withName("Test Rejection Reason") })
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+            withProbationDeliveryUnit(probationDeliveryUnitFactory.produceAndPersist { withProbationRegion(user.probationRegion) })
+          }
+
+          val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val latestBookingEntity = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+            withCrn(crn)
+            withArrivalDate(LocalDate.now().minusDays(21))
+            withDepartureDate(LocalDate.now().minusDays(14))
+            withStatus(Cas3BookingStatus.cancelled)
+            withCreatedAt(OffsetDateTime.now().minusDays(3))
+          }
+
+          val cancellation = cas3CancellationEntityFactory.produceAndPersist {
+            withBooking(latestBookingEntity)
+            withReason(
+              cancellationReasonEntityFactory
+                .produceAndPersist {
+                  withName("Test Cancellation Reason")
+                },
+            )
+            withDate(LocalDate.now().minusDays(3))
+          }
+
+          val suitableApplication = Cas3ExternalCurrentApplicationDto(
+            id = application.id,
+            applicationStatus = ApplicationStatus.submitted,
+            applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
+            applicationSubmittedBy = Cas3StaffDto(
+              application.createdByUser.name,
+              application.createdByUser.deliusUsername,
+              application.createdByUser.deliusStaffCode,
+            ),
+            applicationRejectedReason = null,
+            assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+            bookingStatus = latestBookingEntity.status,
+            bookingProvisionalOfferSentDate = null,
+            previousBookings = emptyList(),
+            premises = Cas3ExternalLatestBookingPremisesDto(
+              startDate = latestBookingEntity.arrivalDate,
+              endDate = latestBookingEntity.departureDate,
+              name = premises.name,
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+            ),
+            uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
+            submittedApplication = Cas3ExternalSubmittedApplicationDto(
+              submittedDate = application.submittedAt!!.toLocalDate(),
+              submittedBy = Cas3StaffDto(
+                application.createdByUser.name,
+                application.createdByUser.deliusUsername,
+                application.createdByUser.deliusStaffCode,
+              ),
+              assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+              assessmentRejectionReason = null,
+              latestBooking = Cas3ExternalLatestBookingDto(
+                status = Cas3BookingStatus.cancelled,
+                provisionalOfferSentDate = null,
+                premises = Cas3ExternalLatestBookingPremisesDto(
+                  startDate = latestBookingEntity.arrivalDate,
+                  endDate = latestBookingEntity.departureDate,
+                  name = premises.name,
+                  addressLine1 = premises.addressLine1,
+                  addressLine2 = premises.addressLine2,
+                  town = premises.town,
+                  postcode = premises.postcode,
+                ),
+                cancellation = Cas3ExternalPreviousBookingCancellationDto(
+                  cancellationDate = cancellation.date,
+                  cancellationReason = cancellation.reason.name,
+                ),
+              ),
+              previousBookings = emptyList(),
+            ),
+          )
+
+          val response = webTestClient.get()
+            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody<Cas3ExternalCurrentApplicationDto>()
+            .returnResult()
+            .responseBody
+
+          Assertions.assertThat(response).isEqualTo(suitableApplication)
+        }
+      }
+    }
+
+    @Test
     fun `Get suitable application returns inProgress application when only inProgress exists`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
