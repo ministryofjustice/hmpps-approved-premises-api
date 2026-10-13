@@ -98,7 +98,7 @@ class Cas2ExternalApplicationService(
       statusUpdate.statusUpdateDetails?.first()?.statusDetail(
         statusId = statusUpdate.statusId,
         service = ServiceName.cas2v2,
-      )?.name
+      )?.label
     } else {
       null
     }
@@ -107,7 +107,7 @@ class Cas2ExternalApplicationService(
       statusUpdate.statusUpdateDetails?.first()?.statusDetail(
         statusId = statusUpdate.statusId,
         service = ServiceName.cas2v2,
-      )?.name
+      )?.label
     } else {
       null
     }
