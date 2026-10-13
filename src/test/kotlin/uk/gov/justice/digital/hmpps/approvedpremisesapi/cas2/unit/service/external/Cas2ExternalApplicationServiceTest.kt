@@ -133,7 +133,7 @@ class Cas2ExternalApplicationServiceTest {
         latestAssessmentStatus = Cas2AssessmentStatus.CANCELLED.apiName,
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
-        cancelledReason = Cas2AssessmentStatusDetail.CREATED_IN_ERROR.name,
+        cancelledReason = Cas2AssessmentStatusDetail.CREATED_IN_ERROR.label,
       )
 
       val expected = setUpExpectedApplication(
@@ -157,7 +157,7 @@ class Cas2ExternalApplicationServiceTest {
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
         latestAssessmentStatus = Cas2AssessmentStatus.OFFER_DECLINED.apiName,
         submittedAt = cas2applicationEntity.submittedAt!!,
-        offerDeclinedReason = Cas2AssessmentStatusDetail.AREA_UNSUITABLE.name,
+        offerDeclinedReason = Cas2AssessmentStatusDetail.AREA_UNSUITABLE.label,
         cancelledReason = null,
       )
 
