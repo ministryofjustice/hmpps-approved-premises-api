@@ -12,6 +12,7 @@ class Cas1ApplicationV2ReportRepository(
 
     fun applicationsDataSetQuery(
       selectAdditions: String = "DISTINCT ON (application.submitted_at, application.id)",
+      joinFilter: String = "",
       whereAdditions: String = "",
     ) = """
 SELECT $selectAdditions
@@ -86,7 +87,7 @@ SELECT $selectAdditions
   
 
 FROM approved_premises_applications apa
-
+$joinFilter
 INNER JOIN applications application on application.id = apa.id
 
 INNER JOIN domain_events submission_event on submission_event.type = 'APPROVED_PREMISES_APPLICATION_SUBMITTED' 
