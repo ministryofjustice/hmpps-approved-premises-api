@@ -53,5 +53,15 @@ data class PlacementApplicationPlaceholderEntity(
 
   val submittedAt: OffsetDateTime,
   val expectedArrivalDate: OffsetDateTime,
+  /**
+   * placeholders are archived once an actual corresponding placement_applications entry has been
+   * created (i.e. on corresponding application acceptance)
+   *
+   * for older placeholders a corresponding placement application was never created, and as such
+   * this placeholder was not archived
+   *
+   * For more information see documentation on this class, which discusses how to fix this
+   * confusing data model using a backfill
+   */
   var archived: Boolean = false,
 )
