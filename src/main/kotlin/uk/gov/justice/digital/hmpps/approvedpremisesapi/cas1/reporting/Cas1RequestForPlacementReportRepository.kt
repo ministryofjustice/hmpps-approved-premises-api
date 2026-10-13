@@ -27,7 +27,7 @@ class Cas1RequestForPlacementReportRepository(
   ): String {
     val s = """
   WITH raw_applications_report AS (
-      ${Cas1ApplicationV2ReportRepository.COMPLETE_DATASET_QUERY}
+      ${Cas1ApplicationV2ReportRepository.applicationsDataSetQuery()}
   )
   
   SELECT 
