@@ -86,6 +86,18 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
     nativeQuery = true,
   )
   fun findPreviouslyAssignedApplicationsInDifferentPrisonToUser(userId: UUID, userPrisonCode: String, serviceOrigin: String): List<UUID>
+
+  @Query(
+    """
+      select * from cas_2_applications
+      where created_at >= :createdAfter
+      and application_origin = 'other'
+      and document is not null
+      and data -> 'risks-of-serious-harm-to-others' -> 'manual-rosh-information' is not null;
+    """,
+    nativeQuery = true,
+  )
+  fun findAllSubmittedWithManualRoshInformation(createdAfter: OffsetDateTime): List<Cas2ApplicationEntity>
 }
 
 @Repository
