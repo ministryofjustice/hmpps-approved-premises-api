@@ -18,11 +18,10 @@ Standard AP,G,Male,IPP,Any,Cannot be calculated
 Standard AP,A,Female,Any,Any,16 weeks
 Standard AP,B,Female,Any,Any,16 weeks
 Standard AP,C,Female,Any,Any,16 weeks
-Standard AP,D,Female,Any,TRUE,16 weeks
+Standard AP,D,Female,Any,Any,16 weeks
 Standard AP,E,Female,Any,TRUE,16 weeks
 Standard AP,F,Female,Any,TRUE,16 weeks
 Standard AP,G,Female,Any,TRUE,16 weeks
-Standard AP,D,Female,Any,FALSE,Cannot be calculated
 Standard AP,E,Female,Any,FALSE,Cannot be calculated
 Standard AP,F,Female,Any,FALSE,Cannot be calculated
 Standard AP,G,Female,Any,FALSE,Cannot be calculated
@@ -44,11 +43,10 @@ PIPE AP,G,Male,IPP,Any,Cannot be calculated
 PIPE AP,A,Female,Any,Any,26 weeks
 PIPE AP,B,Female,Any,Any,26 weeks
 PIPE AP,C,Female,Any,Any,26 weeks
-PIPE AP,D,Female,Any,TRUE,26 weeks
+PIPE AP,D,Female,Any,Any,26 weeks
 PIPE AP,E,Female,Any,TRUE,26 weeks
 PIPE AP,F,Female,Any,TRUE,26 weeks
 PIPE AP,G,Female,Any,TRUE,26 weeks
-PIPE AP,D,Female,Any,FALSE,Cannot be calculated
 PIPE AP,E,Female,Any,FALSE,Cannot be calculated
 PIPE AP,F,Female,Any,FALSE,Cannot be calculated
 PIPE AP,G,Female,Any,FALSE ,Cannot be calculated
@@ -70,11 +68,10 @@ ESAP AP ,G,Male,IPP,Any,Cannot be calculated
 ESAP AP ,A,Female,Any,Any,Max 52 weeks
 ESAP AP ,B,Female,Any,Any,Max 52 weeks
 ESAP AP ,C,Female,Any,Any,Max 52 weeks
-ESAP AP ,D,Female,Any,TRUE,Max 52 weeks
+ESAP AP ,D,Female,Any,Any,Max 52 weeks
 ESAP AP ,E,Female,Any,TRUE,Max 52 weeks
 ESAP AP ,F,Female,Any,TRUE,Max 52 weeks
 ESAP AP ,G,Female,Any,TRUE,Max 52 weeks
-ESAP AP ,D,Female,Any,FALSE ,Cannot be calculated
 ESAP AP ,E,Female,Any,FALSE ,Cannot be calculated
 ESAP AP ,F,Female,Any,FALSE ,Cannot be calculated
 ESAP AP ,G,Female,Any,FALSE ,Cannot be calculated
@@ -96,11 +93,10 @@ RFAP AP,G,Male,IPP,Any,Cannot be calculated
 RFAP AP,A,Female,Any,Any,16 weeks
 RFAP AP,B,Female,Any,Any,16 weeks
 RFAP AP,C,Female,Any,Any,16 weeks
-RFAP AP,D,Female,Any,TRUE,16 weeks
+RFAP AP,D,Female,Any,Any,16 weeks
 RFAP AP,E,Female,Any,TRUE,16 weeks
 RFAP AP,F,Female,Any,TRUE,16 weeks
 RFAP AP,G,Female,Any,TRUE,16 weeks
-RFAP AP,D,Female,Any,FALSE ,Cannot be calculated
 RFAP AP,E,Female,Any,FALSE ,Cannot be calculated
 RFAP AP,F,Female,Any,FALSE ,Cannot be calculated
 RFAP AP,G,Female,Any,FALSE ,Cannot be calculated

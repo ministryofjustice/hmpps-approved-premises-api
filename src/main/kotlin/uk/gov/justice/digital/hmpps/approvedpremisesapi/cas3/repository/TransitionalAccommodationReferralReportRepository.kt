@@ -27,6 +27,7 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Cas3
       taa.duty_to_refer_submission_date AS dateDutyToReferMade,
       taa.duty_to_refer_local_authority_area_name AS dutyToReferLocalAuthorityAreaName,
       taa.duty_to_refer_outcome AS dutyToReferOutcome,
+      taa.risk_ratings  -> 'tier' -> 'value' ->> 'level' as tierOnApplicationCreation,
       probation_region.name AS probationRegionName,
       a.decision AS assessmentDecision,
       rrr.name AS referralRejectionReason,
@@ -94,6 +95,7 @@ interface TransitionalAccommodationReferralReportData {
   val pduName: String?
   val dutyToReferLocalAuthorityAreaName: String?
   val dutyToReferOutcome: String?
+  val tierOnApplicationCreation: String?
   val assessmentDecision: String?
   val referralRejectionReason: String?
   val referralRejectionReasonDetail: String?

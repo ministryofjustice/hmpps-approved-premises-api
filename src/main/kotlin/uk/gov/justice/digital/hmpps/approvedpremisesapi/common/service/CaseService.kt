@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.CaseTiers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.BackfillCasesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.RefreshCasesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
  *
  * The tier values for a case are kept up-to-date by listening for tier update events
  *
- * The [BackfillCasesJob] migration job was used to seed this table originally, and can be
+ * The [RefreshCasesJob] migration job was used to seed this table originally, and can be
  * used if for some reason there are entries missing from this table (e.g. new CRNs were
  * introduced without a call to [ensureCaseExists])
  */

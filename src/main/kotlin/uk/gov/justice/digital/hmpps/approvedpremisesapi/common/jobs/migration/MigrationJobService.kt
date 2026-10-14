@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillPlacementApplicationDecisionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillPlacementApplicationWithdrawalOccurredAt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillPlacementRequestWithdrawalOccurredAt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1CapacityPerformanceTestJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1TaskDueMigrationJob
@@ -59,13 +60,14 @@ class MigrationJobService(
         MigrationJobType.cas3FixWalesHptPremises -> getBean(Cas3FixWalesHptPremises::class)
         MigrationJobType.cas1BackfillPlacementApplicationDecisionSummary -> getBean(Cas1BackfillPlacementApplicationDecisionSummary::class)
         MigrationJobType.cas1BackfillPlacementApplicationWithdrawalOccurredAt -> getBean(Cas1BackfillPlacementApplicationWithdrawalOccurredAt::class)
+        MigrationJobType.cas1BackfillPlacementRequestWithdrawalOccurredAt -> getBean(Cas1BackfillPlacementRequestWithdrawalOccurredAt::class)
         MigrationJobType.cas1BackfillAutomaticPlacementApplications -> getBean(Cas1BackfillAutomaticPlacementApplicationsJob::class)
         MigrationJobType.cas1CapacityPerformanceTest -> getBean(Cas1CapacityPerformanceTestJob::class)
         MigrationJobType.updateCas3DomainEventArchiveUnarchiveTransaction -> getBean(Cas3UpdateArchiveUnarchiveDomainEventTransactionJob::class)
         MigrationJobType.updateCas3ArchiveUnarchiveDomainEventDetails -> getBean(Cas3UpdateArchiveUnarchiveDomainEventDetailsJob::class)
         MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedspaceStartDateJob::class)
         MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2HdcBackfillApplicationCohortJob::class)
-        MigrationJobType.backfillCases -> getBean(BackfillCasesJob::class)
+        MigrationJobType.refreshCases -> getBean(RefreshCasesJob::class)
         MigrationJobType.replayFailedInboxEvents -> getBean(ReplayFailedInboxEventsMigrationJob::class)
       }
 

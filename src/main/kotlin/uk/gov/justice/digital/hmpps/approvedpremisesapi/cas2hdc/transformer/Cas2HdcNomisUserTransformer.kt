@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.NomisUserEntity
 
 @Component
 class Cas2HdcNomisUserTransformer {
@@ -15,14 +14,6 @@ class Cas2HdcNomisUserTransformer {
     nomisUsername = jpa.createdByUser.username,
     isActive = jpa.createdByUser.isActive,
     email = jpa.createdByUser.email,
-  )
-
-  fun transformJpaToApi(nomisUserEntity: NomisUserEntity): NomisUser = NomisUser(
-    id = nomisUserEntity.id,
-    nomisUsername = nomisUserEntity.nomisUsername,
-    name = nomisUserEntity.name,
-    email = nomisUserEntity.email,
-    isActive = nomisUserEntity.isActive,
   )
 
   // BAIL-WIP overload so the transformer will take both entity types and still return the badly named nomis user

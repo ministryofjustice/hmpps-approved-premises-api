@@ -75,7 +75,7 @@ class PlacementRequestDetailTransformer(
     } else {
       Cas1RequestedPlacementPeriod(
         arrival = placementApplication!!.expectedArrival!!,
-        duration = placementApplication.requestedDuration!!,
+        duration = placementApplication.requestedDuration,
         arrivalFlexible = placementApplication.expectedArrivalFlexible,
       )
     }

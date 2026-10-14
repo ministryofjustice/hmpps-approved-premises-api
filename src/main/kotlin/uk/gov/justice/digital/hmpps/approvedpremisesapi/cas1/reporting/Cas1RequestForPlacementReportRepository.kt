@@ -26,11 +26,8 @@ class Cas1RequestForPlacementReportRepository(
     placementApplicationsRangeConstraints: String,
   ): String {
     val s = """
-  WITH raw_applications_report AS (
-      ${Cas1ApplicationV2ReportRepository.COMPLETE_DATASET_QUERY}
-  )
-  
-  SELECT 
+  WITH rfps AS (
+   SELECT 
     pr.id AS internal_placement_request_id,
     pap.id AS request_for_placement_id, 
     'STANDARD' AS request_for_placement_type,
@@ -55,20 +52,19 @@ class Cas1RequestForPlacementReportRepository(
       WHEN apa.release_type = 'inCommunity' THEN apa.situation
       ELSE apa.release_type
     END AS placement_release_type,
-    raw_applications_report.*
-    
-  FROM placement_applications_placeholder pap
+    apa.id as internal_application_id
+    FROM placement_applications_placeholder pap
   
     INNER JOIN approved_premises_applications apa ON apa.id = pap.application_id 
-    INNER JOIN raw_applications_report ON raw_applications_report.application_id = pap.application_id
     INNER JOIN applications a ON a.id = apa.id
-    LEFT OUTER JOIN LATERAL (
-      SELECT assessments.*
+    LEFT JOIN (
+      SELECT DISTINCT ON (application_id)
+             *
       FROM assessments
-      WHERE application_id = a.id AND reallocated_at IS NULL
-      ORDER BY created_at DESC
-      LIMIT 1
-    ) latest_assessment on TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+      WHERE reallocated_at IS NULL
+      ORDER BY application_id, created_at DESC
+    ) latest_assessment ON latest_assessment.application_id = a.id
+    
     LEFT OUTER JOIN placement_requests pr ON pr.application_id = a.id AND 
                     pr.reallocated_at IS NULL AND 
                     pr.placement_application_id IS NULL
@@ -80,64 +76,63 @@ class Cas1RequestForPlacementReportRepository(
                     pr_withdrawn_event.type = 'APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN' AND 
                     cast(pr_withdrawn_event.data -> 'eventDetails' ->> 'matchRequestId' AS uuid) = pr.id
                     
-  WHERE 
-    pap.archived is FALSE AND
-    apa.arrival_date IS NOT NULL
-    AND
-    ($placementRequestsRangeConstraints)
+    WHERE 
+      pap.archived is FALSE AND
+      apa.arrival_date IS NOT NULL
+      AND
+      ($placementRequestsRangeConstraints)
        
-UNION ALL
+  UNION ALL
        
-  SELECT 
-    pr.id AS internal_placement_request_id,
-    pa.id AS request_for_placement_id,
-    CASE
-      WHEN pa.placement_type = '0' THEN 'ROTL'
-      WHEN pa.placement_type = '1' THEN 'RELEASE_FOLLOWING_DECISION'
-      WHEN pa.placement_type = '2' THEN 'ADDITIONAL_PLACEMENT'
-      WHEN pa.placement_type = '3' THEN 'STANDARD'
-      ELSE ''
-    END AS request_for_placement_type, 
-    to_char(pa.expected_arrival, 'YYYY-MM-DD') AS requested_arrival_date,
-    pa.requested_duration AS requested_duration,
-    to_char(CAST(pa.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
-    to_char(CAST(pa.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as timestamp), 'YYYY-MM-DD') AS parole_decision_date,
-    to_char(CAST(pa.allocated_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_last_allocated_to_assessor_date,
-    pa.decision AS request_for_placement_decision,
-    pa.authorised_duration AS authorised_duration,
-    to_char(CAST(pa.decision_made_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_decision_made_date,
-    to_char(withdrawn_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_withdrawal_date,
-    pa.withdrawal_reason AS request_for_placement_withdrawal_reason,
-    pa.sentence_type AS apa_sentence_type,
-    CASE
-      WHEN pa.release_type = 'inCommunity' THEN pa.situation
-      ELSE pa.release_type
-    END AS placement_release_type,
-    raw_applications_report.*
+    SELECT 
+      pr.id AS internal_placement_request_id,
+      pa.id AS request_for_placement_id,
+      CASE
+        WHEN pa.placement_type = '0' THEN 'ROTL'
+        WHEN pa.placement_type = '1' THEN 'RELEASE_FOLLOWING_DECISION'
+        WHEN pa.placement_type = '2' THEN 'ADDITIONAL_PLACEMENT'
+        WHEN pa.placement_type = '3' THEN 'STANDARD'
+        ELSE ''
+      END AS request_for_placement_type, 
+      to_char(pa.expected_arrival, 'YYYY-MM-DD') AS requested_arrival_date,
+      pa.requested_duration AS requested_duration,
+      to_char(CAST(pa.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
+      to_char(CAST(pa.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as timestamp), 'YYYY-MM-DD') AS parole_decision_date,
+      to_char(CAST(pa.allocated_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_last_allocated_to_assessor_date,
+      pa.decision AS request_for_placement_decision,
+      pa.authorised_duration AS authorised_duration,
+      to_char(CAST(pa.decision_made_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_decision_made_date,
+      to_char(pa.withdrawal_occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_withdrawal_date,
+      pa.withdrawal_reason AS request_for_placement_withdrawal_reason,
+      pa.sentence_type AS apa_sentence_type,
+      CASE
+        WHEN pa.release_type = 'inCommunity' THEN pa.situation
+        ELSE pa.release_type
+      END AS placement_release_type,
+      apa.id as internal_application_id
+    FROM
     
-  FROM
-  
-    placement_applications pa
-    INNER JOIN raw_applications_report ON raw_applications_report.application_id = pa.application_id
-    INNER JOIN approved_premises_applications apa ON pa.application_id = apa.id
-    LEFT OUTER JOIN placement_requests pr ON pr.placement_application_id = pa.id AND pr.reallocated_at IS NULL
-    LEFT OUTER JOIN LATERAL (
-      SELECT d.occurred_at,
-             m.value as placement_application_id
-      FROM domain_events d
-      INNER JOIN domain_events_metadata m ON m.domain_event_id = d.id AND m.name = 'CAS1_PLACEMENT_APPLICATION_ID'
-      WHERE
-        d.application_id = pa.application_id AND
-      	d.type = 'APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN' 
-      	AND m.value = CAST(pa.id as text)
-      LIMIT 1
-    ) withdrawn_event ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
-    
-  WHERE
-    pa.submitted_at IS NOT NULL AND
-    pa.reallocated_at IS NULL AND
-    ($placementApplicationsRangeConstraints)
-    ORDER BY request_for_placement_submitted_date,request_for_placement_id ASC     
+      placement_applications pa
+      INNER JOIN approved_premises_applications apa ON pa.application_id = apa.id
+      LEFT OUTER JOIN placement_requests pr ON pr.placement_application_id = pa.id AND pr.reallocated_at IS NULL
+
+    WHERE
+      pa.submitted_at IS NOT NULL AND
+      pa.reallocated_at IS NULL AND
+      ($placementApplicationsRangeConstraints)
+  )
+  ${Cas1ApplicationV2ReportRepository.applicationsDataSetQuery(
+      selectAdditions = """
+      DISTINCT ON (request_for_placement_submitted_date,request_for_placement_id,application.id)
+      rfps.*,
+      """.trimIndent(),
+      joinFilter = """
+      INNER JOIN rfps on rfps.internal_application_id = apa.id
+      """.trimIndent(),
+      whereAdditions = """
+      ORDER BY request_for_placement_submitted_date,request_for_placement_id,application.id ASC  
+      """.trimIndent(),
+    )}     
 """
     return s
   }
@@ -149,7 +144,7 @@ UNION ALL
     """.trimIndent(),
     placementApplicationsRangeConstraints = """
       (pa.submitted_at >= :startDateTimeInclusive AND pa.submitted_at <= :endDateTimeInclusive) OR
-      (withdrawn_event.occurred_at >= :startDateTimeInclusive AND withdrawn_event.occurred_at <= :endDateTimeInclusive)
+      (pa.withdrawal_occurred_at >= :startDateTimeInclusive AND pa.withdrawal_occurred_at <= :endDateTimeInclusive)
     """.trimIndent(),
   ) + ";"
 

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
@@ -204,20 +205,18 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     private fun returnsCas2v2UnexpiredApplications(userEntity: Cas2UserEntity, jwt: String) {
       val unexpiredSubset = setOf(
-        "moreInfoRequested",
-        "awaitingDecision",
-        "onWaitingList",
-        "placeOffered",
-        "offerAccepted",
-        "noPlaceOffered",
-        "incomplete",
-        "offerDeclined",
+        Cas2AssessmentStatus.MORE_INFO_REQUESTED,
+        Cas2AssessmentStatus.AWAITING_DECISION,
+        Cas2AssessmentStatus.ON_WAITING_LIST,
+        Cas2AssessmentStatus.PLACE_OFFERED,
+        Cas2AssessmentStatus.OFFER_DECLINED,
+        Cas2AssessmentStatus.OFFER_ACCEPTED,
       )
 
       val expiredSubset = setOf(
-        "withdrawn",
-        "cancelled",
-        "awaitingArrival",
+        Cas2AssessmentStatus.WITHDRAWN,
+        Cas2AssessmentStatus.CANCELLED,
+        Cas2AssessmentStatus.AWAITING_ARRIVAL,
       )
 
       fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore(32)
@@ -241,7 +240,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val application = givenASubmittedCas2Application(
             createdBy = userEntity,
             crn = offenderDetails.otherIds.crn,
-            latestStatusName = statusName,
+            latestStatus = statusName,
             latestStatusSet = unexpiredDateTime(),
           )
           unexpiredApplicationIds.add(application.id)
@@ -251,7 +250,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val application = givenASubmittedCas2Application(
             createdBy = userEntity,
             crn = offenderDetails.otherIds.crn,
-            latestStatusName = statusName,
+            latestStatus = statusName,
             latestStatusSet = unexpiredDateTime(),
           )
           unexpiredApplicationIds.add(application.id)
@@ -261,7 +260,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val application = givenASubmittedCas2Application(
             createdBy = userEntity,
             crn = offenderDetails.otherIds.crn,
-            latestStatusName = statusName,
+            latestStatus = statusName,
             latestStatusSet = expiredDateTime(),
           )
           expiredApplicationIds.add(application.id)

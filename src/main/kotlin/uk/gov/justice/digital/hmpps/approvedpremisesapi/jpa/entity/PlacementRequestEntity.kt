@@ -177,6 +177,18 @@ data class PlacementRequestEntity(
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementRequestWithdrawalReason?,
 
+  /**
+   * Populated for all records as of 10/26.
+   *
+   * Before then only populated where isForLegacyInitialRequestForPlacement() is true (backfilled from
+   * APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN domain events).
+   *
+   * If required for older records where isForLegacyInitialRequestForPlacement() is false, can backfill
+   * from the linked [placementApplication.withdrawalOccurredAt], as the withdrawal would have
+   * cascaded to the placement requests
+   */
+  var withdrawalOccurredAt: OffsetDateTime? = null,
+
   @Version
   var version: Long = 1,
 ) {

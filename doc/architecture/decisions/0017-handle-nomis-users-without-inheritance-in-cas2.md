@@ -4,7 +4,9 @@ Date: 2023-09-13
 
 ## Status
 
-Accepted
+Superseded
+
+The decision on this ADR has been superseded and CAS2 users are now completely managed by the Cas2UserEntity with no inheritance
 
 ## Context
 

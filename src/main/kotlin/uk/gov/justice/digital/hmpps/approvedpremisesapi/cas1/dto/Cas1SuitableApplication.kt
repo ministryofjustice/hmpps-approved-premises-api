@@ -56,6 +56,7 @@ data class Cas1ExternalPlacementDto(
   val status: Cas1SpaceBookingStatus?,
   val actualArrivalDate: LocalDate?,
   val actualDepartureDate: LocalDate?,
+  val expectedDepartureDate: LocalDate?,
   val cancellationReason: String?,
   val premises: Cas1ExternalPremisesDto?,
 )

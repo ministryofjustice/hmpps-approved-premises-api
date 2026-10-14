@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
 @Component
@@ -14,12 +14,12 @@ class Cas1PlacementRequestSummaryTransformer(
 
   fun transformCas1PlacementRequestSummaryJpaToApi(
     jpa: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary,
-    personInfo: PersonInfoResult,
+    personSummaryInfo: PersonSummaryInfoResult,
   ): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
     requestedPlacementDuration = jpa.getRequestedPlacementDuration(),
     requestedPlacementArrivalDate = jpa.getRequestedPlacementArrivalDate(),
     id = jpa.getId(),
-    person = personTransformer.personInfoResultToPerson(personInfo),
+    person = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
     placementRequestStatus = jpa.getPlacementRequestStatus(),
     isParole = jpa.getIsParole(),
     personTier = jpa.getTierOnApplicationCreation(),

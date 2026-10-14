@@ -10,8 +10,12 @@ class Cas1ApplicationV2ReportRepository(
 
   companion object {
 
-    const val COMPLETE_DATASET_QUERY = """
-SELECT DISTINCT ON (application.submitted_at, application.id)
+    fun applicationsDataSetQuery(
+      selectAdditions: String = "DISTINCT ON (application.submitted_at, application.id)",
+      joinFilter: String = "",
+      whereAdditions: String = "",
+    ) = """
+SELECT $selectAdditions
   application.id AS application_id,
   submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS crn,
   submission_event.data -> 'eventDetails' -> 'personReference' ->> 'noms' AS noms,
@@ -83,7 +87,7 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   
 
 FROM approved_premises_applications apa
-
+$joinFilter
 INNER JOIN applications application on application.id = apa.id
 
 INNER JOIN domain_events submission_event on submission_event.type = 'APPROVED_PREMISES_APPLICATION_SUBMITTED' 
@@ -98,13 +102,13 @@ LEFT OUTER JOIN domain_events_metadata reason_for_short_notice_other_metadata ON
 LEFT JOIN domain_events withdrawal_event on withdrawal_event.type = 'APPROVED_PREMISES_APPLICATION_WITHDRAWN'
   AND application.id = withdrawal_event.application_id
  
-LEFT OUTER JOIN LATERAL (
-  SELECT assessments.*
+LEFT JOIN (
+  SELECT DISTINCT ON (application_id)
+         *
   FROM assessments
-  WHERE reallocated_at IS NULL AND application_id = application.id
-  ORDER BY created_at ASC
-  LIMIT 1
-) initial_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+  WHERE reallocated_at IS NULL
+  ORDER BY application_id, created_at ASC
+) initial_assessment ON initial_assessment.application_id = application.id
 LEFT OUTER JOIN approved_premises_assessments initial_ap_assessment ON initial_ap_assessment.assessment_id = initial_assessment.id
 
 LEFT JOIN users initial_assessor ON initial_assessor.id = initial_assessment.allocated_to_user_id
@@ -116,29 +120,30 @@ LEFT JOIN domain_events AS initial_assessment_event ON
 LEFT JOIN domain_events_metadata initial_assessment_ap_type_metadata on initial_assessment_ap_type_metadata.domain_event_id = initial_assessment_event.id 
   AND initial_assessment_ap_type_metadata.name = 'CAS1_REQUESTED_AP_TYPE' 
  
-LEFT OUTER JOIN LATERAL (
-  SELECT assessment_clarification_notes.*
+LEFT JOIN (
+  SELECT DISTINCT ON (assessment_id)
+         *
   FROM assessment_clarification_notes
-  WHERE assessment_id = initial_assessment.id
-  ORDER BY created_at ASC
-  LIMIT 1
-) initial_assessment_clarification_notes ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+  ORDER BY assessment_id, created_at ASC
+) initial_assessment_clarification_notes ON initial_assessment_clarification_notes.assessment_id = initial_assessment.id
 
-LEFT OUTER JOIN LATERAL (
-  SELECT appeals.*
+LEFT JOIN (
+  SELECT DISTINCT ON (application_id)
+         *
   FROM appeals
-  WHERE application_id = application.id
-  ORDER BY created_at DESC
-  LIMIT 1
-) latest_appeal ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+  ORDER BY application_id, created_at DESC
+) latest_appeal ON latest_appeal.application_id = application.id
 
-LEFT OUTER JOIN LATERAL (
-  SELECT assess.*
-  FROM assessments assess INNER JOIN approved_premises_assessments apa_assess ON assess.id = apa_assess.assessment_id
-  WHERE assess.application_id = application.id AND assess.reallocated_at IS NULL AND apa_assess.created_from_appeal is TRUE
-  ORDER by assess.created_at DESC
-  LIMIT 1
-) latest_appeal_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+LEFT JOIN (
+  SELECT DISTINCT ON (assess.application_id)
+         assess.*
+  FROM assessments assess
+  INNER JOIN approved_premises_assessments apa_assess
+    ON apa_assess.assessment_id = assess.id
+  WHERE assess.reallocated_at IS NULL
+    AND apa_assess.created_from_appeal IS TRUE
+  ORDER BY assess.application_id, assess.created_at DESC
+) latest_appeal_assessment ON latest_appeal_assessment.application_id = application.id
 
 
 LEFT JOIN domain_events as latest_appeal_assessment_event ON 
@@ -151,18 +156,8 @@ LEFT JOIN users as latest_appeal_assessment_assessor on latest_appeal_assessment
 LEFT JOIN ap_areas as ap_area on ap_area.id = apa.ap_area_id
 
 WHERE application.submitted_at IS NOT NULL
+$whereAdditions
     """
-
-    const val QUERY =
-      """
-$COMPLETE_DATASET_QUERY
-AND (
-  (application.submitted_at >= :startDateTimeInclusive AND application.submitted_at <= :endDateTimeInclusive) OR
-  (withdrawal_event.occurred_at >= :startDateTimeInclusive AND withdrawal_event.occurred_at <= :endDateTimeInclusive)
-)
-ORDER BY application.submitted_at ASC, application.id ASC 
-;
-"""
   }
 
   fun generateForSubmissionOrWithdrawalDate(
@@ -170,7 +165,15 @@ ORDER BY application.submitted_at ASC, application.id ASC
     endDateTimeInclusive: LocalDateTime,
     jbdcResultSetConsumer: JdbcResultSetConsumer,
   ) = reportJdbcTemplate.query(
-    QUERY,
+    applicationsDataSetQuery(
+      whereAdditions = """
+    AND (
+      (application.submitted_at >= :startDateTimeInclusive AND application.submitted_at <= :endDateTimeInclusive) OR
+      (withdrawal_event.occurred_at >= :startDateTimeInclusive AND withdrawal_event.occurred_at <= :endDateTimeInclusive)
+    )
+    ORDER BY application.submitted_at ASC, application.id ASC 
+      """.trimIndent(),
+    ),
     mapOf<String, Any>(
       "startDateTimeInclusive" to startDateTimeInclusive,
       "endDateTimeInclusive" to endDateTimeInclusive,

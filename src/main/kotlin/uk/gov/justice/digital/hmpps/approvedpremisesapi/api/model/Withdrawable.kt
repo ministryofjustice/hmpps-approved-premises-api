@@ -1,14 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawableDatePeriodDto
+import java.util.UUID
 
 data class Withdrawable(
-
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
-
-  @get:JsonProperty("type", required = true) val type: WithdrawableType,
-
-  @Schema(example = "null", required = true, description = "0, 1 or more dates can be specified depending upon the WithdrawableType")
-  @get:JsonProperty("dates", required = true) val dates: List<DatePeriod>,
+  val id: UUID,
+  val type: WithdrawableType,
+  @Schema(description = "0, 1 or more dates can be specified depending upon the WithdrawableType")
+  val dates: List<Cas1WithdrawableDatePeriodDto>,
 )

@@ -174,6 +174,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                   postcode = premises.postcode,
                 ),
                 status = Cas1SpaceBookingStatus.UPCOMING,
+                expectedDepartureDate = booking.expectedDepartureDate,
               ),
               placementHistory = emptyList(),
             )
@@ -469,6 +470,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                   town = premises.town,
                   postcode = premises.postcode,
                 ),
+                expectedDepartureDate = booking.expectedDepartureDate,
               ),
               placementHistory = emptyList(),
             )
@@ -599,6 +601,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                   postcode = premises.postcode,
                 ),
                 status = Cas1SpaceBookingStatus.UPCOMING,
+                expectedDepartureDate = booking.expectedDepartureDate,
               ),
               placementHistory = emptyList(),
             )
@@ -627,7 +630,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
-          .isNotFound
+          .isNoContent
       }
     }
   }
@@ -781,7 +784,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               .header("Authorization", "Bearer $clientCredentialsJwt")
               .exchange()
               .expectStatus()
-              .isNotFound()
+              .isNoContent()
           }
         }
       }
@@ -795,7 +798,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
-          .isNotFound
+          .isNoContent
       }
     }
   }

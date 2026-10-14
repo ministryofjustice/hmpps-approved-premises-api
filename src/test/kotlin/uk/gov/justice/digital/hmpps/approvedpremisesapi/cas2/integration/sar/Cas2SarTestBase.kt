@@ -32,7 +32,7 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
-      "created_by_user": "${applicationNotes.createdByUser.name}",
+      "created_by_user": "${applicationNotes.createdByUser.username}",
       "body": "${applicationNotes.body}"
   }
   """.trimIndent()
@@ -48,7 +48,7 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
   protected fun cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
 {
   "document": ${application.document},
-  "created_by_user": "${application.createdByUser.name}",
+  "created_by_user": "${application.createdByUser.username}",
   "created_at": "$CREATED_AT",
   "submitted_at": "$SUBMITTED_AT",
   "referring_prison_code": "${application.referringPrisonCode}",
@@ -126,10 +126,11 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
   protected fun cas2NomisUserEntity(
     serviceOrigin: Cas2ServiceOrigin = Cas2ServiceOrigin.HDC,
     name: String = randomStringMultiCaseWithNumbers(12),
+    username: String = TEST_CREATED_BY_USER_NAME,
   ) = cas2UserEntityFactory.produceAndPersist {
     withName(name)
     withEmail(randomEmailAddress())
-    withUsername(TEST_CREATED_BY_USER_NAME)
+    withUsername(username)
     withActiveNomisCaseloadId(randomStringMultiCaseWithNumbers(3))
     withNomisStaffCode(9L)
     withNomisStaffIdentifier(90L)

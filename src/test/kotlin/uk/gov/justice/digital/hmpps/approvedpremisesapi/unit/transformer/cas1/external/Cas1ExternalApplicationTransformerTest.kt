@@ -116,6 +116,7 @@ class Cas1ExternalApplicationTransformerTest {
           cancellationReason = "Other",
           premises = premises,
           status = Cas1SpaceBookingStatus.CANCELLED,
+          expectedDepartureDate = LocalDate.now().plusDays(2),
         ),
         dateApplied = LocalDate.now(),
       )
@@ -282,6 +283,7 @@ class Cas1ExternalApplicationTransformerTest {
           cancellationReason = placement.cancellation?.reason?.name,
           status = placement.status,
           premises = premises,
+          expectedDepartureDate = placement.expectedDepartureDate,
         ),
         dateApplied = placement.statusSetDate!!,
       )
@@ -369,6 +371,7 @@ class Cas1ExternalApplicationTransformerTest {
           cancellationReason = placement.cancellation?.reason?.name,
           status = placement.status,
           premises = premises,
+          expectedDepartureDate = placement.expectedDepartureDate,
         ),
         dateApplied = placement.statusSetDate!!,
       )
@@ -468,6 +471,7 @@ class Cas1ExternalApplicationTransformerTest {
           cancellationReason = placement.cancellation?.reason?.name,
           status = placement.status,
           premises = premises,
+          expectedDepartureDate = placement.expectedDepartureDate,
         ),
         dateApplied = placement.statusSetDate!!,
       )
@@ -566,6 +570,7 @@ class Cas1ExternalApplicationTransformerTest {
           actualDepartureDate = placement.actualDepartureDate,
           cancellationReason = placement.cancellation?.reasonNotes,
           premises = premises,
+          expectedDepartureDate = placement.expectedDepartureDate,
         ),
         dateApplied = placement.statusSetDate!!,
       )

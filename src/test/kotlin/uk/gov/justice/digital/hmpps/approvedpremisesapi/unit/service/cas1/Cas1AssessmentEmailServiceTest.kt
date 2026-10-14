@@ -13,8 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.DEFAULT_DEADLINE_COPY
@@ -38,7 +36,6 @@ class Cas1AssessmentEmailServiceTest {
 
   private val mockEmailNotificationService = MockCas1EmailNotificationService()
   private val mockWorkingDayService = mockk<WorkingDayService>()
-  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
   private val applicationSubmittedAt = OffsetDateTime.parse("2026-08-17T09:30:00Z")
   private val expectedTimeApplicationReceived = "09:30"
@@ -51,14 +48,12 @@ class Cas1AssessmentEmailServiceTest {
     applicationUrlTemplate = UrlTemplate("http://frontend/application/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/application/#applicationId?tab=timeline"),
     workingDayService = mockWorkingDayService,
-    featureFlagService = mockFeatureFlagService,
     cas2Url = cas2Url,
   )
 
   @BeforeEach
   fun beforeEach() {
     mockEmailNotificationService.reset()
-    every { mockFeatureFlagService.getBooleanFlag(FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES) } returns false
   }
 
   @Nested
@@ -159,9 +154,7 @@ class Cas1AssessmentEmailServiceTest {
     }
 
     @Test
-    fun `assessmentRejected sends the alternative accommodation email when flag enabled and reason is applicable`() {
-      every { mockFeatureFlagService.getBooleanFlag(FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES) } returns true
-
+    fun `assessmentRejected sends the alternative accommodation email when reason is applicable`() {
       val application = applicationWithApplicantEmail()
 
       service.assessmentRejected(application, Cas1AssessmentRejectionReasonDto.accommodationNeedOnly)
@@ -183,9 +176,7 @@ class Cas1AssessmentEmailServiceTest {
     }
 
     @Test
-    fun `assessmentRejected sends the regular email when flag enabled but reason is not applicable`() {
-      every { mockFeatureFlagService.getBooleanFlag(FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES) } returns true
-
+    fun `assessmentRejected sends the regular email when reason is not applicable`() {
       val application = applicationWithApplicantEmail()
 
       service.assessmentRejected(application, Cas1AssessmentRejectionReasonDto.riskToCommunity)
@@ -207,36 +198,10 @@ class Cas1AssessmentEmailServiceTest {
     }
 
     @Test
-    fun `assessmentRejected sends the regular email when flag enabled but reason is null`() {
-      every { mockFeatureFlagService.getBooleanFlag(FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES) } returns true
-
+    fun `assessmentRejected sends the regular email when reason is null`() {
       val application = applicationWithApplicantEmail()
 
       service.assessmentRejected(application, null)
-
-      mockEmailNotificationService.assertEmailRequestCount(1)
-      mockEmailNotificationService.assertEmailRequested(
-        APPLICANT_EMAIL,
-        Cas1NotifyTemplates.ASSESSMENT_REJECTED,
-        mapOf(
-          "name" to "The Applicant Name",
-          "applicationUrl" to "http://frontend/application/${application.id}",
-          "crn" to CRN,
-          "timeApplicationReceived" to expectedTimeApplicationReceived,
-          "dateApplicationReceived" to expectedDateApplicationReceived,
-          "cas2Url" to "$cas2Url?referred_by=cas1_app_rejected_email",
-        ),
-        application,
-      )
-    }
-
-    @Test
-    fun `assessmentRejected sends the regular email when reason is applicable but flag disabled`() {
-      every { mockFeatureFlagService.getBooleanFlag(FEATURE_FLAG_ISR_CAS1_EMAIL_CHANGES) } returns false
-
-      val application = applicationWithApplicantEmail()
-
-      service.assessmentRejected(application, Cas1AssessmentRejectionReasonDto.riskCanBeManagedOtherWay)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(

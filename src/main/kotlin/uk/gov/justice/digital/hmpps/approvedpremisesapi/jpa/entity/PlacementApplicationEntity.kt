@@ -25,7 +25,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementApplicationDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -207,11 +207,10 @@ data class PlacementApplicationEntity(
 
   fun isBeingAssessed() = isActive() && decision == null
 
-  @Deprecated("This assumes requestedDuration is non null on submission, which is no longer necessarily the case")
   fun placementDates() = if (isSubmitted()) {
-    Cas1PlacementDates(
+    Cas1PlacementApplicationDates(
       expectedArrival = expectedArrival!!,
-      duration = authorisedDuration ?: requestedDuration!!,
+      duration = authorisedDuration ?: requestedDuration,
     )
   } else {
     null

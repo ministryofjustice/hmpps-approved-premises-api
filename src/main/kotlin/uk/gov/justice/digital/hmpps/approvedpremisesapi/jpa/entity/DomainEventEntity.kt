@@ -171,6 +171,8 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
 
+  fun findByApplicationIdAndType(applicationId: UUID, type: DomainEventType): List<DomainEventEntity>
+
   @Query(
     """
     SELECT d
@@ -297,7 +299,7 @@ val DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION = DomainEventSchemaVersion(
   description = "The initial version of this domain event",
 )
 
-@SuppressWarnings("LongParameterList")
+@SuppressWarnings("LongParameterList", "MagicNumber")
 enum class DomainEventType(
   val cas: DomainEventCas,
   val typeName: String,
@@ -510,6 +512,10 @@ enum class DomainEventType(
       payloadType = PlacementApplicationWithdrawn::class,
       apiType = Cas1EventType.placementApplicationWithdrawn,
       emittable = false,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "placementDates endDate may now be null"),
+      ),
     ),
   ),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED(
@@ -520,6 +526,11 @@ enum class DomainEventType(
       Cas1TimelineEventType.placementApplicationAllocated,
       payloadType = PlacementApplicationAllocated::class,
       apiType = Cas1EventType.placementApplicationAllocated,
+      emittable = false,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "placementDates endDate may now be null"),
+      ),
     ),
   ),
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN(
@@ -551,6 +562,14 @@ enum class DomainEventType(
           2,
           "requestForPlacementId always refers to placement application id. createdAt/createdBy now always populated. " +
             "createdAt/createdBy match the placementApplication values",
+        ),
+        DomainEventSchemaVersion(
+          3,
+          "duration may now be null",
+        ),
+        DomainEventSchemaVersion(
+          4,
+          "added personTier",
         ),
       ),
     ),
@@ -596,6 +615,11 @@ enum class DomainEventType(
     DomainEventCas.CAS2,
     Cas2EventType.applicationStatusUpdated.value,
     "An assessor has updated the status of a CAS2 application",
+  ),
+  CAS2_PERSON_ARRIVED(
+    DomainEventCas.CAS2,
+    Cas2EventType.arrived.value,
+    "Someone has arrived at a CAS2 premises",
   ),
   CAS3_BOOKING_CANCELLED(
     DomainEventCas.CAS3,

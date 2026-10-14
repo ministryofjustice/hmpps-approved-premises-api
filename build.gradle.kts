@@ -1,7 +1,7 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.7"
-  kotlin("plugin.spring") version "2.4.10"
-  kotlin("plugin.jpa") version "2.4.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.12"
+  kotlin("plugin.spring") version "2.4.20"
+  kotlin("plugin.jpa") version "2.4.20"
   id("dev.detekt") version "2.0.0-alpha.6"
 }
 
@@ -20,10 +20,11 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  val hmppsSpringBootStarterVersion = "3.0.1"
+  val hmppsSpringBootStarterVersion = "3.0.3"
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsSpringBootStarterVersion")
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+  implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
@@ -33,23 +34,14 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
-  implementation("com.google.guava:guava:33.7.1-jre")
+  implementation("com.google.guava:guava:33.7.2-jre")
   implementation("org.javers:javers-core:7.11.8")
-
-  val springDocOpenApiStarterVersion = "3.0.2"
-  // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
-  // generated schema, making it incompatible with the typescript generators and in some
-  // places it was incorrect. We're pinning version 3.0.2 until a new version is available
-  // reverting this change, as proposed by https://github.com/springdoc/springdoc-openapi/pull/3276
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterVersion")
-  // this is a transitive dependency of uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-autoconfigure
-  // so we need to force a different version
-  implementation("org.springdoc:springdoc-openapi-starter-common:$springDocOpenApiStarterVersion")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-4:8.55.0")
+  implementation("io.sentry:sentry-spring-boot-4:8.57.0")
 
   runtimeOnly("org.postgresql:postgresql:42.7.13")
   runtimeOnly("org.ehcache:ehcache")
@@ -70,7 +62,7 @@ dependencies {
 
   implementation("com.opencsv:opencsv:5.12.0")
 
-  val shedLockVersion = "7.9.0"
+  val shedLockVersion = "7.10.1"
   implementation("net.javacrumbs.shedlock:shedlock-spring:$shedLockVersion")
   implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:$shedLockVersion")
 
@@ -81,7 +73,7 @@ dependencies {
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.11")
-  testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.3")
+  testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.4.2")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.8.1")
@@ -91,7 +83,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
-  testImplementation("org.zalando:logbook-spring-boot-starter:4.1.0")
+  testImplementation("org.zalando:logbook-spring-boot-starter:4.2.0")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
     exclude(group = "io.swagger.core.v3")

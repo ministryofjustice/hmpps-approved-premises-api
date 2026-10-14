@@ -16,12 +16,19 @@ spring:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
 
+  http:
+    codecs:
+      # 3MB, defined by prison-api adjudications response,
+      # which is the largest response we expect to receive from any service
+      max-in-memory-size: 3MB
+
   profiles:
     group:
       test:
         - "stdout"
 
   datasource:
+    driverClassName: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
       connection-timeout: 15000
@@ -47,7 +54,6 @@ spring:
       ddl-auto: none
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         cache:
           use_second_level_cache: true
         javax:
@@ -141,6 +147,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          document-management-api:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${hmpps.auth.url}/oauth/token
@@ -148,11 +159,12 @@ spring:
 springdoc:
   swagger-ui:
     urls-primary-name: "All CAS"
-    # workaround advised for hmpps gradle plugin 11.0.2. See https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/release-notes/11.x.md
-    version: 5.32.11
   remove-broken-reference-definitions: false
   writer-with-order-by-keys: true
   pre-loading-enabled: true
+  model-converters:
+    kotlin-nullable-property-customizer:
+      enabled: false
 
 server:
   port: 8080
@@ -188,20 +200,14 @@ management:
 
 services:
   default:
-    # 0.7MB
-    max-response-in-memory-size-bytes: 750000
     timeout-ms: 10000
   hmpps-tier:
     base-url: http://localhost:9004
     timeout-ms: 2000
   prisons-api:
     base-url: http://localhost:9570
-    # 3 MB
-    max-response-in-memory-size-bytes: 3145728
   prisoner-alerts-api:
     base-url: http://localhost:9580
-    # 2.5 MB
-    max-response-in-memory-size-bytes: 2621440
     timeout-ms: 4000
   nomis-user-roles-api:
     base-url: http://localhost:9575
@@ -226,6 +232,8 @@ services:
     base-url: http://localhost:8091
   health-and-medication-api:
     base-url: http://localhost:8093
+  document-management-api:
+    base-url: http://localhost:9095
   cas1-ui:
     base-url: http://localhost:8094
   cas2v2-ui:
@@ -332,6 +340,7 @@ url-templates:
     cas2v2:
       application: http://localhost:3000/applications/#id
       application-overview: http://localhost:3000/applications/#id/overview
+      application-start: http://localhost:3000/new-cohorts/applications/before-you-start
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
     cas3:
       referral-full: http://localhost:3000/referrals/#applicationId/full
@@ -364,7 +373,6 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
-  isr-cas1-email-changes-enabled: false
 
 domain-events:
   listener:

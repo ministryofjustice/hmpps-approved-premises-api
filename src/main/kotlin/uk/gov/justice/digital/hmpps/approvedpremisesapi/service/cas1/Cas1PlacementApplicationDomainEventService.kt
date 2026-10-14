@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventRequestedPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Wi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toEventTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -35,8 +37,9 @@ class Cas1PlacementApplicationDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val tierService: TierService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  val clock: Clock,
+  private val clock: Clock,
 ) {
 
   fun placementApplicationSubmitted(
@@ -50,6 +53,7 @@ class Cas1PlacementApplicationDomainEventService(
     val eventOccurredAt = Instant.now()
     val application = placementApplication.application
     val dates = placementApplication.placementDates()!!
+    val crn = application.crn
 
     val placementType = when (placementApplication.placementType!!) {
       PlacementType.ROTL -> RequestForPlacementType.rotl
@@ -70,7 +74,7 @@ class Cas1PlacementApplicationDomainEventService(
       applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
       requestForPlacementId = placementApplication.id,
       personReference = PersonReference(
-        crn = application.crn,
+        crn = crn,
         noms = application.nomsNumber ?: "Unknown NOMS Number",
       ),
       deliusEventNumber = application.eventNumber,
@@ -79,13 +83,14 @@ class Cas1PlacementApplicationDomainEventService(
       expectedArrival = dates.expectedArrival,
       duration = dates.duration,
       requestForPlacementType = placementType,
+      personTier = tierService.getTier(crn)?.toEventTier(),
     )
 
     domainEventService.saveRequestForPlacementCreatedEvent(
       SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
-        crn = application.crn,
+        crn = crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt,
         data = RequestForPlacementCreatedEnvelope(
@@ -99,7 +104,7 @@ class Cas1PlacementApplicationDomainEventService(
         } else {
           TriggerSourceType.USER
         },
-        schemaVersion = 2,
+        schemaVersion = 4,
       ),
     )
   }
@@ -140,7 +145,7 @@ class Cas1PlacementApplicationDomainEventService(
       withdrawalReason = placementApplication.withdrawalReason!!.name,
       placementDates = listOfNotNull(
         placementApplication.placementDates()?.let {
-          DatePeriod(
+          EventRequestedPlacementDates(
             it.expectedArrival,
             it.expectedDeparture(),
           )
@@ -164,6 +169,7 @@ class Cas1PlacementApplicationDomainEventService(
         metadata = mapOf(
           MetaDataName.CAS1_PLACEMENT_APPLICATION_ID to placementApplication.id.toString(),
         ),
+        schemaVersion = 2,
       ),
     )
   }
@@ -190,7 +196,7 @@ class Cas1PlacementApplicationDomainEventService(
       allocatedTo = domainEventTransformer.toStaffMember(allocatedToUser),
       allocatedBy = allocatedByUser?.let { domainEventTransformer.toStaffMember(it) },
       placementDates = listOf(
-        DatePeriod(
+        EventRequestedPlacementDates(
           startDate = placementDates.expectedArrival,
           endDate = placementDates.expectedDeparture(),
         ),
@@ -210,6 +216,7 @@ class Cas1PlacementApplicationDomainEventService(
           eventType = EventType.placementApplicationAllocated,
           eventDetails = placementApplicationAllocated,
         ),
+        schemaVersion = 2,
       ),
     )
   }

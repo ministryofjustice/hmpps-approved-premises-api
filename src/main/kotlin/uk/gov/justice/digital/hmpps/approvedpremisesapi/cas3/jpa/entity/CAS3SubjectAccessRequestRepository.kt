@@ -21,7 +21,7 @@ class CAS3SubjectAccessRequestRepository(
              a."document",
              a.created_at,
              a.submitted_at,
-             u."name" as applications_user_name ,
+             u."delius_username" as applications_user_name ,
              taa.conviction_id,
              taa.event_number,
              taa.offence_id,
@@ -149,7 +149,7 @@ class CAS3SubjectAccessRequestRepository(
         select
             arhn.message,
             arhn.created_at,
-            u."name" as created_by_user,
+            u."delius_username" as created_by_user,
             case
                 when arhsn.id is not null then 'System'
                 when arhun.id is not null then 'User'

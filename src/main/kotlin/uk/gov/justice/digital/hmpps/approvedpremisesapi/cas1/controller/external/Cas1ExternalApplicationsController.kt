@@ -18,7 +18,7 @@ class Cas1ExternalApplicationsController(
     @PathVariable crn: String,
   ): ResponseEntity<Cas1SuitableApplication> = cas1ExternalApplicationService.getSuitableApplicationByCrn(crn)
     ?.let { ResponseEntity.ok(it) }
-    ?: ResponseEntity.notFound().build()
+    ?: ResponseEntity.noContent().build()
 
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/cases/{crn}/premises/current")
@@ -26,5 +26,5 @@ class Cas1ExternalApplicationsController(
     @PathVariable crn: String,
   ): ResponseEntity<Cas1ExternalPremisesDto> = cas1ExternalApplicationService.getCurrentPremisesByCrn(crn)
     ?.let { ResponseEntity.ok(it) }
-    ?: ResponseEntity.notFound().build()
+    ?: ResponseEntity.noContent().build()
 }

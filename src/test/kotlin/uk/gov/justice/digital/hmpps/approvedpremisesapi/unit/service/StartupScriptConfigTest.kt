@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.insertHdcDates
@@ -43,7 +42,6 @@ class StartupScriptConfigTest {
 
   private val mockApplicationService = mockk<Cas2HdcApplicationService>()
   private val mockCas2HdcStatusUpdateService = mockk<Cas2HdcStatusUpdateService>()
-  private val statusFinder = Cas2HdcPersistedApplicationStatusFinder()
 
   private val seedConfig = SeedConfig()
 
@@ -56,7 +54,6 @@ class StartupScriptConfigTest {
     mockAssessmentRepository,
     mockApplicationService,
     mockCas2HdcStatusUpdateService,
-    statusFinder,
   )
 
   @BeforeEach

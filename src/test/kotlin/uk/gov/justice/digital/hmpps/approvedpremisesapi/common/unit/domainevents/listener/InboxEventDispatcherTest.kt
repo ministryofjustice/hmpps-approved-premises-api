@@ -46,7 +46,7 @@ class InboxEventDispatcherTest {
   }
 
   @Test
-  fun `single event, no handler, skip and alert`() {
+  fun `single event, no handler, fail and alert`() {
     val event = buildPendingInboxEventEntity(eventType = "test.event")
 
     every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
@@ -58,10 +58,10 @@ class InboxEventDispatcherTest {
 
     assertThat(stats.processedCount).isEqualTo(0)
     assertThat(stats.ignoredCount).isEqualTo(0)
-    assertThat(stats.skippedCount).isEqualTo(1)
-    assertThat(stats.failedCount).isEqualTo(0)
+    assertThat(stats.skippedCount).isEqualTo(0)
+    assertThat(stats.failedCount).isEqualTo(1)
 
-    verifyNoEventUpdatesMade()
+    verify { inboxEventService.updateInboxEventStatusAndSave(event, ProcessedStatus.FAILED) }
     verify { sentryService.captureErrorMessage("No handler registered for event type [inboxEventId=${event.id}, eventType=test.event]") }
   }
 
@@ -147,7 +147,7 @@ class InboxEventDispatcherTest {
     val raisedExceptionSlot = slot<InboxEventDispatcher.InboxEventDispatcherFailureException>()
     verify { sentryService.captureException(capture(raisedExceptionSlot)) }
 
-    assertThat(raisedExceptionSlot.captured.message).isEqualTo("Unexpected error dispatching to handler [inboxEventId=${event.id}, eventType=${event.eventType}]")
+    assertThat(raisedExceptionSlot.captured.message).isEqualTo("Unexpected error dispatching event [inboxEventId=${event.id}, eventType=${event.eventType}]")
     assertThat(raisedExceptionSlot.captured.cause).isEqualTo(exception)
   }
 

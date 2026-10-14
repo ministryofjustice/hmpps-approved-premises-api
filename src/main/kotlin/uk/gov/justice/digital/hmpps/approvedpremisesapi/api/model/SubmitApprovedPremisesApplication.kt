@@ -16,10 +16,7 @@ data class SubmitApprovedPremisesApplication(
   @Deprecated(message = "noticeType should be used to indicate if this an emergency application")
   val isEmergencyApplication: Boolean? = null,
   val situation: SituationOption? = null,
-  @Deprecated(message = "Use requestedPlacementDuration instead")
-  @Schema(deprecated = true, description = "Use requestedPlacementDuration instead, which a better named version of this field")
-  val duration: Int? = null,
-  @Schema(description = "The placement duration requested by the applicant, which may be the default duration if not overridden. This will be provided even if requestedPlacementPeriod is null. Required on submission. nullable until 'duration' is removed")
+  @Schema(description = "The placement duration requested by the applicant, which may be the default duration if not overridden, which itself maybe null. This will be provided even if requestedPlacementPeriod is null")
   val requestedPlacementDuration: Int? = null,
   val apAreaId: java.util.UUID? = null,
   val applicantUserDetails: Cas1ApplicationUserDetails? = null,
@@ -36,6 +33,4 @@ data class SubmitApprovedPremisesApplication(
   val calculatedPlacementDuration: Int? = null,
   @Schema(description = "The applicant can make a single request for placement as part of the initial application")
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod? = null,
-) : SubmitApplication {
-  fun requestedDuration() = requestedPlacementDuration ?: duration
-}
+) : SubmitApplication

@@ -90,6 +90,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2/people/search-by-crn/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize(HttpMethod.GET, "/cas2/people/search-by-noms/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize(HttpMethod.GET, "/cas2/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
+        authorize(HttpMethod.POST, "/cas2/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
         authorize("/cas2/applications/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize("/cas2/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
 

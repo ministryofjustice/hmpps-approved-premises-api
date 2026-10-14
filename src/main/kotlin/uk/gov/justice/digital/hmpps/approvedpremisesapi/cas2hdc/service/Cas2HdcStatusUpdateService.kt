@@ -12,8 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding.activeStatuses
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding.statusDetailsByStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
@@ -50,7 +53,6 @@ class Cas2HdcStatusUpdateService(
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,
   private val cas2HdcEmailService: Cas2HdcEmailService,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
@@ -81,11 +83,12 @@ class Cas2HdcStatusUpdateService(
     val statusDetails = if (newStatusDetails.isNullOrEmpty()) {
       emptyList()
     } else {
-      newStatusDetails.map { detail ->
-        status.findStatusDetailOnStatus(detail)
-          ?: return AuthorisableActionResult.Success(
-            ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),
-          )
+      statusUpdate.newStatusDetails.map { detail ->
+        statusDetailsByStatus(status, ServiceName.cas2)?.find {
+          it.apiName == detail
+        } ?: return AuthorisableActionResult.Success(
+          ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),
+        )
       }
     }
 
@@ -94,7 +97,6 @@ class Cas2HdcStatusUpdateService(
         ValidatableActionResult.FieldValidationError(ValidationErrors()),
       )
     }
-
     val createdStatusUpdate = statusUpdateRepository.save(
       Cas2StatusUpdateEntity(
         id = UUID.randomUUID(),
@@ -120,22 +122,20 @@ class Cas2HdcStatusUpdateService(
     }
 
     sendEmailStatusUpdated(assessment.application, createdStatusUpdate)
-
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
-
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(createdStatusUpdate),
     )
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = statusFinder.active()
-    .find { status -> status.name == statusName }
+  private fun findActiveStatusByName(statusName: String): Cas2AssessmentStatus? = activeStatuses()
+    .find { status -> status.apiName == statusName }
 
-  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2PersistedApplicationStatusDetail> = emptyList()) {
+  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2AssessmentStatusDetail> = emptyList()) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt
     val application = statusUpdate.application
-    val newStatus = statusUpdate.status()
+    val newStatus = statusUpdate.status
     val assessor = statusUpdate.assessor
 
     domainEventService.saveApplicationStatusUpdatedDomainEvent(
@@ -160,7 +160,7 @@ class Cas2HdcStatusUpdateService(
               noms = application.nomsNumber.toString(),
             ),
             newStatus = Cas2Status(
-              name = newStatus.name,
+              name = newStatus.apiName,
               description = newStatus.description,
               label = newStatus.label,
               statusDetails = statusTransformer.transformStatusDetailListToDetailItemList(statusDetails),

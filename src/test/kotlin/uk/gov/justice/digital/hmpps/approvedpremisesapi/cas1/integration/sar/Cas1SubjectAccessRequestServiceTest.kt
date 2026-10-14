@@ -95,7 +95,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
     val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
 
-    val timelineNotes = applicationTimelineNoteEntity(application)
+    val timelineNotes = applicationTimelineNoteEntity(application, "This is a test note")
 
     val result = cas1SarService.getSarResult(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
@@ -423,8 +423,8 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "placement_type": "${PlacementType.ADDITIONAL_PLACEMENT}",
         "is_withdrawn": ${placementApplication.isWithdrawn},
         "withdrawal_reason": "${placementApplication.withdrawalReason}",
-        "created_by_user": "${placementApplication.createdByUser.name}",
-        "allocated_user": "${placementApplication.allocatedToUser?.name}",
+        "created_by_user": "${placementApplication.createdByUser.deliusUsername}",
+        "allocated_user": "${placementApplication.allocatedToUser?.deliusUsername}",
         "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
         "release_type": "$RELEASE_TYPE_CONDITIONAL",
         "requested_duration": $REQUESTED_DURATION,
@@ -443,7 +443,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
           "decision" : "${appeal.decision}",
           "decision_detail": "${appeal.decisionDetail}" ,
           "appeal_created_at": "$CREATED_AT" ,
-          "created_by_user" :  "${appeal.createdBy.name}"
+          "created_by_user" :  "${appeal.createdBy.deliusUsername}"
       }
     """.trimIndent()
 
@@ -476,7 +476,6 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
            "case_manager_name": ${application.caseManagerUserDetails?.name?.let { "\"${it.trim().substringAfterLast(' ')}\"" } ?: "null"},
            "case_manager_is_not_applicant" : true,
            "situation": "${SituationOption.bailSentence}",
-           "is_inapplicable": false,
            "licence_expiry_date": "$LICENCE_EXPIRY_DATE",
            "expired_reason": "$EXPIRED_REASON"
         }
@@ -489,7 +488,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
       {
           "body":"${timelineNote.body}",
           "created_at":"$CREATED_AT_NO_TZ",
-          "user_name":"${timelineNote.createdBy?.name}"
+          "created_by_username":"${timelineNote.createdBy?.deliusUsername}"
       }
     """.trimIndent()
 
@@ -524,7 +523,7 @@ class Cas1SubjectAccessRequestServiceTest : Cas1SarTestBase() {
         "query": "${clarificationNote.query}",
         "response": "${clarificationNote.response}",
         "response_received_on": "$RESPONSE_RECEIVED_AT",
-        "created_by_user": "${clarificationNote.createdByUser.name}"
+        "created_by_user": "${clarificationNote.createdByUser.deliusUsername}"
       }
     """.trimIndent()
 

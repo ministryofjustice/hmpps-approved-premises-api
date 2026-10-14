@@ -25,9 +25,11 @@ data class RequestForPlacementCreated(
   @get:JsonProperty("expectedArrival", required = true) val expectedArrival: java.time.LocalDate,
 
   @Schema(example = "7", required = true, description = "")
-  @get:JsonProperty("duration", required = true) val duration: Int,
+  @get:JsonProperty("duration", required = true) val duration: Int?,
 
   @get:JsonProperty("requestForPlacementType", required = true) val requestForPlacementType: RequestForPlacementType,
 
   @get:JsonProperty("createdBy") val createdBy: StaffMember? = null,
+
+  val personTier: EventTier? = null,
 ) : Cas1DomainEventPayload

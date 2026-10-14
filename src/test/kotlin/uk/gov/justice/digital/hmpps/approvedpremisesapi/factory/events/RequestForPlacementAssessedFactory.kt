@@ -17,7 +17,7 @@ class RequestForPlacementAssessedFactory : Factory<RequestForPlacementAssessed> 
   private var decision: Yielded<RequestForPlacementAssessed.Decision> = { RequestForPlacementAssessed.Decision.accepted }
   private var decisionSummary: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var expectedArrival: Yielded<LocalDate> = { LocalDate.now() }
-  private var duration: Yielded<Int> = { randomInt(0, 1000) }
+  private var duration: Yielded<Int?> = { randomInt(0, 1000) }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -29,10 +29,6 @@ class RequestForPlacementAssessedFactory : Factory<RequestForPlacementAssessed> 
 
   fun withPlacementApplicationId(placementApplicationId: UUID) = apply {
     this.placementApplicationId = { placementApplicationId }
-  }
-
-  fun withAssessedBy(staffMember: StaffMember) = apply {
-    this.assessedBy = { staffMember }
   }
 
   fun withDecision(decision: RequestForPlacementAssessed.Decision) = apply {
@@ -47,7 +43,7 @@ class RequestForPlacementAssessedFactory : Factory<RequestForPlacementAssessed> 
     this.expectedArrival = { expectedArrival }
   }
 
-  fun withDuration(duration: Int) = apply {
+  fun withDuration(duration: Int?) = apply {
     this.duration = { duration }
   }
 

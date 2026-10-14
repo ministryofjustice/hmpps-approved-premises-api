@@ -1,21 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
-import io.netty.channel.ChannelOption
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
-import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction
-import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
-import reactor.netty.http.client.HttpClient
-import uk.gov.justice.hmpps.kotlin.auth.ServletRequestResponseNonNullFilterFunction
+import uk.gov.justice.hmpps.kotlin.auth.authorisedWebClient
+import uk.gov.justice.hmpps.kotlin.auth.unauthenticatedWebClient
 import java.time.Duration
 
 data class WebClientConfig(
@@ -28,10 +23,7 @@ data class WebClientConfig(
 @Configuration
 class WebClientConfiguration(
   @Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
-  @Value("\${services.default.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
 ) {
-
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   @Bean
   fun authorizedClientManager(clients: ClientRegistrationRepository): OAuth2AuthorizedClientManager {
@@ -47,472 +39,274 @@ class WebClientConfiguration(
   @Bean(name = ["cas1UiWebClient"])
   fun cas1UiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.cas1-ui.base-url}") cas1UiBaseUrl: String,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(cas1UiBaseUrl)
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-      retryOnReadTimeout = true,
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "delius-backed-apis",
+        url = cas1UiBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+    retryOnReadTimeout = true,
+  )
 
   @Bean(name = ["apDeliusContextApiWebClient"])
   fun apDeliusContextApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.ap-delius-context-api.base-url}") apDeliusContextApiBaseUrl: String,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(apDeliusContextApiBaseUrl)
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-      retryOnReadTimeout = true,
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "delius-backed-apis",
+        url = apDeliusContextApiBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+    retryOnReadTimeout = true,
+  )
 
   @Bean(name = ["hmppsTierApiWebClient"])
   fun hmppsTierApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.hmpps-tier.base-url}") hmppsTierApiBaseUrl: String,
     @Value("\${services.hmpps-tier.timeout-ms}") tierApiUpstreamTimeoutMs: Long,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("hmpps-tier")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(hmppsTierApiBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(tierApiUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(tierApiUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .build(),
-      retryOnReadTimeout = true,
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "hmpps-tier",
+        url = hmppsTierApiBaseUrl,
+        timeout = Duration.ofMillis(tierApiUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(tierApiUpstreamTimeoutMs),
+      ),
+    retryOnReadTimeout = true,
+  )
 
   @Bean(name = ["prisonsApiWebClient"])
   fun prisonsApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String,
-    @Value("\${services.prisons-api.max-response-in-memory-size-bytes}") prisonApiMaxResponseInMemorySizeBytes: Int,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("prisons-api")
-
-    log.info("Using maxInMemorySize of $prisonApiMaxResponseInMemorySizeBytes bytes for Prison API Web Client")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(prisonsApiBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(prisonApiMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .build(),
-      retryOnReadTimeout = true,
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "prisons-api",
+        url = prisonsApiBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+    retryOnReadTimeout = true,
+  )
 
   @Bean(name = ["prisonerAlertsApiWebClient"])
   fun prisonerAlertsApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
-    @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
     @Value("\${services.prisoner-alerts-api.timeout-ms}") tierApiUpstreamTimeoutMs: Long,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("prisoner-alerts-api")
-
-    log.info("Using maxInMemorySize of $prisonerAlertsApiMaxResponseInMemorySizeBytes bytes for Prisoner Alerts API Web Client")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(prisonerAlertsApiBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(tierApiUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(tierApiUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(prisonerAlertsApiMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .build(),
-      retryOnReadTimeout = true,
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "prisoner-alerts-api",
+        url = prisonerAlertsApiBaseUrl,
+        timeout = Duration.ofMillis(tierApiUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(tierApiUpstreamTimeoutMs),
+      ),
+    retryOnReadTimeout = true,
+  )
 
   @Bean(name = ["caseNotesWebClient"])
   fun caseNotesWebClient(
     authorizedClients: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.case-notes.base-url}") caseNotesBaseUrl: String,
     @Value("\${services.case-notes.timeout-ms}") caseNotesServiceUpstreamTimeoutMs: Long,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClients)
-
-    oauth2Client.setDefaultClientRegistrationId("case-notes")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(caseNotesBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(caseNotesServiceUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(caseNotesServiceUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .build(),
-      retryOnReadTimeout = true,
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClients,
+        registrationId = "case-notes",
+        url = caseNotesBaseUrl,
+        timeout = Duration.ofMillis(caseNotesServiceUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(caseNotesServiceUpstreamTimeoutMs),
+      ),
+    retryOnReadTimeout = true,
+  )
 
   @Bean(name = ["apOASysContextApiWebClient"])
   fun apOASysContextApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.ap-oasys-context-api.base-url}") apOASysContextApiBaseUrl: String,
     @Value("\${services.ap-oasys-context-api.timeout-ms}") apAndOasysUpstreamTimeoutMs: Long,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("ap-oasys-context")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(apOASysContextApiBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(apAndOasysUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(apAndOasysUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .build(),
-      retryOnReadTimeout = true,
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "ap-oasys-context",
+        url = apOASysContextApiBaseUrl,
+        timeout = Duration.ofMillis(apAndOasysUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(apAndOasysUpstreamTimeoutMs),
+      ),
+    retryOnReadTimeout = true,
+  )
 
   @Bean(name = ["govUKBankHolidaysApiWebClient"])
   fun govUKBankHolidaysApiClient(
     @Value("\${services.gov-uk-bank-holidays-api.base-url}") govUKBankHolidaysApiBaseUrl: String,
-  ): WebClientConfig = WebClientConfig(
-    WebClient.builder()
-      .baseUrl(govUKBankHolidaysApiBaseUrl)
-      .clientConnector(
-        ReactorClientHttpConnector(
-          HttpClient
-            .create()
-            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
-        ),
-      )
-      .build(),
+    webClientBuilder: WebClient.Builder,
+  ) = WebClientConfig(
+    webClientBuilder
+      .unauthenticatedWebClient(
+        url = govUKBankHolidaysApiBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
   )
 
   @Bean(name = ["nomisUserRolesForRequesterApiWebClient"])
   fun nomisUserRolesForRequesterApiClient(
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
     @Value("\${services.nomis-user-roles-api.timeout-ms}") nomisUserRolesUpstreamTimeoutMs: Long,
-  ): WebClientConfig = WebClientConfig(
-    WebClient.builder()
-      .baseUrl(nomisUserRolesBaseUrl)
-      .clientConnector(
-        ReactorClientHttpConnector(
-          HttpClient
-            .create()
-            .responseTimeout(Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs).toMillis().toInt()),
-        ),
-      )
-      .build(),
+  ) = WebClientConfig(
+    webClientBuilder
+      .unauthenticatedWebClient(
+        url = nomisUserRolesBaseUrl,
+        timeout = Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs),
+      ),
     retryOnReadTimeout = true,
   )
 
   @Bean(name = ["nomisUserRolesApiWebClient"])
   fun nomisUserRolesApiClient(
+    webClientBuilder: WebClient.Builder,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("nomis-user-roles-api")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(nomisUserRolesBaseUrl)
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(
-                ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-              ),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "nomis-user-roles-api",
+        url = nomisUserRolesBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+  )
 
   @Bean(name = ["manageUsersApiWebClient"])
   fun manageUsersApiClient(
+    webClientBuilder: WebClient.Builder,
     @Value("\${services.manage-users-api.base-url}") manageUsersBaseUrl: String,
-  ): WebClientConfig = WebClientConfig(
-    WebClient.builder()
-      .baseUrl(manageUsersBaseUrl)
-      .clientConnector(
-        ReactorClientHttpConnector(
-          HttpClient
-            .create()
-            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
-        ),
-      )
-      .build(),
+  ) = WebClientConfig(
+    webClientBuilder
+      .unauthenticatedWebClient(
+        url = manageUsersBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
   )
 
   @Bean(name = ["managePomCasesWebClient"])
   fun managePomCasesWebClient(
+    webClientBuilder: WebClient.Builder,
     authorizedClientManager: OAuth2AuthorizedClientManager,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("manage-pom-cases")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(
-                ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-              ),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "manage-pom-cases",
+        url = "",
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+  )
 
   @Bean(name = ["nonAssociationsWebClient"])
   fun nonAssociationsWebClient(
+    webClientBuilder: WebClient.Builder,
     authorizedClientManager: OAuth2AuthorizedClientManager,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("non-associations")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(
-                ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-              ),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "non-associations",
+        url = "",
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+  )
 
   @Bean(name = ["prisonerSearchWebClient"])
   fun prisonerSearchWebClient(
+    webClientBuilder: WebClient.Builder,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisoner-search.base-url}") prisonSearchBaseUrl: String,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("prisoner-search")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(prisonSearchBaseUrl)
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(
-                ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-              ),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "prisoner-search",
+        url = prisonSearchBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+  )
 
   @Bean(name = ["licenceApiWebClient"])
   fun licenceApiWebClient(
+    webClientBuilder: WebClient.Builder,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.licence-api.base-url}") licenceApiBaseUrl: String,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("cvl")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(licenceApiBaseUrl)
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(
-                ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-              ),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-    )
-  }
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "cvl",
+        url = licenceApiBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+  )
 
   @Bean(name = ["healthAndMedicationApiWebClient"])
   fun healthAndMedicationApiWebClient(
+    webClientBuilder: WebClient.Builder,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.health-and-medication-api.base-url}") healthAndMedicationApiBaseUrl: String,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "health-and-medication",
+        url = healthAndMedicationApiBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+  )
 
-    oauth2Client.setDefaultClientRegistrationId("health-and-medication")
-
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(healthAndMedicationApiBaseUrl)
-        .filter(ServletRequestResponseNonNullFilterFunction())
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(
-                ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-              ),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-    )
-  }
+  @Bean(name = ["documentManagementApiWebClient"])
+  fun documentManagementApiWebClient(
+    webClientBuilder: WebClient.Builder,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.document-management-api.base-url}") documentManagementApiBaseUrl: String,
+  ) = WebClientConfig(
+    webClientBuilder
+      .authorisedWebClient(
+        authorizedClientManager = authorizedClientManager,
+        registrationId = "document-management-api",
+        url = documentManagementApiBaseUrl,
+        timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+        connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
+      ),
+  )
 }

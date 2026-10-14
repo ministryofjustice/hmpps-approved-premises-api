@@ -5,9 +5,6 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -21,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.UUID
 
 class PlacementApplicationTransformerTest {
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
@@ -151,35 +147,5 @@ class PlacementApplicationTransformerTest {
 
     assertThat(result.id).isEqualTo(placementApplication.id)
     assertThat(result.canBeWithdrawn).isEqualTo(false)
-  }
-
-  @Test
-  fun `transformToWithdrawable converts correctly`() {
-    val id = UUID.randomUUID()
-
-    val jpa = PlacementApplicationEntityFactory()
-      .withId(id)
-      .withCreatedByUser(user)
-      .withApplication(applicationMock)
-      .withDecision(PlacementApplicationDecision.ACCEPTED)
-      .withSubmittedAt(OffsetDateTime.now())
-      .withExpectedArrival(LocalDate.of(2023, 12, 11))
-      .withRequestedDuration(30)
-      .produce()
-
-    val result = placementApplicationTransformer.transformToWithdrawable(jpa)
-
-    assertThat(result).isEqualTo(
-      Withdrawable(
-        id,
-        WithdrawableType.placementApplication,
-        listOf(
-          DatePeriod(
-            LocalDate.of(2023, 12, 11),
-            LocalDate.of(2024, 1, 10),
-          ),
-        ),
-      ),
-    )
   }
 }

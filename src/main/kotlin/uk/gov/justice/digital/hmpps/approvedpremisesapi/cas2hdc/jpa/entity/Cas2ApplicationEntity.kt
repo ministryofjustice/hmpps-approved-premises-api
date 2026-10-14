@@ -41,9 +41,9 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   fun findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn: String): List<Cas2ApplicationEntity>
 
   @Query(
-    "SELECT a FROM Cas2ApplicationEntity a WHERE a.crn = :crn and a.cohort in :cohorts and a.abandonedAt is null order by a.createdAt desc limit 1",
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.crn = :crn and a.cohort in :cohorts and a.abandonedAt is null order by a.createdAt desc",
   )
-  fun findLatestApplication(crn: String, cohorts: List<Cas2Cohort>): Cas2ApplicationEntity?
+  fun findByCrnAndCohortsNewestFirst(crn: String, cohorts: List<Cas2Cohort>): List<Cas2ApplicationEntity>
 
   @Query(
     "SELECT id, application_origin FROM cas_2_applications WHERE cohort IS NULL",
@@ -98,6 +98,18 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
     nativeQuery = true,
   )
   fun findAllSubmittedWithManualRoshInformation(createdAfter: OffsetDateTime): List<Cas2ApplicationEntity>
+
+  @Query(
+    """
+    SELECT a
+    FROM Cas2ApplicationEntity a
+    WHERE a.crn = :crn
+      AND a.cohort IN :cohorts
+      AND a.submittedAt IS NOT NULL
+    ORDER BY a.createdAt DESC
+    """,
+  )
+  fun findSubmittedApplicationsByCrnAndCohorts(crn: String, cohorts: List<Cas2Cohort>): List<Cas2ApplicationEntity>
 }
 
 @Repository
@@ -229,7 +241,9 @@ data class Cas2ApplicationEntity(
     )
   }
 
-  fun isMostRecentStatusUpdateANonAssignableStatus() = statusUpdates?.firstOrNull()
+  fun getLatestStatusUpdate(): Cas2StatusUpdateEntity? = statusUpdates?.firstOrNull()
+
+  fun isMostRecentStatusUpdateANonAssignableStatus() = getLatestStatusUpdate()
     ?.let { mostRecent -> mostRecent.label in Cas2StatusUpdateNonAssignable.entries.map { it.label } }
     ?: false
 }

@@ -70,6 +70,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -121,7 +122,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           givenAnApplication(
             userEntity,
             crn = offenderDetails.otherIds.crn,
-            submittedAt = OffsetDateTime.now(),
+            submittedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
           ) { submittedApplication ->
             val domainEvents = domainEventFactory.produceAndPersistMultiple(2) {
               withCrn(offenderDetails.otherIds.crn)
@@ -152,6 +153,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
                       Cas1ApplicationTimeline(
                         id = submittedApplication.id,
                         createdAt = submittedApplication.createdAt.toInstant(),
+                        submittedAt = submittedApplication.submittedAt?.toInstant(),
                         status = Cas1ApplicationStatus.started,
                         isOfflineApplication = false,
                         createdBy = ApprovedPremisesUser(
@@ -336,7 +338,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           givenAnApplication(
             userEntity,
             crn = offenderDetails.otherIds.crn,
-            submittedAt = OffsetDateTime.now(),
+            submittedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
           ) { application ->
             val domainEvents = domainEventFactory.produceAndPersistMultiple(2) {
               withCrn(offenderDetails.otherIds.crn)
@@ -367,6 +369,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
                       Cas1ApplicationTimeline(
                         id = application.id,
                         createdAt = application.createdAt.toInstant(),
+                        submittedAt = application.submittedAt?.toInstant(),
                         status = Cas1ApplicationStatus.started,
                         isOfflineApplication = false,
                         createdBy = ApprovedPremisesUser(
@@ -477,6 +480,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
                       status = null,
                       isOfflineApplication = true,
                       createdBy = null,
+                      submittedAt = offlineApplication.createdAt.toInstant(),
                       timelineEvents = listOf(
                         Cas1TimelineEvent(
                           type = Cas1TimelineEventType.applicationSubmitted,

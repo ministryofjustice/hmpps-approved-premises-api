@@ -21,7 +21,7 @@ class RequestForPlacementCreatedFactory : Factory<RequestForPlacementCreated> {
   private var createdAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var createdBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var expectedArrival: Yielded<LocalDate> = { LocalDate.now() }
-  private var duration: Yielded<Int> = { randomInt(0, 1000) }
+  private var duration: Yielded<Int?> = { randomInt(0, 1000) }
   private var requestForPlacementType: Yielded<RequestForPlacementType> = { RequestForPlacementType.additionalPlacement }
   private var requestForPlacementId: Yielded<UUID> = { UUID.randomUUID() }
 
@@ -53,16 +53,12 @@ class RequestForPlacementCreatedFactory : Factory<RequestForPlacementCreated> {
     this.expectedArrival = { expectedArrival }
   }
 
-  fun withDuration(duration: Int) = apply {
+  fun withDuration(duration: Int?) = apply {
     this.duration = { duration }
   }
 
   fun withApplicationUrl(applicationUrl: String) = apply {
     this.applicationUrl = { applicationUrl }
-  }
-
-  fun withRequestForPlacementId(requestForPlacementId: UUID) = apply {
-    this.requestForPlacementId = { requestForPlacementId }
   }
 
   override fun produce() = RequestForPlacementCreated(

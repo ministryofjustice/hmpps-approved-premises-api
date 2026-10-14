@@ -13,7 +13,6 @@ spring:
   datasource:
     username: api_user
     password: api_user_password
-    driverClassName: org.postgresql.Driver
     # see TestPropertiesInitializer and IntegrationTestDbManager
     url: "dynamically set per test"
   # if making changes here, also update TestPropertiesInitializer
@@ -21,7 +20,6 @@ spring:
     locations: classpath:db/migration/all,classpath:db/migration/integration
     clean-disabled: false
   jpa:
-    database: postgresql
     properties:
       hibernate:
         enable_lazy_load_no_trans: true
@@ -59,6 +57,12 @@ spring:
             client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
           health-and-medication:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
+          document-management-api:
             provider: hmpps-auth
             client-id: approved-premises-api
             client-secret: clientsecret
@@ -119,7 +123,7 @@ hmpps:
       enabled: true
     tests:
       attachments-expected: false
-      expected-flyway-schema-version: 20260908135503000
+      expected-flyway-schema-version: 20260930054917000
       expected-jpa-entity-schema:
         path: /sar/cas-entities-schema.json
 
@@ -153,6 +157,8 @@ services:
   licence-api:
     base-url: http://localhost:#WIREMOCK_PORT
   health-and-medication-api:
+    base-url: http://localhost:#WIREMOCK_PORT
+  document-management-api:
     base-url: http://localhost:#WIREMOCK_PORT
   cas1-ui:
     base-url: http://localhost:#WIREMOCK_PORT
@@ -224,6 +230,8 @@ url-templates:
       application: http://cas2.frontend/applications/#id
       application-overview: http://cas2.frontend/applications/#id/overview
       submitted-application-overview: http://cas2.frontend/assess/applications/#applicationId/overview
+    cas2v2:
+      application-start: http://frontend.cas2/applications/start
     cas3:
       referral-full: http://frontend.cas3/referrals/#applicationId/full
       referral-start: http://frontend.cas3/applications/start
@@ -266,7 +274,7 @@ logbook:
 
 logging:
   level:
-    logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
+    org.springframework.jdbc.core.JdbcTemplate: debug
     org.zalando.logbook: TRACE
     # change to INFO to see requests and responses
     WireMock: WARN
@@ -278,4 +286,3 @@ refresh-inmate-details-cache:
 
 feature-flags:
   cas1-disable-overbooking-summary: false
-  isr-cas1-email-changes-enabled: true

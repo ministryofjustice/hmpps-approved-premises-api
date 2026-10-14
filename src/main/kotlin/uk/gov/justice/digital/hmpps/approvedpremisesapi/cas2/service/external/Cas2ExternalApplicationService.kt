@@ -2,41 +2,167 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalApplicationDto
+import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import java.time.Clock
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 @Service
 class Cas2ExternalApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
+  private val domainEventRepository: DomainEventRepository,
+  private val cas2ExternalDomainEventService: Cas2ExternalDomainEventService,
+  private val jsonMapper: JsonMapper,
+  private val clock: Clock,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
-  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? = cas2ApplicationRepository.findLatestApplication(crn, Cas2Cohort.isr())
-    ?.let { mostRecent ->
-      val uiUrl = if (mostRecent.submittedAt != null) {
-        submittedApplicationUrlTemplate.replace("#applicationId", mostRecent.id.toString())
+  private companion object {
+    // Applications with an AWAITING_ARRIVAL status older than this threshold are excluded from the suitable applications list,
+    // consistent with the cas_2_application_live_summary database view.
+    const val APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS = 32L
+  }
+
+  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? {
+    val allApplicationsForCrn = cas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr())
+
+    val allApplicationsWithStatus = allApplicationsForCrn.map { application ->
+      val latestStatusUpdate = application.getLatestStatusUpdate()
+      Pair(application, latestStatusUpdate)
+    }
+
+    val applicationsExcludingOldAwaitingArrival = allApplicationsWithStatus.filter { (_, statusUpdate) ->
+      if (statusUpdate?.status == Cas2AssessmentStatus.AWAITING_ARRIVAL) {
+        val awaitingArrivalDate = statusUpdate.createdAt.toInstant()
+        val daysSinceAwaitingArrival = ChronoUnit.DAYS.between(awaitingArrivalDate, Instant.now(clock))
+        daysSinceAwaitingArrival <= APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS
       } else {
-        applicationUrlTemplate.replace("#id", mostRecent.id.toString())
+        true
       }
+    }.map { it.first }
+
+    return applicationsExcludingOldAwaitingArrival.firstOrNull()?.let { mostRecent ->
+
       Cas2SuitableApplication(
-        uiUrl = uiUrl,
-        application = Cas2ExternalApplicationDto(
-          id = mostRecent.id,
-          status = mostRecent.statusUpdates?.firstOrNull()?.label,
-        ),
+        uiUrl = getUiUrl(mostRecent),
         id = mostRecent.id,
-        submittedApplication = if (mostRecent.submittedAt != null) {
-          Cas2ExternalSubmittedApplicationDto(
-            latestAssessmentStatus = mostRecent.statusUpdates?.firstOrNull()?.label,
-            submittedAt = mostRecent.submittedAt!!,
-          )
-        } else {
-          null
-        },
+        submittedApplication = getSubmittedApplication(mostRecent),
+        createdAt = mostRecent.createdAt,
+        cohort = mostRecent.cohort?.apiType,
+        createdBy = Cas2StaffDto(
+          username = mostRecent.createdByUser.username,
+          deliusStaffCode = mostRecent.createdByUser.deliusStaffCode,
+          name = mostRecent.createdByUser.name,
+          nomisStaffId = mostRecent.createdByUser.nomisStaffId,
+          userType = when (mostRecent.createdByUser.userType) {
+            Cas2UserType.DELIUS -> Cas2UserTypeDto.DELIUS
+            Cas2UserType.NOMIS -> Cas2UserTypeDto.NOMIS
+            Cas2UserType.EXTERNAL -> Cas2UserTypeDto.EXTERNAL
+          },
+        ),
       )
     }
+  }
+
+  fun recordArrival(crn: String, applicationId: UUID, arrivedByUsername: String, arrivalDateTime: Instant): CasResult<Unit> {
+    val applications = cas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
+
+    if (applications.isEmpty()) {
+      return CasResult.NotFound("CRN", crn)
+    } else if (!applications.contains(applications.firstOrNull { it.id == applicationId })) {
+      return CasResult.NotFound("application", applicationId.toString())
+    }
+
+    if (arrivalDateTime.isAfter(Instant.now())) {
+      return CasResult.FieldValidationError(mapOf(arrivalDateTime.toString() to "cannot be in the future"))
+    }
+
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+
+    cas2ExternalDomainEventService.saveArrivalDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = applicationId,
+        crn = crn,
+        nomsNumber = null,
+        occurredAt = eventOccurredAt,
+        data = Cas2ArrivalEvent(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = EventType.arrived,
+          eventDetails = Cas2ArrivalEventDetails(
+            markedAsArrivedDateTime = arrivalDateTime,
+            arrivedByUsername = arrivedByUsername,
+          ),
+        ),
+      ),
+    )
+
+    return CasResult.Success(Unit)
+  }
+
+  private fun getSubmittedApplication(mostRecent: Cas2ApplicationEntity) = if (mostRecent.submittedAt != null) {
+    val statusUpdate = mostRecent
+      .statusUpdates
+      ?.firstOrNull()
+
+    val offerDeclinedReason = if (statusUpdate?.status == Cas2AssessmentStatus.OFFER_DECLINED) {
+      statusUpdate.statusUpdateDetails?.first()?.statusDetail(
+        statusId = statusUpdate.statusId,
+        service = ServiceName.cas2v2,
+      )?.label
+    } else {
+      null
+    }
+
+    val cancelledReason = if (statusUpdate?.status == Cas2AssessmentStatus.CANCELLED) {
+      statusUpdate.statusUpdateDetails?.first()?.statusDetail(
+        statusId = statusUpdate.statusId,
+        service = ServiceName.cas2v2,
+      )?.label
+    } else {
+      null
+    }
+
+    val markedAsArrivedDateTime = if (statusUpdate?.status == Cas2AssessmentStatus.AWAITING_ARRIVAL) {
+      cas2ExternalDomainEventService.getArrivalEventFromApplicationId(mostRecent.id)?.data?.eventDetails?.markedAsArrivedDateTime
+    } else {
+      null
+    }
+
+    Cas2ExternalSubmittedApplicationDto(
+      latestAssessmentStatus = statusUpdate?.status?.apiName,
+      submittedAt = mostRecent.submittedAt!!,
+      offerDeclinedReason = offerDeclinedReason,
+      cancelledReason = cancelledReason,
+      markedAsArrivedDateTime = markedAsArrivedDateTime,
+    )
+  } else {
+    null
+  }
+
+  private fun getUiUrl(mostRecent: Cas2ApplicationEntity) = if (mostRecent.submittedAt != null) {
+    submittedApplicationUrlTemplate.replace("#applicationId", mostRecent.id.toString())
+  } else {
+    applicationUrlTemplate.replace("#id", mostRecent.id.toString())
+  }
 }

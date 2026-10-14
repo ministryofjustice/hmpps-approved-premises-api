@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.InboxEventEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.ProcessedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.partition
 
 /**
  * Dispatches inbox events to registered handlers. Each event is processed in isolation - handlers
@@ -88,8 +87,10 @@ class InboxEventDispatcher(
 
     val (partitions, eventsWithoutHandlers) = partitionByKey(inboxEvents)
     eventsWithoutHandlers.forEach {
+      log.error("No handler registered for event type [inboxEventId={}, eventType={}]", it.id, it.eventType)
       sentryService.captureErrorMessage("No handler registered for event type [inboxEventId=${it.id}, eventType=${it.eventType}]")
-      progressTracker.eventSkipped()
+      inboxEventService.updateInboxEventStatusAndSave(it, ProcessedStatus.FAILED)
+      progressTracker.eventFailed()
     }
     log.debug("Partitioned into {} groups", partitions.size)
 
@@ -134,9 +135,8 @@ class InboxEventDispatcher(
     inboxEvent: InboxEventEntity,
     progressTracker: ProgressTracker,
   ) {
-    val handler = inboxEvent.resolveHandler()!!
-
     try {
+      val handler = inboxEvent.resolveHandler()!!
       when (handler.handle(inboxEvent.toInboxEvent())) {
         InboxEventHandler.Result.PROCESSED -> {
           inboxEventService.updateInboxEventStatusAndSave(inboxEvent, ProcessedStatus.PROCESSED)
@@ -149,7 +149,7 @@ class InboxEventDispatcher(
       }
     } catch (e: Throwable) {
       sentryService.captureException(
-        InboxEventDispatcherFailureException("Unexpected error dispatching to handler [inboxEventId=${inboxEvent.id}, eventType=${inboxEvent.eventType}]", e),
+        InboxEventDispatcherFailureException("Unexpected error dispatching event [inboxEventId=${inboxEvent.id}, eventType=${inboxEvent.eventType}]", e),
       )
       inboxEventService.updateInboxEventStatusAndSave(inboxEvent, ProcessedStatus.FAILED)
       progressTracker.eventFailed()

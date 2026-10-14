@@ -13,7 +13,8 @@ import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding.statusDetailsByStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
@@ -119,13 +120,13 @@ class Cas2StatusUpdateTest(
           val persistedStatusUpdate = realCas2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
           assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
-          val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
+          val appliedStatus = Cas2AssessmentStatus.entries
             .find { status ->
               status.id == persistedStatusUpdate.statusId
             }
-          assertThat(appliedStatus!!.name).isEqualTo("moreInfoRequested")
+          assertThat(appliedStatus!!.apiName).isEqualTo("moreInfoRequested")
 
-          // verify that generated 'application.status-updated' domain event links
+          // verify that the generated 'application.status-updated' domain event links
           // to the CAS2 domain
           val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", application.id.toString())
           val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
@@ -243,13 +244,13 @@ class Cas2StatusUpdateTest(
                 realCas2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate.id)
               assertThat(persistedStatusDetailUpdate).isNotNull
 
-              val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
+              val appliedStatus = Cas2AssessmentStatus.entries
                 .find { status ->
                   status.id == persistedStatusUpdate.statusId
                 }
 
-              assertThat(appliedStatus!!.name).isEqualTo("offerDeclined")
-              assertThat(appliedStatus.statusDetails?.find { detail -> detail.id == persistedStatusDetailUpdate?.statusDetailId })
+              assertThat(appliedStatus!!.apiName).isEqualTo("offerDeclined")
+              assertThat(statusDetailsByStatus(appliedStatus, ServiceName.cas2v2)!!.find { detail -> detail.id == persistedStatusDetailUpdate?.statusDetailId })
                 .isNotNull()
 
               emailAsserter.assertEmailsRequestedCount(1)

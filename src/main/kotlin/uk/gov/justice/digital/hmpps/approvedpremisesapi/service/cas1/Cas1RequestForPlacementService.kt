@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
@@ -38,11 +40,20 @@ class Cas1RequestForPlacementService(
   private val jsonMapper: JsonMapper,
   private val sentryService: SentryService,
 ) {
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
+
   companion object {
     val TIER_SCORE_ABC = listOf(
       TierV3Score.A,
       TierV3Score.B,
       TierV3Score.C,
+    )
+
+    val TIER_SCORE_ABCD = listOf(
+      TierV3Score.A,
+      TierV3Score.B,
+      TierV3Score.C,
+      TierV3Score.D,
     )
 
     val TIER_SCORE_D_TO_G = listOf(
@@ -51,13 +62,16 @@ class Cas1RequestForPlacementService(
       TierV3Score.F,
       TierV3Score.G,
     )
+
+    val TIER_SCORE_E_TO_G = listOf(
+      TierV3Score.E,
+      TierV3Score.F,
+      TierV3Score.G,
+    )
   }
 
   fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity?): CasResult<List<RequestForPlacement>> {
-    val application = applicationService.getApplication(applicationId)
-      ?: return CasResult.NotFound("Application", applicationId.toString())
-
-    check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
+    applicationService.getApplication(applicationId) ?: return CasResult.NotFound("Application", applicationId.toString())
 
     val placementApplications = cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(applicationId)
     val placementRequests = placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId)
@@ -93,7 +107,16 @@ class Cas1RequestForPlacementService(
     val sentenceType: SentenceTypeOption,
     val liveTier: TierDto,
     val exceptionalApplication: Boolean,
-  )
+  ) {
+    override fun toString(): String = "DurationCriteria(" +
+      "apType=${apType.name}, " +
+      "application=${application.id}, " +
+      "isWomensApplication=${application.isWomensApplication}, " +
+      "sentenceType=${sentenceType.name}, " +
+      "tierScore=${liveTier.tierScore}, " +
+      "exceptionalApplication=$exceptionalApplication" +
+      ")"
+  }
 
   @SuppressWarnings("MagicNumber")
   private fun defaultDurationTierV2(
@@ -122,29 +145,35 @@ class Cas1RequestForPlacementService(
     val male = !(criteria.application.isWomensApplication ?: error("Cannot calculate duration for application ${criteria.application.id} because isWomensApplication is not set"))
 
     val tierAbc = tierScore in TIER_SCORE_ABC
+    val tierAbcd = tierScore in TIER_SCORE_ABCD
     val tierDtoGWithException = tierScore in TIER_SCORE_D_TO_G && criteria.exceptionalApplication
+    val tierEtoGWithException = tierScore in TIER_SCORE_E_TO_G && criteria.exceptionalApplication
 
-    fun maleIppRestrictedRule(period: Period) = if (isIpp && male) {
-      if (tierAbc) {
+    fun fixedPeriodIfApplicable(period: Period) = if (male) {
+      if (isIpp && tierAbc) {
+        period
+      } else if (!isIpp && (tierAbc || tierDtoGWithException)) {
         period
       } else {
         null
       }
-    } else if (tierAbc || tierDtoGWithException) {
-      period
     } else {
-      null
+      if (tierAbcd || tierEtoGWithException) {
+        period
+      } else {
+        null
+      }
     }
 
     val period = when (apType) {
-      ApType.pipe -> maleIppRestrictedRule(Period.ofWeeks(26))
-      ApType.esap -> maleIppRestrictedRule(Period.ofWeeks(52))
+      ApType.pipe -> fixedPeriodIfApplicable(Period.ofWeeks(26))
+      ApType.esap -> fixedPeriodIfApplicable(Period.ofWeeks(52))
 
       ApType.mhapStJosephs,
       ApType.mhapElliottHouse,
       -> {
         if (male) {
-          maleIppRestrictedRule(Period.ofWeeks(26))
+          fixedPeriodIfApplicable(Period.ofWeeks(26))
         } else {
           null
         }
@@ -153,10 +182,10 @@ class Cas1RequestForPlacementService(
       ApType.normal,
       ApType.rfap,
       -> {
-        if (isIpp) {
-          maleIppRestrictedRule(Period.ofWeeks(16))
-        } else {
-          if (male) {
+        if (male) {
+          if (isIpp) {
+            fixedPeriodIfApplicable(Period.ofWeeks(16))
+          } else {
             when (tierScore) {
               TierV3Score.A -> Period.ofWeeks(16)
               TierV3Score.B -> Period.ofWeeks(12)
@@ -173,13 +202,9 @@ class Cas1RequestForPlacementService(
               TierV3Score.MISSING -> null
               TierV3Score.NOT_SUPERVISED -> null
             }
-          } else {
-            if (tierAbc || tierDtoGWithException) {
-              Period.ofWeeks(16)
-            } else {
-              null
-            }
           }
+        } else {
+          fixedPeriodIfApplicable(Period.ofWeeks(16))
         }
       }
     }
@@ -187,6 +212,8 @@ class Cas1RequestForPlacementService(
     if (period == null) {
       sentryService.captureErrorMessage(message = "Could not calculate duration for criteria $criteria", groupId = "cas1-cant-calculate-duration")
     }
+
+    log.info("Have calculated duration as $period for criteria $criteria")
 
     return Cas1RequestsForPlacementDurationsCalculationResponseDto(period?.days, null)
   }

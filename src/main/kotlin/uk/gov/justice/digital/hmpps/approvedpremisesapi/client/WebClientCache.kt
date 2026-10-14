@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpMethod
@@ -26,6 +27,8 @@ class WebClientCache(
   private val sentryService: SentryService,
   private val clock: Clock,
 ) {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   fun checkPreemptiveCacheStatus(cacheConfig: PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus {
     val cacheKeyResolver = CacheKeyResolver(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
@@ -95,12 +98,7 @@ class WebClientCache(
     )
 
     if (attempt >= FAILED_ATTEMPT_WARN_THRESHOLD) {
-      sentryService.captureException(
-        RuntimeException(
-          "Unable to make upstream request to refresh cache after $attempt attempts. Path is $path",
-          exception,
-        ),
-      )
+      log.warn("Unable to make upstream request to refresh cache after $attempt attempts. Path is $path", exception)
     }
 
     writeToRedis(qualifiedKey, cacheEntry, body, cacheConfig.hardTtlSeconds.toLong())

@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
@@ -33,8 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruMana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -310,8 +311,6 @@ class ApplicationsTransformersTest {
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.createdByUserName).isEqualTo(user.name)
-    assertThat(result.arrivalDate).isEqualTo(OffsetDateTime.parse("2004-12-11T10:15:30Z").toInstant())
-    assertThat(result.duration).isEqualTo(52)
     assertThat(result.requestedPlacementDuration).isEqualTo(52)
     assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2004, 12, 11))
     assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isNull()
@@ -335,10 +334,23 @@ class ApplicationsTransformersTest {
 
     val result = applicationsTransformer.transformJpaToCas1Application(application, mockk())
 
-    assertThat(result.arrivalDate).isNull()
-    assertThat(result.duration).isEqualTo(52)
     assertThat(result.requestedPlacementDuration).isEqualTo(52)
     assertThat(result.requestedPlacementPeriod).isNull()
+  }
+
+  @Test
+  fun `transformJpaToCas1Application with arrival date and null duration`() {
+    val application = approvedPremisesApplicationFactory
+      .withArrivalDate(OffsetDateTime.parse("2004-12-11T10:15:30Z"))
+      .withRequestedPlacementDuration(null)
+      .produce()
+
+    val result = applicationsTransformer.transformJpaToCas1Application(application, mockk())
+
+    assertThat(result.requestedPlacementDuration).isNull()
+    assertThat(result.requestedPlacementPeriod?.arrival).isEqualTo(LocalDate.of(2004, 12, 11))
+    assertThat(result.requestedPlacementPeriod?.arrivalFlexible).isNull()
+    assertThat(result.requestedPlacementPeriod?.duration).isNull()
   }
 
   @Test
@@ -423,8 +435,8 @@ class ApplicationsTransformersTest {
   @MethodSource("applicationStatusArgs")
   fun `transformDomainToCas1ApplicationSummary transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
     val (apiStatus, jpaStatus) = args
-    val mockPersonInfoResult = mockk<PersonInfoResult>()
-    val mockPerson = mockk<Person>()
+    val mockPersonSummaryInfoResult = mockk<PersonSummaryInfoResult>()
+    val mockPersonSummary = mockk<PersonSummary>()
 
     val application = object : DomainApprovedPremisesApplicationSummary {
       override fun getIsWomensApplication() = false
@@ -445,15 +457,15 @@ class ApplicationsTransformersTest {
       override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
       override fun getHasRequestsForPlacement(): Boolean = true
     }
-    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockPerson
+    every { mockPersonTransformer.personSummaryInfoResultToPersonSummary(mockPersonSummaryInfoResult) } returns mockPersonSummary
 
     val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
       application,
-      mockPersonInfoResult,
+      mockPersonSummaryInfoResult,
     )
 
     assertThat(result.id).isEqualTo(application.getId())
-    assertThat(result.person).isEqualTo(mockPerson)
+    assertThat(result.person).isEqualTo(mockPersonSummary)
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
     assertThat(result.createdAt).isEqualTo(application.getCreatedAt())
     assertThat(result.submittedAt).isEqualTo(application.getSubmittedAt())
@@ -468,8 +480,8 @@ class ApplicationsTransformersTest {
 
   @Test
   fun `transformDomainToCas1ApplicationSummary transforms an Approved Premises application with arrival date in summer`() {
-    val mockPersonInfoResult = mockk<PersonInfoResult>()
-    val mockPerson = mockk<Person>()
+    val mockPersonSummaryInfoResult = mockk<PersonSummaryInfoResult>()
+    val mockPersonSummary = mockk<PersonSummary>()
 
     val application = object : DomainApprovedPremisesApplicationSummary {
       override fun getIsWomensApplication() = false
@@ -490,11 +502,11 @@ class ApplicationsTransformersTest {
       override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
       override fun getHasRequestsForPlacement(): Boolean = true
     }
-    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockPerson
+    every { mockPersonTransformer.personSummaryInfoResultToPersonSummary(mockPersonSummaryInfoResult) } returns mockPersonSummary
 
     val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
       application,
-      mockPersonInfoResult,
+      mockPersonSummaryInfoResult,
     )
 
     assertThat(result.arrivalDate).isEqualTo("2023-06-19")
@@ -502,8 +514,8 @@ class ApplicationsTransformersTest {
 
   @Test
   fun `transformDomainToCas1ApplicationSummary transforms an Approved Premises application with arrival date not defined`() {
-    val mockPersonInfoResult = mockk<PersonInfoResult>()
-    val mockPerson = mockk<Person>()
+    val mockPersonSummaryInfoResult = mockk<PersonSummaryInfoResult>()
+    val mockPersonSummary = mockk<PersonSummary>()
 
     val application = object : DomainApprovedPremisesApplicationSummary {
       override fun getIsWomensApplication() = false
@@ -524,11 +536,11 @@ class ApplicationsTransformersTest {
       override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
       override fun getHasRequestsForPlacement(): Boolean = true
     }
-    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockPerson
+    every { mockPersonTransformer.personSummaryInfoResultToPersonSummary(mockPersonSummaryInfoResult) } returns mockPersonSummary
 
     val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
       application,
-      mockPersonInfoResult,
+      mockPersonSummaryInfoResult,
     )
 
     assertThat(result.arrivalDate).isNull()
@@ -538,8 +550,8 @@ class ApplicationsTransformersTest {
   @EnumSource(ReleaseTypeOption::class)
   @NullSource
   fun `transformDomainToCas1ApplicationSummary transforms an Approved Premises application's release type correctly`(releaseTypeOption: ReleaseTypeOption?) {
-    val mockPersonInfoResult = mockk<PersonInfoResult>()
-    val mockPerson = mockk<Person>()
+    val mockPersonSummaryInfoResult = mockk<PersonSummaryInfoResult>()
+    val mockPersonSummary = mockk<PersonSummary>()
 
     val application = object : DomainApprovedPremisesApplicationSummary {
       override fun getIsWomensApplication() = false
@@ -561,11 +573,11 @@ class ApplicationsTransformersTest {
       override fun getHasRequestsForPlacement(): Boolean = true
     }
 
-    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockPerson
+    every { mockPersonTransformer.personSummaryInfoResultToPersonSummary(mockPersonSummaryInfoResult) } returns mockPersonSummary
 
     val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
       application,
-      mockPersonInfoResult,
+      mockPersonSummaryInfoResult,
     )
 
     assertThat(result.releaseType).isEqualTo(releaseTypeOption)

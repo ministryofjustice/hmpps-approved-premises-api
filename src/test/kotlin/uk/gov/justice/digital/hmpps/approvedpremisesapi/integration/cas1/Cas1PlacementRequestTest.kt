@@ -8,7 +8,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
@@ -48,11 +50,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.Comp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -295,17 +300,69 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       unmatchedPlacementRequest,
-                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate, tier = null),
+                      PersonSummaryInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender.asCaseSummary(), tier = null),
                     ),
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       withdrawnPlacementRequest,
-                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate, tier = null),
+                      PersonSummaryInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender.asCaseSummary(), tier = null),
                     ),
                   ),
                 ),
               )
           }
         }
+      }
+    }
+
+    @Test
+    fun `Returns a restricted person summary for a LAO offender the user cannot access`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        val (offenderDetails, _) = givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        )
+
+        val (placementRequest) = givenAPlacementRequest(
+          assessmentAllocatedTo = user,
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn,
+        )
+
+        val result = webTestClient.get()
+          .uri("/cas1/placement-requests")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+        assertThat(result.map { it.id }).containsExactly(placementRequest.id)
+        assertThat(result[0].person).isInstanceOf(RestrictedPersonSummary::class.java)
+      }
+    }
+
+    @Test
+    fun `Returns a full person summary for an offender the user can access`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        val (offenderDetails, _) = givenAnOffender()
+
+        val (placementRequest) = givenAPlacementRequest(
+          assessmentAllocatedTo = user,
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn,
+        )
+
+        val result = webTestClient.get()
+          .uri("/cas1/placement-requests")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+        assertThat(result.map { it.id }).containsExactly(placementRequest.id)
+        assertThat(result[0].person).isInstanceOf(FullPersonSummary::class.java)
       }
     }
 
@@ -493,7 +550,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                     ),
                   ),
                 ),
@@ -523,7 +580,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                     ),
                   ),
                 ),
@@ -553,11 +610,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest5thJan,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                    PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                   ),
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest10thJan,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                    PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                   ),
                 ),
               ),
@@ -586,11 +643,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest1stJan,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                    PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                   ),
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest5thJan,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                    PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                   ),
                 ),
               ),
@@ -619,7 +676,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequestA1,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                    PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                   ),
                 ),
               ),
@@ -651,7 +708,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             listOf(
               transformNotMatchedPlacementRequestJpaToApiSummary(
                 placementRequestA1,
-                PersonInfoResult.Success.Full(offender2Details.otherIds.crn, offender2Details, inmate2Details, tier = null),
+                PersonSummaryInfoResult.Success.Full(offender2Details.otherIds.crn, offender2Details.asCaseSummary(), tier = null),
               ),
             ),
           ),
@@ -688,10 +745,9 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             listOf(
               transformNotMatchedPlacementRequestJpaToApiSummary(
                 placementRequestA0,
-                PersonInfoResult.Success.Full(
+                PersonSummaryInfoResult.Success.Full(
                   offender1Details.otherIds.crn,
-                  offender1Details,
-                  inmate1Details,
+                  offender1Details.asCaseSummary(),
                   tier = null,
                 ),
               ),
@@ -727,7 +783,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             listOf(
               transformNotMatchedPlacementRequestJpaToApiSummary(
                 placementRequestB6,
-                PersonInfoResult.Success.Full(crn, offender2Details, inmate2Details, caseService.getCase(crn)!!.tier),
+                PersonSummaryInfoResult.Success.Full(crn, offender2Details.asCaseSummary(), caseService.getCase(crn)!!.tier),
               ),
             ),
           ),
@@ -761,7 +817,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             listOf(
               transformNotMatchedPlacementRequestJpaToApiSummary(
                 placementRequestE,
-                PersonInfoResult.Success.Full(offender2Details.otherIds.crn, offender2Details, inmate2Details, caseService.getCase(crn)!!.tier),
+                PersonSummaryInfoResult.Success.Full(offender2Details.otherIds.crn, offender2Details.asCaseSummary(), caseService.getCase(crn)!!.tier),
               ),
             ),
           ),
@@ -792,7 +848,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequestA1,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                    PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                   ),
                 ),
               ),
@@ -820,7 +876,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     standardRelease,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                    PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                   ),
                 ),
               ),
@@ -848,7 +904,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     parole,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+                    PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
                   ),
                 ),
               ),
@@ -890,7 +946,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementOffender1On5thJanTierA2Parole,
-                      PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details, tier = null),
+                      PersonSummaryInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details.asCaseSummary(), tier = null),
                     ),
                   ),
                 ),
@@ -1439,11 +1495,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       }
     }
 
-    fun transformNotMatchedPlacementRequestJpaToApiSummary(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
+    fun transformNotMatchedPlacementRequestJpaToApiSummary(jpa: PlacementRequestEntity, personSummaryInfo: PersonSummaryInfoResult): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
       requestedPlacementDuration = jpa.duration,
       requestedPlacementArrivalDate = jpa.expectedArrival,
       id = jpa.id,
-      person = personTransformer.personInfoResultToPerson(personInfo),
+      person = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
       placementRequestStatus = PlacementRequestStatus.notMatched,
       isParole = jpa.isParole,
       personTier = jpa.application.riskRatings?.tier?.value?.level,
@@ -1886,6 +1942,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
             assertThat(persistedPlacementRequest.isWithdrawn).isTrue
             assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+            assertThat(persistedPlacementRequest.withdrawalOccurredAt).isWithinTheLastMinute()
 
             snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN)
 

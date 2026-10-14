@@ -7,13 +7,13 @@ import java.time.LocalDate
 
 class Cas3ExternalPreviousBookingCancellationDtoFactory : Factory<Cas3ExternalPreviousBookingCancellationDto> {
   private var cancellationDate: Yielded<LocalDate> = { LocalDate.now() }
-  private var cancellationReason: Yielded<String?> = { null }
+  private var cancellationReason: Yielded<String> = { "the reason" }
 
   fun withCancellationDate(cancellationDate: LocalDate) = apply {
     this.cancellationDate = { cancellationDate }
   }
 
-  fun withCancellationReason(cancellationReason: String?) = apply {
+  fun withCancellationReason(cancellationReason: String) = apply {
     this.cancellationReason = { cancellationReason }
   }
 

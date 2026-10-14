@@ -190,7 +190,7 @@ class Cas1ApplicationCreationService(
       releaseType = Cas1ReleaseType.fromApiType(submitApplication.releaseType)
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival)
-      requestedPlacementDuration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.requestedDuration()
+      requestedPlacementDuration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.requestedPlacementDuration
       calculatedPlacementDuration = submitApplication.calculatedPlacementDuration
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()

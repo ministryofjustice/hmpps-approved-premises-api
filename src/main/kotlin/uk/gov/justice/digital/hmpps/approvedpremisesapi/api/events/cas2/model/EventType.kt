@@ -8,6 +8,7 @@ enum class EventType(@get:JsonValue val value: String) {
 
   applicationSubmitted("applications.cas2.application.submitted"),
   applicationStatusUpdated("applications.cas2.application.status-updated"),
+  arrived("accommodation.cas2.person.arrived"),
   ;
 
   companion object {

@@ -5,8 +5,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalCurrentApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalLatestBookingPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
@@ -64,13 +64,13 @@ class Cas3ApplicationService(
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
-  fun getCurrentPremisesByCrn(crn: String): Cas3ExternalLatestBookingDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
+  fun getCurrentPremisesByCrn(crn: String): Cas3ExternalLatestBookingPremisesDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
     .firstNotNullOfOrNull { application ->
       cas3BookingService.getLatestArrivedBooking(application.id)
         ?.let { transformer.transformToCas3PremisesSummary(it) }
     }
 
-  fun getSuitableApplicationByCrn(crn: String): Cas3SuitableApplication? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
+  fun getSuitableApplicationByCrn(crn: String): Cas3ExternalCurrentApplicationDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
     .firstOrNull {
       val now = OffsetDateTime.now(clock)
       val draftExpiryLimit = 2L
@@ -81,7 +81,7 @@ class Cas3ApplicationService(
       }
     }
     ?.let {
-      transformer.transformToCas3SuitableApplication(
+      transformer.transformToExternalCurrentApplicationDto(
         application = it,
         bookings = cas3BookingRepository.findAllBookingEntityCreatedAtDesc(it.id),
       )

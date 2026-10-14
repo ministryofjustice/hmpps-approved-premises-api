@@ -109,8 +109,8 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       withDeliusUsername(TEST_ASSESSOR_USERNAME)
     }
     val spaceBookingCreatedByUser = userEntityFactory.produceAndPersist {
-      withName(TEST_SPACE_BOOKING_CREATED_BY_USER_NAME)
       withProbationRegion(givenAProbationRegion())
+      withDeliusUsername(TEST_SPACE_BOOKING_CREATED_BY_USER_NAME)
     }
 
     val application = approvedPremisesApplicationEntity(
@@ -124,7 +124,8 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
 
     val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
 
-    applicationTimelineNoteEntity(application)
+    applicationTimelineNoteEntity(application, "Some random note about this application")
+    applicationTimelineNoteEntity(application, "An additional note about this application")
     approvedPremisesAssessmentClarificationNoteEntity(assessment)
     appealEntity(application, assessment)
 
