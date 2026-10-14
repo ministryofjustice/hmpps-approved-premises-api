@@ -15,23 +15,35 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -45,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
@@ -281,6 +294,211 @@ class Cas1AssessmentTransformerTest {
       assertThat(apiSummary.status).isEqualTo(Cas1AssessmentStatus.awaitingResponse)
       assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
       assertThat(apiSummary.person).isNotNull
+    }
+  }
+
+  @Nested
+  inner class TransformDomainToApiCas1ReferralHistory {
+    @Test
+    fun `transforms application with latest assessment and placement history`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val apArea = ApAreaEntityFactory().produce()
+      val cruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApArea(apArea)
+        .withCruManagementArea(cruManagementArea)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+        .produce()
+
+      val olderAssessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withCreatedAt(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
+        .produce()
+
+      val latestAssessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withCreatedAt(OffsetDateTime.parse("2024-01-02T10:00:00Z"))
+        .withSubmittedAt(OffsetDateTime.parse("2024-01-02T12:00:00Z"))
+        .produce()
+
+      application.assessments = mutableListOf(olderAssessment, latestAssessment)
+
+      val placementPairs = listOf(
+        Cas1PlacementPairDto(
+          dateApplied = LocalDate.parse("2024-01-05"),
+          placement = Cas1ExternalPlacementDto(
+            status = Cas1SpaceBookingStatus.ARRIVED,
+            actualArrivalDate = LocalDate.parse("2024-02-01"),
+            actualDepartureDate = LocalDate.parse("2024-02-28"),
+            cancellationReason = null,
+            premises = Cas1ExternalPremisesDto(
+              startDate = null,
+              endDate = null,
+              addressLine1 = "10 Test Street",
+              addressLine2 = null,
+              town = "London",
+              postcode = "SW1A 1AA",
+            ),
+          ),
+          requestForPlacement = Cas1ExternalRequestForPlacementDto(
+            status = RequestForPlacementStatus.placementBooked,
+            decision = null,
+            rejectionReason = "Not suitable",
+            submittedBy = null,
+            submittedAt = LocalDate.parse("2024-01-05"),
+            withdrawalReason = WithdrawPlacementRequestReason.noCapacity,
+            withdrawalDate = null,
+            expectedArrivalDate = null,
+            durationDays = null,
+          ),
+        ),
+      )
+
+      val result = cas1AssessmentTransformer.transformDomainToApiCas1ReferralHistory(application, placementPairs)
+
+      assertThat(result).hasSize(1)
+      val referral = result.first()
+      assertThat(referral.id).isEqualTo(latestAssessment.id)
+      assertThat(referral.applicationId).isEqualTo(application.id)
+      assertThat(referral.date).isEqualTo(LocalDate.parse("2024-01-05"))
+      assertThat(referral.applicationStatus).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+      assertThat(referral.type).isEqualTo(ServiceType.CAS1)
+      assertThat(referral.localAuthorityArea).isEqualTo(apArea.name)
+      assertThat(referral.pdu).isEqualTo(cruManagementArea.name)
+      assertThat(referral.referredBy).isEqualTo(Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode))
+      assertThat(referral.placementAddress).isEqualTo("10 Test Street, London, SW1A 1AA")
+      assertThat(referral.placementStatus).isEqualTo(Cas1SpaceBookingStatus.ARRIVED)
+      assertThat(referral.requestForPlacementStatus).isEqualTo(RequestForPlacementStatus.placementBooked)
+      assertThat(referral.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.noCapacity)
+      assertThat(referral.referralRejectionReason).isEqualTo("Not suitable")
+      assertThat(referral.uiUrl).isEqualTo("http://localhost:3000/applications/${application.id}")
+    }
+
+    @Test
+    fun `transforms application with latest assessment and empty placement history`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val apArea = ApAreaEntityFactory().produce()
+      val cruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApArea(apArea)
+        .withCruManagementArea(cruManagementArea)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+        .produce()
+
+      val olderAssessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withCreatedAt(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
+        .produce()
+
+      val latestAssessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withCreatedAt(OffsetDateTime.parse("2024-01-02T10:00:00Z"))
+        .withSubmittedAt(OffsetDateTime.parse("2024-01-02T12:00:00Z"))
+        .produce()
+
+      application.assessments = mutableListOf(olderAssessment, latestAssessment)
+
+      val result = cas1AssessmentTransformer.transformDomainToApiCas1ReferralHistory(application, emptyList())
+
+      assertThat(result).hasSize(1)
+      val referral = result.first()
+      assertThat(referral.id).isEqualTo(latestAssessment.id)
+      assertThat(referral.applicationId).isEqualTo(application.id)
+      assertThat(referral.date).isEqualTo(LocalDate.parse("2024-01-02"))
+      assertThat(referral.applicationStatus).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+      assertThat(referral.type).isEqualTo(ServiceType.CAS1)
+      assertThat(referral.localAuthorityArea).isEqualTo(apArea.name)
+      assertThat(referral.pdu).isEqualTo(cruManagementArea.name)
+      assertThat(referral.referredBy).isEqualTo(Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode))
+      assertThat(referral.placementAddress).isNull()
+      assertThat(referral.placementStatus).isNull()
+      assertThat(referral.requestForPlacementStatus).isNull()
+      assertThat(referral.withdrawalReason).isNull()
+      assertThat(referral.referralRejectionReason).isNull()
+      assertThat(referral.uiUrl).isEqualTo("http://localhost:3000/applications/${application.id}")
+    }
+
+    @Test
+    fun `transforms application without assessment falling back to application id and submittedAt`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApArea(null)
+        .withCruManagementArea(null)
+        .withSubmittedAt(OffsetDateTime.parse("2024-01-03T10:00:00Z"))
+        .withCreatedAt(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      application.assessments = mutableListOf()
+
+      val result = cas1AssessmentTransformer.transformDomainToApiCas1ReferralHistory(application, emptyList())
+
+      assertThat(result).hasSize(1)
+      val referral = result.first()
+      assertThat(referral.id).isEqualTo(application.id)
+      assertThat(referral.applicationId).isEqualTo(application.id)
+      assertThat(referral.date).isEqualTo(LocalDate.parse("2024-01-03"))
+      assertThat(referral.applicationStatus).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
+      assertThat(referral.type).isEqualTo(ServiceType.CAS1)
+      assertThat(referral.localAuthorityArea).isNull()
+      assertThat(referral.pdu).isNull()
+      assertThat(referral.referredBy).isEqualTo(Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode))
+      assertThat(referral.placementAddress).isNull()
+      assertThat(referral.uiUrl).isEqualTo("http://localhost:3000/applications/${application.id}")
+    }
+
+    @Test
+    fun `transforms application without assessment and no submittedAt falling back to createdAt`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .withCreatedAt(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      application.assessments = mutableListOf()
+
+      val result = cas1AssessmentTransformer.transformDomainToApiCas1ReferralHistory(application, emptyList())
+
+      assertThat(result).hasSize(1)
+      val referral = result.first()
+      assertThat(referral.id).isEqualTo(application.id)
+      assertThat(referral.applicationId).isEqualTo(application.id)
+      assertThat(referral.date).isEqualTo(LocalDate.parse("2024-01-01"))
     }
   }
 }
