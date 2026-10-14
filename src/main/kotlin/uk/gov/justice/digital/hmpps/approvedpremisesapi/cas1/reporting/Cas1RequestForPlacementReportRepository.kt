@@ -78,8 +78,6 @@ class Cas1RequestForPlacementReportRepository(
                     
     WHERE 
       pap.archived is FALSE AND
-      apa.arrival_date IS NOT NULL
-      AND
       ($placementRequestsRangeConstraints)
        
   UNION ALL
