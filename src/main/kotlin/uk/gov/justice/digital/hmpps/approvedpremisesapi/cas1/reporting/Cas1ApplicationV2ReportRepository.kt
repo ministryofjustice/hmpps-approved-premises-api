@@ -10,8 +10,12 @@ class Cas1ApplicationV2ReportRepository(
 
   companion object {
 
-    const val COMPLETE_DATASET_QUERY = """
-SELECT DISTINCT ON (application.submitted_at, application.id)
+    fun applicationsDataSetQuery(
+      selectAdditions: String = "DISTINCT ON (application.submitted_at, application.id)",
+      joinFilter: String = "",
+      whereAdditions: String = "",
+    ) = """
+SELECT $selectAdditions
   application.id AS application_id,
   submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS crn,
   submission_event.data -> 'eventDetails' -> 'personReference' ->> 'noms' AS noms,
@@ -83,7 +87,7 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   
 
 FROM approved_premises_applications apa
-
+$joinFilter
 INNER JOIN applications application on application.id = apa.id
 
 INNER JOIN domain_events submission_event on submission_event.type = 'APPROVED_PREMISES_APPLICATION_SUBMITTED' 
@@ -152,18 +156,8 @@ LEFT JOIN users as latest_appeal_assessment_assessor on latest_appeal_assessment
 LEFT JOIN ap_areas as ap_area on ap_area.id = apa.ap_area_id
 
 WHERE application.submitted_at IS NOT NULL
+$whereAdditions
     """
-
-    const val QUERY =
-      """
-$COMPLETE_DATASET_QUERY
-AND (
-  (application.submitted_at >= :startDateTimeInclusive AND application.submitted_at <= :endDateTimeInclusive) OR
-  (withdrawal_event.occurred_at >= :startDateTimeInclusive AND withdrawal_event.occurred_at <= :endDateTimeInclusive)
-)
-ORDER BY application.submitted_at ASC, application.id ASC 
-;
-"""
   }
 
   fun generateForSubmissionOrWithdrawalDate(
@@ -171,7 +165,15 @@ ORDER BY application.submitted_at ASC, application.id ASC
     endDateTimeInclusive: LocalDateTime,
     jbdcResultSetConsumer: JdbcResultSetConsumer,
   ) = reportJdbcTemplate.query(
-    QUERY,
+    applicationsDataSetQuery(
+      whereAdditions = """
+    AND (
+      (application.submitted_at >= :startDateTimeInclusive AND application.submitted_at <= :endDateTimeInclusive) OR
+      (withdrawal_event.occurred_at >= :startDateTimeInclusive AND withdrawal_event.occurred_at <= :endDateTimeInclusive)
+    )
+    ORDER BY application.submitted_at ASC, application.id ASC 
+      """.trimIndent(),
+    ),
     mapOf<String, Any>(
       "startDateTimeInclusive" to startDateTimeInclusive,
       "endDateTimeInclusive" to endDateTimeInclusive,
