@@ -68,7 +68,8 @@ class Cas1ApAreaMappingServiceTest {
       "N41EXM, NE",
       "N41EP4, NE",
       "XXXNAT, NE",
-      "XXXNAT, NE",
+      "XXXYOS, NE",
+      "N43TM6, NE",
     )
     fun `determineApArea when region has no ap area defined using team code`(
       deliusTeamCode: String,
