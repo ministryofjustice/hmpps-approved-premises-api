@@ -11,6 +11,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 class Cas1ApAreaMappingService(
   private val apAreaRepository: ApAreaRepository,
 ) {
+  companion object {
+    const val AP_AREA_IF_NO_SPECIFIC_LOCATION = "NE"
+    const val AP_AREA_IF_NO_TEAMS = "NE"
+  }
+
   private val deliusTeamMappings = listOf(
     DeliusTeamMapping("N07CEU", "LON"),
     DeliusTeamMapping("N43CP1", "NE"),
@@ -33,9 +38,8 @@ class Cas1ApAreaMappingService(
     DeliusTeamMapping("N41EP4", "NE"),
     DeliusTeamMapping("XXXNAT", "NE"),
     DeliusTeamMapping("XXXYOS", "NE"),
+    DeliusTeamMapping("N43TM6", AP_AREA_IF_NO_SPECIFIC_LOCATION),
   )
-
-  private val noTeamsApArea = "NE"
 
   data class DeliusTeamMapping(
     val deliusTeamCode: String,
@@ -57,7 +61,7 @@ class Cas1ApAreaMappingService(
       return usersProbationRegion.apArea!!
     } else {
       if (deliusUserTeamCodes.isEmpty()) {
-        return apAreaForCode(noTeamsApArea)
+        return apAreaForCode(AP_AREA_IF_NO_TEAMS)
       }
 
       val deliusTeamMapping = deliusTeamMappings.firstOrNull { deliusTeamMapping ->

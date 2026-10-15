@@ -41,7 +41,7 @@ class Cas1RequestForPlacementReportRepository(
     to_char(CAST(latest_assessment.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_decision_made_date,
     CASE
       WHEN pr.id IS NULL THEN to_char(apa_withdrawn_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-      ELSE to_char(pr_withdrawn_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+      ELSE to_char(pr.withdrawal_occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
      END AS request_for_placement_withdrawal_date,
     CASE
       WHEN pr.id IS NULL THEN apa.withdrawal_reason
@@ -71,15 +71,9 @@ class Cas1RequestForPlacementReportRepository(
     LEFT OUTER JOIN domain_events AS apa_withdrawn_event ON 
                     apa_withdrawn_event.application_id = apa.id AND
                     apa_withdrawn_event.type = 'APPROVED_PREMISES_APPLICATION_WITHDRAWN'
-    LEFT OUTER JOIN domain_events AS pr_withdrawn_event ON 
-                    pr_withdrawn_event.application_id = apa.id AND
-                    pr_withdrawn_event.type = 'APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN' AND 
-                    cast(pr_withdrawn_event.data -> 'eventDetails' ->> 'matchRequestId' AS uuid) = pr.id
                     
     WHERE 
       pap.archived is FALSE AND
-      apa.arrival_date IS NOT NULL
-      AND
       ($placementRequestsRangeConstraints)
        
   UNION ALL
@@ -140,7 +134,7 @@ class Cas1RequestForPlacementReportRepository(
   val query = buildQuery(
     placementRequestsRangeConstraints = """
       (pap.submitted_at >= :startDateTimeInclusive AND pap.submitted_at <= :endDateTimeInclusive) OR
-      (pr_withdrawn_event.occurred_at >= :startDateTimeInclusive AND pr_withdrawn_event.occurred_at <= :endDateTimeInclusive)
+      (pr.withdrawal_occurred_at >= :startDateTimeInclusive AND pr.withdrawal_occurred_at <= :endDateTimeInclusive)
     """.trimIndent(),
     placementApplicationsRangeConstraints = """
       (pa.submitted_at >= :startDateTimeInclusive AND pa.submitted_at <= :endDateTimeInclusive) OR
