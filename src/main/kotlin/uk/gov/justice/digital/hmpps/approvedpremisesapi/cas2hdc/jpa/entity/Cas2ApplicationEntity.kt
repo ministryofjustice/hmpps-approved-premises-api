@@ -89,6 +89,18 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
 
   @Query(
     """
+      select * from cas_2_applications
+      where created_at >= :createdAfter
+      and application_origin = 'other'
+      and document is not null
+      and data -> 'risks-of-serious-harm-to-others' -> 'manual-rosh-information' is not null;
+    """,
+    nativeQuery = true,
+  )
+  fun findAllSubmittedWithManualRoshInformation(createdAfter: OffsetDateTime): List<Cas2ApplicationEntity>
+
+  @Query(
+    """
     SELECT a
     FROM Cas2ApplicationEntity a
     WHERE a.crn = :crn
