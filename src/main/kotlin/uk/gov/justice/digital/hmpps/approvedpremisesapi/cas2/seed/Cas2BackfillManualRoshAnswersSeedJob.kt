@@ -48,7 +48,7 @@ class Cas2BackfillManualRoshAnswersSeedJob(
   }
 
   fun addManualRoshAnswers(applicationId: UUID, data: String?, document: String?): String? {
-    if (data == null || document == null) return null
+    if (data == null || document == null) error("Expected application $applicationId to have data and document")
 
     val manualRosh = jsonMapper.readTree(data)
       .path("risks-of-serious-harm-to-others")
@@ -62,8 +62,7 @@ class Cas2BackfillManualRoshAnswersSeedJob(
       ?.firstOrNull { it.path("title").stringValue() == ROSH_TASK_TITLE } as? ObjectNode
 
     if (roshTask == null) {
-      log.warn("Application $applicationId has manual RoSH information but no '$ROSH_TASK_TITLE' task in its document")
-      return null
+      error("Application $applicationId has manual RoSH information but no '$ROSH_TASK_TITLE' task in its document")
     }
 
     val questionsAndAnswers = roshTask.get("questionsAndAnswers") as? ArrayNode

@@ -6,6 +6,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import tools.jackson.databind.node.ArrayNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2BackfillManualRoshAnswersSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2BackfillManualRoshAnswersSeedJob
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -77,15 +79,34 @@ class Cas2BackfillManualRoshAnswersSeedJobTest {
   inner class AddManualRoshAnswers {
 
     @Test
-    fun `adds all manual RoSH answers when they are missing, preserving existing answers`() {
+    fun `adds all manual RoSH answers when they are missing`() {
       val result = job.addManualRoshAnswers(
         UUID.randomUUID(),
         dataWithManualRosh,
         document("""[{"question": "Who is at risk?", "answer": "Person A"}]"""),
       )
 
-      assertThat(roshQuestionsAndAnswers(result!!))
-        .isEqualTo(expectedAnswers + listOf("Who is at risk?" to "Person A"))
+      val expected = """
+        {
+          "sections": [{
+            "title": "Risk and health needs",
+            "tasks": [{
+              "title": "Add risk of serious harm to others",
+              "questionsAndAnswers": [
+                { "question": "Created by prison offender manager", "answer": "8 October 2026" },
+                { "question": "Overall risk rating", "answer": "High" },
+                { "question": "Risk to children", "answer": "Low" },
+                { "question": "Risk to known adult", "answer": "High" },
+                { "question": "Risk to public", "answer": "Medium" },
+                { "question": "Risk to staff", "answer": "Very high" },
+                { "question": "Who is at risk?", "answer": "Person A" }
+              ]
+            }]
+          }]
+        }
+      """.trimIndent()
+
+      assertJsonEquals(expected, result)
     }
 
     @Test
@@ -112,28 +133,6 @@ class Cas2BackfillManualRoshAnswersSeedJobTest {
     }
 
     @Test
-    fun `adds only missing answers when some are already present`() {
-      val roshDocument = """
-        [
-          {"question": "Created by prison offender manager", "answer": "8 October 2026"},
-          {"question": "Overall risk rating", "answer": "High"},
-          {"question": "Risk to children", "answer": "Low"},
-          {"question": "Risk to known adult", "answer": "High"},
-          {"question": "Who is at risk?", "answer": "Person C"}
-        ]
-      """.trimIndent()
-
-      val result = job.addManualRoshAnswers(
-        UUID.randomUUID(),
-        dataWithManualRosh,
-        document(roshDocument),
-      )
-
-      assertThat(roshQuestionsAndAnswers(result!!))
-        .isEqualTo(expectedAnswers + listOf("Who is at risk?" to "Person C"))
-    }
-
-    @Test
     fun `returns null when there is no manual RoSH information`() {
       val data = """{"risks-of-serious-harm-to-others":{"summary":{"oasysImportedDate":"2026-10-01"}}}"""
 
@@ -141,16 +140,16 @@ class Cas2BackfillManualRoshAnswersSeedJobTest {
     }
 
     @Test
-    fun `returns null when the document has no RoSH task`() {
+    fun `throws an error when the document has no RoSH task`() {
       val documentWithoutTask = """{"sections":[{"title":"Risk and health needs","tasks":[]}]}"""
 
-      assertThat(job.addManualRoshAnswers(UUID.randomUUID(), dataWithManualRosh, documentWithoutTask)).isNull()
+      assertThrows<IllegalStateException> { job.addManualRoshAnswers(UUID.randomUUID(), dataWithManualRosh, documentWithoutTask) }
     }
 
     @Test
-    fun `returns null when data or document is null`() {
-      assertThat(job.addManualRoshAnswers(UUID.randomUUID(), null, document("[]"))).isNull()
-      assertThat(job.addManualRoshAnswers(UUID.randomUUID(), dataWithManualRosh, null)).isNull()
+    fun `throws an error when data or document is null`() {
+      assertThrows<IllegalStateException> { job.addManualRoshAnswers(UUID.randomUUID(), null, document("[]")) }
+      assertThrows<IllegalStateException> { job.addManualRoshAnswers(UUID.randomUUID(), dataWithManualRosh, null) }
     }
   }
 
@@ -179,7 +178,28 @@ class Cas2BackfillManualRoshAnswersSeedJobTest {
       verify { repository.findAllSubmittedWithManualRoshInformation(OffsetDateTime.parse("2026-09-01T00:00+01:00")) }
       verify(exactly = 1) { repository.save(needsUpdate) }
       verify(exactly = 0) { repository.save(alreadyCorrect) }
-      assertThat(roshQuestionsAndAnswers(needsUpdate.document!!)).isEqualTo(expectedAnswers + listOf("Who is at risk?" to "Person D"))
+
+      val expected = """
+        {
+          "sections": [{
+            "title": "Risk and health needs",
+            "tasks": [{
+              "title": "Add risk of serious harm to others",
+              "questionsAndAnswers": [
+                { "question": "Created by prison offender manager", "answer": "8 October 2026" },
+                { "question": "Overall risk rating", "answer": "High" },
+                { "question": "Risk to children", "answer": "Low" },
+                { "question": "Risk to known adult", "answer": "High" },
+                { "question": "Risk to public", "answer": "Medium" },
+                { "question": "Risk to staff", "answer": "Very high" },
+                { "question": "Who is at risk?", "answer": "Person D" }
+              ]
+            }]
+          }]
+        }
+      """.trimIndent()
+
+      assertJsonEquals(expected, needsUpdate.document)
     }
   }
 }
