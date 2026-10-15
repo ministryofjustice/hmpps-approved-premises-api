@@ -113,6 +113,7 @@ generic-service:
 
     FEATURE-FLAGS_CAS2-SQS-LISTENER-ENABLED: true
     FEATURE-FLAGS_USE-TIER-V3: true
+    FEATURE-FLAGS_DATA-SCIENCE-REPORTS-SCHEDULED-JOB-ENABLED: false
 
   namespace_secrets:
     hmpps-domain-events-topic:

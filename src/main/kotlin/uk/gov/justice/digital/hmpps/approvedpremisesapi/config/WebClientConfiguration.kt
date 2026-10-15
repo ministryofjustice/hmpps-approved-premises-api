@@ -300,7 +300,7 @@ class WebClientConfiguration(
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.document-management-api.base-url}") documentManagementApiBaseUrl: String,
   ) = WebClientConfig(
-    webClientBuilder
+    webClient = webClientBuilder
       .authorisedWebClient(
         authorizedClientManager = authorizedClientManager,
         registrationId = "document-management-api",
@@ -308,5 +308,11 @@ class WebClientConfiguration(
         timeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
         connectionTimeout = Duration.ofMillis(defaultUpstreamTimeoutMs),
       ),
+    /**
+     * Upload is non-idempotent: the Document Management API rejects an already-uploaded UUID.
+     * If a request fails, it should be handled by the caller and retried at a higher level if appropriate.
+     * This is to avoid the risk of duplicate uploads or other unintended side effects.
+     */
+    maxRetryAttempts = 0,
   )
 }
