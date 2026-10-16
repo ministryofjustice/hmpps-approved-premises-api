@@ -34,9 +34,7 @@ class Cas1WithdrawableService(
   ): WithdrawableEntitiesWithNotes {
     val tree = cas1WithdrawableTreeBuilder.treeForApp(application, user)
 
-    if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for application ${application.id} is $tree")
-    }
+    log.info("Withdrawables tree for application ${application.id} is $tree")
 
     return WithdrawableEntitiesWithNotes(
       notes = tree.notes(),
@@ -47,9 +45,7 @@ class Cas1WithdrawableService(
   fun isDirectlyWithdrawable(placementRequest: PlacementRequestEntity, user: UserEntity): Boolean {
     val tree = cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user)
 
-    if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for placement request ${placementRequest.id} is $tree")
-    }
+    log.info("Withdrawables tree for placement request ${placementRequest.id} is $tree")
 
     return toDirectlyWithdrawableEntities(tree.rootNode)
       .any { it.type == WithdrawableEntityType.PlacementRequest && it.id == placementRequest.id }
@@ -58,9 +54,7 @@ class Cas1WithdrawableService(
   fun isDirectlyWithdrawable(placementApplication: PlacementApplicationEntity, user: UserEntity): Boolean {
     val tree = cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
 
-    if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree for placement app ${placementApplication.id} is $tree")
-    }
+    log.info("Withdrawables tree for placement app ${placementApplication.id} is $tree")
 
     return toDirectlyWithdrawableEntities(tree.rootNode)
       .any { it.type == WithdrawableEntityType.PlacementApplication && it.id == placementApplication.id }
