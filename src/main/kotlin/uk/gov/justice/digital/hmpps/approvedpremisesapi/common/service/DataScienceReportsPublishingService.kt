@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.FileSystemResource
+import org.springframework.retry.support.RetryTemplate
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.DocumentManagementApiClient
@@ -9,49 +10,22 @@ import java.io.File
 import java.time.LocalDate
 
 @Service
+@SuppressWarnings("MagicNumber")
 class DataScienceReportsPublishingService(
   private val dataScienceReportsGenerator: DataScienceReportsGenerator,
   private val documentManagementApiClient: DocumentManagementApiClient,
   private val tempFileFactory: (prefix: String, suffix: String) -> File = { prefix, suffix -> File.createTempFile(prefix, suffix) },
+  private val retryTemplate: RetryTemplate = RetryTemplate.builder()
+    .maxAttempts(3)
+    .exponentialBackoff(5000, 2.0, 30000)
+    .notRetryOn(listOf(IllegalArgumentException::class.java))
+    .build(),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   companion object {
     const val CAS_DOCUMENT_TYPE = "CAS_DOCUMENTS"
-  }
-
-  /**
-   * Generates and uploads all Data Science CSV reports for CAS1, CAS2, and CAS3.
-   *
-   * Each report generation and upload is executed within an isolated try-catch block.
-   * If any report fails, processing continues to allow later reports to run and collect full diagnostics.
-   * If any failures occur, an aggregatedException [IllegalStateException] is thrown containing all failed services,
-   * with individual causes attached as suppressed exceptions to ensure the overall job is marked as failed.
-   */
-  @SuppressWarnings("TooGenericExceptionCaught")
-  fun generateAndUploadAllReports(executionDate: LocalDate) {
-    log.info("Starting CAS Data Science reports generation and upload for execution date: $executionDate")
-    val failures = mutableListOf<DocumentUploadFailure>()
-
-    CasDocumentSubType.entries.forEach { documentSubType ->
-      try {
-        generateAndUploadReport(documentSubType, executionDate)
-      } catch (ex: Exception) {
-        log.error("Failed to generate or upload ${documentSubType.value} report for date $executionDate", ex)
-        failures.add(DocumentUploadFailure(documentSubType.value, ex))
-      }
-    }
-
-    if (failures.isNotEmpty()) {
-      val failedServices = failures.joinToString(", ") { it.service }
-      val errorMessage = "CAS Data Science report scheduled execution completed with failures for services: $failedServices"
-      log.error(errorMessage)
-      val aggregatedException = IllegalStateException(errorMessage)
-      failures.forEach { failure -> aggregatedException.addSuppressed(failure.cause) }
-      throw aggregatedException
-    }
-
-    log.info("Successfully generated and uploaded all CAS Data Science reports for execution date: $executionDate")
+    val RETRY_ERROR_CODES = listOf(500, 501, 502, 503, 504)
   }
 
   /**
@@ -84,50 +58,14 @@ class DataScienceReportsPublishingService(
    * }
    * ```
    */
-  @SuppressWarnings("TooGenericExceptionCaught", "TooGenericExceptionThrown", "ThrowsCount")
-  private fun generateAndUploadReport(documentSubType: CasDocumentSubType, executionDate: LocalDate) {
+  fun generateAndUploadReport(documentSubType: CasDocumentSubType, executionDate: LocalDate) {
     val tempFile = tempFileFactory("cas_data_science_${documentSubType.value.lowercase()}", ".csv")
 
     try {
       val report = dataScienceReportsGenerator.generateReport(documentSubType, executionDate, tempFile)
 
-      /**
-       * Metadata key-value pairs attached to the document payload.
-       * Enables searching and filtering documents in the Document Management API (`POST /documents/search`)
-       * by documentType (`CAS_DOCUMENTS`), report run date (`date`), and document subtype (`documentSubType`).
-       */
-      val metadata = mapOf(
-        "date" to executionDate.toString(),
-        "documentSubType" to documentSubType.value,
-      )
-
-      val uploadResult = documentManagementApiClient.uploadDocument(
-        documentType = CAS_DOCUMENT_TYPE,
-        documentUuid = report.documentUuid,
-        filename = report.filename,
-        fileResource = FileSystemResource(tempFile),
-        metadata = metadata,
-      )
-
-      when (uploadResult) {
-        is ClientResult.Success -> {
-          log.info("Successfully uploaded ${documentSubType.value} report to Document Management API (UUID: ${uploadResult.body.documentUuid}, S3 filename: ${uploadResult.body.filename})")
-        }
-        is ClientResult.Failure.StatusCode -> {
-          val errorMsg = "Document Management API returned HTTP status ${uploadResult.status} for ${documentSubType.value} report upload: ${uploadResult.body}"
-          log.error(errorMsg)
-          throw IllegalStateException(errorMsg)
-        }
-        is ClientResult.Failure.Other -> {
-          val errorMsg = "Failed to communicate with Document Management API for ${documentSubType.value} report upload: ${uploadResult.exception.message}"
-          log.error(errorMsg, uploadResult.exception)
-          throw IllegalStateException(errorMsg, uploadResult.exception)
-        }
-        else -> {
-          val errorMsg = "Unexpected failure uploading ${documentSubType.value} report to Document Management API"
-          log.error(errorMsg)
-          throw IllegalStateException(errorMsg)
-        }
+      retryTemplate.execute<Unit, Throwable> {
+        uploadDocumentReport(executionDate, documentSubType, report, tempFile)
       }
     } finally {
       if (tempFile.exists()) {
@@ -139,8 +77,60 @@ class DataScienceReportsPublishingService(
     }
   }
 
-  private data class DocumentUploadFailure(
-    val service: String,
-    val cause: Throwable,
-  )
+  @SuppressWarnings("TooGenericExceptionCaught", "TooGenericExceptionThrown", "ThrowsCount")
+  private fun uploadDocumentReport(
+    executionDate: LocalDate,
+    documentSubType: CasDocumentSubType,
+    report: GeneratedReport,
+    tempFile: File,
+  ) {
+    /**
+     * Metadata key-value pairs attached to the document payload.
+     * Enables searching and filtering documents in the Document Management API (`POST /documents/search`)
+     * by documentType (`CAS_DOCUMENTS`), report run date (`date`), and document subtype (`documentSubType`).
+     */
+    val metadata = mapOf(
+      "date" to executionDate.toString(),
+      "documentSubType" to documentSubType.value,
+    )
+
+    val uploadResult = documentManagementApiClient.uploadDocument(
+      documentType = CAS_DOCUMENT_TYPE,
+      documentUuid = report.documentUuid,
+      filename = report.filename,
+      fileResource = FileSystemResource(tempFile),
+      metadata = metadata,
+    )
+
+    when (uploadResult) {
+      is ClientResult.Success -> {
+        log.info("Successfully uploaded ${documentSubType.value} report to Document Management API (UUID: ${uploadResult.body.documentUuid}, S3 filename: ${uploadResult.body.filename})")
+      }
+
+      is ClientResult.Failure.StatusCode -> {
+        val statusCode = uploadResult.status.value()
+        val errorMsg =
+          "Document Management API returned HTTP status $statusCode for ${documentSubType.value} report upload: ${uploadResult.body}"
+        log.error(errorMsg)
+        if (statusCode in RETRY_ERROR_CODES) {
+          throw IllegalStateException(errorMsg)
+        } else {
+          throw IllegalArgumentException(errorMsg)
+        }
+      }
+
+      is ClientResult.Failure.Other -> {
+        val errorMsg =
+          "Failed to communicate with Document Management API for ${documentSubType.value} report upload: ${uploadResult.exception.message}"
+        log.error(errorMsg, uploadResult.exception)
+        throw IllegalStateException(errorMsg, uploadResult.exception)
+      }
+
+      else -> {
+        val errorMsg = "Unexpected failure uploading ${documentSubType.value} report to Document Management API"
+        log.error(errorMsg)
+        throw IllegalArgumentException(errorMsg)
+      }
+    }
+  }
 }

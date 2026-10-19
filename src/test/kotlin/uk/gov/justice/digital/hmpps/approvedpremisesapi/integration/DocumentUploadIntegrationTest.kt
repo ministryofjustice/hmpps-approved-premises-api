@@ -19,15 +19,23 @@ import org.springframework.core.io.Resource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1DataScienceReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.Cas2DataScienceReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.Cas3DataScienceReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.DocumentManagementApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.documentmanagement.Document
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CasDocumentSubType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.DataScienceReportsPublishingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAllCasDataScienceReportEntities
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.documentManagementApiMockSuccessfulUpload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.documentManagementApiMockSuccessfulUploadAny
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.documentManagementApiMockUnsuccessfulUpload
+import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.util.UUID
+import kotlin.use
 
 class DocumentUploadIntegrationTest : IntegrationTestBase() {
 
@@ -35,10 +43,36 @@ class DocumentUploadIntegrationTest : IntegrationTestBase() {
   lateinit var documentManagementApiClient: DocumentManagementApiClient
 
   @Autowired
+  lateinit var cas1Repo: Cas1DataScienceReportRepository
+
+  @Autowired
+  lateinit var cas2Repo: Cas2DataScienceReportRepository
+
+  @Autowired
+  lateinit var cas3Repo: Cas3DataScienceReportRepository
+
+  @Autowired
   lateinit var dataScienceReportsPublishingService: DataScienceReportsPublishingService
 
   @Autowired
   lateinit var dataSetup: DocumentUploadDataSetup
+
+  @Test
+  fun `data science queries for CAS1, CAS2, and CAS3 produce CSV containing matching applications`() {
+    val createdEntities = givenAllCasDataScienceReportEntities()
+
+    val out1 = ByteArrayOutputStream()
+    CsvJdbcResultSetConsumer(out1).use { cas1Repo.generate(it) }
+    assertThat(out1.toString()).contains(createdEntities.cas1.application.crn)
+
+    val out2 = ByteArrayOutputStream()
+    CsvJdbcResultSetConsumer(out2).use { cas2Repo.generate(it) }
+    assertThat(out2.toString()).contains(createdEntities.cas2.application.crn)
+
+    val out3 = ByteArrayOutputStream()
+    CsvJdbcResultSetConsumer(out3).use { cas3Repo.generate(it) }
+    assertThat(out3.toString()).contains(createdEntities.cas3.application.crn)
+  }
 
   @Test
   fun `uploadDocument sends multipart file and metadata successfully`() {
@@ -94,7 +128,7 @@ class DocumentUploadIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `generateAndUploadAllReports uploads CSV files and metadata for all CAS services`() {
+  fun `generateAndUploadReport uploads CSV files and metadata for all CAS services`() {
     val executionDate = LocalDate.of(2026, 10, 7)
     val sampleDocument = dataSetup.createSampleDocument()
 
@@ -103,7 +137,9 @@ class DocumentUploadIntegrationTest : IntegrationTestBase() {
       response = sampleDocument,
     )
 
-    dataScienceReportsPublishingService.generateAndUploadAllReports(executionDate)
+    listOf(CasDocumentSubType.CAS1, CasDocumentSubType.CAS2, CasDocumentSubType.CAS3).forEach { subType ->
+      dataScienceReportsPublishingService.generateAndUploadReport(subType, executionDate)
+    }
 
     listOf("CAS1", "CAS2", "CAS3").forEach { serviceType ->
       val expectedFilename = "${serviceType.lowercase()}_data_science_report_2026-10-07.csv"
