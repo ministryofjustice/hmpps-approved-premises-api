@@ -18,14 +18,19 @@ class Cas1DomainEventReplaySeedJob(
 
   override fun deserializeRow(columns: Map<String, String>) = Cas1DomainEventReplaySeedCsvRow(
     domainEventId = columns["domain_event_id"]!!.trim(),
+    personReferenceCrnOverride = columns["person_reference_crn_override"]?.trim()?.takeIf { it.isNotEmpty() },
   )
 
   override fun processRow(row: Cas1DomainEventReplaySeedCsvRow) {
     log.info("Replaying domain event ${row.domainEventId}")
-    domainEventService.replay(UUID.fromString(row.domainEventId))
+    domainEventService.replay(
+      domainEventId = UUID.fromString(row.domainEventId),
+      personReferenceCrnOverride = row.personReferenceCrnOverride,
+    )
   }
 }
 
 data class Cas1DomainEventReplaySeedCsvRow(
   val domainEventId: String,
+  val personReferenceCrnOverride: String? = null,
 )

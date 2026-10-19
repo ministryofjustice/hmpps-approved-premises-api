@@ -712,6 +712,46 @@ class Cas1DomainEventServiceTest {
         )
       }
     }
+
+    @Test
+    fun `replay emits event to SNS using a person reference CRN override`() {
+      val id = UUID.fromString("9785dd29-0e1f-467a-933e-5e731cc27adc")
+      val type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
+      val applicationId = UUID.randomUUID()
+      val bookingId = UUID.fromString("8785dd29-0e1f-467a-933e-5e731cc27adc")
+      val crn = "CRN"
+      val overrideCrn = "OVERRIDE_CRN"
+      val nomsNumber = "theNomsNumber"
+      val occurredAt = OffsetDateTime.now()
+
+      val domainEventEntity = DomainEventEntityFactory()
+        .withId(id)
+        .withType(type)
+        .withApplicationId(applicationId)
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .withOccurredAt(occurredAt)
+        .withBookingId(bookingId)
+        .produce()
+
+      every { domainEventRepositoryMock.findByIdOrNull(id) } returns domainEventEntity
+      every { mockDomainEventUrlConfig.getUrlForDomainEventId(type, id) } returns "theCorrectUrl"
+      every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
+
+      domainEventService.replay(id, overrideCrn)
+
+      verify(exactly = 1) {
+        domainEventWorkerMock.emitEvent(
+          withArg { snsEvent ->
+            assertThat(snsEvent.eventType).isEqualTo(type.typeName)
+            assertThat(snsEvent.detailUrl).isEqualTo("theCorrectUrl")
+            assertThat(snsEvent.personReference.identifiers.first { it.type == "CRN" }.value).isEqualTo(overrideCrn)
+            assertThat(snsEvent.personReference.identifiers.first { it.type == "NOMS" }.value).isEqualTo(nomsNumber)
+          },
+          id,
+        )
+      }
+    }
   }
 
   @Nested

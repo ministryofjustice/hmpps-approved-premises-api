@@ -283,15 +283,16 @@ class Cas1DomainEventService(
     }
   }
 
-  fun replay(domainEventId: UUID) {
+  fun replay(domainEventId: UUID, personReferenceCrnOverride: String? = null) {
     val domainEventEntity = domainEventRepository.findByIdOrNull(domainEventId)
       ?: throw NotFoundProblem(domainEventId, "DomainEvent")
 
-    emit(domainEventEntity)
+    emit(domainEventEntity, personReferenceCrnOverride)
   }
 
   private fun emit(
     domainEvent: DomainEventEntity,
+    personReferenceCrnOverride: String? = null,
   ) {
     val eventType = domainEvent.type
     val typeName = eventType.typeName
@@ -307,7 +308,7 @@ class Cas1DomainEventService(
     }
 
     val typeDescription = eventType.typeDescription
-    val crn = domainEvent.crn
+    val crn = personReferenceCrnOverride ?: domainEvent.crn
     val nomsNumber = domainEvent.nomsNumber ?: "Unknown NOMS Number"
     val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
 
