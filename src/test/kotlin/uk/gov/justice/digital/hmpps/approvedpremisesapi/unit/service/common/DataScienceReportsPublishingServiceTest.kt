@@ -8,6 +8,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.retry.support.RetryTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.DocumentManagementApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.documentmanagement.Document
@@ -25,13 +26,14 @@ class DataScienceReportsPublishingServiceTest {
   private val generator = mockk<DataScienceReportsGenerator>()
   private val apiClient = mockk<DocumentManagementApiClient>()
 
-  private val publishingService = DataScienceReportsPublishingService(
-    dataScienceReportsGenerator = generator,
-    documentManagementApiClient = apiClient,
-  )
+  private fun createFastRetryTemplate(): RetryTemplate = RetryTemplate.builder()
+    .maxAttempts(3)
+    .fixedBackoff(1)
+    .notRetryOn(listOf(IllegalArgumentException::class.java))
+    .build()
 
   @Test
-  fun `generateAndUploadAllReports successfully generates, uploads, and deletes temp files for all CAS services`() {
+  fun `generateAndUploadReport successfully generates, uploads, and deletes temp file`() {
     val executionDate = LocalDate.of(2026, 10, 8)
     val tempFiles = mutableListOf<File>()
 
@@ -43,114 +45,229 @@ class DataScienceReportsPublishingServiceTest {
         tempFiles.add(file)
         file
       },
+      retryTemplate = createFastRetryTemplate(),
     )
 
-    CasDocumentSubType.entries.forEach { subType ->
-      val documentUuid = UUID.randomUUID()
-
-      every { generator.generateReport(subType, executionDate, any()) } returns GeneratedReport(
-        filename = "${subType.value.lowercase()}_data_science_report_$executionDate.csv",
-        documentUuid = documentUuid,
-        documentSubType = subType,
-        executionDate = executionDate,
-      )
-
-      val document = Document(
-        documentUuid = documentUuid,
-        documentType = "CAS_DOCUMENTS",
-        documentFilename = "${subType.value.lowercase()}_data_science_report_$executionDate.csv",
-        filename = "${subType.value.lowercase()}_data_science_report_$executionDate.csv",
-        fileExtension = "csv",
-        fileSize = 100L,
-        fileHash = "abc",
-        mimeType = "text/csv",
-        createdTime = LocalDateTime.now(),
-      )
-
-      every {
-        apiClient.uploadDocument(
-          documentType = "CAS_DOCUMENTS",
-          documentUuid = documentUuid,
-          filename = "${subType.value.lowercase()}_data_science_report_$executionDate.csv",
-          fileResource = any(),
-          metadata = mapOf("date" to executionDate.toString(), "documentSubType" to subType.value),
-        )
-      } returns ClientResult.Success(HttpStatus.CREATED, document, false)
-    }
-
-    publishingService.generateAndUploadAllReports(executionDate)
-
-    tempFiles.forEach { tempFile ->
-      assertThat(tempFile).doesNotExist()
-    }
-
-    verify(exactly = 3) { apiClient.uploadDocument(any(), any(), any(), any(), any(), any()) }
-  }
-
-  @Test
-  fun `generateAndUploadAllReports continues on failure, deletes temp file, and throws composite exception`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
-    val tempFiles = mutableListOf<File>()
-
-    val publishingService = DataScienceReportsPublishingService(
-      dataScienceReportsGenerator = generator,
-      documentManagementApiClient = apiClient,
-      tempFileFactory = { prefix, suffix ->
-        val file = File.createTempFile(prefix, suffix)
-        tempFiles.add(file)
-        file
-      },
-    )
-
-    val uuid1 = UUID.randomUUID()
-    val uuid2 = UUID.randomUUID()
-    val uuid3 = UUID.randomUUID()
-
+    val documentUuid = UUID.randomUUID()
     every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
-      filename = "cas1.csv",
-      documentUuid = uuid1,
+      filename = "cas1_data_science_report_$executionDate.csv",
+      documentUuid = documentUuid,
       documentSubType = CasDocumentSubType.CAS1,
       executionDate = executionDate,
     )
-    every { generator.generateReport(CasDocumentSubType.CAS2, executionDate, any()) } returns GeneratedReport(
-      filename = "cas2.csv",
-      documentUuid = uuid2,
-      documentSubType = CasDocumentSubType.CAS2,
-      executionDate = executionDate,
+
+    val document = Document(
+      documentUuid = documentUuid,
+      documentType = "CAS_DOCUMENTS",
+      documentFilename = "cas1_data_science_report_$executionDate.csv",
+      filename = "cas1_data_science_report_$executionDate.csv",
+      fileExtension = "csv",
+      fileSize = 100L,
+      fileHash = "abc",
+      mimeType = "text/csv",
+      createdTime = LocalDateTime.now(),
     )
-    every { generator.generateReport(CasDocumentSubType.CAS3, executionDate, any()) } returns GeneratedReport(
-      filename = "cas3.csv",
-      documentUuid = uuid3,
-      documentSubType = CasDocumentSubType.CAS3,
-      executionDate = executionDate,
-    )
 
-    // CAS1 succeeds
     every {
-      apiClient.uploadDocument("CAS_DOCUMENTS", uuid1, "cas1.csv", any(), any(), any())
-    } returns ClientResult.Success(HttpStatus.CREATED, mockk(relaxed = true), false)
+      apiClient.uploadDocument(
+        documentType = "CAS_DOCUMENTS",
+        documentUuid = documentUuid,
+        filename = "cas1_data_science_report_$executionDate.csv",
+        fileResource = any(),
+        metadata = mapOf("date" to executionDate.toString(), "documentSubType" to "CAS1"),
+      )
+    } returns ClientResult.Success(HttpStatus.CREATED, document, false)
 
-    // CAS2 fails
-    every {
-      apiClient.uploadDocument("CAS_DOCUMENTS", uuid2, "cas2.csv", any(), any(), any())
-    } returns ClientResult.Failure.StatusCode(HttpMethod.POST, "/documents/CAS_DOCUMENTS/$uuid2", HttpStatus.INTERNAL_SERVER_ERROR, "Server Error")
+    publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
 
-    // CAS3 succeeds
-    every {
-      apiClient.uploadDocument("CAS_DOCUMENTS", uuid3, "cas3.csv", any(), any(), any())
-    } returns ClientResult.Success(HttpStatus.CREATED, mockk(relaxed = true), false)
-
-    assertThatThrownBy {
-      publishingService.generateAndUploadAllReports(executionDate)
-    }.isInstanceOf(IllegalStateException::class.java)
-      .hasMessageContaining("failures for services: CAS2")
-
-    // Ensure all temp files were deleted including the failed CAS2 file
     tempFiles.forEach { tempFile ->
       assertThat(tempFile).doesNotExist()
     }
 
-    // Verify all 3 were attempted
-    verify(exactly = 3) { generator.generateReport(any(), any(), any()) }
+    verify(exactly = 1) { generator.generateReport(any(), any(), any()) }
+    verify(exactly = 1) { apiClient.uploadDocument(any(), any(), any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun `generateAndUploadReport generates once and retries upload on transient failure then succeeds on next attempt`() {
+    val executionDate = LocalDate.of(2026, 10, 8)
+    val tempFiles = mutableListOf<File>()
+
+    val publishingService = DataScienceReportsPublishingService(
+      dataScienceReportsGenerator = generator,
+      documentManagementApiClient = apiClient,
+      tempFileFactory = { prefix, suffix ->
+        val file = File.createTempFile(prefix, suffix)
+        tempFiles.add(file)
+        file
+      },
+      retryTemplate = createFastRetryTemplate(),
+    )
+
+    val uuid = UUID.randomUUID()
+    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
+      filename = "cas1.csv",
+      documentUuid = uuid,
+      documentSubType = CasDocumentSubType.CAS1,
+      executionDate = executionDate,
+    )
+
+    val document = Document(
+      documentUuid = uuid,
+      documentType = "CAS_DOCUMENTS",
+      documentFilename = "cas1.csv",
+      filename = "cas1.csv",
+      fileExtension = "csv",
+      fileSize = 100L,
+      fileHash = "abc",
+      mimeType = "text/csv",
+      createdTime = LocalDateTime.now(),
+    )
+
+    // Attempt 1: 503 Service Unavailable, Attempt 2: Success
+    every {
+      apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any())
+    } returns ClientResult.Failure.StatusCode(
+      HttpMethod.POST,
+      "/documents/CAS_DOCUMENTS/$uuid",
+      HttpStatus.SERVICE_UNAVAILABLE,
+      "Unavailable",
+    ) andThen ClientResult.Success(HttpStatus.CREATED, document, false)
+
+    publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
+
+    // Report generation ran only ONCE
+    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) }
+
+    // Upload was attempted TWICE with the exact same UUID
+    verify(exactly = 2) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
+
+    tempFiles.forEach { assertThat(it).doesNotExist() }
+  }
+
+  @Test
+  fun `generateAndUploadReport retries upload 3 times on 5xx server errors then exhausts and cleans up temp file`() {
+    val executionDate = LocalDate.of(2026, 10, 8)
+    val tempFiles = mutableListOf<File>()
+
+    val publishingService = DataScienceReportsPublishingService(
+      dataScienceReportsGenerator = generator,
+      documentManagementApiClient = apiClient,
+      tempFileFactory = { prefix, suffix ->
+        val file = File.createTempFile(prefix, suffix)
+        tempFiles.add(file)
+        file
+      },
+      retryTemplate = createFastRetryTemplate(),
+    )
+
+    val uuid = UUID.randomUUID()
+    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
+      filename = "cas1.csv",
+      documentUuid = uuid,
+      documentSubType = CasDocumentSubType.CAS1,
+      executionDate = executionDate,
+    )
+
+    every {
+      apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any())
+    } returns ClientResult.Failure.StatusCode(HttpMethod.POST, "/documents/CAS_DOCUMENTS/$uuid", HttpStatus.BAD_GATEWAY, "Bad Gateway")
+
+    assertThatThrownBy {
+      publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
+    }.isInstanceOf(IllegalStateException::class.java)
+      .hasMessageContaining("HTTP status 502")
+
+    // Report generation ran only ONCE
+    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) }
+
+    // Upload was attempted 3 times (exhausted attempts)
+    verify(exactly = 3) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
+
+    tempFiles.forEach { assertThat(it).doesNotExist() }
+  }
+
+  @Test
+  fun `generateAndUploadReport does not retry for 4xx client errors and fails on first attempt`() {
+    val executionDate = LocalDate.of(2026, 10, 8)
+    val tempFiles = mutableListOf<File>()
+
+    val publishingService = DataScienceReportsPublishingService(
+      dataScienceReportsGenerator = generator,
+      documentManagementApiClient = apiClient,
+      tempFileFactory = { prefix, suffix ->
+        val file = File.createTempFile(prefix, suffix)
+        tempFiles.add(file)
+        file
+      },
+      retryTemplate = createFastRetryTemplate(),
+    )
+
+    val uuid = UUID.randomUUID()
+    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
+      filename = "cas1.csv",
+      documentUuid = uuid,
+      documentSubType = CasDocumentSubType.CAS1,
+      executionDate = executionDate,
+    )
+
+    every {
+      apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any())
+    } returns ClientResult.Failure.StatusCode(HttpMethod.POST, "/documents/CAS_DOCUMENTS/$uuid", HttpStatus.BAD_REQUEST, "Bad Request")
+
+    assertThatThrownBy {
+      publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
+    }.isInstanceOf(IllegalArgumentException::class.java)
+      .hasMessageContaining("HTTP status 400")
+
+    // Report generation ran only ONCE
+    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) }
+
+    // Upload was attempted only ONCE (no retry on 4xx)
+    verify(exactly = 1) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
+
+    tempFiles.forEach { assertThat(it).doesNotExist() }
+  }
+
+  @Test
+  fun `generateAndUploadReport retries upload 3 times on network or communication failure then exhausts`() {
+    val executionDate = LocalDate.of(2026, 10, 8)
+    val tempFiles = mutableListOf<File>()
+
+    val publishingService = DataScienceReportsPublishingService(
+      dataScienceReportsGenerator = generator,
+      documentManagementApiClient = apiClient,
+      tempFileFactory = { prefix, suffix ->
+        val file = File.createTempFile(prefix, suffix)
+        tempFiles.add(file)
+        file
+      },
+      retryTemplate = createFastRetryTemplate(),
+    )
+
+    val uuid = UUID.randomUUID()
+    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
+      filename = "cas1.csv",
+      documentUuid = uuid,
+      documentSubType = CasDocumentSubType.CAS1,
+      executionDate = executionDate,
+    )
+
+    every {
+      apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any())
+    } returns ClientResult.Failure.Other(HttpMethod.POST, "/documents/CAS_DOCUMENTS/$uuid", RuntimeException("Connection timed out"))
+
+    assertThatThrownBy {
+      publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
+    }.isInstanceOf(IllegalStateException::class.java)
+      .hasMessageContaining("Failed to communicate with Document Management API")
+
+    // Report generation ran only ONCE
+    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) }
+
+    // Upload was attempted 3 times
+    verify(exactly = 3) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
+
+    tempFiles.forEach { assertThat(it).doesNotExist() }
   }
 }
