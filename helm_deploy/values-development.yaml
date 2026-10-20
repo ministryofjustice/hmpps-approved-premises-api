@@ -36,7 +36,7 @@ generic-service:
     SERVICES_DOCUMENT-MANAGEMENT-API_BASE-URL: https://document-api-dev.hmpps.service.justice.gov.uk
     SERVICES_CAS1-UI_BASE-URL: https://approved-premises-dev.hmpps.service.justice.gov.uk
     SERVICES_CAS2V2-UI_BASE-URL: https://community-accommodation-tier-2-bail-dev.hmpps.service.justice.gov.uk
-    SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/dev-truncate,classpath:db/migration/dev,classpath:db/migration/all-except-integration
+    SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/dev,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
     SENTRY_ENVIRONMENT: dev
     SENTRY_TRACES-SAMPLE-RATE: 0.01
