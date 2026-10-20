@@ -125,7 +125,6 @@ generic-service:
 
 # These alerts are provided by https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/README.md
 generic-prometheus-alerts:
-  alertSeverity: hmpps-approved-premises-nonprod
   elastiCacheAlertsClusterIds:
     cp-ede0649d3201fded: "community accommodation"
   rdsAlertsDatabases:
