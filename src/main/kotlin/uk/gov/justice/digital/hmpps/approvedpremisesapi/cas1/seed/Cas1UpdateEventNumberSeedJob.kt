@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -19,9 +21,9 @@ import java.util.UUID
 
 /**
  * This seed job can be used to update the event number and associated offence id/conviction id for a given
- * application. It will also update the event number in any Application Assessed, Application Submitted or
- * Booking Made domain events (these are the only domain events for which probation-integration needs a valid
- * deliusEventNumber value)
+ * application. It will also update the event number in any Application Assessed, Application Submitted,
+ * Booking Made, Person Arrived or Person Departed domain events (these are the only domain events for which
+ * probation-integration needs a valid deliusEventNumber value)
  *
  * This job has been created to allow us to recover from situations where the event number associated with
  * an application do not exist in delius (i.e. they have been deleted in delius). In this case domain event
@@ -125,6 +127,38 @@ class Cas1UpdateEventNumberSeedJob(
     }.forEach {
       log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_BOOKING_MADE")
       val envelope = jsonMapper.readValue(it.data, BookingMadeEnvelope::class.java)
+      val updatedEnvelope = envelope.copy(
+        eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),
+      )
+      domainEventRepository.updateData(it.id, jsonMapper.writeValueAsString(updatedEnvelope))
+    }
+
+    domainEvents.filter {
+      it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED
+    }.forEach {
+      val schemaVersion = it.schemaVersion
+      if (schemaVersion == null || schemaVersion < 2) {
+        error("schema versions before 2 not supported")
+      }
+
+      log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_PERSON_ARRIVED")
+      val envelope = jsonMapper.readValue(it.data, PersonArrivedEnvelope::class.java)
+      val updatedEnvelope = envelope.copy(
+        eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),
+      )
+      domainEventRepository.updateData(it.id, jsonMapper.writeValueAsString(updatedEnvelope))
+    }
+
+    domainEvents.filter {
+      it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED
+    }.forEach {
+      val schemaVersion = it.schemaVersion
+      if (schemaVersion == null || schemaVersion < 2) {
+        error("schema versions before 2 not supported")
+      }
+
+      log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_PERSON_DEPARTED")
+      val envelope = jsonMapper.readValue(it.data, PersonDepartedEnvelope::class.java)
       val updatedEnvelope = envelope.copy(
         eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),
       )
