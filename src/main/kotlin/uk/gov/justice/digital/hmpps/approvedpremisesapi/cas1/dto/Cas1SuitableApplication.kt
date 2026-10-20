@@ -14,8 +14,11 @@ data class Cas1SuitableApplication(
   val uiUrl: String,
   val application: Cas1ExternalApplicationDto,
   val assessment: Cas1ExternalAssessmentDto?,
+  @Schema(description = "Use [suitablePlacement]", deprecated = true)
   val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
+  @Schema(description = "Use [suitablePlacement]", deprecated = true)
   val placement: Cas1ExternalPlacementDto?,
+  val suitablePlacement: Cas1PlacementPairDto?,
   val placementHistory: List<Cas1PlacementPairDto>,
 )
 
@@ -23,6 +26,7 @@ data class Cas1SuitableApplication(
 data class Cas1PlacementPairDto(
   val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
   val placement: Cas1ExternalPlacementDto?,
+  @Schema(description = "When the status was last updated on the request for placement or placement")
   val dateApplied: LocalDate,
 )
 

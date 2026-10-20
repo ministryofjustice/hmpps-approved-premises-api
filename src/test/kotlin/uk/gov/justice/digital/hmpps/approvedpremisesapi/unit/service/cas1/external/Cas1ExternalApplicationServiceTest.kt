@@ -1153,6 +1153,37 @@ class Cas1ExternalApplicationServiceTest {
       status = placement?.status,
       expectedDepartureDate = placement?.expectedDepartureDate,
     ),
+    suitablePlacement = Cas1PlacementPairDto(
+      requestForPlacement = Cas1ExternalRequestForPlacementDto(
+        decision = requestForPlacement?.decision?.apiValue,
+        rejectionReason = null,
+        submittedBy = requestForPlacement?.submittedBy,
+        submittedAt = requestForPlacement?.submittedAt?.toLocalDate(),
+        withdrawalReason = requestForPlacement?.withdrawalReason,
+        withdrawalDate = null,
+        expectedArrivalDate = placement?.expectedArrivalDate ?: requestForPlacement?.canonicalPlacementPeriod?.arrival,
+        durationDays = requestForPlacement?.canonicalPlacementPeriod?.duration,
+        status = requestForPlacement?.status,
+      ),
+      placement = Cas1ExternalPlacementDto(
+        actualArrivalDate = placement?.actualArrivalDate,
+        actualDepartureDate = placement?.actualDepartureDate,
+        cancellationReason = placement?.cancellation?.reason?.name,
+        premises = premisesEntity?.let {
+          Cas1ExternalPremisesDto(
+            startDate = placement?.expectedArrivalDate,
+            endDate = placement?.expectedDepartureDate,
+            addressLine1 = it.addressLine1,
+            addressLine2 = it.addressLine2,
+            town = it.town,
+            postcode = it.postcode,
+          )
+        },
+        status = placement?.status,
+        expectedDepartureDate = placement?.expectedDepartureDate,
+      ),
+      dateApplied = LocalDate.now(),
+    ),
     uiUrl = "http://localhost:3000/applications/${applicationEntity.id}",
     application = Cas1ExternalApplicationDto(
       createdAt = applicationEntity.createdAt,

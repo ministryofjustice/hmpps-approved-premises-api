@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.extern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
@@ -124,14 +126,15 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
             val (offender) = givenAnOffender()
 
+            val arrivalDate = LocalDate.of(2025, 1, 2)
             val booking = cas1SpaceBookingEntityFactory.produceAndPersist {
               withCrn(offender.otherIds.crn)
               withPremises(premises)
               withPlacementRequest(placementRequest)
               withApplication(placementRequest.application)
               withCreatedBy(user)
-              withExpectedArrivalDate(LocalDate.now())
-              withExpectedDepartureDate(LocalDate.now().plusDays(10))
+              withExpectedArrivalDate(arrivalDate)
+              withExpectedDepartureDate(arrivalDate.plusDays(10))
               withActualDepartureDate(null)
               withActualArrivalDate(null)
             }
@@ -176,6 +179,35 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 status = Cas1SpaceBookingStatus.UPCOMING,
                 expectedDepartureDate = booking.expectedDepartureDate,
               ),
+              suitablePlacement = Cas1PlacementPairDto(
+                requestForPlacement = Cas1ExternalRequestForPlacementDto(
+                  decision = placementApplication.decision?.apiValue,
+                  rejectionReason = null,
+                  submittedBy = transformToStaffDto(placementApplication.createdByUser),
+                  submittedAt = placementApplication.submittedAt?.toLocalDate(),
+                  withdrawalReason = null,
+                  withdrawalDate = null,
+                  expectedArrivalDate = booking.expectedArrivalDate,
+                  durationDays = 20,
+                  status = RequestForPlacementStatus.placementBooked,
+                ),
+                placement = Cas1ExternalPlacementDto(
+                  actualArrivalDate = booking.actualArrivalDate,
+                  actualDepartureDate = booking.actualDepartureDate,
+                  cancellationReason = booking.cancellationReason?.name,
+                  premises = Cas1ExternalPremisesDto(
+                    startDate = booking.expectedArrivalDate,
+                    endDate = booking.expectedDepartureDate,
+                    addressLine1 = premises.addressLine1,
+                    addressLine2 = premises.addressLine2,
+                    town = premises.town,
+                    postcode = premises.postcode,
+                  ),
+                  status = Cas1SpaceBookingStatus.UPCOMING,
+                  expectedDepartureDate = booking.expectedDepartureDate,
+                ),
+                dateApplied = arrivalDate,
+              ),
               placementHistory = emptyList(),
             )
 
@@ -185,7 +217,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               .exchange()
               .expectStatus()
               .isOk
-              .expectBody(Cas1SuitableApplication::class.java)
+              .expectBody<Cas1SuitableApplication>()
               .returnResult()
               .responseBody
 
@@ -230,6 +262,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               ),
               requestForPlacement = null,
               placement = null,
+              suitablePlacement = null,
               placementHistory = emptyList(),
             )
 
@@ -239,7 +272,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               .exchange()
               .expectStatus()
               .isOk
-              .expectBody(Cas1SuitableApplication::class.java)
+              .expectBody<Cas1SuitableApplication>()
               .returnResult()
               .responseBody
 
@@ -266,6 +299,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
             approvedPremisesApplicationRepository.save(application)
 
+            val placementAppDecisionMadeAt = OffsetDateTime.now()
             val placementApplication = placementApplicationFactory.produceAndPersist {
               withApplication(application)
               withDecision(PlacementApplicationDecision.REJECTED)
@@ -276,7 +310,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               withAuthorisedDuration(20)
               withExpectedArrival(LocalDate.now().plusDays(10))
               withRequestedDuration(10)
-              withDecisionMadeAt(OffsetDateTime.now())
+              withDecisionMadeAt(placementAppDecisionMadeAt)
             }
 
             val envelopedData = Cas1DomainEventEnvelope(
@@ -322,6 +356,21 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 status = RequestForPlacementStatus.requestRejected,
               ),
               placement = null,
+              suitablePlacement = Cas1PlacementPairDto(
+                requestForPlacement = Cas1ExternalRequestForPlacementDto(
+                  decision = placementApplication.decision?.apiValue,
+                  rejectionReason = envelopedData.eventDetails.decisionSummary,
+                  submittedBy = transformToStaffDto(placementApplication.createdByUser),
+                  submittedAt = placementApplication.submittedAt?.toLocalDate(),
+                  withdrawalReason = null,
+                  withdrawalDate = null,
+                  expectedArrivalDate = placementApplication.expectedArrival,
+                  durationDays = 20,
+                  status = RequestForPlacementStatus.requestRejected,
+                ),
+                placement = null,
+                dateApplied = placementAppDecisionMadeAt.toLocalDate(),
+              ),
               placementHistory = emptyList(),
             )
 
@@ -401,6 +450,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               withName("A problem")
             }
 
+            val bookingCancellationOccurredAt = LocalDate.now().minusDays(10)
             val booking = cas1SpaceBookingEntityFactory.produceAndPersist {
               withCrn(offender.otherIds.crn)
               withPremises(premises)
@@ -412,7 +462,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               withActualDepartureDate(null)
               withActualArrivalDate(null)
               withCancellationReason(cancellationReason)
-              withCancellationOccurredAt(LocalDate.now().minusDays(10))
+              withCancellationOccurredAt(bookingCancellationOccurredAt)
               withCancellationRecordedAt(Instant.now())
               withCancellationReasonNotes("Notes")
             }
@@ -471,6 +521,35 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                   postcode = premises.postcode,
                 ),
                 expectedDepartureDate = booking.expectedDepartureDate,
+              ),
+              suitablePlacement = Cas1PlacementPairDto(
+                requestForPlacement = Cas1ExternalRequestForPlacementDto(
+                  decision = placementApplication.decision?.apiValue,
+                  rejectionReason = null,
+                  submittedBy = transformToStaffDto(placementApplication.createdByUser),
+                  submittedAt = placementApplication.submittedAt?.toLocalDate(),
+                  withdrawalReason = WithdrawPlacementRequestReason.errorInPlacementRequest,
+                  withdrawalDate = withDrawnDomainEntity.occurredAt.toLocalDate(),
+                  expectedArrivalDate = booking.expectedArrivalDate,
+                  durationDays = 20,
+                  status = RequestForPlacementStatus.requestWithdrawn,
+                ),
+                placement = Cas1ExternalPlacementDto(
+                  actualArrivalDate = booking.actualArrivalDate,
+                  actualDepartureDate = booking.actualDepartureDate,
+                  cancellationReason = booking.cancellationReason?.name,
+                  status = Cas1SpaceBookingStatus.CANCELLED,
+                  premises = Cas1ExternalPremisesDto(
+                    startDate = booking.expectedArrivalDate,
+                    endDate = booking.expectedDepartureDate,
+                    addressLine1 = premises.addressLine1,
+                    addressLine2 = premises.addressLine2,
+                    town = premises.town,
+                    postcode = premises.postcode,
+                  ),
+                  expectedDepartureDate = booking.expectedDepartureDate,
+                ),
+                dateApplied = bookingCancellationOccurredAt,
               ),
               placementHistory = emptyList(),
             )
@@ -536,14 +615,15 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
             val (offender) = givenAnOffender()
 
+            val bookingExpectedArrivalDate = LocalDate.now()
             val booking = cas1SpaceBookingEntityFactory.produceAndPersist {
               withCrn(offender.otherIds.crn)
               withPremises(premises)
               withPlacementRequest(placementRequest)
               withApplication(placementRequest.application)
               withCreatedBy(user)
-              withExpectedArrivalDate(LocalDate.now())
-              withExpectedDepartureDate(LocalDate.now().plusDays(10))
+              withExpectedArrivalDate(bookingExpectedArrivalDate)
+              withExpectedDepartureDate(bookingExpectedArrivalDate.plusDays(10))
               withActualDepartureDate(null)
               withActualArrivalDate(null)
             }
@@ -602,6 +682,35 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 ),
                 status = Cas1SpaceBookingStatus.UPCOMING,
                 expectedDepartureDate = booking.expectedDepartureDate,
+              ),
+              suitablePlacement = Cas1PlacementPairDto(
+                requestForPlacement = Cas1ExternalRequestForPlacementDto(
+                  decision = PlacementApplicationDecisionDto.accepted,
+                  rejectionReason = null,
+                  submittedBy = transformToStaffDto(application.createdByUser),
+                  submittedAt = placementRequest.createdAt.toLocalDate(),
+                  withdrawalReason = WithdrawPlacementRequestReason.errorInPlacementRequest,
+                  withdrawalDate = withDrawnDomainEntity.occurredAt.toLocalDate(),
+                  expectedArrivalDate = booking.expectedArrivalDate,
+                  durationDays = placementRequest.duration,
+                  status = RequestForPlacementStatus.requestWithdrawn,
+                ),
+                placement = Cas1ExternalPlacementDto(
+                  actualArrivalDate = booking.actualArrivalDate,
+                  actualDepartureDate = booking.actualDepartureDate,
+                  cancellationReason = booking.cancellationReason?.name,
+                  premises = Cas1ExternalPremisesDto(
+                    startDate = booking.expectedArrivalDate,
+                    endDate = booking.expectedDepartureDate,
+                    addressLine1 = premises.addressLine1,
+                    addressLine2 = premises.addressLine2,
+                    town = premises.town,
+                    postcode = premises.postcode,
+                  ),
+                  status = Cas1SpaceBookingStatus.UPCOMING,
+                  expectedDepartureDate = booking.expectedDepartureDate,
+                ),
+                dateApplied = bookingExpectedArrivalDate,
               ),
               placementHistory = emptyList(),
             )
