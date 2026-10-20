@@ -25,7 +25,28 @@ class Cas1ExternalApplicationService(
   private val transformer: Cas1ExternalApplicationTransformer,
 ) {
 
-  private val mostSuitableApplication = compareBy<ApprovedPremisesApplicationEntity> { suitableStatusesAsc[it.status] }
+  companion object {
+    /**
+     * High number = Higher Priority
+     */
+    @SuppressWarnings("MagicNumber")
+    private val APPLICATION_STATUS_TO_SUITABILITY = mapOf(
+      ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to 11,
+      ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT to 10,
+      ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST to 9,
+      ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION to 8,
+      ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS to 7,
+      ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT to 6,
+      ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT to 5,
+      ApprovedPremisesApplicationStatus.STARTED to 4,
+      ApprovedPremisesApplicationStatus.REJECTED to 3,
+      ApprovedPremisesApplicationStatus.WITHDRAWN to 2,
+      ApprovedPremisesApplicationStatus.EXPIRED to 1,
+      ApprovedPremisesApplicationStatus.INAPPLICABLE to 0,
+    )
+  }
+
+  private val applicationSuitabilityComparator = compareBy<ApprovedPremisesApplicationEntity> { APPLICATION_STATUS_TO_SUITABILITY[it.status] }
     .thenBy { it.submittedAt ?: it.createdAt }
 
   fun getPlacementPairs(applicationId: UUID): List<Cas1PlacementPairDto> {
@@ -61,7 +82,7 @@ class Cas1ExternalApplicationService(
   }
 
   fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
-    .maxWithOrNull(mostSuitableApplication)
+    .maxWithOrNull(applicationSuitabilityComparator)
     ?.let { application ->
       val placementPairs = getPlacementPairs(application.id)
 
@@ -86,24 +107,8 @@ class Cas1ExternalApplicationService(
     }
 
   fun getCurrentPremisesByCrn(crn: String): Cas1ExternalPremisesDto? = approvedPremisesApplicationRepository.findByCrn(crn)
-    .sortedWith(mostSuitableApplication).firstNotNullOfOrNull { application ->
+    .sortedWith(applicationSuitabilityComparator).firstNotNullOfOrNull { application ->
       getPlacementPairs(application.id)
         .firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
     }
-
-  @SuppressWarnings("MagicNumber")
-  private val suitableStatusesAsc = mapOf(
-    ApprovedPremisesApplicationStatus.INAPPLICABLE to 0,
-    ApprovedPremisesApplicationStatus.EXPIRED to 1,
-    ApprovedPremisesApplicationStatus.WITHDRAWN to 2,
-    ApprovedPremisesApplicationStatus.REJECTED to 3,
-    ApprovedPremisesApplicationStatus.STARTED to 4,
-    ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT to 5,
-    ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT to 6,
-    ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS to 7,
-    ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION to 8,
-    ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST to 9,
-    ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT to 10,
-    ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to 11,
-  )
 }
