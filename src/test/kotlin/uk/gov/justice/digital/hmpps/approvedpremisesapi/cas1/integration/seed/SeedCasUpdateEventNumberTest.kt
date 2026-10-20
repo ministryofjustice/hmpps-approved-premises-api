@@ -16,6 +16,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ldu
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MoveOnCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDeparted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedDestination
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ProbationArea
@@ -251,6 +257,116 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     val domainEventAfterUpdate = domainEventRepository.findByApplicationId(application.id)[0]
 
     val unmarshalledData = jsonMapper.readValue(domainEventAfterUpdate.data, BookingMadeEnvelope::class.java)
+    assertThat(unmarshalledData.eventDetails.deliusEventNumber).isEqualTo(NEW_EVENT_NUMBER)
+
+    assertThat(domainEventBeforeUpdate.data.replace(OLD_EVENT_NUMBER, NEW_EVENT_NUMBER)).isEqualTo(domainEventAfterUpdate.data)
+  }
+
+  @Test
+  fun `Update Person Arrived Domain Event`() {
+    val (application, offenderDetails) = createApplication()
+
+    val staffUserDetails = StaffDetailFactory.staffDetail()
+
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
+        id = UUID.randomUUID(),
+        type = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
+        applicationId = application.id,
+        crn = application.crn,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        occurredAt = Instant.now(),
+        schemaVersion = 2,
+        data = PersonArrived(
+          applicationId = application.id,
+          applicationUrl = "theUrl",
+          bookingId = UUID.randomUUID(),
+          personReference = PersonReference(
+            crn = application.crn,
+            noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+          ),
+          deliusEventNumber = application.eventNumber,
+          premises = Premises(
+            id = UUID.randomUUID(),
+            name = "premisesName",
+            apCode = "premisesApCode",
+            legacyApCode = "premisesQCode",
+            localAuthorityAreaName = "laAreaName",
+          ),
+          applicationSubmittedOn = LocalDate.now(),
+          arrivedAt = Instant.now(),
+          expectedDepartureOn = LocalDate.now().plusDays(7),
+          notes = null,
+          recordedBy = staffUserDetails.toStaffMember(),
+        ),
+      ),
+    )
+
+    val domainEventBeforeUpdate = domainEventRepository.findByApplicationId(application.id)[0]
+
+    callSeedJob(application = application)
+
+    val domainEventAfterUpdate = domainEventRepository.findByApplicationId(application.id)[0]
+
+    val unmarshalledData = jsonMapper.readValue(domainEventAfterUpdate.data, PersonArrivedEnvelope::class.java)
+    assertThat(unmarshalledData.eventDetails.deliusEventNumber).isEqualTo(NEW_EVENT_NUMBER)
+
+    assertThat(domainEventBeforeUpdate.data.replace(OLD_EVENT_NUMBER, NEW_EVENT_NUMBER)).isEqualTo(domainEventAfterUpdate.data)
+  }
+
+  @Test
+  fun `Update Person Departed Domain Event`() {
+    val (application, offenderDetails) = createApplication()
+
+    val staffUserDetails = StaffDetailFactory.staffDetail()
+
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
+        id = UUID.randomUUID(),
+        type = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
+        applicationId = application.id,
+        crn = application.crn,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        occurredAt = Instant.now(),
+        schemaVersion = 2,
+        data = PersonDeparted(
+          applicationId = application.id,
+          applicationUrl = "theUrl",
+          bookingId = UUID.randomUUID(),
+          personReference = PersonReference(
+            crn = application.crn,
+            noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+          ),
+          deliusEventNumber = application.eventNumber,
+          premises = Premises(
+            id = UUID.randomUUID(),
+            name = "premisesName",
+            apCode = "premisesApCode",
+            legacyApCode = "premisesQCode",
+            localAuthorityAreaName = "laAreaName",
+          ),
+          recordedBy = staffUserDetails.toStaffMember(),
+          departedAt = Instant.now(),
+          reason = "Moved on",
+          legacyReasonCode = "Q",
+          destination = PersonDepartedDestination(
+            moveOnCategory = MoveOnCategory(
+              description = "B&B / Temp / Short-Term Housing",
+              legacyMoveOnCategoryCode = "MC05",
+              id = UUID.randomUUID(),
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val domainEventBeforeUpdate = domainEventRepository.findByApplicationId(application.id)[0]
+
+    callSeedJob(application = application)
+
+    val domainEventAfterUpdate = domainEventRepository.findByApplicationId(application.id)[0]
+
+    val unmarshalledData = jsonMapper.readValue(domainEventAfterUpdate.data, PersonDepartedEnvelope::class.java)
     assertThat(unmarshalledData.eventDetails.deliusEventNumber).isEqualTo(NEW_EVENT_NUMBER)
 
     assertThat(domainEventBeforeUpdate.data.replace(OLD_EVENT_NUMBER, NEW_EVENT_NUMBER)).isEqualTo(domainEventAfterUpdate.data)
