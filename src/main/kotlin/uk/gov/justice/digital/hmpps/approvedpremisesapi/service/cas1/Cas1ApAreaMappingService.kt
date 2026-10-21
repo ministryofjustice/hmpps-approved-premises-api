@@ -18,6 +18,7 @@ class Cas1ApAreaMappingService(
 
   private val deliusTeamMappings = listOf(
     DeliusTeamMapping("N07CEU", "LON"),
+    DeliusTeamMapping("N07LDG", "LON"),
     DeliusTeamMapping("N43CP1", "NE"),
     DeliusTeamMapping("N43CP2", "NE"),
     DeliusTeamMapping("N43CPP", "NE"),
