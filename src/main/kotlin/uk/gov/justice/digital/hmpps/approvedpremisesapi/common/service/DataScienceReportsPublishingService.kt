@@ -6,6 +6,7 @@ import org.springframework.retry.support.RetryTemplate
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.DocumentManagementApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.File
 import java.time.LocalDate
 
@@ -15,6 +16,7 @@ class DataScienceReportsPublishingService(
   private val dataScienceReportsGenerator: DataScienceReportsGenerator,
   private val documentManagementApiClient: DocumentManagementApiClient,
   private val tempFileFactory: (prefix: String, suffix: String) -> File = { prefix, suffix -> File.createTempFile(prefix, suffix) },
+  private val sentryService: SentryService,
   private val retryTemplate: RetryTemplate = RetryTemplate.builder()
     .maxAttempts(3)
     .exponentialBackoff(5000, 2.0, 30000)
@@ -58,6 +60,7 @@ class DataScienceReportsPublishingService(
    * }
    * ```
    */
+  @SuppressWarnings("TooGenericExceptionCaught")
   fun generateAndUploadReport(documentSubType: CasDocumentSubType, executionDate: LocalDate) {
     val tempFile = tempFileFactory("cas_data_science_${documentSubType.value.lowercase()}", ".csv")
 
@@ -67,6 +70,10 @@ class DataScienceReportsPublishingService(
       retryTemplate.execute<Unit, Throwable> {
         uploadDocumentReport(executionDate, documentSubType, report, tempFile)
       }
+    } catch (e: Exception) {
+      log.error("Failed to generate and upload report for document subtype: ${documentSubType.value}", e)
+      sentryService.captureException(e)
+      throw e
     } finally {
       if (tempFile.exists()) {
         val deleted = tempFile.delete()

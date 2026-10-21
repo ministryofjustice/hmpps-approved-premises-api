@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CasDocume
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.DataScienceReportsGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.DataScienceReportsPublishingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.GeneratedReport
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -25,6 +27,12 @@ class DataScienceReportsPublishingServiceTest {
 
   private val generator = mockk<DataScienceReportsGenerator>()
   private val apiClient = mockk<DocumentManagementApiClient>()
+  private val mockSentryService = mockk<SentryService>()
+
+  @BeforeEach
+  fun setup() {
+    every { mockSentryService.captureException(any()) } returns Unit
+  }
 
   private fun createFastRetryTemplate(): RetryTemplate = RetryTemplate.builder()
     .maxAttempts(3)
@@ -45,6 +53,7 @@ class DataScienceReportsPublishingServiceTest {
         tempFiles.add(file)
         file
       },
+      sentryService = mockSentryService,
       retryTemplate = createFastRetryTemplate(),
     )
 
@@ -86,6 +95,7 @@ class DataScienceReportsPublishingServiceTest {
 
     verify(exactly = 1) { generator.generateReport(any(), any(), any()) }
     verify(exactly = 1) { apiClient.uploadDocument(any(), any(), any(), any(), any(), any()) }
+    verify(exactly = 0) { mockSentryService.captureException(any()) }
   }
 
   @Test
@@ -101,6 +111,7 @@ class DataScienceReportsPublishingServiceTest {
         tempFiles.add(file)
         file
       },
+      sentryService = mockSentryService,
       retryTemplate = createFastRetryTemplate(),
     )
 
@@ -142,11 +153,14 @@ class DataScienceReportsPublishingServiceTest {
     // Upload was attempted TWICE with the exact same UUID
     verify(exactly = 2) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
 
+    // Sentry should NOT be called since retry succeeded
+    verify(exactly = 0) { mockSentryService.captureException(any()) }
+
     tempFiles.forEach { assertThat(it).doesNotExist() }
   }
 
   @Test
-  fun `generateAndUploadReport retries upload 3 times on 5xx server errors then exhausts and cleans up temp file`() {
+  fun `generateAndUploadReport retries upload 3 times on 5xx server errors then exhausts, captures to Sentry, and cleans up temp file`() {
     val executionDate = LocalDate.of(2026, 10, 8)
     val tempFiles = mutableListOf<File>()
 
@@ -158,6 +172,7 @@ class DataScienceReportsPublishingServiceTest {
         tempFiles.add(file)
         file
       },
+      sentryService = mockSentryService,
       retryTemplate = createFastRetryTemplate(),
     )
 
@@ -184,11 +199,14 @@ class DataScienceReportsPublishingServiceTest {
     // Upload was attempted 3 times (exhausted attempts)
     verify(exactly = 3) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
 
+    // Sentry captured the final exception
+    verify(exactly = 1) { mockSentryService.captureException(any()) }
+
     tempFiles.forEach { assertThat(it).doesNotExist() }
   }
 
   @Test
-  fun `generateAndUploadReport does not retry for 4xx client errors and fails on first attempt`() {
+  fun `generateAndUploadReport does not retry for 4xx client errors and captures to Sentry on first attempt`() {
     val executionDate = LocalDate.of(2026, 10, 8)
     val tempFiles = mutableListOf<File>()
 
@@ -200,6 +218,7 @@ class DataScienceReportsPublishingServiceTest {
         tempFiles.add(file)
         file
       },
+      sentryService = mockSentryService,
       retryTemplate = createFastRetryTemplate(),
     )
 
@@ -226,11 +245,14 @@ class DataScienceReportsPublishingServiceTest {
     // Upload was attempted only ONCE (no retry on 4xx)
     verify(exactly = 1) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
 
+    // Sentry captured the exception
+    verify(exactly = 1) { mockSentryService.captureException(any()) }
+
     tempFiles.forEach { assertThat(it).doesNotExist() }
   }
 
   @Test
-  fun `generateAndUploadReport retries upload 3 times on network or communication failure then exhausts`() {
+  fun `generateAndUploadReport retries upload 3 times on network or communication failure then exhausts and captures to Sentry`() {
     val executionDate = LocalDate.of(2026, 10, 8)
     val tempFiles = mutableListOf<File>()
 
@@ -242,6 +264,7 @@ class DataScienceReportsPublishingServiceTest {
         tempFiles.add(file)
         file
       },
+      sentryService = mockSentryService,
       retryTemplate = createFastRetryTemplate(),
     )
 
@@ -267,6 +290,9 @@ class DataScienceReportsPublishingServiceTest {
 
     // Upload was attempted 3 times
     verify(exactly = 3) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
+
+    // Sentry captured the exception
+    verify(exactly = 1) { mockSentryService.captureException(any()) }
 
     tempFiles.forEach { assertThat(it).doesNotExist() }
   }
