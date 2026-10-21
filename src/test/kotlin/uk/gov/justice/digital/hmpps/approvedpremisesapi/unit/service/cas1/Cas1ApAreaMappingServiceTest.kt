@@ -48,6 +48,7 @@ class Cas1ApAreaMappingServiceTest {
     @ParameterizedTest
     @CsvSource(
       "N07CEU, LON",
+      "N07LDG, LON",
       "N43CP1, NE",
       "N43CP1, NE",
       "N43CP2, NE",
