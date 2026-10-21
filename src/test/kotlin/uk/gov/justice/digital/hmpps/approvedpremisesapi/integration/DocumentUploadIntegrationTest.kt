@@ -12,6 +12,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.http.Fault
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ByteArrayResource
@@ -19,6 +20,7 @@ import org.springframework.core.io.Resource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1DataScienceReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.Cas2DataScienceReportRepository
@@ -28,14 +30,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.DocumentManagemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.documentmanagement.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CasDocumentSubType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.DataScienceReportsPublishingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SchedulingConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAllCasDataScienceReportEntities
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.documentManagementApiMockSuccessfulUpload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.documentManagementApiMockSuccessfulUploadAny
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.documentManagementApiMockUnsuccessfulUpload
 import java.io.ByteArrayOutputStream
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
-import kotlin.use
 
 class DocumentUploadIntegrationTest : IntegrationTestBase() {
 
@@ -253,7 +256,7 @@ class DocumentUploadIntegrationTest : IntegrationTestBase() {
       documentUuid = documentUuid,
       filename = filename,
       fileBytes = content,
-      contentType = org.springframework.http.MediaType.APPLICATION_JSON,
+      contentType = MediaType.APPLICATION_JSON,
     )
 
     assertThat(uploadResult).isInstanceOfSatisfying(ClientResult.Success::class.java) { success ->
@@ -336,6 +339,28 @@ class DocumentUploadIntegrationTest : IntegrationTestBase() {
       assertThat(failure.method).isEqualTo(HttpMethod.POST)
       assertThat(failure.path).isEqualTo("/documents/$documentType/$documentUuid")
       assertThat(failure.exception).isInstanceOf(com.fasterxml.jackson.core.JsonProcessingException::class.java)
+    }
+  }
+
+  @Test
+  fun `scheduled task error handler captures exception in Sentry when an unhandled error occurs`() {
+    val scheduler = ThreadPoolTaskScheduler()
+    SchedulingConfig().customiseTaskScheduler(mockSentryService).customize(scheduler)
+    scheduler.initialize()
+
+    val expectedException = RuntimeException("Scheduled job failed")
+
+    try {
+      scheduler.schedule(
+        { throw expectedException },
+        Instant.now(),
+      )
+
+      await().untilAsserted {
+        assertThat(mockSentryService.getRaisedExceptions()).contains(expectedException)
+      }
+    } finally {
+      scheduler.shutdown()
     }
   }
 }
