@@ -14,7 +14,7 @@ class Cas1ExternalApplicationsController(
 ) {
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/cases/{crn}/applications/suitable")
-  fun getSuitableApplicationsByCrn(
+  fun getSuitableApplicationByCrn(
     @PathVariable crn: String,
   ): ResponseEntity<Cas1SuitableApplication> = cas1ExternalApplicationService.getSuitableApplicationByCrn(crn)
     ?.let { ResponseEntity.ok(it) }
