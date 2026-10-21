@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
@@ -40,6 +41,7 @@ import java.util.UUID
 
 class Cas2ExternalApplicationServiceTest {
   private val mockCas2ApplicationRepository = mockk<Cas2ApplicationRepository>()
+  private val mockCas2ApplicationService = mockk<Cas2ApplicationService>()
   private val mockDomainEventRepository = mockk<DomainEventRepository>()
   private val mockCas2ExternalDomainEventService = mockk<Cas2ExternalDomainEventService>()
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
@@ -47,10 +49,8 @@ class Cas2ExternalApplicationServiceTest {
 
   private val cas2ExternalApplicationService = Cas2ExternalApplicationService(
     mockCas2ApplicationRepository,
-    mockDomainEventRepository,
+    mockCas2ApplicationService,
     mockCas2ExternalDomainEventService,
-    jsonMapper,
-    clock,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -62,6 +62,7 @@ class Cas2ExternalApplicationServiceTest {
     @Test
     fun `returns current application (submitted), providing view submitted url`() {
       val cas2applicationEntity = setUpApplication()
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2applicationEntity.id }) } returns false
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
@@ -90,6 +91,7 @@ class Cas2ExternalApplicationServiceTest {
       val statusDetailId = UUID.fromString("e4a2391e-e847-427a-a913-51e0b0ad9f52")
 
       val cas2applicationEntity = setUpApplicationWithStatusDetail(statusId, statusDetailId)
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2applicationEntity.id }) } returns false
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
@@ -117,6 +119,7 @@ class Cas2ExternalApplicationServiceTest {
       val statusId = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")
 
       val cas2applicationEntity = setUpApplication()
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2applicationEntity.id }) } returns false
 
       val statusUpdate = Cas2StatusUpdateEntityFactory()
         .withApplication(cas2applicationEntity)
@@ -153,6 +156,7 @@ class Cas2ExternalApplicationServiceTest {
       val statusDetailId = UUID.fromString("d1d96185-d92a-450b-b47f-bcce50356eed")
 
       val cas2applicationEntity = setUpApplicationWithStatusDetail(statusId, statusDetailId)
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2applicationEntity.id }) } returns false
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
@@ -181,6 +185,7 @@ class Cas2ExternalApplicationServiceTest {
       val statusDetailId = UUID.fromString("62645779-242d-4601-a8f8-d2cbf1d41dfa")
 
       val cas2applicationEntity = setUpApplicationWithStatusDetail(statusId, statusDetailId)
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2applicationEntity.id }) } returns false
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
@@ -213,6 +218,7 @@ class Cas2ExternalApplicationServiceTest {
         .withStatusUpdates(mutableListOf())
         .produce()
 
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2applicationEntity.id }) } returns false
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
       val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
@@ -251,6 +257,7 @@ class Cas2ExternalApplicationServiceTest {
           .produce(),
       )
 
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2ApplicationEntity.id }) } returns false
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2ApplicationEntity)
       every {
         mockDomainEventRepository.findByApplicationIdAndType(cas2ApplicationEntity.id, DomainEventType.CAS2_PERSON_ARRIVED)
@@ -283,6 +290,7 @@ class Cas2ExternalApplicationServiceTest {
 
       val arrivalEvent = mockk<DomainEventEntity>()
 
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2ApplicationEntity.id }) } returns false
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2ApplicationEntity)
       every {
         mockDomainEventRepository.findByApplicationIdAndType(cas2ApplicationEntity.id, DomainEventType.CAS2_PERSON_ARRIVED)
@@ -331,6 +339,7 @@ class Cas2ExternalApplicationServiceTest {
         .withData(jsonMapper.writeValueAsString(cas2ArrivalEvent))
         .produce()
 
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2ApplicationEntity.id }) } returns false
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2ApplicationEntity)
       every {
         mockDomainEventRepository.findByApplicationIdAndType(cas2ApplicationEntity.id, DomainEventType.CAS2_PERSON_ARRIVED)
@@ -352,9 +361,10 @@ class Cas2ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `returns application when awaiting arrival status is exactly 32 days old`() {
+    fun `returns application when awaiting arrival application is not archived`() {
       val awaitingArrivalStatusId = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")
       val cas2ApplicationEntity = setUpApplication()
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2ApplicationEntity.id }) } returns false
 
       cas2ApplicationEntity.statusUpdates!!.add(
         Cas2StatusUpdateEntityFactory()
@@ -389,9 +399,10 @@ class Cas2ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `returns no application when only application has awaiting arrival status older than 32 days`() {
+    fun `returns no application when the only application is archived`() {
       val awaitingArrivalStatusId = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")
       val cas2ApplicationEntity = setUpApplication()
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2ApplicationEntity.id }) } returns true
 
       cas2ApplicationEntity.statusUpdates!!.add(
         Cas2StatusUpdateEntityFactory()
@@ -410,10 +421,12 @@ class Cas2ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `returns no application when all applications are filtered out by awaiting arrival age`() {
+    fun `returns no application when all applications are archived`() {
       val awaitingArrivalStatusId = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")
       val newestApplication = setUpApplication(createdAt = OffsetDateTime.now().minusDays(1))
       val oldestApplication = setUpApplication(createdAt = OffsetDateTime.now().minusDays(2))
+      every { mockCas2ApplicationService.isArchived(match { it.id == newestApplication.id }) } returns true
+      every { mockCas2ApplicationService.isArchived(match { it.id == oldestApplication.id }) } returns true
 
       newestApplication.statusUpdates!!.add(
         Cas2StatusUpdateEntityFactory()
@@ -441,10 +454,12 @@ class Cas2ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `returns next most recent application when most recent awaiting arrival application is older than 32 days`() {
+    fun `returns next most recent application when most recent application is archived`() {
       val awaitingArrivalStatusId = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")
       val excludedApplication = setUpApplication(createdAt = OffsetDateTime.now().minusDays(1))
       val fallbackApplication = setUpApplication(createdAt = OffsetDateTime.now().minusDays(2))
+      every { mockCas2ApplicationService.isArchived(match { it.id == excludedApplication.id }) } returns true
+      every { mockCas2ApplicationService.isArchived(match { it.id == fallbackApplication.id }) } returns false
 
       excludedApplication.statusUpdates!!.add(
         Cas2StatusUpdateEntityFactory()
@@ -475,9 +490,10 @@ class Cas2ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `returns application when latest status is not awaiting arrival even if status is old`() {
+    fun `returns non archived application with an old awaiting decision status`() {
       val awaitingDecisionStatusId = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")
       val cas2ApplicationEntity = setUpApplication()
+      every { mockCas2ApplicationService.isArchived(match { it.id == cas2ApplicationEntity.id }) } returns false
 
       cas2ApplicationEntity.statusUpdates!!.add(
         Cas2StatusUpdateEntityFactory()

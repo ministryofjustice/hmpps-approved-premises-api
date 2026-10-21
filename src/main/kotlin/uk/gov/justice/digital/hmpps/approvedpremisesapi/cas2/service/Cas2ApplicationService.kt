@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
@@ -37,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiExcep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -54,9 +56,28 @@ class Cas2ApplicationService(
   private val sentryService: SentryService,
   private val caseService: CaseService,
   private val cas2ApplicationEmailService: Cas2ApplicationEmailService,
+  private val clock: Clock,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
+
+  private companion object {
+    // Applications with an AWAITING_ARRIVAL status older than this threshold are excluded from the suitable applications list,
+    // consistent with the cas_2_application_live_summary database view.
+    const val APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS = 32L
+  }
+
+  fun isArchived(application: Cas2ApplicationEntity): Boolean {
+    val latestStatusUpdate = application.getLatestStatusUpdate()
+    val latestStatus = latestStatusUpdate?.status
+    if (latestStatus != Cas2AssessmentStatus.AWAITING_ARRIVAL) {
+      return false
+    }
+
+    // Complement the live view's status_created_at > CURRENT_DATE - '32 days'::interval.
+    val cutoff = LocalDate.now(clock).minusDays(APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS).atStartOfDay(clock.zone).toInstant()
+    return !latestStatusUpdate.createdAt.toInstant().isAfter(cutoff)
+  }
 
   fun getCas2Applications(
     prisonCode: String?,
