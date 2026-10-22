@@ -344,6 +344,7 @@ url-templates:
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
     cas3:
       referral-full: http://localhost:3000/referrals/#applicationId/full
+      referral: http://localhost:3000/referrals/#applicationId
       referral-start: http://localhost:3000/applications/start
 
 preemptive-cache-enabled: true

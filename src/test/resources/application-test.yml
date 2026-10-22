@@ -234,6 +234,7 @@ url-templates:
       application-start: http://frontend.cas2/applications/start
     cas3:
       referral-full: http://frontend.cas3/referrals/#applicationId/full
+      referral: http://frontend.cas3/referrals/#applicationId
       referral-start: http://frontend.cas3/applications/start
 preemptive-cache-enabled: false
 
