@@ -73,7 +73,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               pdu = application1.preferredAreas,
               referredBy = application1.createdByUser.name,
               placementAddress = omu.prisonName,
-              uiUrl = "http://localhost:3000/assess/applications/${application1.id}/overview",
+              uiUrl = "http://localhost:3000/applications/${application1.id}/overview",
             ),
             Cas2ReferralHistory(
               type = type,
@@ -87,7 +87,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               pdu = application2.preferredAreas,
               referredBy = application2.createdByUser.name,
               placementAddress = omu.prisonName,
-              uiUrl = "http://localhost:3000/assess/applications/${application2.id}/overview",
+              uiUrl = "http://localhost:3000/applications/${application2.id}/overview",
             ),
             Cas2ReferralHistory(
               type = type,
@@ -101,7 +101,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               pdu = application3.preferredAreas,
               referredBy = application3.createdByUser.name,
               placementAddress = omu.prisonName,
-              uiUrl = "http://localhost:3000/assess/applications/${application3.id}/overview",
+              uiUrl = "http://localhost:3000/applications/${application3.id}/overview",
             ),
             Cas2ReferralHistory(
               type = type,
@@ -115,7 +115,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               pdu = application4.preferredAreas,
               referredBy = application4.createdByUser.name,
               placementAddress = omu.prisonName,
-              uiUrl = "http://localhost:3000/assess/applications/${application4.id}/overview",
+              uiUrl = "http://localhost:3000/applications/${application4.id}/overview",
             ),
             Cas2ReferralHistory(
               type = type,
@@ -129,7 +129,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               pdu = application4.preferredAreas,
               referredBy = application5.createdByUser.name,
               placementAddress = omu.prisonName,
-              uiUrl = "http://localhost:3000/assess/applications/${application5.id}/overview",
+              uiUrl = "http://localhost:3000/applications/${application5.id}/overview",
             ),
           )
 

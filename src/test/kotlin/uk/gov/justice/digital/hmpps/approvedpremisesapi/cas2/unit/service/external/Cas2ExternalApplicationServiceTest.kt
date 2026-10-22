@@ -52,7 +52,7 @@ class Cas2ExternalApplicationServiceTest {
     mockCas2ApplicationService,
     mockCas2ExternalDomainEventService,
     "http://frontend/applications/#id",
-    "http://frontend/assess/applications/#applicationId/overview",
+    "http://frontend/applications/#id/overview",
   )
 
   val crn = "ADAFD"
@@ -79,7 +79,7 @@ class Cas2ExternalApplicationServiceTest {
       val expected = setUpExpectedApplication(
         cas2applicationEntity = cas2applicationEntity,
         submittedApplication = submittedApplication,
-        uiUrl = "http://frontend/assess/applications/${cas2applicationEntity.id}/overview",
+        uiUrl = "http://frontend/applications/${cas2applicationEntity.id}/overview",
       )
 
       assertThat(result).isEqualTo(expected)
@@ -108,7 +108,7 @@ class Cas2ExternalApplicationServiceTest {
       val expected = setUpExpectedApplication(
         cas2applicationEntity = cas2applicationEntity,
         submittedApplication = submittedApplication,
-        uiUrl = "http://frontend/assess/applications/${cas2applicationEntity.id}/overview",
+        uiUrl = "http://frontend/applications/${cas2applicationEntity.id}/overview",
       )
 
       assertThat(result).isEqualTo(expected)
@@ -144,7 +144,7 @@ class Cas2ExternalApplicationServiceTest {
       val expected = setUpExpectedApplication(
         cas2applicationEntity = cas2applicationEntity,
         submittedApplication = submittedApplication,
-        uiUrl = "http://frontend/assess/applications/${cas2applicationEntity.id}/overview",
+        uiUrl = "http://frontend/applications/${cas2applicationEntity.id}/overview",
       )
 
       assertThat(result).isEqualTo(expected)
@@ -173,7 +173,7 @@ class Cas2ExternalApplicationServiceTest {
       val expected = setUpExpectedApplication(
         cas2applicationEntity = cas2applicationEntity,
         submittedApplication = submittedApplication,
-        uiUrl = "http://frontend/assess/applications/${cas2applicationEntity.id}/overview",
+        uiUrl = "http://frontend/applications/${cas2applicationEntity.id}/overview",
       )
 
       assertThat(result).isEqualTo(expected)
@@ -202,7 +202,7 @@ class Cas2ExternalApplicationServiceTest {
       val expected = setUpExpectedApplication(
         cas2applicationEntity = cas2applicationEntity,
         submittedApplication = submittedApplication,
-        uiUrl = "http://frontend/assess/applications/${cas2applicationEntity.id}/overview",
+        uiUrl = "http://frontend/applications/${cas2applicationEntity.id}/overview",
       )
 
       assertThat(result).isEqualTo(expected)
@@ -392,7 +392,7 @@ class Cas2ExternalApplicationServiceTest {
           cancelledReason = null,
           markedAsArrivedDateTime = null,
         ),
-        uiUrl = "http://frontend/assess/applications/${cas2ApplicationEntity.id}/overview",
+        uiUrl = "http://frontend/applications/${cas2ApplicationEntity.id}/overview",
       )
 
       assertThat(result).isEqualTo(expected)
@@ -483,7 +483,7 @@ class Cas2ExternalApplicationServiceTest {
           cancelledReason = null,
           markedAsArrivedDateTime = null,
         ),
-        uiUrl = "http://frontend/assess/applications/${fallbackApplication.id}/overview",
+        uiUrl = "http://frontend/applications/${fallbackApplication.id}/overview",
       )
 
       assertThat(result).isEqualTo(expected)
@@ -517,7 +517,7 @@ class Cas2ExternalApplicationServiceTest {
           cancelledReason = null,
           markedAsArrivedDateTime = null,
         ),
-        uiUrl = "http://frontend/assess/applications/${cas2ApplicationEntity.id}/overview",
+        uiUrl = "http://frontend/applications/${cas2ApplicationEntity.id}/overview",
       )
 
       assertThat(result).isEqualTo(expected)
