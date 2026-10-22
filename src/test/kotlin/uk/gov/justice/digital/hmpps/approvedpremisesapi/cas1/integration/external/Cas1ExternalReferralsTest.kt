@@ -199,6 +199,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
           val placementApplication = placementApplicationFactory.produceAndPersist {
             withApplication(application)
             withDecision(PlacementApplicationDecision.REJECTED)
+            withDecisionSummary("NO SPACE")
             withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now())

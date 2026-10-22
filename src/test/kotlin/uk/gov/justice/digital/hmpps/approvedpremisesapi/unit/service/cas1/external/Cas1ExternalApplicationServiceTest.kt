@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.externa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.stream.Stream
 import kotlin.collections.emptyList
 
@@ -237,14 +238,20 @@ class Cas1ExternalApplicationServiceTest {
           placement4,
         ),
       ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
+
+      val withdrawalDate = LocalDate.now().minusDays(10)
+      val rejectionReason = "No space"
+
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.requestRejected)
         .withDecision(PlacementApplicationDecision.REJECTED).produce()
+        .copy(rejectionReason = rejectionReason)
       val requestForPlacement5 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(50),
       ).withStatus(RequestForPlacementStatus.requestWithdrawn)
         .withIsWithdrawn(true).produce()
+        .copy(withdrawalDate = withdrawalDate.atStartOfDay(ZoneOffset.UTC).toInstant())
 
       every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
         listOf(
@@ -262,19 +269,6 @@ class Cas1ExternalApplicationServiceTest {
       every {
         cas1PremisesService.findPremisesById(match { it != premisesEntity.id })
       } returns null
-      val withdrawalDate = LocalDate.now().minusDays(10)
-      val rejectionReason = "No space"
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement1) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement2) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement3) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement4) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement5) } returns withdrawalDate
-
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement1) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement2) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement3) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement4) } returns rejectionReason
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement5) } returns null
 
       every {
         cas1ExternalApplicationTransformer
@@ -422,8 +416,6 @@ class Cas1ExternalApplicationServiceTest {
         transformToPlacementHistory(requestForPlacement1),
         transformToPlacementHistory(requestForPlacement3),
       )
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(any()) } returns null
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2) } returns suitablePlacementPair
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
@@ -552,8 +544,6 @@ class Cas1ExternalApplicationServiceTest {
       every {
         cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
       } returns premisesEntity
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(any()) } returns null
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement1) } returns transformToPlacementHistory(requestForPlacement1, placement1)
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement2) } returns transformToPlacementHistory(requestForPlacement1, placement2)
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement3) } returns transformToPlacementHistory(requestForPlacement1, placement3)
@@ -638,8 +628,6 @@ class Cas1ExternalApplicationServiceTest {
         .withStatus(RequestForPlacementStatus.placementBooked).produce()
       val suitableApplication = transformToSuitableApplication(application, requestForPlacement, placement, premisesEntity)
       val suitablePlacementPair = transformToPlacementHistory(requestForPlacement, placement, premisesEntity)
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(any()) } returns null
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, suitablePlacementPair, emptyList()) } returns suitableApplication
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, null, null, placement, premisesEntity) } returns suitablePlacementPair
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
@@ -709,8 +697,6 @@ class Cas1ExternalApplicationServiceTest {
 
       every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(latestAwaitingPlacementApplication.id, null) } returns CasResult.Success(emptyList())
       every { cas1PremisesService.findPremisesById(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(any()) } returns null
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(latestAwaitingPlacementApplication, null, emptyList()) } returns suitableApplication
 
       val result = service.getSuitableApplicationByCrn(crn)
@@ -755,8 +741,6 @@ class Cas1ExternalApplicationServiceTest {
 
       every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(latestStartedApplication.id, null) } returns CasResult.Success(emptyList())
       every { cas1PremisesService.findPremisesById(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(any()) } returns null
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(latestStartedApplication, null, emptyList()) } returns suitableApplication
 
       val result = service.getSuitableApplicationByCrn(crn)
@@ -808,8 +792,6 @@ class Cas1ExternalApplicationServiceTest {
           requestForPlacement4,
         ),
       )
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(any()) } returns null
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2) } returns transformToPlacementHistory(requestForPlacement2)
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
@@ -944,8 +926,6 @@ class Cas1ExternalApplicationServiceTest {
       every {
         cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
       } returns premisesEntity
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(any()) } returns null
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement1) } returns
         transformToPlacementHistory(requestForPlacement1, placement1)
       every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement2, premisesEntity) } returns
@@ -1060,8 +1040,6 @@ class Cas1ExternalApplicationServiceTest {
         ),
       )
       every { cas1PremisesService.findPremisesById(premisesEntity.id) } returns premisesEntity
-      every { cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(any()) } returns null
-      every { cas1RequestForPlacementService.getRequestForPlacementRejectionReason(any()) } returns null
       every {
         cas1ExternalApplicationTransformer.transformToCas1PlacementPair(
           requestForPlacement,
