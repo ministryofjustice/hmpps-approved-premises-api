@@ -82,15 +82,37 @@ class Cas3ApplicationTransformerTest {
   private val assessmentFactory = TemporaryAccommodationAssessmentEntityFactory()
     .withAllocatedToUser(allocatedToUser)
 
-  private val uiUrl = "http://localhost/applications/#applicationId"
+  private val uiUrl = "http://frontend.cas3/referrals/#applicationId/full"
+  private val draftUiUrl = "http://frontend.cas3/referrals/#applicationId"
 
   private val cas3ApplicationsTransformer =
-    Cas3ApplicationTransformer(jsonMapper, mockPersonTransformer, mockRisksTransformer, uiUrl)
+    Cas3ApplicationTransformer(jsonMapper, mockPersonTransformer, mockRisksTransformer, uiUrl, draftUiUrl)
 
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
     every { mockRisksTransformer.transformDomainToApi(any<PersonRisks>(), any<String>()) } returns mockk()
+  }
+
+  @Test
+  fun `unsubmitted referrals link to the task list instead of the full referral view`() {
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(null)
+      .withArrivalDate(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(ApAreaEntityFactory().produce())
+          .produce()
+      }
+      .produce()
+
+    val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, null)
+
+    assertThat(result.id).isEqualTo(application.id)
+    assertThat(result.applicationStatus).isEqualTo(ApplicationStatus.inProgress)
+    assertThat(result.submittedApplication).isNull()
+    assertThat(result.applicationSubmittedDate).isNull()
+    assertThat(result.uiUrl).isEqualTo("http://frontend.cas3/referrals/${application.id}")
   }
 
   @Test

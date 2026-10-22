@@ -307,7 +307,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             bookingProvisionalOfferSentDate = null,
             previousBookings = emptyList(),
             premises = null,
-            uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
+            uiUrl = "http://frontend.cas3/referrals/${application.id}",
             submittedApplication = null,
           )
 

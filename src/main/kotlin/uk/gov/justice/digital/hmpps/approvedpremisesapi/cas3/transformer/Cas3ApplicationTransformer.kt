@@ -33,6 +33,7 @@ class Cas3ApplicationTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   @Value($$"${url-templates.frontend.cas3.referral-full}") private val cas3ApplicationFullUrlTemplate: String,
+  @Value($$"${url-templates.frontend.cas3.referral}") private val cas3ApplicationUrlTemplate: String,
 ) {
   fun transformToExternalCurrentApplicationDto(application: TemporaryAccommodationApplicationEntity, bookings: List<Cas3BookingEntity>?): Cas3ExternalCurrentApplicationDto {
     val latestBooking = bookings?.firstOrNull()
@@ -72,7 +73,11 @@ class Cas3ApplicationTransformer(
       bookingProvisionalOfferSentDate = submittedApplication?.latestBooking?.provisionalOfferSentDate,
       previousBookings = previousBookings,
       premises = submittedApplication?.latestBooking?.premises,
-      uiUrl = cas3ApplicationFullUrlTemplate.replace("#applicationId", application.id.toString()),
+      uiUrl = if (application.isSubmitted()) {
+        cas3ApplicationFullUrlTemplate.replace("#applicationId", application.id.toString())
+      } else {
+        cas3ApplicationUrlTemplate.replace("#applicationId", application.id.toString())
+      },
     )
   }
 
