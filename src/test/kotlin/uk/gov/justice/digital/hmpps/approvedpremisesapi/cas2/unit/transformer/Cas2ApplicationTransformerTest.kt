@@ -36,11 +36,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManageme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
-import java.time.Clock
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas2ApplicationTransformerTest {
@@ -62,8 +59,7 @@ class Cas2ApplicationTransformerTest {
     mockCas2AssessmentsTransformer,
     mockOffenderManagementUnitRepository,
     mockCas2ApplicationService,
-    "http://frontend/assess/applications/#applicationId/overview",
-    Clock.fixed(Instant.parse("2026-10-21T12:00:00Z"), ZoneOffset.UTC),
+    "http://frontend/applications/#id/overview",
   )
 
   private val user = Cas2UserEntityFactory()
@@ -348,7 +344,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.pdu).isEqualTo("Area 1, Area 2")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
       assertThat(result.placementAddress).isEqualTo("HMP Bristol")
-      assertThat(result.uiUrl).isEqualTo("http://frontend/assess/applications/${application.id}/overview")
+      assertThat(result.uiUrl).isEqualTo("http://frontend/applications/${application.id}/overview")
     }
 
     @Test
@@ -383,7 +379,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.localAuthorityArea).isEqualTo("BRI")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
       assertThat(result.placementAddress).isEqualTo("BRI")
-      assertThat(result.uiUrl).isEqualTo("http://frontend/assess/applications/${application.id}/overview")
+      assertThat(result.uiUrl).isEqualTo("http://frontend/applications/${application.id}/overview")
     }
 
     @Test
@@ -419,7 +415,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.localAuthorityArea).isEqualTo("BRI")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
       assertThat(result.placementAddress).isEqualTo("BRI")
-      assertThat(result.uiUrl).isEqualTo("http://frontend/assess/applications/${application.id}/overview")
+      assertThat(result.uiUrl).isEqualTo("http://frontend/applications/${application.id}/overview")
     }
 
     @ParameterizedTest
@@ -450,6 +446,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.applicationStatus).isEqualTo(expectedStatus)
       assertThat(result.applicationLastUpdatedDate).isEqualTo(statusUpdate.createdAt.toLocalDate())
       assertThat(result.referralRejectionReason).isNull()
+      assertThat(result.uiUrl).isEqualTo("http://frontend/applications/${application.id}/overview")
     }
   }
 }

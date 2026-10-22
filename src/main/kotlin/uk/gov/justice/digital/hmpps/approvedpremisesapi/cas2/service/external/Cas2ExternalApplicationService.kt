@@ -27,7 +27,7 @@ class Cas2ExternalApplicationService(
   private val cas2ApplicationService: Cas2ApplicationService,
   private val cas2ExternalDomainEventService: Cas2ExternalDomainEventService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
   fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? {
@@ -139,7 +139,7 @@ class Cas2ExternalApplicationService(
   }
 
   private fun getUiUrl(mostRecent: Cas2ApplicationEntity) = if (mostRecent.submittedAt != null) {
-    submittedApplicationUrlTemplate.replace("#applicationId", mostRecent.id.toString())
+    submittedApplicationUrlTemplate.replace("#id", mostRecent.id.toString())
   } else {
     applicationUrlTemplate.replace("#id", mostRecent.id.toString())
   }

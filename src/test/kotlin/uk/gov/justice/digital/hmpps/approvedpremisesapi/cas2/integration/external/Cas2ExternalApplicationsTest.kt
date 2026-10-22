@@ -74,7 +74,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val suitableApplication = Cas2SuitableApplication(
-          uiUrl = "http://localhost:3000/assess/applications/${application.id}/overview",
+          uiUrl = "http://localhost:3000/applications/${application.id}/overview",
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
             latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName,
@@ -138,7 +138,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         }
 
         val suitableApplication = Cas2SuitableApplication(
-          uiUrl = "http://localhost:3000/assess/applications/${application.id}/overview",
+          uiUrl = "http://localhost:3000/applications/${application.id}/overview",
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
             latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName,
@@ -194,7 +194,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val suitableApplication = Cas2SuitableApplication(
-          uiUrl = "http://localhost:3000/assess/applications/${latestApplication.id}/overview",
+          uiUrl = "http://localhost:3000/applications/${latestApplication.id}/overview",
           id = latestApplication.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
             latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED.apiName,
@@ -252,7 +252,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val suitableApplication = Cas2SuitableApplication(
-          uiUrl = "http://localhost:3000/assess/applications/${olderApplicationLaterStatusUpdate.id}/overview",
+          uiUrl = "http://localhost:3000/applications/${olderApplicationLaterStatusUpdate.id}/overview",
           id = olderApplicationLaterStatusUpdate.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
             latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL.apiName,
@@ -309,7 +309,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val suitableApplication = Cas2SuitableApplication(
-          uiUrl = "http://localhost:3000/assess/applications/${fallbackApplication.id}/overview",
+          uiUrl = "http://localhost:3000/applications/${fallbackApplication.id}/overview",
           id = fallbackApplication.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
             latestAssessmentStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED.apiName,
