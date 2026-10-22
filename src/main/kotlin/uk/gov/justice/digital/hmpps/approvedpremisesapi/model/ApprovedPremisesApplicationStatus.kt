@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
@@ -22,7 +23,7 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
   ASSESSMENT_IN_PROGRESS(ApiApprovedPremisesApplicationStatus.assesmentInProgress),
 
   /**
-   * An application has been assessed and a [PlacementRequestEntity] has been created which requires a [BookingEntity].
+   * An application has been assessed and a [PlacementRequestEntity] has been created which requires a [Cas1SpaceBookingEntity].
    *
    * Note - If a [PlacementApplicationEntity] is assessed the application _will not_ enter this state
    * (it will remain as PENDING_PLACEMENT_REQUEST)
@@ -42,7 +43,7 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
   PENDING_PLACEMENT_REQUEST(ApiApprovedPremisesApplicationStatus.pendingPlacementRequest),
 
   /**
-   * A [BookingEntity] has been created for a [PlacementRequestEntity]
+   * A [Cas1SpaceBookingEntity] has been created for a [PlacementRequestEntity]
    */
   // placement created
   PLACEMENT_ALLOCATED(ApiApprovedPremisesApplicationStatus.placementAllocated),
