@@ -269,6 +269,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             val placementApplication = placementApplicationFactory.produceAndPersist {
               withApplication(application)
               withDecision(PlacementApplicationDecision.REJECTED)
+              withDecisionSummary("NO SPACE")
               withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.now())
@@ -369,6 +370,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             val placementApplication = placementApplicationFactory.produceAndPersist {
               withIsWithdrawn(true)
               withWithdrawalReason(PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
+              withWithdrawalOccurredAt(OffsetDateTime.now().minusDays(6))
               withApplication(application)
               withDecision(PlacementApplicationDecision.ACCEPTED)
               withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
@@ -452,7 +454,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 submittedBy = transformToStaffDto(placementApplication.createdByUser),
                 submittedAt = placementApplication.submittedAt?.toLocalDate(),
                 withdrawalReason = WithdrawPlacementRequestReason.errorInPlacementRequest,
-                withdrawalDate = withDrawnDomainEntity.occurredAt.toLocalDate(),
+                withdrawalDate = placementApplication.withdrawalOccurredAt!!.toLocalDate(),
                 expectedArrivalDate = booking.expectedArrivalDate,
                 durationDays = 20,
                 status = RequestForPlacementStatus.requestWithdrawn,
@@ -524,6 +526,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               withPlacementApplication(null)
               withIsWithdrawn(true)
               withWithdrawalReason(PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
+              withWithdrawalOccurredAt(OffsetDateTime.now().minusDays(6))
               withDuration(30)
             }
 
@@ -583,7 +586,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 submittedBy = transformToStaffDto(application.createdByUser),
                 submittedAt = placementRequest.createdAt.toLocalDate(),
                 withdrawalReason = WithdrawPlacementRequestReason.errorInPlacementRequest,
-                withdrawalDate = withDrawnDomainEntity.occurredAt.toLocalDate(),
+                withdrawalDate = placementRequest.withdrawalOccurredAt!!.toLocalDate(),
                 expectedArrivalDate = booking.expectedArrivalDate,
                 durationDays = placementRequest.duration,
                 status = RequestForPlacementStatus.requestWithdrawn,

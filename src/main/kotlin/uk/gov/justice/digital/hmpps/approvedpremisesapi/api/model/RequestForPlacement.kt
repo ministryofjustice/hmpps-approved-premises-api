@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 data class RequestForPlacement(
   @Schema(description = "If `type` is `\"manual\"`, provides the `PlacementApplication` ID. If `type` is `\"automatic\"` this field provides a `PlacementRequest` ID. ")
@@ -28,6 +29,8 @@ data class RequestForPlacement(
   val requestReviewedAt: java.time.Instant? = null,
   val document: Any? = null,
   val withdrawalReason: WithdrawPlacementRequestReason? = null,
+  val withdrawalDate: OffsetDateTime? = null,
+  val rejectionReason: String? = null,
   val sentenceType: SentenceTypeOption? = null,
   val releaseType: ReleaseTypeOption? = null,
   val situation: SituationOption? = null,
