@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
 
@@ -33,9 +32,6 @@ class Cas2ApplicationsTransformer(
   private val cas2ApplicationService: Cas2ApplicationService,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
 ) {
-
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.personInfoResultToPerson(personInfo))
-
   fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person) = Cas2Application(
     id = jpa.id,
     person = fullPerson,

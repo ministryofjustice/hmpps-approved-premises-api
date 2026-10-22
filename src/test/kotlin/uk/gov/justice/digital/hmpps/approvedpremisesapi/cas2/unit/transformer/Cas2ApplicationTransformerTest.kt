@@ -75,7 +75,6 @@ class Cas2ApplicationTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
     every { mockCas2UserTransformer.transformJpaToApi(any()) } returns Cas2User(
       id = user.id,
       name = user.name,
@@ -89,7 +88,7 @@ class Cas2ApplicationTransformerTest {
   }
 
   @Nested
-  inner class TransformJpaToApi {
+  inner class TransformJpaAndFullPersonToApi {
 
     @Test
     fun `transformJpaToApi transforms an in progress CAS-2v2 application correctly`() {
@@ -100,7 +99,7 @@ class Cas2ApplicationTransformerTest {
         .withCohort(Cas2Cohort.PRISON_BAIL)
         .produce()
 
-      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, mockk<Person>())
 
       assertThat(result).hasOnlyFields(
         "id",
@@ -140,7 +139,7 @@ class Cas2ApplicationTransformerTest {
             .produce(),
         ).produce()
 
-      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, mockk<Person>())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
@@ -168,7 +167,7 @@ class Cas2ApplicationTransformerTest {
           .produce(),
       ).produce()
 
-      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, mockk<Person>())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.assessment!!.statusUpdates).hasSize(1).containsExactly(mockStatusUpdate)
