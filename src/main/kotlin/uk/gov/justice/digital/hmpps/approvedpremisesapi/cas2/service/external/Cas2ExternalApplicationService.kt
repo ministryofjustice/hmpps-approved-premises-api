@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEventDetails
@@ -12,52 +11,31 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import java.time.Clock
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @Service
 class Cas2ExternalApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
-  private val domainEventRepository: DomainEventRepository,
+  private val cas2ApplicationService: Cas2ApplicationService,
   private val cas2ExternalDomainEventService: Cas2ExternalDomainEventService,
-  private val jsonMapper: JsonMapper,
-  private val clock: Clock,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
-  private companion object {
-    // Applications with an AWAITING_ARRIVAL status older than this threshold are excluded from the suitable applications list,
-    // consistent with the cas_2_application_live_summary database view.
-    const val APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS = 32L
-  }
-
   fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? {
     val allApplicationsForCrn = cas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr())
 
-    val allApplicationsWithStatus = allApplicationsForCrn.map { application ->
-      val latestStatusUpdate = application.getLatestStatusUpdate()
-      Pair(application, latestStatusUpdate)
+    val applicationsExcludingOldAwaitingArrival = allApplicationsForCrn.filter { application ->
+      !cas2ApplicationService.isArchived(application)
     }
-
-    val applicationsExcludingOldAwaitingArrival = allApplicationsWithStatus.filter { (_, statusUpdate) ->
-      if (statusUpdate?.status == Cas2AssessmentStatus.AWAITING_ARRIVAL) {
-        val awaitingArrivalDate = statusUpdate.createdAt.toInstant()
-        val daysSinceAwaitingArrival = ChronoUnit.DAYS.between(awaitingArrivalDate, Instant.now(clock))
-        daysSinceAwaitingArrival <= APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS
-      } else {
-        true
-      }
-    }.map { it.first }
 
     return applicationsExcludingOldAwaitingArrival.firstOrNull()?.let { mostRecent ->
 

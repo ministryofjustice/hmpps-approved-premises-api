@@ -12,11 +12,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import java.time.Clock
 import java.util.UUID
 
 @Component
@@ -28,7 +31,9 @@ class Cas2ApplicationsTransformer(
   private val timelineEventsTransformer: Cas2TimelineEventsTransformer,
   private val cas2AssessmentsTransformer: Cas2AssessmentsTransformer,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
+  private val cas2ApplicationService: Cas2ApplicationService,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val applicationUrlTemplate: String,
+  private val clock: Clock,
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.personInfoResultToPerson(personInfo))
@@ -96,10 +101,6 @@ class Cas2ApplicationsTransformer(
     jpa: Cas2ApplicationEntity,
   ): Cas2ReferralHistory {
     val latestStatusUpdate = jpa.getLatestStatusUpdate()
-    val latestStatus = latestStatusUpdate?.status
-    val rejectionReason = latestStatus
-      ?.takeIf { it in listOf(Cas2AssessmentStatus.CANCELLED, Cas2AssessmentStatus.WITHDRAWN) }
-      ?.apiName
 
     val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode ?: throw IllegalStateException("Missing placement address for CAS2v2 application ${jpa.id}")
@@ -108,10 +109,10 @@ class Cas2ApplicationsTransformer(
       id = jpa.assessment!!.id,
       applicationId = jpa.id,
       type = ServiceType.CAS2v2,
-      applicationStatus = latestStatus?.apiName,
+      applicationStatus = getReferralStatus(jpa),
       applicationSubmittedDate = jpa.submittedAt!!.toLocalDate(),
       applicationLastUpdatedDate = latestStatusUpdate?.createdAt?.toLocalDate(),
-      referralRejectionReason = rejectionReason,
+      referralRejectionReason = getRejectionReason(latestStatusUpdate),
       localAuthorityArea = placementAddress,
       pdu = jpa.preferredAreas,
       referredBy = jpa.createdByUser.name,
@@ -119,6 +120,20 @@ class Cas2ApplicationsTransformer(
       uiUrl = applicationUrlTemplate.replace("#applicationId", jpa.id.toString()).replace("#id", jpa.id.toString()),
     )
   }
+
+  private fun getReferralStatus(jpa: Cas2ApplicationEntity) = cas2ApplicationService.isArchived(jpa).let { isArchived ->
+    if (isArchived) {
+      "archived"
+    } else {
+      jpa.getLatestStatusUpdate()?.status?.apiName
+    }
+  }
+
+  private fun getRejectionReason(latestStatusUpdate: Cas2StatusUpdateEntity?) = latestStatusUpdate
+    ?.status
+    ?.takeIf {
+      it in listOf(Cas2AssessmentStatus.CANCELLED, Cas2AssessmentStatus.WITHDRAWN)
+    }?.apiName
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {

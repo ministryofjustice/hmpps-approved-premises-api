@@ -13,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.springframework.data.domain.Page
@@ -26,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
@@ -37,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -60,8 +64,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -90,9 +97,74 @@ class Cas2v2ApplicationServiceTest {
     mockSentryService,
     mockCaseService,
     mockCas2ApplicationEmailService,
+    Clock.fixed(Instant.parse("2026-10-21T12:00:00Z"), ZoneId.of("UTC")),
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
+
+  @Nested
+  inner class IsArchived {
+    private fun applicationWithStatus(
+      status: Cas2AssessmentStatus,
+      createdAt: OffsetDateTime,
+    ): Cas2ApplicationEntity {
+      val application = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .produce()
+      application.statusUpdates = mutableListOf(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(application)
+          .withAssessor(application.createdByUser)
+          .withStatusId(status.id)
+          .withCreatedAt(createdAt)
+          .produce(),
+      )
+      return application
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "2026-09-18T23:59:59.999999Z, true",
+      "2026-09-19T00:00:00Z, true",
+      "2026-09-19T00:00:00.000001Z, false",
+    )
+    fun `archives awaiting arrival statuses at or before midnight 32 calendar days ago`(
+      createdAt: OffsetDateTime,
+      expected: Boolean,
+    ) {
+      val application = applicationWithStatus(Cas2AssessmentStatus.AWAITING_ARRIVAL, createdAt)
+
+      assertThat(cas2ApplicationService.isArchived(application)).isEqualTo(expected)
+    }
+
+    @ParameterizedTest
+    @EnumSource(Cas2AssessmentStatus::class, names = ["AWAITING_ARRIVAL"], mode = EnumSource.Mode.EXCLUDE)
+    fun `does not archive other statuses even when older than the cutoff`(status: Cas2AssessmentStatus) {
+      val application = applicationWithStatus(status, OffsetDateTime.parse("2026-09-01T00:00:00Z"))
+
+      assertThat(cas2ApplicationService.isArchived(application)).isFalse()
+    }
+
+    @Test
+    fun `does not archive an application with null status updates`() {
+      val application = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .produce()
+      application.statusUpdates = null
+
+      assertThat(cas2ApplicationService.isArchived(application)).isFalse()
+    }
+
+    @Test
+    fun `does not archive an application with empty status updates`() {
+      val application = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(Cas2UserEntityFactory().produce())
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      assertThat(cas2ApplicationService.isArchived(application)).isFalse()
+    }
+  }
 
   @Nested
   inner class GetAllSubmittedCas2v2ApplicationsForAssessor {
