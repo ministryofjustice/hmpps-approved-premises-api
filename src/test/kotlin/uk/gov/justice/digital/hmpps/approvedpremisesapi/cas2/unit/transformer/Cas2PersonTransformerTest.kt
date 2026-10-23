@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 
-class Cas2v2PersonTransformerTest {
+class Cas2PersonTransformerTest {
 
   private val cas2PersonTransformer = Cas2PersonTransformer()
 

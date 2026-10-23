@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefor
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2v2ApplicationNotesTransformerTest {
+class Cas2ApplicationNotesTransformerTest {
   private val user = Cas2UserEntityFactory()
     .withServiceOrigin(Cas2ServiceOrigin.BAIL)
     .produce()

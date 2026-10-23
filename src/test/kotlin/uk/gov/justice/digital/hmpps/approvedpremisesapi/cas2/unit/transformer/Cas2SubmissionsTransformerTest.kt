@@ -30,7 +30,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2v2SubmissionsTransformerTest {
+class Cas2SubmissionsTransformerTest {
 
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockCas2UserTransformer = mockk<Cas2UserTransformer>()

@@ -72,7 +72,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class Cas2v2ApplicationServiceTest {
+class Cas2ApplicationServiceTest {
   private val mockCas2ApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockCas2LockableApplicationRepository = mockk<Cas2LockableApplicationRepository>()
   private val mockCas2ApplicationSummaryRepository = mockk<Cas2ApplicationSummaryRepository>()

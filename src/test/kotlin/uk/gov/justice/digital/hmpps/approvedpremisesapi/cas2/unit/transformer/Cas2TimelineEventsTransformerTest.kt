@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2U
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2v2TimelineEventsTransformerTest {
+class Cas2TimelineEventsTransformerTest {
   private val user = Cas2UserEntityFactory()
     .withServiceOrigin(Cas2ServiceOrigin.BAIL)
     .produce()

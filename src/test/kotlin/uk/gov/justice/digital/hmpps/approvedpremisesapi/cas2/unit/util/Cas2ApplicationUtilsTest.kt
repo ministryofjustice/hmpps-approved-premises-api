@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constants.CAS2_PRISON_BAIL_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constants.HDC_APPLICATION_TYPE
 
-class Cas2v2ApplicationUtilsTest {
+class Cas2ApplicationUtilsTest {
 
   @Test
   fun `in Cas2v2ApplicationUtils getApplicationTypeFromApplicationOrigin returns correct applicationType`() {
