@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -183,7 +182,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
@@ -204,7 +203,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = true,
       )
 
@@ -235,7 +234,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult1Success, personSummaryInfoResult2Restricted, personSummaryInfoResult3Success)
@@ -276,7 +275,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = true,
       )
 
@@ -293,7 +292,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
@@ -307,7 +306,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = true,
       )
 
@@ -324,7 +323,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
@@ -338,7 +337,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = true,
       )
 
@@ -359,7 +358,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = false,
         )
       } returns listOf(personSummaryInfoResult)
@@ -380,7 +379,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = false,
       )
 
@@ -390,7 +389,7 @@ class OffenderDetailServiceTest {
       verify(exactly = 1) {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = false,
         )
       }
@@ -450,7 +449,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
@@ -471,7 +470,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResult(
         crn = CRN1,
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = true,
       )
 
@@ -485,7 +484,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
@@ -499,7 +498,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResult(
         crn = CRN1,
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = true,
       )
 
@@ -515,7 +514,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
@@ -529,7 +528,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResult(
         crn = CRN1,
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = true,
       )
 
@@ -549,7 +548,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = false,
         )
       } returns listOf(personSummaryInfoResult)
@@ -570,7 +569,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResult(
         crn = CRN1,
-        laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
         includeTier = false,
       )
 
@@ -579,7 +578,7 @@ class OffenderDetailServiceTest {
       verify(exactly = 1) {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(DELIUS_USERNAME),
           includeTier = false,
         )
       }

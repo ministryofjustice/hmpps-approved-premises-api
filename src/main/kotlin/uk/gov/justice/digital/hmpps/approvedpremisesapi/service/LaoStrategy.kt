@@ -59,35 +59,79 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
  *
  * See [cas3LaoStrategy()] below
  */
-sealed interface LaoStrategy {
-  /**
-   * Even if the calling user has exclusions or restrictions for a given offender,
-   * return [PersonSummaryInfoResult.Success.Full] or [PersonInfoResult.Success.Full] regardless.
-   *
-   * This strategy should be used with care, typically when the calling user
-   * has a specific qualification that indicates they can always view limited
-   * access offender information
-   */
-  data object NeverRestricted : LaoStrategy
+data class LaoStrategy(
+  val restrictionHandling: RestrictionHandling,
+  val exclusionHandling: ExclusionHandling,
+  val deliusUsername: String?,
+) {
 
-  /**
-   * If the offender is LAO, retrieve the access information for the calling delius user.
-   * If the user has limited access to this offender (either restricted or excluded), return
-   * [PersonInfoResult.Success.Restricted] or [PersonSummaryInfoResult.Success.Restricted]
-   */
-  data class CheckUserAccess(val deliusUsername: String) : LaoStrategy
+  init {
+    // temporary limitation whilst refactoring offender service to use individual restriction/exclusion handling strategies
+    if (restrictionHandling == RestrictionHandling.ALWAYS_CHECK && exclusionHandling == ExclusionHandling.IGNORE) {
+      error("If restrictionHandling is ALWAYS_CHECK, exclusionHandling must also be ALWAYS_CHECK")
+    }
+
+    // temporary limitation whilst refactoring offender service to use individual restriction/exclusion handling strategies
+    if (restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.ALWAYS_CHECK) {
+      error("If exclusionHandling is ALWAYS_CHECK, restrictionHandling must also be ALWAYS_CHECK")
+    }
+
+    if (restrictionHandling == RestrictionHandling.ALWAYS_CHECK || exclusionHandling == ExclusionHandling.ALWAYS_CHECK) {
+      requireNotNull(deliusUsername) { "Delius username is required when applying LAO checks" }
+    }
+  }
+
+  fun ignoreAll() = restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.IGNORE
+  fun checkAll() = restrictionHandling == RestrictionHandling.ALWAYS_CHECK && exclusionHandling == ExclusionHandling.ALWAYS_CHECK
+
+  enum class RestrictionHandling {
+    ALWAYS_CHECK,
+    IGNORE,
+  }
+  enum class ExclusionHandling {
+    ALWAYS_CHECK,
+    IGNORE,
+  }
+
+  companion object {
+
+    /**
+     * Even if the calling user has exclusions or restrictions for a given offender,
+     * return [PersonSummaryInfoResult.Success.Full] or [PersonInfoResult.Success.Full] regardless.
+     *
+     * This strategy should be used with care, typically when the calling user
+     * has a specific qualification that indicates they can always view limited
+     * access offender information
+     */
+    val NeverRestricted = LaoStrategy(
+      restrictionHandling = RestrictionHandling.IGNORE,
+      exclusionHandling = ExclusionHandling.IGNORE,
+      deliusUsername = null,
+    )
+
+    /**
+     * If the offender is LAO, retrieve the access information for the calling delius user.
+     * If the user has limited access to this offender (either restricted or excluded), return
+     * [PersonInfoResult.Success.Restricted] or [PersonSummaryInfoResult.Success.Restricted]
+     */
+    fun checkUserAccess(deliusUserName: String) = LaoStrategy(
+      restrictionHandling = RestrictionHandling.ALWAYS_CHECK,
+      exclusionHandling = ExclusionHandling.ALWAYS_CHECK,
+      deliusUsername = deliusUserName,
+    )
+  }
 }
 
 /**
  * This strategy is _not_ applied when creating an application. In that case, use cas1CreateApplicationLaoStrategy, which
- * always applies [LaoStrategy.CheckUserAccess]
+ * always applies [LaoStrategy.checkUserAccess]
  */
 fun UserEntity.cas1LaoStrategy() = if (this.hasQualification(UserQualification.LAO)) {
   LaoStrategy.NeverRestricted
 } else {
-  LaoStrategy.CheckUserAccess(this.deliusUsername)
+  LaoStrategy.checkUserAccess(this.deliusUsername)
 }
 
-fun UserEntity.cas1CreateApplicationLaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
+fun UserEntity.cas1CreateApplicationLaoStrategy() = LaoStrategy.checkUserAccess(this.deliusUsername)
 
-fun UserEntity.cas3LaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
+fun UserEntity.cas3LaoStrategy() = LaoStrategy.checkUserAccess(this.deliusUsername)
