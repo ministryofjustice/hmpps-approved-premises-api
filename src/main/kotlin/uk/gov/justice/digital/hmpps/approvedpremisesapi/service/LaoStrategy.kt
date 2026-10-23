@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -66,23 +67,10 @@ data class LaoStrategy(
 ) {
 
   init {
-    // temporary limitation whilst refactoring offender service to use individual restriction/exclusion handling strategies
-    if (restrictionHandling == RestrictionHandling.ALWAYS_CHECK && exclusionHandling == ExclusionHandling.IGNORE) {
-      error("If restrictionHandling is ALWAYS_CHECK, exclusionHandling must also be ALWAYS_CHECK")
-    }
-
-    // temporary limitation whilst refactoring offender service to use individual restriction/exclusion handling strategies
-    if (restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.ALWAYS_CHECK) {
-      error("If exclusionHandling is ALWAYS_CHECK, restrictionHandling must also be ALWAYS_CHECK")
-    }
-
     if (restrictionHandling == RestrictionHandling.ALWAYS_CHECK || exclusionHandling == ExclusionHandling.ALWAYS_CHECK) {
       requireNotNull(deliusUsername) { "Delius username is required when applying LAO checks" }
     }
   }
-
-  fun ignoreAll() = restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.IGNORE
-  fun checkAll() = restrictionHandling == RestrictionHandling.ALWAYS_CHECK && exclusionHandling == ExclusionHandling.ALWAYS_CHECK
 
   enum class RestrictionHandling {
     ALWAYS_CHECK,
@@ -119,6 +107,63 @@ data class LaoStrategy(
       exclusionHandling = ExclusionHandling.ALWAYS_CHECK,
       deliusUsername = deliusUserName,
     )
+  }
+
+  fun ignoreAll() = restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.IGNORE
+  fun checkAll() = restrictionHandling == RestrictionHandling.ALWAYS_CHECK && exclusionHandling == ExclusionHandling.ALWAYS_CHECK
+
+  /**
+   * The CaseSummary indicates if any restrictions/exclusions exist on the CRN,
+   * but doesn't indicate if they apply to this specific user
+   *
+   * Depending on the LaoStrategy, the CaseSummary may be sufficient to determine access
+   */
+  fun canView(caseSummary: CaseSummary): CaseSummaryViewResult {
+    val noApplicableExclusion = if (!caseSummary.currentExclusion) {
+      true
+    } else {
+      when (exclusionHandling) {
+        ExclusionHandling.ALWAYS_CHECK -> null
+        ExclusionHandling.IGNORE -> true
+      }
+    }
+
+    val noApplicableRestriction = if (!caseSummary.currentRestriction) {
+      true
+    } else {
+      when (restrictionHandling) {
+        RestrictionHandling.ALWAYS_CHECK -> null
+        RestrictionHandling.IGNORE -> true
+      }
+    }
+
+    return if (noApplicableExclusion == true && noApplicableRestriction == true) {
+      CaseSummaryViewResult.CAN_VIEW
+    } else {
+      CaseSummaryViewResult.CHECK_CASE_ACCESS
+    }
+  }
+
+  /**
+   * CaseAccess indicates if there are any restrictions/exclusions that apply to a specific user.
+   */
+  fun canView(caseAccess: CaseAccess): Boolean {
+    val excluded = when (exclusionHandling) {
+      ExclusionHandling.ALWAYS_CHECK -> caseAccess.userExcluded
+      ExclusionHandling.IGNORE -> false
+    }
+
+    val restricted = when (restrictionHandling) {
+      RestrictionHandling.ALWAYS_CHECK -> caseAccess.userRestricted
+      RestrictionHandling.IGNORE -> false
+    }
+
+    return !excluded && !restricted
+  }
+
+  enum class CaseSummaryViewResult {
+    CAN_VIEW,
+    CHECK_CASE_ACCESS,
   }
 }
 

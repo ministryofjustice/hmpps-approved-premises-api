@@ -160,6 +160,9 @@ class OffenderService(
   private fun toPersonSummaryInfo(
     crn: String,
     caseSummary: CaseSummary?,
+    /**
+     * Case access information for CRNs that need checking for LAO
+     */
     caseAccess: CaseAccess?,
     laoStrategy: LaoStrategy,
     tier: TierDto?,
@@ -169,7 +172,7 @@ class OffenderService(
       return PersonSummaryInfoResult.NotFound(crn)
     }
 
-    if (!caseSummary.hasLimitedAccess() || laoStrategy.ignoreAll()) {
+    if (laoStrategy.canView(caseSummary) == LaoStrategy.CaseSummaryViewResult.CAN_VIEW) {
       log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
       return PersonSummaryInfoResult.Success.Full(
         crn = crn,
@@ -179,22 +182,23 @@ class OffenderService(
     }
 
     return if (caseAccess == null) {
-      // This shouldn't happen
+      // This shouldn't happen because it indicates we've filtered out a case access
+      // for a CRN for which LAO needs checking
       log.warn("Could not find case access details for LAO '$crn'. Returning 'Not Found'")
       PersonSummaryInfoResult.NotFound(crn)
     } else {
-      if (caseAccess.hasLimitedAccess()) {
-        log.debug("Caller cannot access LAO '$crn'. Returning restricted")
-        PersonSummaryInfoResult.Success.Restricted(
-          crn = crn,
-          nomsNumber = caseSummary.nomsId,
-          tier = tier,
-        )
-      } else {
+      if (laoStrategy.canView(caseAccess)) {
         log.debug("Caller can access LAO '$crn'. Returning full details")
         PersonSummaryInfoResult.Success.Full(
           crn = crn,
           summary = caseSummary,
+          tier = tier,
+        )
+      } else {
+        log.debug("Caller cannot access LAO '$crn'. Returning restricted")
+        PersonSummaryInfoResult.Success.Restricted(
+          crn = crn,
+          nomsNumber = caseSummary.nomsId,
           tier = tier,
         )
       }
@@ -202,7 +206,6 @@ class OffenderService(
   }
 
   private fun CaseSummary.hasLimitedAccess() = this.currentExclusion || this.currentRestriction
-  private fun CaseAccess.hasLimitedAccess() = this.userExcluded || this.userRestricted
   private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
 
   fun isLao(crn: String): Boolean {
