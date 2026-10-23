@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import java.time.Instant
 import java.time.LocalDate
 
 data class RequestForPlacement(
@@ -28,6 +29,8 @@ data class RequestForPlacement(
   val requestReviewedAt: java.time.Instant? = null,
   val document: Any? = null,
   val withdrawalReason: WithdrawPlacementRequestReason? = null,
+  val withdrawalDate: Instant? = null,
+  val rejectionReason: String? = null,
   val sentenceType: SentenceTypeOption? = null,
   val releaseType: ReleaseTypeOption? = null,
   val situation: SituationOption? = null,

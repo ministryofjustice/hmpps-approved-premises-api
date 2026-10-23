@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
@@ -53,10 +52,10 @@ class Cas1ExternalApplicationService(
     val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, requestingUser = null) as CasResult.Success).value
 
     return rfps.flatMap { rfp ->
-      val withdrawalDate = if (rfp.isWithdrawn) cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(rfp) else null
+      val withdrawalDate = if (rfp.isWithdrawn) rfp.withdrawalDate?.atZone(java.time.ZoneOffset.UTC)?.toLocalDate() else null
 
       if (rfp.placements.isEmpty()) {
-        val rejectionReason = if (rfp.decision == PlacementApplicationDecision.REJECTED) cas1RequestForPlacementService.getRequestForPlacementRejectionReason(rfp) else null
+        val rejectionReason = rfp.rejectionReason
 
         listOf(
           transformer.transformToCas1PlacementPair(
