@@ -274,7 +274,7 @@ class PeopleController(
   private fun ensureUserCanAccessOffenderInfo(crn: String) {
     if (!offenderService.canAccessOffender(
         crn,
-        laoStrategy = LaoStrategy.CheckUserAccess(userService.getDeliusUserNameForRequest()),
+        laoStrategy = LaoStrategy.checkUserAccess(userService.getDeliusUserNameForRequest()),
       )
     ) {
       throw ForbiddenProblem()
@@ -285,7 +285,7 @@ class PeopleController(
     val nomsNumber = when (
       val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(
         crn = crn,
-        laoStrategy = LaoStrategy.CheckUserAccess(userService.getDeliusUserNameForRequest()),
+        laoStrategy = LaoStrategy.checkUserAccess(userService.getDeliusUserNameForRequest()),
       )
     ) {
       is PersonSummaryInfoResult.Success.Full -> personSummaryInfoResult.summary.nomsId

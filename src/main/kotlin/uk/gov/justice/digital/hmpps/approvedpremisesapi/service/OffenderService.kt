@@ -81,6 +81,7 @@ class OffenderService(
       .flatMap { it.stream() }
       .collect(Collectors.toList())
   }
+
   fun getPersonSummaryInfoResult(
     crn: String,
     laoStrategy: LaoStrategy,
@@ -114,14 +115,15 @@ class OffenderService(
       valueTransform = { it },
     )
 
-    val caseAccessByCrn = when (laoStrategy) {
-      is LaoStrategy.NeverRestricted -> emptyMap()
-      is LaoStrategy.CheckUserAccess -> {
+    val caseAccessByCrn = when {
+      laoStrategy.ignoreAll() -> emptyMap()
+      laoStrategy.checkAll() -> {
         getUserAccessForCrns(
-          deliusUsername = laoStrategy.deliusUsername,
+          deliusUsername = laoStrategy.deliusUsername!!,
           crns = crnsList.filter { caseSummariesByCrn[it]?.hasLimitedAccess() == true },
         )
       }
+      else -> laoStrategy.throwUnsupportedConfigError()
     }
 
     val tiersByCrn = when (includeTier) {
@@ -167,7 +169,7 @@ class OffenderService(
       return PersonSummaryInfoResult.NotFound(crn)
     }
 
-    if (!caseSummary.hasLimitedAccess() || laoStrategy is LaoStrategy.NeverRestricted) {
+    if (!caseSummary.hasLimitedAccess() || laoStrategy.ignoreAll()) {
       log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
       return PersonSummaryInfoResult.Success.Full(
         crn = crn,
@@ -215,12 +217,13 @@ class OffenderService(
   fun canAccessOffender(
     crn: String,
     laoStrategy: LaoStrategy,
-  ) = when (laoStrategy) {
-    is LaoStrategy.NeverRestricted -> true
-    is LaoStrategy.CheckUserAccess -> canAccessOffender(
-      username = laoStrategy.deliusUsername,
+  ) = when {
+    laoStrategy.ignoreAll() -> true
+    laoStrategy.checkAll() -> canAccessOffender(
+      username = laoStrategy.deliusUsername!!,
       crn = crn,
     )
+    else -> laoStrategy.throwUnsupportedConfigError()
   }
 
   fun canAccessOffender(username: String, crn: String) = canAccessOffenders(username, listOf(crn))[crn]!!
@@ -315,17 +318,19 @@ class OffenderService(
   fun getCsraSummariesForOffender(
     crn: String,
     laoStrategy: LaoStrategy,
-  ): CasResult<List<CsraSummary>> = when (laoStrategy) {
-    is LaoStrategy.NeverRestricted -> {
+  ): CasResult<List<CsraSummary>> = when {
+    laoStrategy.ignoreAll() -> {
       caseService.getCase(crn)?.nomsNumber?.let { nomsNumber ->
         prisonsApiClient.getCsraSummariesForOffender(nomsNumber)
           .toCasResult(entityType = "CsraSummary", id = crn)
       } ?: getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
     }
 
-    is LaoStrategy.CheckUserAccess -> {
+    laoStrategy.checkAll() -> {
       getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
     }
+
+    else -> laoStrategy.throwUnsupportedConfigError()
   }
 
   private fun PersonSummaryInfoResult.toCsraSummaries(crn: String): CasResult<List<CsraSummary>> = when (this) {
@@ -362,4 +367,6 @@ class OffenderService(
       is ClientResult.Failure -> inmateDetailResult.throwException()
     }
   }
+
+  fun LaoStrategy.throwUnsupportedConfigError(): Nothing = error("Unsupported lao strategy config $this")
 }
