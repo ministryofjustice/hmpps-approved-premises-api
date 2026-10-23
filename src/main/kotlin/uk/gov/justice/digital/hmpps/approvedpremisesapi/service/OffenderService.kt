@@ -169,7 +169,7 @@ class OffenderService(
       return PersonSummaryInfoResult.NotFound(crn)
     }
 
-    if (!caseSummary.hasLimitedAccess() || laoStrategy.ignoreAll()) {
+    if (caseSummary.canView(laoStrategy) == CaseSummaryViewResult.CAN_VIEW) {
       log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
       return PersonSummaryInfoResult.Success.Full(
         crn = crn,
@@ -183,7 +183,7 @@ class OffenderService(
       log.warn("Could not find case access details for LAO '$crn'. Returning 'Not Found'")
       PersonSummaryInfoResult.NotFound(crn)
     } else {
-      if (caseAccess.hasLimitedAccess()) {
+      if (caseAccess.cannotView(laoStrategy)) {
         log.debug("Caller cannot access LAO '$crn'. Returning restricted")
         PersonSummaryInfoResult.Success.Restricted(
           crn = crn,
@@ -201,8 +201,8 @@ class OffenderService(
     }
   }
 
+  // TODO: move these into Lao util (where still required?)
   private fun CaseSummary.hasLimitedAccess() = this.currentExclusion || this.currentRestriction
-  private fun CaseAccess.hasLimitedAccess() = this.userExcluded || this.userRestricted
   private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
 
   fun isLao(crn: String): Boolean {
