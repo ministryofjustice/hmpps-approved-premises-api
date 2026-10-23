@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2v2AssessmentServiceTest {
+class Cas2AssessmentServiceTest {
 
   private val mockCas2AssessmentRepository = mockk<Cas2AssessmentRepository>()
 

@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2Sta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 
-class Cas2v2AssessmentsTransformerTest {
+class Cas2AssessmentsTransformerTest {
   private val mockCas2StatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
   private val cas2AssessmentEntity = Cas2AssessmentEntityFactory()
     .withNacroReferralId("NACRO_ID")

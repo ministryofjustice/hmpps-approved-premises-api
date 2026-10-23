@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasy
 import java.time.Instant
 import java.time.OffsetDateTime
 
-class Cas2v2OASysTransformerTest {
+class Cas2OASysTransformerTest {
 
   private val transformer = Cas2OASysTransformer()
 

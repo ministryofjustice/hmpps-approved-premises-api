@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import java.time.OffsetDateTime
 
-class Cas2v2UserAccessServiceTest {
+class Cas2UserAccessServiceTest {
 
   val mockkCas2UserService = mockk<Cas2UserService>()
 
