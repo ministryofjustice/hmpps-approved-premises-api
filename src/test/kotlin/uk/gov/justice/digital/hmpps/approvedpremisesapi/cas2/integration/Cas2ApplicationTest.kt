@@ -1434,9 +1434,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     val crn = "CRN123"
 
     @Test
-    fun `Create new cas2v2 application as a POM user returns 404 when a person cannot be found`() {
+    fun `Create new cas2v2 application as a POM user returns 404 when case summary cannot be found`() {
       givenACas2v2DeliusUser { _, jwt ->
-        createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt)
+        apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
+        createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt, crn)
       }
     }
 
@@ -1454,17 +1455,18 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create new cas2v2 application as a Noms user returns 404 when a person cannot be found`() {
+    fun `Create new cas2v2 application as a Noms user returns 404 when a case summary cannot be found`() {
       givenACas2v2NomisUser { _, jwt ->
-        apDeliusContextCaseSummariesErrorResponse(404)
-        createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt)
+        apDeliusContextCaseSummariesEmptyResponseForCrn("X1234")
+        createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt, "X1234")
       }
     }
 
     @Test
-    fun `Create new cas2v2 application as a LicenceCaseAdminUsers user returns 404 when a person cannot be found`() {
+    fun `Create new cas2v2 application as a LicenceCaseAdminUsers user returns 404 when a case summary cannot be found`() {
       givenACas2v2DeliusUser { _, jwt ->
-        createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt)
+        apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
+        createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt, crn)
       }
     }
 
@@ -1500,8 +1502,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       }
     }
 
-    private fun createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt: String) {
-      val crn = "X1234"
+    private fun createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt: String, crn: String = "X1234") {
 
       webTestClient.post()
         .uri("/cas2/applications")

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -47,15 +48,31 @@ class Cas2OffenderServiceTest {
     val nomsNumber = "DEF123"
 
     @Test
-    fun `returns NotFound result when Probation Offender Search returns 404`() {
+    fun `returns error when Case Summaries Search returns 404`() {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.NOT_FOUND, null)
 
-      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      assertThatThrownBy {
+        cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
+      }
+        .isInstanceOf(IllegalStateException::class.java)
+        .hasMessage("Received a 404 from the Delius Integration Api when searching for DEF123. This should not happen, as the API should return an empty response instead")
     }
 
     @Test
-    fun `returns NotFound result when Probation Offender Search does not return a matching offender`() {
+    fun `returns error when Case Summaries Search returns 403`() {
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
+        StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.FORBIDDEN, null)
+
+      assertThatThrownBy {
+        cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
+      }
+        .isInstanceOf(IllegalStateException::class.java)
+        .hasMessage("Received a 403 from the Delius Integration Api when searching for DEF123. This indicates a service permission issue")
+    }
+
+    @Test
+    fun `returns NotFound result when Case Summaries Search does not return a matching offender`() {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
 

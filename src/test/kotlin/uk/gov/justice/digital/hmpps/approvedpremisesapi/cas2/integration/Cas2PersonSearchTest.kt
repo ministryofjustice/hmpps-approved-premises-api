@@ -73,7 +73,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
         }
 
         @Test
-        fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
+        fun `Searching for a NOMIS ID returns server error when case summary call is unauthorized by the API`() {
           givenACas2v2NomisUser { _, jwt ->
             apDeliusContextCaseSummariesErrorResponse(403)
 
@@ -82,12 +82,12 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
-              .isForbidden
+              .is5xxServerError
           }
         }
 
         @Test
-        fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
+        fun `Searching for a NOMIS ID returns server error when 404 returned from case summary`() {
           givenACas2v2DeliusUser { _, jwt ->
             apDeliusContextCaseSummariesErrorResponse(404)
 
@@ -96,7 +96,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
-              .isNotFound
+              .is5xxServerError
           }
         }
 

@@ -27,23 +27,29 @@ class Cas2OffenderService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun getPersonByNomisIdOrCrn(nomisIdOrCrn: String): Cas2v2OffenderSearchResult {
-    fun logFailedResponse(probationResponse: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomisIdOrCrn", probationResponse.toException())
+    fun logFailedResponse(caseSummariesResponse: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomisIdOrCrn", caseSummariesResponse.toException())
 
-    val caseSummaryList = when (val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))) {
-      is ClientResult.Success -> caseSummaries.body.cases
-      is ClientResult.Failure.StatusCode -> when (caseSummaries.status) {
+    val caseSummaryList = when (val caseSummariesResponse = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))) {
+      is ClientResult.Success -> caseSummariesResponse.body.cases
+      is ClientResult.Failure.StatusCode -> when (caseSummariesResponse.status) {
         // this isn't technically correct because we should get an empty response if offender not found. instead, this should be treated as an unexpected error
-        HttpStatus.NOT_FOUND -> return emitMessageAndCreateNotFound("Person not found ($nomisIdOrCrn) via the Delius Integration Api", nomisIdOrCrn)
-        HttpStatus.FORBIDDEN -> return Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
+        HttpStatus.NOT_FOUND -> {
+          logFailedResponse(caseSummariesResponse)
+          error("Received a 404 from the Delius Integration Api when searching for $nomisIdOrCrn. This should not happen, as the API should return an empty response instead")
+        }
+        HttpStatus.FORBIDDEN -> {
+          logFailedResponse(caseSummariesResponse)
+          error("Received a 403 from the Delius Integration Api when searching for $nomisIdOrCrn. This indicates a service permission issue")
+        }
         else -> {
-          logFailedResponse(caseSummaries)
-          return Cas2v2OffenderSearchResult.Unknown(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
+          logFailedResponse(caseSummariesResponse)
+          return Cas2v2OffenderSearchResult.Unknown(nomisIdOrCrn = nomisIdOrCrn, caseSummariesResponse.toException())
         }
       }
 
       is ClientResult.Failure -> {
-        logFailedResponse(caseSummaries)
-        return Cas2v2OffenderSearchResult.Unknown(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
+        logFailedResponse(caseSummariesResponse)
+        return Cas2v2OffenderSearchResult.Unknown(nomisIdOrCrn = nomisIdOrCrn, caseSummariesResponse.toException())
       }
     }
 
