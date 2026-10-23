@@ -243,7 +243,7 @@ class UserAccessServiceTest {
         .produce(),
     )
 
-    every { offenderService.canAccessOffender(application.crn, LaoStrategy.CheckUserAccess(user.deliusUsername)) } returns true
+    every { offenderService.canAccessOffender(application.crn, LaoStrategy.checkUserAccess(user.deliusUsername)) } returns true
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
   }
@@ -262,7 +262,7 @@ class UserAccessServiceTest {
         .produce(),
     )
 
-    every { offenderService.canAccessOffender(application.crn, LaoStrategy.CheckUserAccess(user.deliusUsername)) } returns false
+    every { offenderService.canAccessOffender(application.crn, LaoStrategy.checkUserAccess(user.deliusUsername)) } returns false
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
   }
