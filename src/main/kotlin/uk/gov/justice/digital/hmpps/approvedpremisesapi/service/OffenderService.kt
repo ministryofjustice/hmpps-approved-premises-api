@@ -112,7 +112,7 @@ class OffenderService(
       false -> emptyMap()
     }
 
-    val visibilities = laoService.isVisible(caseSummaries, laoStrategy)
+    val visibilities = laoService.isVisibleForCaseSummaries(caseSummaries, laoStrategy)
 
     val visibilityByCrn = visibilities.associateBy(
       keySelector = { it.caseSummary.crn },
@@ -178,7 +178,7 @@ class OffenderService(
   ): Map<String, Boolean> {
     if (crns.isEmpty()) return emptyMap()
 
-    val visibilities = laoService.isVisibleFromCaseAccess(
+    val visibilities = laoService.isVisibleForCrns(
       crns = crns,
       laoStrategy = laoStrategy,
     )

@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient.Companion.MAX_CASE_ACCESS_REQUEST_COUNT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 
 @Service
@@ -13,9 +14,20 @@ class LaoService(
 ) {
 
   /**
+   * Determines visibility for a list of [CaseSummary]'s, given an [LaoStrategy].
+   *
+   * If the caller already has/requires a list of [CaseSummary]'s this function
+   * should be used in preference to [isVisibleForCrns] because typically
+   * the [CaseSummary] is sufficient to determine access without having
+   * to retrieve [UserAccess] details (e.g. if a given [CaseSummary] indicates
+   * no exclusions/restrictions exist)
+   *
+   * When [UserAccess] details _are_ required to determine visibility, they
+   * will only be fetched for the required  CRNs
+   *
    * Will return an entry for each provided CRN
    */
-  fun isVisible(
+  fun isVisibleForCaseSummaries(
     caseSummaries: List<CaseSummary>,
     laoStrategy: LaoStrategy,
   ): List<IsVisible> {
@@ -28,7 +40,7 @@ class LaoService(
 
     val indeterminateVisibility = visibilityFromCaseSummary.filter { !it.couldDetermineVisibility() }
 
-    val visibilityFromCaseAccess = isVisibleFromCaseAccess(
+    val visibilityFromCaseAccess = isVisibleForCrns(
       crns = indeterminateVisibility.map { it.caseSummary.crn },
       laoStrategy = laoStrategy,
     )
@@ -40,9 +52,15 @@ class LaoService(
   }
 
   /**
+   * Will fetch [UserAccess] information for each given CRN and determine if
+   * the Case is visible, for the given [LaoStrategy]
+   *
+   * If the caller already has/requires a list of [CaseSummary]'s, use [isVisibleForCaseSummaries]
+   * instead because it's more efficient
+   *
    * Will return an entry for each provided CRN
    */
-  fun isVisibleFromCaseAccess(
+  fun isVisibleForCrns(
     crns: List<String>,
     laoStrategy: LaoStrategy,
   ): List<VisibilityFromCaseAccess> {
@@ -52,7 +70,7 @@ class LaoService(
       throw InternalServerErrorProblem("Cannot request access details for more than $MAX_CASE_ACCESS_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
-    if (laoStrategy.ignoreAll()) {
+    if (laoStrategy.isNeverRestricted()) {
       return crns.map {
         VisibilityFromCaseAccess(
           crn = it,

@@ -52,7 +52,7 @@ class LaoStrategyTest {
   }
 
   @Nested
-  inner class IgnoreAll {
+  inner class IsNeverRestricted {
 
     @Test
     fun `returns true when both checks are ignored`() {
@@ -62,7 +62,7 @@ class LaoStrategyTest {
         deliusUsername = null,
       )
 
-      assertThat(strategy.ignoreAll()).isTrue()
+      assertThat(strategy.isNeverRestricted()).isTrue()
     }
 
     @Test
@@ -73,7 +73,7 @@ class LaoStrategyTest {
         deliusUsername = "user1",
       )
 
-      assertThat(strategy.ignoreAll()).isFalse()
+      assertThat(strategy.isNeverRestricted()).isFalse()
     }
 
     @Test
@@ -84,7 +84,7 @@ class LaoStrategyTest {
         deliusUsername = "user1",
       )
 
-      assertThat(strategy.ignoreAll()).isFalse()
+      assertThat(strategy.isNeverRestricted()).isFalse()
     }
   }
 

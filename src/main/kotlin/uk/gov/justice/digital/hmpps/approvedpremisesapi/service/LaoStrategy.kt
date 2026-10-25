@@ -109,7 +109,11 @@ data class LaoStrategy(
     )
   }
 
-  fun ignoreAll() = restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.IGNORE
+  /**
+   * return true if the strategy means callers can view any offenders
+   * without any LAO checks required
+   */
+  fun isNeverRestricted() = restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.IGNORE
 
   /**
    * The CaseSummary indicates if any restrictions/exclusions exist on the CRN,
