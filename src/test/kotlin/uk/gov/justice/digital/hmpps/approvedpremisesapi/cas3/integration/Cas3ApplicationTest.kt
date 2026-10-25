@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -44,6 +45,13 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
 
 class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
+
+  @BeforeEach
+  fun resetMocks() {
+    // this is an imperfect solution to ensure case access
+    // mocks don't persist across tests
+    wiremockManager.reset()
+  }
 
   @Nested
   inner class GetApplications {
@@ -373,6 +381,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
+                .withAccess()
                 .produce(),
             ),
             createdByUser.deliusUsername,

@@ -78,7 +78,7 @@ class WiremockManager {
     }
   }
 
-  fun afterTest() {
+  fun reset() {
     wiremockServer.resetAll()
   }
 
