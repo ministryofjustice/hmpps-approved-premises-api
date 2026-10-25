@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
@@ -156,8 +155,6 @@ class OffenderService(
     }
   }
 
-  private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
-
   fun isLao(crn: String): Boolean {
     val offender = when (val offenderResponse = apDeliusContextApiClient.getCaseSummaries(listOf(crn))) {
       is ClientResult.Success -> offenderResponse.body.cases.first()
@@ -295,6 +292,4 @@ class OffenderService(
       is ClientResult.Failure -> inmateDetailResult.throwException()
     }
   }
-
-  fun LaoStrategy.throwUnsupportedConfigError(): Nothing = error("Unsupported lao strategy config $this")
 }

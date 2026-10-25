@@ -110,7 +110,6 @@ data class LaoStrategy(
   }
 
   fun ignoreAll() = restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.IGNORE
-  fun checkAll() = restrictionHandling == RestrictionHandling.ALWAYS_CHECK && exclusionHandling == ExclusionHandling.ALWAYS_CHECK
 
   /**
    * The CaseSummary indicates if any restrictions/exclusions exist on the CRN,

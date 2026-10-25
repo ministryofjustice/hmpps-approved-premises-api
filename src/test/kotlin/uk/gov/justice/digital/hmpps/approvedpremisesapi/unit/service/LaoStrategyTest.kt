@@ -89,43 +89,6 @@ class LaoStrategyTest {
   }
 
   @Nested
-  inner class CheckAll {
-
-    @Test
-    fun `returns true when both checks are enabled`() {
-      val strategy = LaoStrategy(
-        restrictionHandling = LaoStrategy.RestrictionHandling.ALWAYS_CHECK,
-        exclusionHandling = LaoStrategy.ExclusionHandling.ALWAYS_CHECK,
-        deliusUsername = "user1",
-      )
-
-      assertThat(strategy.checkAll()).isTrue()
-    }
-
-    @Test
-    fun `returns false when restriction check is ignored`() {
-      val strategy = LaoStrategy(
-        restrictionHandling = LaoStrategy.RestrictionHandling.IGNORE,
-        exclusionHandling = LaoStrategy.ExclusionHandling.ALWAYS_CHECK,
-        deliusUsername = "user1",
-      )
-
-      assertThat(strategy.checkAll()).isFalse()
-    }
-
-    @Test
-    fun `returns false when exclusion check is ignored`() {
-      val strategy = LaoStrategy(
-        restrictionHandling = LaoStrategy.RestrictionHandling.ALWAYS_CHECK,
-        exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
-        deliusUsername = "user1",
-      )
-
-      assertThat(strategy.checkAll()).isFalse()
-    }
-  }
-
-  @Nested
   inner class CanViewUsingCaseSummary {
 
     @Test
