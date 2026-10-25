@@ -259,20 +259,7 @@ class OffenderService(
   fun getCsraSummariesForOffender(
     crn: String,
     laoStrategy: LaoStrategy,
-  ): CasResult<List<CsraSummary>> = when {
-    laoStrategy.ignoreAll() -> {
-      caseService.getCase(crn)?.nomsNumber?.let { nomsNumber ->
-        prisonsApiClient.getCsraSummariesForOffender(nomsNumber)
-          .toCasResult(entityType = "CsraSummary", id = crn)
-      } ?: getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
-    }
-
-    laoStrategy.checkAll() -> {
-      getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
-    }
-
-    else -> laoStrategy.throwUnsupportedConfigError()
-  }
+  ) = getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
 
   private fun PersonSummaryInfoResult.toCsraSummaries(crn: String): CasResult<List<CsraSummary>> = when (this) {
     is PersonSummaryInfoResult.Success.Full -> {
