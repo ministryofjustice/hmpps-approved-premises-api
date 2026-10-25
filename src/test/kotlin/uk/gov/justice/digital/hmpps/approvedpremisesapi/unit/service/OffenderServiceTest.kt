@@ -158,14 +158,14 @@ class OffenderServiceTest {
 
     @Test
     fun `return empty result when crns list is empty`() {
-      val result = offenderService.canAccessOffenders("distinguished.name", emptyList())
+      val result = offenderService.canAccessOffenders(emptyList(), LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result.isEmpty()).isTrue()
     }
 
     @Test
     fun `return error if greater than 500 crns are requested`() {
       assertThatThrownBy {
-        offenderService.canAccessOffenders("distinguished.name", (0..500).map { "$it" })
+        offenderService.canAccessOffenders((0..500).map { "$it" }, LaoStrategy.checkUserAccess("distinguished.name"))
       }.isInstanceOf(InternalServerErrorProblem::class.java)
         .hasMessage("Cannot request access details for more than 500 CRNs. 501 have been provided.")
     }
@@ -185,7 +185,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      val result = offenderService.canAccessOffenders(listOf(crn), LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result[crn]).isFalse()
     }
 
@@ -204,7 +204,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      val result = offenderService.canAccessOffenders(listOf(crn), LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result[crn]).isFalse()
     }
 
@@ -224,7 +224,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      val result = offenderService.canAccessOffenders(listOf(crn), LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result[crn]).isTrue()
     }
 
@@ -265,7 +265,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, userAccess)
 
-      val result = offenderService.canAccessOffenders("distinguished.name", crns)
+      val result = offenderService.canAccessOffenders(crns, LaoStrategy.checkUserAccess("distinguished.name"))
 
       assertThat(result["CRN1"]).isTrue()
       assertThat(result["CRN2"]).isFalse()
@@ -280,7 +280,7 @@ class OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns response
 
-      assertThrows<Throwable> { offenderService.canAccessOffenders("distinguished.name", listOf(crn)) }
+      assertThrows<Throwable> { offenderService.canAccessOffenders(listOf(crn), LaoStrategy.checkUserAccess("distinguished.name")) }
     }
   }
 

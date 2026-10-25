@@ -170,38 +170,26 @@ class OffenderService(
   fun canAccessOffender(
     crn: String,
     laoStrategy: LaoStrategy,
-  ) = when {
-    laoStrategy.ignoreAll() -> true
-    laoStrategy.checkAll() -> canAccessOffender(
-      username = laoStrategy.deliusUsername!!,
-      crn = crn,
-    )
-    else -> laoStrategy.throwUnsupportedConfigError()
-  }
+  ) = canAccessOffenders(
+    crns = listOf(crn),
+    laoStrategy = laoStrategy,
+  ).entries.first().value
 
-  fun canAccessOffender(username: String, crn: String) = canAccessOffenders(username, listOf(crn))[crn]!!
-
-  fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {
+  fun canAccessOffenders(
+    crns: List<String>,
+    laoStrategy: LaoStrategy,
+  ): Map<String, Boolean> {
     if (crns.isEmpty()) return emptyMap()
 
-    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
-      throw InternalServerErrorProblem("Cannot request access details for more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
-    }
+    val visibilities = laoService.isVisibleFromCaseAccess(
+      crns = crns,
+      laoStrategy = laoStrategy,
+    )
 
-    return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(username, crns)) {
-      is ClientResult.Success -> {
-        val crnToAccessResult = clientResult.body.access.associateBy(
-          keySelector = { it.crn },
-          valueTransform = { it },
-        )
-
-        crns.associateBy(
-          keySelector = { crn -> crn },
-          valueTransform = { crn -> crnToAccessResult[crn]!!.hasNotLimitedAccess() },
-        )
-      }
-      is ClientResult.Failure -> clientResult.throwException()
-    }
+    return visibilities.associateBy(
+      keySelector = { it.crn },
+      valueTransform = { it.isVisible },
+    )
   }
 
   fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {

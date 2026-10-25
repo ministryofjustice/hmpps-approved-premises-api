@@ -52,6 +52,16 @@ class LaoService(
       throw InternalServerErrorProblem("Cannot request access details for more than $MAX_CASE_ACCESS_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
+    if (laoStrategy.ignoreAll()) {
+      return crns.map {
+        VisibilityFromCaseAccess(
+          crn = it,
+          laoStrategy = laoStrategy,
+          isVisible = true,
+        )
+      }
+    }
+
     val caseAccess = when (
       val result = apDeliusContextApiClient.getUserAccessForCrns(
         deliusUsername = laoStrategy.deliusUsername!!,

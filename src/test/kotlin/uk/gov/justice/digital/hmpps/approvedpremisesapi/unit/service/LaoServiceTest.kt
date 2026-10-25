@@ -33,6 +33,11 @@ class LaoServiceTest {
 
   private val username = "distinguished.name"
 
+  @BeforeEach
+  fun setupDefaultStrategy() {
+    every { mockLaoStrategy.ignoreAll() } returns false
+  }
+
   @Nested
   inner class IsVisible {
 
@@ -187,6 +192,23 @@ class LaoServiceTest {
 
       verify { mockApDeliusContextApiClient wasNot Called }
       verify { mockLaoStrategy wasNot Called }
+    }
+
+    @Test
+    fun `makes no upstream calls if lao strategy indicates to ignore exclusions and restrictions`() {
+      val crn1 = randomNumberChars(8)
+      val crn2 = randomNumberChars(8)
+      val crn3 = randomNumberChars(8)
+
+      every { mockLaoStrategy.ignoreAll() } returns true
+
+      val result = laoService.isVisibleFromCaseAccess(listOf(crn1, crn2, crn3), mockLaoStrategy)
+
+      assertThat(result).containsExactly(
+        LaoService.VisibilityFromCaseAccess(crn1, mockLaoStrategy, true),
+        LaoService.VisibilityFromCaseAccess(crn2, mockLaoStrategy, true),
+        LaoService.VisibilityFromCaseAccess(crn3, mockLaoStrategy, true),
+      )
     }
 
     @Test
