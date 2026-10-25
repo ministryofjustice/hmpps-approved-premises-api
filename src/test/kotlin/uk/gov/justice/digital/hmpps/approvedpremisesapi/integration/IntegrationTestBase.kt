@@ -8,10 +8,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.http.RequestMethod
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -164,6 +163,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.Dom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.EmailNotificationAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.IntegrationTestDbManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.TestPropertiesInitializer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.WiremockManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MockFeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.NoOpSentryService
@@ -633,21 +633,12 @@ abstract class IntegrationTestBase {
   lateinit var inboxEventEntityFactory: PersistedFactory<InboxEventEntity, UUID, InboxEventEntityFactory>
   lateinit var caseEntityFactory: PersistedFactory<CaseEntity, UUID, CaseEntityFactory>
 
-  private var clientCredentialsCallMocked = false
-
   @BeforeEach
   fun beforeEach(info: TestInfo) {
     log.info("Running test '${info.displayName}'")
 
     if (!info.tags.contains("isPerClass")) {
       this.setupTests()
-    }
-  }
-
-  @AfterEach
-  fun afterEach(info: TestInfo) {
-    if (!info.tags.contains("isPerClass")) {
-      this.teardownTests()
     }
   }
 
@@ -667,10 +658,6 @@ abstract class IntegrationTestBase {
 
     redisTemplate.keys("$preemptiveCacheKeyPrefix-**").forEach(redisTemplate::delete)
     this.setupFactories()
-  }
-
-  fun teardownTests() {
-    wiremockManager.afterTest()
   }
 
   fun setupFactories() {
@@ -907,10 +894,12 @@ abstract class IntegrationTestBase {
   }
 
   fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit = {}) {
+    val clientCredentialsCallMocked = wiremockServer.listAllStubMappings().mappings.any {
+      it.request.method == RequestMethod.POST && it.request.url == "/auth/oauth/token"
+    }
+
     if (!clientCredentialsCallMocked) {
       mockClientCredentialsJwtRequest()
-
-      clientCredentialsCallMocked = true
     }
 
     block()
@@ -937,11 +926,6 @@ abstract class InitialiseDatabasePerClassTestBase : IntegrationTestBase() {
   @BeforeAll
   fun beforeAll() {
     this.setupTests()
-  }
-
-  @AfterAll
-  fun afterAll() {
-    this.teardownTests()
   }
 }
 

@@ -7,7 +7,7 @@ import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockPortManager
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.WiremockPortManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 
 class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext> {

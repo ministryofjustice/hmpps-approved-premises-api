@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier
@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.springframework.test.context.event.annotation.AfterTestMethod
 import java.net.ServerSocket
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
@@ -78,7 +79,8 @@ class WiremockManager {
     }
   }
 
-  fun afterTest() {
+  @AfterTestMethod
+  fun resetWiremock() {
     wiremockServer.resetAll()
   }
 
