@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
@@ -39,6 +38,7 @@ class OffenderService(
   private val offenderRiskNoteParser: OffenderRiskNoteParser,
   private val caseService: CaseService,
   private val tierService: TierService,
+  private val laoService: LaoService,
 ) {
   companion object {
     const val MAX_OFFENDER_REQUEST_COUNT = 500
@@ -103,107 +103,59 @@ class OffenderService(
       throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
-    val crnsList = crns.toList()
-
-    val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getCaseSummaries(crnsList)) {
+    val caseSummaries = when (val result = apDeliusContextApiClient.getCaseSummaries(crns.toList())) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
-    }.cases.associateBy(
-      keySelector = { it.crn },
-      valueTransform = { it },
-    )
-
-    val caseAccessByCrn = when {
-      laoStrategy.ignoreAll() -> emptyMap()
-      laoStrategy.checkAll() -> {
-        getUserAccessForCrns(
-          deliusUsername = laoStrategy.deliusUsername!!,
-          crns = crnsList.filter { caseSummariesByCrn[it]?.hasLimitedAccess() == true },
-        )
-      }
-      else -> laoStrategy.throwUnsupportedConfigError()
-    }
+    }.cases
 
     val tiersByCrn = when (includeTier) {
       true -> tierService.getTiers(crns)
       false -> emptyMap()
     }
 
+    val visibilities = laoService.isVisible(caseSummaries, laoStrategy)
+
+    val visibilityByCrn = visibilities.associateBy(
+      keySelector = { it.caseSummary.crn },
+      valueTransform = { it },
+    )
+
     return crns.map { crn ->
       toPersonSummaryInfo(
         crn = crn,
-        caseSummary = caseSummariesByCrn[crn],
-        caseAccess = caseAccessByCrn[crn],
-        laoStrategy = laoStrategy,
+        visibility = visibilityByCrn[crn],
         tier = tiersByCrn[crn.uppercase()],
       )
     }
   }
 
-  private fun getUserAccessForCrns(
-    deliusUsername: String,
-    crns: List<String>,
-  ): Map<String, CaseAccess> = if (crns.isNotEmpty()) {
-    when (val result = apDeliusContextApiClient.getUserAccessForCrns(deliusUsername, crns)) {
-      is ClientResult.Success -> result.body
-      is ClientResult.Failure -> result.throwException()
-    }.access.associateBy(
-      keySelector = { it.crn },
-      valueTransform = { it },
-    )
-  } else {
-    emptyMap()
-  }
-
   private fun toPersonSummaryInfo(
     crn: String,
-    caseSummary: CaseSummary?,
-    /**
-     * Case access information for CRNs that need checking for LAO
-     */
-    caseAccess: CaseAccess?,
-    laoStrategy: LaoStrategy,
+    visibility: LaoService.IsVisible?,
     tier: TierDto?,
-  ): PersonSummaryInfoResult {
-    if (caseSummary == null) {
+  ) = when {
+    visibility == null -> {
       log.debug("Could not find case summary for '$crn'. Returning not found")
-      return PersonSummaryInfoResult.NotFound(crn)
+      PersonSummaryInfoResult.NotFound(crn)
     }
-
-    if (laoStrategy.canView(caseSummary) == LaoStrategy.CaseSummaryViewResult.CAN_VIEW) {
-      log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
-      return PersonSummaryInfoResult.Success.Full(
+    visibility.isVisible -> {
+      log.debug("Caller can access LAO '$crn'. Returning full details")
+      PersonSummaryInfoResult.Success.Full(
         crn = crn,
-        summary = caseSummary,
+        summary = visibility.caseSummary,
         tier = tier,
       )
     }
-
-    return if (caseAccess == null) {
-      // This shouldn't happen because it indicates we've filtered out a case access
-      // for a CRN for which LAO needs checking
-      log.warn("Could not find case access details for LAO '$crn'. Returning 'Not Found'")
-      PersonSummaryInfoResult.NotFound(crn)
-    } else {
-      if (laoStrategy.canView(caseAccess)) {
-        log.debug("Caller can access LAO '$crn'. Returning full details")
-        PersonSummaryInfoResult.Success.Full(
-          crn = crn,
-          summary = caseSummary,
-          tier = tier,
-        )
-      } else {
-        log.debug("Caller cannot access LAO '$crn'. Returning restricted")
-        PersonSummaryInfoResult.Success.Restricted(
-          crn = crn,
-          nomsNumber = caseSummary.nomsId,
-          tier = tier,
-        )
-      }
+    else -> {
+      log.debug("Caller cannot access LAO '$crn'. Returning restricted")
+      PersonSummaryInfoResult.Success.Restricted(
+        crn = crn,
+        nomsNumber = visibility.caseSummary.nomsId,
+        tier = tier,
+      )
     }
   }
 
-  private fun CaseSummary.hasLimitedAccess() = this.currentExclusion || this.currentRestriction
   private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
 
   fun isLao(crn: String): Boolean {

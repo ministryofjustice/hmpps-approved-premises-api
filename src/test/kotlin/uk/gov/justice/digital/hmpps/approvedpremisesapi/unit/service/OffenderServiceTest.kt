@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
@@ -67,6 +68,7 @@ class OffenderServiceTest {
     mockOffenderRiskNoteParser,
     mockCaseService,
     mockTierService,
+    laoService = LaoService(mockApDeliusContextApiClient),
   )
 
   @Nested
@@ -631,46 +633,6 @@ class OffenderServiceTest {
       assertThat(result.tier).isNull()
 
       verify(exactly = 0) { mockTierService.getTiers(any()) }
-    }
-
-    @ParameterizedTest
-    @CsvSource(
-      "true,false",
-      "false,true",
-      "true,true",
-    )
-    fun `single crn with limited access, ReturnRestrictedIfLimitedAccess strategy, no limited access record returned, return NotFound`(
-      currentExclusion: Boolean,
-      currentRestriction: Boolean,
-    ) {
-      val offender1CaseSummary = CaseSummaryFactory()
-        .withCrn(OFFENDER_1_CRN)
-        .withCurrentExclusion(currentExclusion)
-        .withCurrentRestriction(currentRestriction)
-        .produce()
-
-      every {
-        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
-      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
-
-      every {
-        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
-      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
-
-      every {
-        mockTierService.getTiers(setOf(OFFENDER_1_CRN))
-      } returns mapOf(OFFENDER_1_CRN to null)
-
-      val results = offenderService.getPersonSummaryInfoResults(
-        crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
-        includeTier = true,
-      )
-
-      assertThat(results).hasSize(1)
-      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
-      val result0 = results[0] as PersonSummaryInfoResult.NotFound
-      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
     }
 
     @ParameterizedTest

@@ -12,6 +12,9 @@ class LaoService(
   val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
 
+  /**
+   * Will return an entry for each provided CRN
+   */
   fun isVisible(
     caseSummaries: List<CaseSummary>,
     laoStrategy: LaoStrategy,
@@ -36,6 +39,9 @@ class LaoService(
       )
   }
 
+  /**
+   * Will return an entry for each provided CRN
+   */
   fun isVisibleFromCaseAccess(
     crns: List<String>,
     laoStrategy: LaoStrategy,
