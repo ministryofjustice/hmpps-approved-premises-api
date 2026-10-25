@@ -26,6 +26,11 @@ class ApDeliusContextApiClient(
   jsonMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
+
+  companion object {
+    const val MAX_CASE_ACCESS_REQUEST_COUNT = 500
+  }
+
   @Cacheable(value = ["qCodeStaffMembersCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffMembers(qCode: String) = getRequest<StaffMembersPage> {
     path = "/approved-premises/$qCode/staff"

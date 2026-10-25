@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.toCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
@@ -36,7 +35,6 @@ class OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val prisionerAlertsApiClient: PrisonerAlertsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val offenderDetailsDataSource: OffenderDetailsDataSource,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
   private val offenderRiskNoteParser: OffenderRiskNoteParser,
   private val caseService: CaseService,

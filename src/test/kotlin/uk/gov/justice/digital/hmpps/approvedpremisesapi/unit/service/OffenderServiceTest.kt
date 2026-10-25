@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
@@ -52,7 +51,6 @@ class OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockOffenderRiskNoteParser = mockk<OffenderRiskNoteParser>()
   private val mockCaseService = mockk<CaseService>()
   private val mockTierService = mockk<TierService>()
@@ -65,7 +63,6 @@ class OffenderServiceTest {
     mockPrisonsApiClient,
     mockPrisonerAlertsApiClient,
     mockApDeliusContextApiClient,
-    mockOffenderDetailsDataSource,
     adjudicationsConfigBindingModel,
     mockOffenderRiskNoteParser,
     mockCaseService,
