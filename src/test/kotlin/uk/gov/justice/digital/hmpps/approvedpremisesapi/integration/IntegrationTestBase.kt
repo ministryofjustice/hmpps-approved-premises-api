@@ -102,9 +102,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3VoidBedspacesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TemporaryAccommodationAssessmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffMembersPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
@@ -164,6 +161,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.Dom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.EmailNotificationAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.IntegrationTestDbManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.TestPropertiesInitializer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsAuthMockClientCredentialsJwtRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.isClientCredentialsJwtRequestMocked
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MockFeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.NoOpSentryService
@@ -633,8 +632,6 @@ abstract class IntegrationTestBase {
   lateinit var inboxEventEntityFactory: PersistedFactory<InboxEventEntity, UUID, InboxEventEntityFactory>
   lateinit var caseEntityFactory: PersistedFactory<CaseEntity, UUID, CaseEntityFactory>
 
-  private var clientCredentialsCallMocked = false
-
   @BeforeEach
   fun beforeEach(info: TestInfo) {
     log.info("Running test '${info.displayName}'")
@@ -661,16 +658,20 @@ abstract class IntegrationTestBase {
 
     wiremockManager.beforeTest()
 
+    clearCaches()
+    this.setupFactories()
+  }
+
+  fun teardownTests() {
+    wiremockManager.reset()
+  }
+
+  private fun clearCaches() {
     cacheManager.cacheNames.forEach {
       cacheManager.getCache(it)!!.clear()
     }
 
     redisTemplate.keys("$preemptiveCacheKeyPrefix-**").forEach(redisTemplate::delete)
-    this.setupFactories()
-  }
-
-  fun teardownTests() {
-    wiremockManager.afterTest()
   }
 
   fun setupFactories() {
@@ -752,50 +753,7 @@ abstract class IntegrationTestBase {
     username: String? = null,
     roles: List<String> = listOf(),
     authSource: String = "none",
-  ) {
-    wiremockServer.stubFor(
-      post(urlEqualTo("/auth/oauth/token"))
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              jsonMapper.writeValueAsString(
-                GetTokenResponse(
-                  accessToken = jwtAuthHelper.createClientCredentialsJwt(
-                    username = username,
-                    roles = roles,
-                    authSource = authSource,
-                  ),
-                  tokenType = "bearer",
-                  expiresIn = Duration.ofHours(1).toSeconds().toInt(),
-                  scope = "read",
-                  sub = username?.uppercase() ?: "integration-test-client-id",
-                  authSource = authSource,
-                  jti = UUID.randomUUID().toString(),
-                  iss = "http://localhost:${wiremockServer.port()}/auth/issuer",
-                ),
-              ),
-            ),
-        ),
-    )
-  }
-
-  fun mockStaffMembersContextApiCall(staffMember: StaffMember, qCode: String) = wiremockServer.stubFor(
-    WireMock.get(urlEqualTo("/approved-premises/$qCode/staff"))
-      .willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            jsonMapper.writeValueAsString(
-              StaffMembersPage(
-                content = listOf(staffMember),
-              ),
-            ),
-          ),
-      ),
-  )
+  ) = hmppsAuthMockClientCredentialsJwtRequest(username, roles, authSource)
 
   fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
     WireMock.get(urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
@@ -907,10 +865,8 @@ abstract class IntegrationTestBase {
   }
 
   fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit = {}) {
-    if (!clientCredentialsCallMocked) {
+    if (!isClientCredentialsJwtRequestMocked()) {
       mockClientCredentialsJwtRequest()
-
-      clientCredentialsCallMocked = true
     }
 
     block()
