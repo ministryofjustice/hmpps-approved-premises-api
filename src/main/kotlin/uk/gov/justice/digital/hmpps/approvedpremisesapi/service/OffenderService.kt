@@ -108,12 +108,12 @@ class OffenderService(
       is ClientResult.Failure -> result.throwException()
     }.cases
 
+    val visibilityByCrn = laoService.isVisibleForCaseSummaries(caseSummaries, laoStrategy)
+
     val tiersByCrn = when (includeTier) {
       true -> tierService.getTiers(crns)
       false -> emptyMap()
     }
-
-    val visibilityByCrn = laoService.isVisibleForCaseSummaries(caseSummaries, laoStrategy)
 
     val caseSummaryInfoByCrn = caseSummaries.associate {
       it.crn to CaseSummaryInfo(

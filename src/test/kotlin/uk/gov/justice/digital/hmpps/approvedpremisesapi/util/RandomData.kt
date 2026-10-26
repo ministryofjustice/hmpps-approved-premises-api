@@ -8,6 +8,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
 private val charPoolMultiCaseNumbers = ('a'..'z') + ('A'..'Z') + ('0'..'9')
@@ -28,6 +29,16 @@ fun randomStringLowerCase(length: Int) = randomWithCharPool(charPoolLowerCase, l
 fun randomEmailAddress() = randomWithCharPool(charPoolLowerCase, 5) + "." + randomWithCharPool(charPoolLowerCase, 8) + "@" + randomWithCharPool(charPoolLowerCase, 6) + ".com"
 
 fun randomNumberChars(length: Int) = randomWithCharPool(charPoolNumbers, length)
+
+private val usedUniqueNumberChars = ConcurrentHashMap.newKeySet<String>()
+
+/** Like [randomNumberChars] but never returns the same value twice within a test JVM */
+fun uniqueRandomNumberChars(length: Int): String {
+  while (true) {
+    val candidate = randomNumberChars(length)
+    if (usedUniqueNumberChars.add(candidate)) return candidate
+  }
+}
 
 fun randomPostCode() = randomStringUpperCase(2) + randomNumberChars(1) + " " +
   randomStringUpperCase(2) + randomNumberChars(1)

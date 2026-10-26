@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.uniqueRandomNumberChars
 
 class LaoServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
@@ -212,9 +212,9 @@ class LaoServiceTest {
 
     @Test
     fun `makes no upstream calls if lao strategy indicates to ignore exclusions and restrictions`() {
-      val crn1 = randomNumberChars(8)
-      val crn2 = randomNumberChars(8)
-      val crn3 = randomNumberChars(8)
+      val crn1 = uniqueRandomNumberChars(8)
+      val crn2 = uniqueRandomNumberChars(8)
+      val crn3 = uniqueRandomNumberChars(8)
 
       every { mockLaoStrategy.isNeverRestricted() } returns true
 
@@ -231,7 +231,7 @@ class LaoServiceTest {
 
     @Test
     fun `throws internal server error when more than the maximum number of crns are provided`() {
-      val crns = (1..MAX_CASE_ACCESS_REQUEST_COUNT + 1).map { randomNumberChars(8) }
+      val crns = (1..MAX_CASE_ACCESS_REQUEST_COUNT + 1).map { uniqueRandomNumberChars(8) }
 
       assertThatThrownBy {
         laoService.isVisible(crns, mockLaoStrategy)
@@ -244,7 +244,7 @@ class LaoServiceTest {
 
     @Test
     fun `accepts exactly the maximum number of crns`() {
-      val crns = (1..MAX_CASE_ACCESS_REQUEST_COUNT).map { randomNumberChars(8) }
+      val crns = (1..MAX_CASE_ACCESS_REQUEST_COUNT).map { uniqueRandomNumberChars(8) }
       val access = crns.map { CaseAccessFactory().withCrn(it).produce() }
 
       every { mockLaoStrategy.deliusUsername } returns username
@@ -260,7 +260,7 @@ class LaoServiceTest {
 
     @Test
     fun `returns visible when lao strategy returns is visible`() {
-      val crn = randomNumberChars(8)
+      val crn = uniqueRandomNumberChars(8)
       val caseAccess = CaseAccessFactory().withCrn(crn).produce()
 
       every { mockLaoStrategy.deliusUsername } returns username
@@ -276,7 +276,7 @@ class LaoServiceTest {
 
     @Test
     fun `returns not visible when lao strategy returns is not visible`() {
-      val crn = randomNumberChars(8)
+      val crn = uniqueRandomNumberChars(8)
       val caseAccess = CaseAccessFactory().withCrn(crn).produce()
 
       every { mockLaoStrategy.deliusUsername } returns username
@@ -292,9 +292,9 @@ class LaoServiceTest {
 
     @Test
     fun `returns a mix of visible and not visible when strategy gives mixed responses for the case access`() {
-      val crn1 = randomNumberChars(8)
-      val crn2 = randomNumberChars(8)
-      val crn3 = randomNumberChars(8)
+      val crn1 = uniqueRandomNumberChars(8)
+      val crn2 = uniqueRandomNumberChars(8)
+      val crn3 = uniqueRandomNumberChars(8)
       val caseAccess1 = CaseAccessFactory().withCrn(crn1).produce()
       val caseAccess2 = CaseAccessFactory().withCrn(crn2).produce()
       val caseAccess3 = CaseAccessFactory().withCrn(crn3).produce()
@@ -320,7 +320,7 @@ class LaoServiceTest {
 
     @Test
     fun `throws exception when response does not include access for a requested crn`() {
-      val crn = randomNumberChars(8)
+      val crn = uniqueRandomNumberChars(8)
 
       every { mockLaoStrategy.deliusUsername } returns username
       every {
@@ -337,7 +337,7 @@ class LaoServiceTest {
     @ParameterizedTest
     @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
     fun `throws exception when client returns a failure`(response: ClientResult.Failure<UserAccess>) {
-      val crn = randomNumberChars(8)
+      val crn = uniqueRandomNumberChars(8)
 
       every { mockLaoStrategy.deliusUsername } returns username
       every { mockApDeliusContextApiClient.getUserAccessForCrns(username, listOf(crn)) } returns response
