@@ -232,8 +232,6 @@ services:
     base-url: http://localhost:8091
   health-and-medication-api:
     base-url: http://localhost:8093
-  document-management-api:
-    base-url: http://localhost:9095
   cas1-ui:
     base-url: http://localhost:8094
   cas2v2-ui:
@@ -388,3 +386,7 @@ domain-events:
       shedlock:
         lock-at-most-for: PT2M
         lock-at-least-for: PT1S
+
+s3:
+  bucket-name: ${S3_BUCKET_NAME:}
+  region: ${AWS_DEFAULT_REGION:eu-west-2}

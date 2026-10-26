@@ -2,272 +2,98 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.common
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.retry.support.RetryTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.DocumentManagementApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.documentmanagement.Document
+import software.amazon.awssdk.core.exception.SdkClientException
+import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import software.amazon.awssdk.services.s3.model.PutObjectResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CasDocumentSubType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.DataScienceReportsGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.DataScienceReportsPublishingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.GeneratedReport
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.S3Config
 import java.io.File
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.UUID
 
 class DataScienceReportsPublishingServiceTest {
 
   private val generator = mockk<DataScienceReportsGenerator>()
-  private val apiClient = mockk<DocumentManagementApiClient>()
+  private val s3Client = mockk<S3Client>()
+  private val s3Config = S3Config().apply {
+    bucketName = "test-bucket"
+    region = "eu-west-2"
+  }
+  private val tempFiles = mutableListOf<File>()
 
-  private fun createFastRetryTemplate(): RetryTemplate = RetryTemplate.builder()
-    .maxAttempts(3)
-    .fixedBackoff(1)
-    .notRetryOn(listOf(IllegalArgumentException::class.java))
-    .build()
+  private val publishingService = DataScienceReportsPublishingService(
+    dataScienceReportsGenerator = generator,
+    s3Client = s3Client,
+    s3Config = s3Config,
+    tempFileFactory = { prefix, suffix ->
+      File.createTempFile(prefix, suffix).also { tempFiles.add(it) }
+    },
+  )
+
+  private val executionDate = LocalDate.of(2026, 10, 8)
+
+  private fun givenGeneratedReport(documentSubType: CasDocumentSubType) {
+    every { generator.generateReport(documentSubType, any()) } returns GeneratedReport(
+      filename = "${documentSubType.value.lowercase()}_data_science_report_20261008_143000.csv",
+      documentSubType = documentSubType,
+    )
+  }
 
   @Test
-  fun `generateAndUploadReport successfully generates, uploads, and deletes temp file`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
-    val tempFiles = mutableListOf<File>()
+  fun `generateAndUploadReport successfully generates, uploads to S3 with executionDate prefix, and deletes temp file`() {
+    givenGeneratedReport(CasDocumentSubType.CAS1)
 
-    val publishingService = DataScienceReportsPublishingService(
-      dataScienceReportsGenerator = generator,
-      documentManagementApiClient = apiClient,
-      tempFileFactory = { prefix, suffix ->
-        val file = File.createTempFile(prefix, suffix)
-        tempFiles.add(file)
-        file
-      },
-      retryTemplate = createFastRetryTemplate(),
-    )
-
-    val documentUuid = UUID.randomUUID()
-    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
-      filename = "cas1_data_science_report_$executionDate.csv",
-      documentUuid = documentUuid,
-      documentSubType = CasDocumentSubType.CAS1,
-      executionDate = executionDate,
-    )
-
-    val document = Document(
-      documentUuid = documentUuid,
-      documentType = "CAS_DOCUMENTS",
-      documentFilename = "cas1_data_science_report_$executionDate.csv",
-      filename = "cas1_data_science_report_$executionDate.csv",
-      fileExtension = "csv",
-      fileSize = 100L,
-      fileHash = "abc",
-      mimeType = "text/csv",
-      createdTime = LocalDateTime.now(),
-    )
-
-    every {
-      apiClient.uploadDocument(
-        documentType = "CAS_DOCUMENTS",
-        documentUuid = documentUuid,
-        filename = "cas1_data_science_report_$executionDate.csv",
-        fileResource = any(),
-        metadata = mapOf("date" to executionDate.toString(), "documentSubType" to "CAS1"),
-      )
-    } returns ClientResult.Success(HttpStatus.CREATED, document, false)
+    val requestSlot = slot<PutObjectRequest>()
+    every { s3Client.putObject(capture(requestSlot), any<RequestBody>()) } returns PutObjectResponse.builder().build()
 
     publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
 
-    tempFiles.forEach { tempFile ->
-      assertThat(tempFile).doesNotExist()
-    }
+    assertThat(requestSlot.captured.bucket()).isEqualTo("test-bucket")
+    assertThat(requestSlot.captured.key()).isEqualTo("2026-10-08/cas1_data_science_report_20261008_143000.csv")
+    assertThat(requestSlot.captured.contentType()).isEqualTo("text/csv")
+    assertThat(tempFiles).isNotEmpty.allSatisfy { assertThat(it).doesNotExist() }
 
-    verify(exactly = 1) { generator.generateReport(any(), any(), any()) }
-    verify(exactly = 1) { apiClient.uploadDocument(any(), any(), any(), any(), any(), any()) }
+    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, any()) }
+    verify(exactly = 1) { s3Client.putObject(any<PutObjectRequest>(), any<RequestBody>()) }
   }
 
   @Test
-  fun `generateAndUploadReport generates once and retries upload on transient failure then succeeds on next attempt`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
-    val tempFiles = mutableListOf<File>()
+  fun `generateAndUploadReport does not retry at service level when upload fails, rethrows exception, and deletes temp file`() {
+    givenGeneratedReport(CasDocumentSubType.CAS3)
 
-    val publishingService = DataScienceReportsPublishingService(
-      dataScienceReportsGenerator = generator,
-      documentManagementApiClient = apiClient,
-      tempFileFactory = { prefix, suffix ->
-        val file = File.createTempFile(prefix, suffix)
-        tempFiles.add(file)
-        file
-      },
-      retryTemplate = createFastRetryTemplate(),
-    )
-
-    val uuid = UUID.randomUUID()
-    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
-      filename = "cas1.csv",
-      documentUuid = uuid,
-      documentSubType = CasDocumentSubType.CAS1,
-      executionDate = executionDate,
-    )
-
-    val document = Document(
-      documentUuid = uuid,
-      documentType = "CAS_DOCUMENTS",
-      documentFilename = "cas1.csv",
-      filename = "cas1.csv",
-      fileExtension = "csv",
-      fileSize = 100L,
-      fileHash = "abc",
-      mimeType = "text/csv",
-      createdTime = LocalDateTime.now(),
-    )
-
-    // Attempt 1: 503 Service Unavailable, Attempt 2: Success
     every {
-      apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any())
-    } returns ClientResult.Failure.StatusCode(
-      HttpMethod.POST,
-      "/documents/CAS_DOCUMENTS/$uuid",
-      HttpStatus.SERVICE_UNAVAILABLE,
-      "Unavailable",
-    ) andThen ClientResult.Success(HttpStatus.CREATED, document, false)
+      s3Client.putObject(any<PutObjectRequest>(), any<RequestBody>())
+    } throws SdkClientException.create("S3 upload failed")
 
-    publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
+    assertThatThrownBy {
+      publishingService.generateAndUploadReport(CasDocumentSubType.CAS3, executionDate)
+    }.isInstanceOf(SdkClientException::class.java).hasMessage("S3 upload failed")
 
-    // Report generation ran only ONCE
-    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) }
+    assertThat(tempFiles).isNotEmpty.allSatisfy { assertThat(it).doesNotExist() }
 
-    // Upload was attempted TWICE with the exact same UUID
-    verify(exactly = 2) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
-
-    tempFiles.forEach { assertThat(it).doesNotExist() }
+    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS3, any()) }
+    verify(exactly = 1) { s3Client.putObject(any<PutObjectRequest>(), any<RequestBody>()) }
   }
 
   @Test
-  fun `generateAndUploadReport retries upload 3 times on 5xx server errors then exhausts and cleans up temp file`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
-    val tempFiles = mutableListOf<File>()
-
-    val publishingService = DataScienceReportsPublishingService(
-      dataScienceReportsGenerator = generator,
-      documentManagementApiClient = apiClient,
-      tempFileFactory = { prefix, suffix ->
-        val file = File.createTempFile(prefix, suffix)
-        tempFiles.add(file)
-        file
-      },
-      retryTemplate = createFastRetryTemplate(),
-    )
-
-    val uuid = UUID.randomUUID()
-    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
-      filename = "cas1.csv",
-      documentUuid = uuid,
-      documentSubType = CasDocumentSubType.CAS1,
-      executionDate = executionDate,
-    )
-
-    every {
-      apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any())
-    } returns ClientResult.Failure.StatusCode(HttpMethod.POST, "/documents/CAS_DOCUMENTS/$uuid", HttpStatus.BAD_GATEWAY, "Bad Gateway")
+  fun `generateAndUploadReport cleans up temp file when generator throws exception`() {
+    every { generator.generateReport(any(), any()) } throws RuntimeException("DB error during report generation")
 
     assertThatThrownBy {
       publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
-    }.isInstanceOf(IllegalStateException::class.java)
-      .hasMessageContaining("HTTP status 502")
+    }.isInstanceOf(RuntimeException::class.java).hasMessage("DB error during report generation")
 
-    // Report generation ran only ONCE
-    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) }
+    assertThat(tempFiles).isNotEmpty.allSatisfy { assertThat(it).doesNotExist() }
 
-    // Upload was attempted 3 times (exhausted attempts)
-    verify(exactly = 3) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
-
-    tempFiles.forEach { assertThat(it).doesNotExist() }
-  }
-
-  @Test
-  fun `generateAndUploadReport does not retry for 4xx client errors and fails on first attempt`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
-    val tempFiles = mutableListOf<File>()
-
-    val publishingService = DataScienceReportsPublishingService(
-      dataScienceReportsGenerator = generator,
-      documentManagementApiClient = apiClient,
-      tempFileFactory = { prefix, suffix ->
-        val file = File.createTempFile(prefix, suffix)
-        tempFiles.add(file)
-        file
-      },
-      retryTemplate = createFastRetryTemplate(),
-    )
-
-    val uuid = UUID.randomUUID()
-    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
-      filename = "cas1.csv",
-      documentUuid = uuid,
-      documentSubType = CasDocumentSubType.CAS1,
-      executionDate = executionDate,
-    )
-
-    every {
-      apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any())
-    } returns ClientResult.Failure.StatusCode(HttpMethod.POST, "/documents/CAS_DOCUMENTS/$uuid", HttpStatus.BAD_REQUEST, "Bad Request")
-
-    assertThatThrownBy {
-      publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
-    }.isInstanceOf(IllegalArgumentException::class.java)
-      .hasMessageContaining("HTTP status 400")
-
-    // Report generation ran only ONCE
-    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) }
-
-    // Upload was attempted only ONCE (no retry on 4xx)
-    verify(exactly = 1) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
-
-    tempFiles.forEach { assertThat(it).doesNotExist() }
-  }
-
-  @Test
-  fun `generateAndUploadReport retries upload 3 times on network or communication failure then exhausts`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
-    val tempFiles = mutableListOf<File>()
-
-    val publishingService = DataScienceReportsPublishingService(
-      dataScienceReportsGenerator = generator,
-      documentManagementApiClient = apiClient,
-      tempFileFactory = { prefix, suffix ->
-        val file = File.createTempFile(prefix, suffix)
-        tempFiles.add(file)
-        file
-      },
-      retryTemplate = createFastRetryTemplate(),
-    )
-
-    val uuid = UUID.randomUUID()
-    every { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) } returns GeneratedReport(
-      filename = "cas1.csv",
-      documentUuid = uuid,
-      documentSubType = CasDocumentSubType.CAS1,
-      executionDate = executionDate,
-    )
-
-    every {
-      apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any())
-    } returns ClientResult.Failure.Other(HttpMethod.POST, "/documents/CAS_DOCUMENTS/$uuid", RuntimeException("Connection timed out"))
-
-    assertThatThrownBy {
-      publishingService.generateAndUploadReport(CasDocumentSubType.CAS1, executionDate)
-    }.isInstanceOf(IllegalStateException::class.java)
-      .hasMessageContaining("Failed to communicate with Document Management API")
-
-    // Report generation ran only ONCE
-    verify(exactly = 1) { generator.generateReport(CasDocumentSubType.CAS1, executionDate, any()) }
-
-    // Upload was attempted 3 times
-    verify(exactly = 3) { apiClient.uploadDocument("CAS_DOCUMENTS", uuid, "cas1.csv", any(), any(), any()) }
-
-    tempFiles.forEach { assertThat(it).doesNotExist() }
+    verify(exactly = 0) { s3Client.putObject(any<PutObjectRequest>(), any<RequestBody>()) }
   }
 }

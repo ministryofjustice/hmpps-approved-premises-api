@@ -14,18 +14,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CasDocume
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.DataScienceReportsGenerator
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
-import java.time.LocalDate
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 
 class DataScienceReportsGeneratorTest {
 
   private val cas1Repo = mockk<Cas1DataScienceReportRepository>()
   private val cas2Repo = mockk<Cas2DataScienceReportRepository>()
   private val cas3Repo = mockk<Cas3DataScienceReportRepository>()
+  private val fixedClock = Clock.fixed(Instant.parse("2026-10-08T14:30:00Z"), ZoneOffset.UTC)
 
   private val generator = DataScienceReportsGenerator(
     cas1DataScienceReportRepository = cas1Repo,
     cas2DataScienceReportRepository = cas2Repo,
     cas3DataScienceReportRepository = cas3Repo,
+    clock = fixedClock,
   )
 
   private val mockResultSet = mockk<ResultSet>(relaxed = true)
@@ -44,19 +48,16 @@ class DataScienceReportsGeneratorTest {
 
   @Test
   fun `generateReport for CAS1 invokes cas1 repository and returns GeneratedReport with temp file`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
     val tempFile = java.io.File.createTempFile("cas_data_science_cas1", ".csv")
     try {
       every { cas1Repo.generate(any()) } answers {
         firstArg<JdbcResultSetConsumer>().consume(mockResultSet)
       }
 
-      val report = generator.generateReport(CasDocumentSubType.CAS1, executionDate, tempFile)
+      val report = generator.generateReport(CasDocumentSubType.CAS1, tempFile)
 
       assertThat(report.documentSubType).isEqualTo(CasDocumentSubType.CAS1)
-      assertThat(report.executionDate).isEqualTo(executionDate)
-      assertThat(report.filename).isEqualTo("cas1_data_science_report_2026-10-08.csv")
-      assertThat(report.documentUuid).isNotNull
+      assertThat(report.filename).isEqualTo("cas1_data_science_report_20261008_143000.csv")
       assertThat(tempFile).exists()
       assertThat(tempFile.readText()).contains("\"header1\",\"header2\"")
 
@@ -68,17 +69,16 @@ class DataScienceReportsGeneratorTest {
 
   @Test
   fun `generateReport for CAS2 invokes cas2 repository and returns GeneratedReport`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
     val tempFile = java.io.File.createTempFile("cas_data_science_cas2", ".csv")
     try {
       every { cas2Repo.generate(any()) } answers {
         firstArg<JdbcResultSetConsumer>().consume(mockResultSet)
       }
 
-      val report = generator.generateReport(CasDocumentSubType.CAS2, executionDate, tempFile)
+      val report = generator.generateReport(CasDocumentSubType.CAS2, tempFile)
 
       assertThat(report.documentSubType).isEqualTo(CasDocumentSubType.CAS2)
-      assertThat(report.filename).isEqualTo("cas2_data_science_report_2026-10-08.csv")
+      assertThat(report.filename).isEqualTo("cas2_data_science_report_20261008_143000.csv")
       assertThat(tempFile).exists()
 
       verify(exactly = 1) { cas2Repo.generate(any()) }
@@ -89,17 +89,16 @@ class DataScienceReportsGeneratorTest {
 
   @Test
   fun `generateReport for CAS3 invokes cas3 repository and returns GeneratedReport`() {
-    val executionDate = LocalDate.of(2026, 10, 8)
     val tempFile = java.io.File.createTempFile("cas_data_science_cas3", ".csv")
     try {
       every { cas3Repo.generate(any()) } answers {
         firstArg<JdbcResultSetConsumer>().consume(mockResultSet)
       }
 
-      val report = generator.generateReport(CasDocumentSubType.CAS3, executionDate, tempFile)
+      val report = generator.generateReport(CasDocumentSubType.CAS3, tempFile)
 
       assertThat(report.documentSubType).isEqualTo(CasDocumentSubType.CAS3)
-      assertThat(report.filename).isEqualTo("cas3_data_science_report_2026-10-08.csv")
+      assertThat(report.filename).isEqualTo("cas3_data_science_report_20261008_143000.csv")
       assertThat(tempFile).exists()
 
       verify(exactly = 1) { cas3Repo.generate(any()) }
