@@ -231,7 +231,7 @@ url-templates:
       application-overview: http://cas2.frontend/applications/#id/overview
       submitted-application-overview: http://cas2.frontend/assess/applications/#applicationId/overview
     cas2v2:
-      application-start: http://frontend.cas2/applications/start
+      application-start: http://frontend.cas2/new-cohorts/applications/people/find-by-crn?crn=#crn
     cas3:
       referral-full: http://frontend.cas3/referrals/#applicationId/full
       referral: http://frontend.cas3/referrals/#applicationId
