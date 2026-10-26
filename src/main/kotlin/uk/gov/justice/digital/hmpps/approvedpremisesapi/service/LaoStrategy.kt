@@ -122,28 +122,22 @@ data class LaoStrategy(
    * Depending on the LaoStrategy, the CaseSummary may be sufficient to determine access
    */
   fun canView(caseSummary: CaseSummary): CaseSummaryViewResult {
-    val noApplicableExclusion = if (!caseSummary.currentExclusion) {
-      true
-    } else {
+    val checkCaseAccessToDetermineExclusion = caseSummary.currentExclusion &&
       when (exclusionHandling) {
-        ExclusionHandling.ALWAYS_CHECK -> null
-        ExclusionHandling.IGNORE -> true
+        ExclusionHandling.ALWAYS_CHECK -> true
+        ExclusionHandling.IGNORE -> false
       }
-    }
 
-    val noApplicableRestriction = if (!caseSummary.currentRestriction) {
-      true
-    } else {
+    val checkCaseAccessToDetermineRestriction = caseSummary.currentRestriction &&
       when (restrictionHandling) {
-        RestrictionHandling.ALWAYS_CHECK -> null
-        RestrictionHandling.IGNORE -> true
+        RestrictionHandling.ALWAYS_CHECK -> true
+        RestrictionHandling.IGNORE -> false
       }
-    }
 
-    return if (noApplicableExclusion == true && noApplicableRestriction == true) {
-      CaseSummaryViewResult.CAN_VIEW
-    } else {
+    return if (checkCaseAccessToDetermineExclusion || checkCaseAccessToDetermineRestriction) {
       CaseSummaryViewResult.CHECK_CASE_ACCESS
+    } else {
+      CaseSummaryViewResult.CAN_VIEW
     }
   }
 
@@ -151,17 +145,17 @@ data class LaoStrategy(
    * CaseAccess indicates if there are any restrictions/exclusions that apply to a specific user.
    */
   fun canView(caseAccess: CaseAccess): Boolean {
-    val excluded = when (exclusionHandling) {
-      ExclusionHandling.ALWAYS_CHECK -> caseAccess.userExcluded
-      ExclusionHandling.IGNORE -> false
+    val exclusionDoesntApply = when (exclusionHandling) {
+      ExclusionHandling.ALWAYS_CHECK -> !caseAccess.userExcluded
+      ExclusionHandling.IGNORE -> true
     }
 
-    val restricted = when (restrictionHandling) {
-      RestrictionHandling.ALWAYS_CHECK -> caseAccess.userRestricted
-      RestrictionHandling.IGNORE -> false
+    val restrictionDoesntApply = when (restrictionHandling) {
+      RestrictionHandling.ALWAYS_CHECK -> !caseAccess.userRestricted
+      RestrictionHandling.IGNORE -> true
     }
 
-    return !excluded && !restricted
+    return exclusionDoesntApply && restrictionDoesntApply
   }
 
   enum class CaseSummaryViewResult {
