@@ -21,7 +21,7 @@ class Cas2ExternalUrlTest : IntegrationTestBase() {
           .consumeWith { result ->
             println(String(result.responseBody ?: ByteArray(0)))
           }
-          .jsonPath("$.cas2ApplicationStart").isEqualTo("http://frontend.cas2/applications/start")
+          .jsonPath("$.cas2ApplicationStart").isEqualTo("http://frontend.cas2/new-cohorts/applications/people/find-by-crn?crn=#crn")
       }
     }
   }
