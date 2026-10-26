@@ -206,6 +206,8 @@ data class Cas2ApplicationEntity(
 
   @Enumerated(EnumType.STRING)
   var cohort: Cas2Cohort? = null,
+
+  var accommodationStartDate: LocalDate? = null,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
   fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByUser.id == user.id
