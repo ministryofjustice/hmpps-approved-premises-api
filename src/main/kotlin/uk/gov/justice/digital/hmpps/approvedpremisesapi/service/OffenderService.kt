@@ -115,43 +115,59 @@ class OffenderService(
 
     val visibilityByCrn = laoService.isVisibleForCaseSummaries(caseSummaries, laoStrategy)
 
-    val caseSummaryByCrn = caseSummaries.associateBy { it.crn }
+    val caseSummaryInfoByCrn = caseSummaries.associate {
+      it.crn to CaseSummaryInfo(
+        caseSummary = it,
+        visible = visibilityByCrn[it.crn] ?: false,
+        tier = tiersByCrn[it.crn.uppercase()],
+      )
+    }
 
     return crns.map { crn ->
       toPersonSummaryInfo(
         crn = crn,
-        caseSummary = caseSummaryByCrn[crn],
-        isVisible = visibilityByCrn[crn],
-        tier = tiersByCrn[crn.uppercase()],
+        caseSummaryInfo = caseSummaryInfoByCrn[crn],
       )
     }
   }
 
+  private data class CaseSummaryInfo(
+    val caseSummary: CaseSummary,
+    val visible: Boolean,
+    val tier: TierDto?,
+  )
+
   private fun toPersonSummaryInfo(
     crn: String,
-    caseSummary: CaseSummary?,
-    isVisible: Boolean?,
-    tier: TierDto?,
-  ): PersonSummaryInfoResult = when {
-    caseSummary == null || isVisible == null -> {
+    caseSummaryInfo: CaseSummaryInfo?,
+  ): PersonSummaryInfoResult {
+    if (caseSummaryInfo == null) {
       log.debug("Could not find case summary for '$crn'. Returning not found")
-      PersonSummaryInfoResult.NotFound(crn)
+      return PersonSummaryInfoResult.NotFound(crn)
     }
-    isVisible -> {
-      log.debug("Caller can access LAO '$crn'. Returning full details")
-      PersonSummaryInfoResult.Success.Full(
-        crn = crn,
-        summary = caseSummary,
-        tier = tier,
-      )
-    }
-    else -> {
-      log.debug("Caller cannot access LAO '$crn'. Returning restricted")
-      PersonSummaryInfoResult.Success.Restricted(
-        crn = crn,
-        nomsNumber = caseSummary.nomsId,
-        tier = tier,
-      )
+
+    val caseSummary = caseSummaryInfo.caseSummary
+    val visible = caseSummaryInfo.visible
+    val tier = caseSummaryInfo.tier
+
+    return when {
+      visible -> {
+        log.debug("Caller can access LAO '$crn'. Returning full details")
+        PersonSummaryInfoResult.Success.Full(
+          crn = crn,
+          summary = caseSummary,
+          tier = tier,
+        )
+      }
+
+      else -> {
+        log.debug("Caller cannot access LAO '$crn'. Returning restricted")
+        PersonSummaryInfoResult.Success.Restricted(
+          crn = crn,
+          nomsNumber = caseSummary.nomsId,
+          tier = tier,
+        )
+      }
     }
   }
 
@@ -175,14 +191,10 @@ class OffenderService(
   fun canAccessOffenders(
     crns: List<String>,
     laoStrategy: LaoStrategy,
-  ): Map<String, Boolean> {
-    if (crns.isEmpty()) return emptyMap()
-
-    return laoService.isVisible(
-      crns = crns,
-      laoStrategy = laoStrategy,
-    )
-  }
+  ) = laoService.isVisible(
+    crns = crns,
+    laoStrategy = laoStrategy,
+  )
 
   fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
     val allAdjudications = mutableListOf<Adjudication>()
