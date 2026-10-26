@@ -27,4 +27,6 @@ data class SubmitCas2Application(
   @get:JsonProperty("conditionalReleaseDate") val conditionalReleaseDate: LocalDate? = null,
 
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+
+  @get:JsonProperty("accommodationStartDate") val accommodationStartDate: LocalDate? = null,
 )

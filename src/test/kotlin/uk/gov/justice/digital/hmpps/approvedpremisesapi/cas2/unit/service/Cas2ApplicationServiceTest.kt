@@ -816,6 +816,7 @@ class Cas2ApplicationServiceTest {
       hdcEligibilityDate = hdcEligibilityDate,
       conditionalReleaseDate = conditionalReleaseDate,
       telephoneNumber = "123",
+      accommodationStartDate = LocalDate.parse("2025-01-21"),
     )
 
     @BeforeEach
