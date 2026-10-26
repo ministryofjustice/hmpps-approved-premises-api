@@ -66,7 +66,11 @@ class LaoServiceTest {
 
       val result = laoService.isVisibleForCaseSummaries(listOf(caseSummary), mockLaoStrategy)
 
-      assertThat(result).containsExactly(LaoService.IsVisible(caseSummary, mockLaoStrategy, true))
+      assertThat(result).isEqualTo(
+        mapOf(
+          caseSummary.crn to true,
+        ),
+      )
 
       verify { mockApDeliusContextApiClient wasNot Called }
     }
@@ -86,7 +90,11 @@ class LaoServiceTest {
 
       val result = laoService.isVisibleForCaseSummaries(listOf(caseSummary), mockLaoStrategy)
 
-      assertThat(result).containsExactly(LaoService.IsVisible(caseSummary, mockLaoStrategy, true))
+      assertThat(result).isEqualTo(
+        mapOf(
+          caseSummary.crn to true,
+        ),
+      )
     }
 
     @Test
@@ -104,7 +112,11 @@ class LaoServiceTest {
 
       val result = laoService.isVisibleForCaseSummaries(listOf(caseSummary), mockLaoStrategy)
 
-      assertThat(result).containsExactly(LaoService.IsVisible(caseSummary, mockLaoStrategy, false))
+      assertThat(result).isEqualTo(
+        mapOf(
+          caseSummary.crn to false,
+        ),
+      )
     }
 
     @Test
@@ -128,9 +140,11 @@ class LaoServiceTest {
 
       val result = laoService.isVisibleForCaseSummaries(listOf(caseSummary1, caseSummary2), mockLaoStrategy)
 
-      assertThat(result).containsExactlyInAnyOrder(
-        LaoService.IsVisible(caseSummary1, mockLaoStrategy, true),
-        LaoService.IsVisible(caseSummary2, mockLaoStrategy, false),
+      assertThat(result).isEqualTo(
+        mapOf(
+          caseSummary1.crn to true,
+          caseSummary2.crn to false,
+        ),
       )
     }
 
@@ -153,9 +167,11 @@ class LaoServiceTest {
 
       val result = laoService.isVisibleForCaseSummaries(listOf(determinable, indeterminate), mockLaoStrategy)
 
-      assertThat(result).containsExactlyInAnyOrder(
-        LaoService.IsVisible(determinable, mockLaoStrategy, true),
-        LaoService.IsVisible(indeterminate, mockLaoStrategy, false),
+      assertThat(result).isEqualTo(
+        mapOf(
+          determinable.crn to true,
+          indeterminate.crn to false,
+        ),
       )
 
       verify(exactly = 1) { mockApDeliusContextApiClient.getUserAccessForCrns(username, listOf(indeterminate.crn)) }
@@ -182,11 +198,11 @@ class LaoServiceTest {
   }
 
   @Nested
-  inner class IsVisibleForCrns {
+  inner class IsVisible {
 
     @Test
     fun `returns empty list and makes no calls when no crns provided`() {
-      val result = laoService.isVisibleForCrns(emptyList(), mockLaoStrategy)
+      val result = laoService.isVisible(emptyList(), mockLaoStrategy)
 
       assertThat(result).isEmpty()
 
@@ -202,12 +218,14 @@ class LaoServiceTest {
 
       every { mockLaoStrategy.isNeverRestricted() } returns true
 
-      val result = laoService.isVisibleForCrns(listOf(crn1, crn2, crn3), mockLaoStrategy)
+      val result = laoService.isVisible(listOf(crn1, crn2, crn3), mockLaoStrategy)
 
-      assertThat(result).containsExactly(
-        LaoService.VisibilityFromCaseAccess(crn1, mockLaoStrategy, true),
-        LaoService.VisibilityFromCaseAccess(crn2, mockLaoStrategy, true),
-        LaoService.VisibilityFromCaseAccess(crn3, mockLaoStrategy, true),
+      assertThat(result).isEqualTo(
+        mapOf(
+          crn1 to true,
+          crn2 to true,
+          crn3 to true,
+        ),
       )
     }
 
@@ -216,7 +234,7 @@ class LaoServiceTest {
       val crns = (1..MAX_CASE_ACCESS_REQUEST_COUNT + 1).map { randomNumberChars(8) }
 
       assertThatThrownBy {
-        laoService.isVisibleForCrns(crns, mockLaoStrategy)
+        laoService.isVisible(crns, mockLaoStrategy)
       }
         .isInstanceOf(InternalServerErrorProblem::class.java)
         .hasMessage("Cannot request access details for more than $MAX_CASE_ACCESS_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
@@ -235,7 +253,7 @@ class LaoServiceTest {
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(access))
       every { mockLaoStrategy.canView(any<CaseAccess>()) } returns true
 
-      val result = laoService.isVisibleForCrns(crns, mockLaoStrategy)
+      val result = laoService.isVisible(crns, mockLaoStrategy)
 
       assertThat(result).hasSize(MAX_CASE_ACCESS_REQUEST_COUNT)
     }
@@ -251,9 +269,9 @@ class LaoServiceTest {
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
       every { mockLaoStrategy.canView(caseAccess) } returns true
 
-      val result = laoService.isVisibleForCrns(listOf(crn), mockLaoStrategy)
+      val result = laoService.isVisible(listOf(crn), mockLaoStrategy)
 
-      assertThat(result).containsExactly(LaoService.VisibilityFromCaseAccess(crn, mockLaoStrategy, true))
+      assertThat(result).isEqualTo(mapOf(crn to true))
     }
 
     @Test
@@ -267,9 +285,9 @@ class LaoServiceTest {
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
       every { mockLaoStrategy.canView(caseAccess) } returns false
 
-      val result = laoService.isVisibleForCrns(listOf(crn), mockLaoStrategy)
+      val result = laoService.isVisible(listOf(crn), mockLaoStrategy)
 
-      assertThat(result).containsExactly(LaoService.VisibilityFromCaseAccess(crn, mockLaoStrategy, false))
+      assertThat(result).isEqualTo(mapOf(crn to false))
     }
 
     @Test
@@ -289,12 +307,14 @@ class LaoServiceTest {
       every { mockLaoStrategy.canView(caseAccess2) } returns false
       every { mockLaoStrategy.canView(caseAccess3) } returns true
 
-      val result = laoService.isVisibleForCrns(listOf(crn1, crn2, crn3), mockLaoStrategy)
+      val result = laoService.isVisible(listOf(crn1, crn2, crn3), mockLaoStrategy)
 
-      assertThat(result).containsExactly(
-        LaoService.VisibilityFromCaseAccess(crn1, mockLaoStrategy, true),
-        LaoService.VisibilityFromCaseAccess(crn2, mockLaoStrategy, false),
-        LaoService.VisibilityFromCaseAccess(crn3, mockLaoStrategy, true),
+      assertThat(result).isEqualTo(
+        mapOf(
+          crn1 to true,
+          crn2 to false,
+          crn3 to true,
+        ),
       )
     }
 
@@ -308,7 +328,7 @@ class LaoServiceTest {
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
 
       assertThatThrownBy {
-        laoService.isVisibleForCrns(listOf(crn), mockLaoStrategy)
+        laoService.isVisible(listOf(crn), mockLaoStrategy)
       }
         .isInstanceOf(IllegalStateException::class.java)
         .hasMessage("No case access found for CRN $crn")
@@ -325,7 +345,7 @@ class LaoServiceTest {
       val expectedException = response.toException()
 
       assertThatThrownBy {
-        laoService.isVisibleForCrns(listOf(crn), mockLaoStrategy)
+        laoService.isVisible(listOf(crn), mockLaoStrategy)
       }
         .isInstanceOf(expectedException::class.java)
         .hasMessage(expectedException.message)

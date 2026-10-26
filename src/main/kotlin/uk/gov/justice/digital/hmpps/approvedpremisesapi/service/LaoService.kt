@@ -4,9 +4,10 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient.Companion.MAX_CASE_ACCESS_REQUEST_COUNT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CaseSummaryViewResult
 
 @Service
 class LaoService(
@@ -16,68 +17,61 @@ class LaoService(
   /**
    * Determines visibility for a list of [CaseSummary]'s, given an [LaoStrategy].
    *
-   * If the caller already has/requires a list of [CaseSummary]'s this function
-   * should be used in preference to [isVisibleForCrns] because typically
-   * the [CaseSummary] is sufficient to determine access without having
-   * to retrieve [UserAccess] details (e.g. if a given [CaseSummary] indicates
-   * no exclusions/restrictions exist)
+   * If the caller already has a list of [CaseSummary]'s this function should be used in preference to [isVisible]
+   * because typically the [CaseSummary] is sufficient to determine access without having to retrieve [CaseAccess] details
+   * (e.g. if a given [CaseSummary] indicates no exclusions/restrictions exist)
    *
-   * When [UserAccess] details _are_ required to determine visibility, they
-   * will only be fetched for the required  CRNs
+   * When [CaseAccess] details _are_ required to determine visibility, they will only be fetched for the corresponding CRNs
    *
    * Will return an entry for each provided CRN
    */
   fun isVisibleForCaseSummaries(
     caseSummaries: List<CaseSummary>,
     laoStrategy: LaoStrategy,
-  ): List<IsVisible> {
-    if (caseSummaries.isEmpty()) return emptyList()
+  ): Map<String, Boolean> {
+    if (caseSummaries.isEmpty()) return emptyMap()
 
-    val visibilityFromCaseSummary = visibilityFromCaseSummary(
-      caseSummaries = caseSummaries,
+    val crnToCaseSummaryViewResult = caseSummaries.associate {
+      it.crn to laoStrategy.canView(it)
+    }
+
+    val visibilityFromCaseSummary = crnToCaseSummaryViewResult
+      .filter { it.value != CaseSummaryViewResult.CHECK_CASE_ACCESS }
+      .mapValues { it.value.toIsVisible() }
+
+    val visibilityFromCaseAccess = isVisible(
+      crns = crnToCaseSummaryViewResult.filter { it.value == CaseSummaryViewResult.CHECK_CASE_ACCESS }.keys.toList(),
       laoStrategy = laoStrategy,
     )
 
-    val indeterminateVisibility = visibilityFromCaseSummary.filter { !it.couldDetermineVisibility() }
+    return visibilityFromCaseSummary + visibilityFromCaseAccess
+  }
 
-    val visibilityFromCaseAccess = isVisibleForCrns(
-      crns = indeterminateVisibility.map { it.caseSummary.crn },
-      laoStrategy = laoStrategy,
-    )
-
-    return (
-      visibilityFromCaseSummary.filter { it.couldDetermineVisibility() }.map { it.toIsVisible() } +
-        visibilityFromCaseAccess.map { it.toIsVisible(caseSummaries) }
-      )
+  private fun CaseSummaryViewResult.toIsVisible() = when (this) {
+    CaseSummaryViewResult.CAN_VIEW -> true
+    CaseSummaryViewResult.CHECK_CASE_ACCESS -> error("cannot determine visibility")
   }
 
   /**
-   * Will fetch [UserAccess] information for each given CRN and determine if
-   * the Case is visible, for the given [LaoStrategy]
+   * Will fetch [CaseAccess] information for each given CRN and determine if the Case is visible, given an [LaoStrategy]
    *
-   * If the caller already has/requires a list of [CaseSummary]'s, use [isVisibleForCaseSummaries]
-   * instead because it's more efficient
+   * If the caller already has a list of [CaseSummary]'s, use [isVisibleForCaseSummaries] instead because it's more efficient\
+   * as in many cases visibility can be determined by the [CaseSummary] alone
    *
    * Will return an entry for each provided CRN
    */
-  fun isVisibleForCrns(
+  fun isVisible(
     crns: List<String>,
     laoStrategy: LaoStrategy,
-  ): List<VisibilityFromCaseAccess> {
-    if (crns.isEmpty()) return emptyList()
+  ): Map<String, Boolean> {
+    if (crns.isEmpty()) return emptyMap()
 
     if (crns.size > MAX_CASE_ACCESS_REQUEST_COUNT) {
       throw InternalServerErrorProblem("Cannot request access details for more than $MAX_CASE_ACCESS_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
     if (laoStrategy.isNeverRestricted()) {
-      return crns.map {
-        VisibilityFromCaseAccess(
-          crn = it,
-          laoStrategy = laoStrategy,
-          isVisible = true,
-        )
-      }
+      return crns.associateWith { true }
     }
 
     val caseAccess = when (
@@ -95,64 +89,10 @@ class LaoService(
       valueTransform = { it },
     )
 
-    return crns.map { crn ->
+    return crns.associateWith { crn ->
       val access = accessByCrn[crn] ?: error("No case access found for CRN $crn")
 
-      VisibilityFromCaseAccess(
-        crn = crn,
-        laoStrategy = laoStrategy,
-        isVisible = laoStrategy.canView(access),
-      )
+      laoStrategy.canView(access)
     }
   }
-
-  private fun visibilityFromCaseSummary(
-    caseSummaries: List<CaseSummary>,
-    laoStrategy: LaoStrategy,
-  ): List<VisibilityFromCaseSummary> = caseSummaries.map {
-    VisibilityFromCaseSummary(
-      caseSummary = it,
-      laoStrategy = laoStrategy,
-      isVisible = when (laoStrategy.canView(it)) {
-        LaoStrategy.CaseSummaryViewResult.CAN_VIEW -> true
-        LaoStrategy.CaseSummaryViewResult.CHECK_CASE_ACCESS -> null
-      },
-    )
-  }
-
-  data class VisibilityFromCaseAccess(
-    val crn: String,
-    val laoStrategy: LaoStrategy,
-    val isVisible: Boolean,
-  ) {
-    fun toIsVisible(caseSummaries: List<CaseSummary>) = IsVisible(
-      caseSummary = caseSummaries.first { it.crn == crn },
-      laoStrategy = laoStrategy,
-      isVisible = isVisible,
-    )
-  }
-
-  private data class VisibilityFromCaseSummary(
-    val caseSummary: CaseSummary,
-    val laoStrategy: LaoStrategy,
-    /**
-     * If non-null the case summary can be used to determine visibility
-     * for the given laoStrategy
-     */
-    val isVisible: Boolean?,
-  ) {
-    fun couldDetermineVisibility() = isVisible != null
-
-    fun toIsVisible() = IsVisible(
-      caseSummary = caseSummary,
-      laoStrategy = laoStrategy,
-      isVisible = isVisible!!,
-    )
-  }
-
-  data class IsVisible(
-    val caseSummary: CaseSummary,
-    val laoStrategy: LaoStrategy,
-    val isVisible: Boolean,
-  )
 }

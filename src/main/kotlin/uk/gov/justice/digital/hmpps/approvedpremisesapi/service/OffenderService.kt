@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
@@ -112,17 +113,15 @@ class OffenderService(
       false -> emptyMap()
     }
 
-    val visibilities = laoService.isVisibleForCaseSummaries(caseSummaries, laoStrategy)
+    val visibilityByCrn = laoService.isVisibleForCaseSummaries(caseSummaries, laoStrategy)
 
-    val visibilityByCrn = visibilities.associateBy(
-      keySelector = { it.caseSummary.crn },
-      valueTransform = { it },
-    )
+    val caseSummaryByCrn = caseSummaries.associateBy { it.crn }
 
     return crns.map { crn ->
       toPersonSummaryInfo(
         crn = crn,
-        visibility = visibilityByCrn[crn],
+        caseSummary = caseSummaryByCrn[crn],
+        isVisible = visibilityByCrn[crn],
         tier = tiersByCrn[crn.uppercase()],
       )
     }
@@ -130,18 +129,19 @@ class OffenderService(
 
   private fun toPersonSummaryInfo(
     crn: String,
-    visibility: LaoService.IsVisible?,
+    caseSummary: CaseSummary?,
+    isVisible: Boolean?,
     tier: TierDto?,
-  ) = when {
-    visibility == null -> {
+  ): PersonSummaryInfoResult = when {
+    caseSummary == null || isVisible == null -> {
       log.debug("Could not find case summary for '$crn'. Returning not found")
       PersonSummaryInfoResult.NotFound(crn)
     }
-    visibility.isVisible -> {
+    isVisible -> {
       log.debug("Caller can access LAO '$crn'. Returning full details")
       PersonSummaryInfoResult.Success.Full(
         crn = crn,
-        summary = visibility.caseSummary,
+        summary = caseSummary,
         tier = tier,
       )
     }
@@ -149,7 +149,7 @@ class OffenderService(
       log.debug("Caller cannot access LAO '$crn'. Returning restricted")
       PersonSummaryInfoResult.Success.Restricted(
         crn = crn,
-        nomsNumber = visibility.caseSummary.nomsId,
+        nomsNumber = caseSummary.nomsId,
         tier = tier,
       )
     }
@@ -178,14 +178,9 @@ class OffenderService(
   ): Map<String, Boolean> {
     if (crns.isEmpty()) return emptyMap()
 
-    val visibilities = laoService.isVisibleForCrns(
+    return laoService.isVisible(
       crns = crns,
       laoStrategy = laoStrategy,
-    )
-
-    return visibilities.associateBy(
-      keySelector = { it.crn },
-      valueTransform = { it.isVisible },
     )
   }
 
