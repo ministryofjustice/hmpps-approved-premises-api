@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.util.UUID
 
@@ -228,7 +229,7 @@ class Cas1ApplicationServiceTest {
 
       every { offlineApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
       every { userRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-      every { offenderService.canAccessOffender(distinguishedName, applicationEntity.crn) } returns false
+      every { offenderService.canAccessOffender(applicationEntity.crn, userEntity.cas1LaoStrategy()) } returns false
 
       val result = service.getOfflineApplicationForUsername(applicationId, distinguishedName)
 
@@ -266,7 +267,7 @@ class Cas1ApplicationServiceTest {
 
       every { offlineApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
       every { userRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-      every { offenderService.canAccessOffender(distinguishedName, applicationEntity.crn) } returns true
+      every { offenderService.canAccessOffender(applicationEntity.crn, userEntity.cas1LaoStrategy()) } returns true
 
       val result = service.getOfflineApplicationForUsername(applicationId, distinguishedName)
 

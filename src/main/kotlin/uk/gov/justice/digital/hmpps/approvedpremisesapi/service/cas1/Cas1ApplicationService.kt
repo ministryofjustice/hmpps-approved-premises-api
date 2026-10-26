@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
@@ -83,7 +84,7 @@ class Cas1ApplicationService(
       ?: throw RuntimeException("Could not get user")
 
     if (userEntity.hasPermission(UserPermission.CAS1_OFFLINE_APPLICATION_VIEW) &&
-      offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
+      offenderService.canAccessOffender(applicationEntity.crn, userEntity.cas1LaoStrategy())
     ) {
       return CasResult.Success(applicationEntity)
     }
