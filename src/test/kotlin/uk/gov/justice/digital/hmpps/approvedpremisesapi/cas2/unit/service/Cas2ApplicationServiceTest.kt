@@ -1003,27 +1003,77 @@ class Cas2ApplicationServiceTest {
   }
 
   @Nested
-  inner class FindApplicationsByCrnAndCohorts {
-    @Test
-    fun `returns applications matching CRN and ISR cohorts`() {
-      val crn = "CRN123"
-      val applications = listOf(
-        Cas2ApplicationEntityFactory()
-          .withCreatedByUser(userWithUsername("someUser"))
-          .withCrn(crn)
-          .withCohort(Cas2Cohort.ATCR)
+  inner class FindCompleteApplicationsByCrnAndCohorts {
+    private val crn = "CRN123"
+    private val cohorts = Cas2Cohort.isr()
+
+    private fun applicationWithStatus(
+      status: Cas2AssessmentStatus,
+      createdAt: OffsetDateTime = OffsetDateTime.parse("2026-10-20T12:00:00Z"),
+    ): Cas2ApplicationEntity {
+      val application = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(userWithUsername("someUser"))
+        .withCrn(crn)
+        .withCohort(Cas2Cohort.ATCR)
+        .withSubmittedAt(OffsetDateTime.parse("2026-09-01T12:00:00Z"))
+        .produce()
+      application.statusUpdates = mutableListOf(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(application)
+          .withAssessor(application.createdByUser)
+          .withStatusId(status.id)
+          .withCreatedAt(createdAt)
           .produce(),
       )
+      return application
+    }
 
+    @ParameterizedTest
+    @EnumSource(Cas2AssessmentStatus::class)
+    fun `filters every latest status for both recent and old updates`(status: Cas2AssessmentStatus) {
+      val recent = applicationWithStatus(status)
+      val old = applicationWithStatus(status, OffsetDateTime.parse("2026-09-18T00:00:00Z"))
       every {
-        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr())
-      } returns applications
+        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, cohorts)
+      } returns listOf(recent, old)
 
-      val result = cas2ApplicationService.findSubmittedApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr())
+      val result = cas2ApplicationService.findCompleteApplicationsByCrnAndCohorts(crn, cohorts)
 
-      assertThat(result).isEqualTo(applications)
+      val expectedIds = when (status) {
+        Cas2AssessmentStatus.WITHDRAWN, Cas2AssessmentStatus.OFFER_DECLINED, Cas2AssessmentStatus.CANCELLED -> listOf(recent.id, old.id)
+        Cas2AssessmentStatus.AWAITING_ARRIVAL -> listOf(old.id)
+        else -> emptyList()
+      }
+      assertThat(result.map { it.id }).containsExactlyElementsOf(expectedIds)
       verify(exactly = 1) {
-        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr())
+        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, cohorts)
+      }
+    }
+
+    @Test
+    fun `excludes applications with null or empty status updates`() {
+      val nullStatuses = applicationWithStatus(Cas2AssessmentStatus.WITHDRAWN).apply { statusUpdates = null }
+      val emptyStatuses = applicationWithStatus(Cas2AssessmentStatus.CANCELLED).apply { statusUpdates = mutableListOf() }
+      every {
+        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, cohorts)
+      } returns listOf(nullStatuses, emptyStatuses)
+
+      val result = cas2ApplicationService.findCompleteApplicationsByCrnAndCohorts(crn, cohorts)
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `returns empty when the repository finds no applications`() {
+      every {
+        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, cohorts)
+      } returns emptyList()
+
+      val result = cas2ApplicationService.findCompleteApplicationsByCrnAndCohorts(crn, cohorts)
+
+      assertThat(result).isEmpty()
+      verify(exactly = 1) {
+        mockCas2ApplicationRepository.findSubmittedApplicationsByCrnAndCohorts(crn, cohorts)
       }
     }
   }

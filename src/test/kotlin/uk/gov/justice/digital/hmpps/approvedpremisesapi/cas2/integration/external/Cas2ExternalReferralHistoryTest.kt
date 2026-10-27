@@ -189,7 +189,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
             withPrisonCode("TST")
             withPrisonName("HMP Test Prison")
           }
-          val applicationWithPrison = createApplication(user, "Awaiting decision", referringPrisonCode = omu.prisonCode)
+          val applicationWithPrison = createApplication(user, "Referral withdrawn", referringPrisonCode = omu.prisonCode)
 
           val response = webTestClient.get()
             .uri("/cas2/external/referrals/$crn")
@@ -215,8 +215,8 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
             withPrisonCode("TST")
             withPrisonName("HMP Test Prison")
           }
-          val isrApplication = createApplication(user, "Awaiting decision", referringPrisonCode = omu.prisonCode, cohort = Cas2Cohort.ATCR)
-          val nonIsrApplication = createApplication(user, "Awaiting decision", referringPrisonCode = omu.prisonCode, cohort = Cas2Cohort.COURT_BAIL)
+          val isrApplication = createApplication(user, "Referral withdrawn", referringPrisonCode = omu.prisonCode, cohort = Cas2Cohort.ATCR)
+          val nonIsrApplication = createApplication(user, "Referral withdrawn", referringPrisonCode = omu.prisonCode, cohort = Cas2Cohort.COURT_BAIL)
 
           val response = webTestClient.get()
             .uri("/cas2/external/referrals/$crn")

@@ -21,7 +21,7 @@ class Cas2ExternalReferralController(
   fun getReferralsByCrn(
     @PathVariable crn: String,
   ): ResponseEntity<List<Cas2ReferralHistory>> = ResponseEntity.ok(
-    cas2ApplicationService.findSubmittedApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr()).map {
+    cas2ApplicationService.findCompleteApplicationsByCrnAndCohorts(crn, Cas2Cohort.isr()).map {
       cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(it)
     },
   )

@@ -9,6 +9,7 @@ enum class Cas2AssessmentStatus(
   val hasStatusDetails: Boolean = false,
   val isActive: Boolean = true,
   val apiName: String,
+  val endState: Boolean = false,
 ) {
   MORE_INFO_REQUESTED(
     id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
@@ -52,6 +53,7 @@ enum class Cas2AssessmentStatus(
     description = "The accommodation offered has been declined or withdrawn.",
     hasStatusDetails = true,
     apiName = "offerDeclined",
+    endState = true,
   ),
 
   WITHDRAWN(
@@ -60,6 +62,7 @@ enum class Cas2AssessmentStatus(
     description = "The referrer withdrew the application.",
     hasStatusDetails = true,
     apiName = "withdrawn",
+    endState = true,
   ),
 
   CANCELLED(
@@ -68,6 +71,7 @@ enum class Cas2AssessmentStatus(
     description = "The application has been cancelled.",
     hasStatusDetails = true,
     apiName = "cancelled",
+    endState = true,
   ),
 
   AWAITING_ARRIVAL(
@@ -75,5 +79,12 @@ enum class Cas2AssessmentStatus(
     label = "Awaiting arrival",
     description = "The accommodation is arranged for the agreed dates.",
     apiName = "awaitingArrival",
+    // this is not an end state as it is archived after 32 days of being set
+    endState = false,
   ),
+  ;
+
+  companion object {
+    fun completeStatuses() = Cas2AssessmentStatus.entries.filter { it.endState }
+  }
 }
