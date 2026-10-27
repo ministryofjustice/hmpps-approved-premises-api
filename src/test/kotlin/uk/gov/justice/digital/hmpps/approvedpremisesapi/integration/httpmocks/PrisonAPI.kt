@@ -60,6 +60,11 @@ fun IntegrationTestBase.prisonAPIMockSuccessfulCsraSummariesCall(nomsNumber: Str
   responseBody = summaries,
 )
 
+fun IntegrationTestBase.prisonAPIVerifyInmateDetailsCalls(nomsNumber: String, times: Int) = wiremockServer.verify(
+  WireMock.exactly(times),
+  WireMock.getRequestedFor(WireMock.urlPathEqualTo("/api/offenders/$nomsNumber")),
+)
+
 fun IntegrationTestBase.prisonAPIVerifyCsraSummariesCalls(nomsNumber: String, times: Int) = wiremockServer.verify(
   WireMock.exactly(times),
   WireMock.getRequestedFor(WireMock.urlPathEqualTo("/api/offender-assessments/csra/$nomsNumber")),
