@@ -13,9 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
-import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
@@ -28,17 +26,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacementFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventEnvelopeFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
@@ -67,8 +60,6 @@ class Cas1RequestForPlacementServiceTest {
   private val cas1SpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val cas1SpaceBookingTransformer = mockk<Cas1SpaceBookingTransformer>()
   private val tierService = mockk<TierService>()
-  private val domainEventRepository = mockk<DomainEventRepository>()
-  private val jsonMapper = JsonMapper()
   private val sentryService = mockk<SentryService>(relaxed = true)
 
   private val cas1RequestForPlacementService = Cas1RequestForPlacementService(
@@ -79,9 +70,7 @@ class Cas1RequestForPlacementServiceTest {
     cas1WithdrawableService,
     cas1SpaceBookingRepository,
     cas1SpaceBookingTransformer,
-    domainEventRepository,
     tierService,
-    jsonMapper,
     sentryService,
   )
 
@@ -129,74 +118,6 @@ class Cas1RequestForPlacementServiceTest {
     val exceptionStatus: Boolean,
     val expectedDurationWeeks: Int?,
   )
-
-  @Nested
-  inner class GetRequestForPlacementRejectionReason {
-    @Test
-    fun `getRequestForPlacementRejectionReason returns null if request for placement event has no rejection reason`() {
-      val requestForPlacement = RequestForPlacementFactory().produce()
-
-      every { domainEventRepository.findAssessedRequestForPlacement(requestForPlacement.id) } returns null
-
-      val result = cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement)
-
-      assertThat(result).isNull()
-    }
-
-    @Test
-    fun `getRequestForPlacementRejectionReason returns rejectionReason if request for placement event has rejection reason`() {
-      val requestForPlacement = RequestForPlacementFactory().produce()
-
-      val details = RequestForPlacementAssessed(
-        applicationId = UUID.randomUUID(),
-        applicationUrl = "url",
-        placementApplicationId = requestForPlacement.id,
-        assessedBy = StaffMemberFactory().produce(),
-        decision = RequestForPlacementAssessed.Decision.rejected,
-        expectedArrival = LocalDate.now(),
-        duration = 12,
-        decisionSummary = "No space",
-      )
-      val envelopedData = Cas1DomainEventEnvelopeFactory<RequestForPlacementAssessed>()
-        .withDetails(details)
-        .produce()
-
-      every { domainEventRepository.findAssessedRequestForPlacement(requestForPlacement.id) } returns DomainEventEntityFactory()
-        .withData(jsonMapper.writeValueAsString(envelopedData))
-        .produce()
-
-      val result = cas1RequestForPlacementService.getRequestForPlacementRejectionReason(requestForPlacement)
-
-      assertThat(result).isEqualTo("No space")
-    }
-  }
-
-  @Nested
-  inner class GetRequestForPlacementWithdrawalDate {
-    @Test
-    fun `getRequestForPlacementWithdrawalDate returns null if request for placement event has not been withdrawn`() {
-      val requestForPlacement = RequestForPlacementFactory().produce()
-
-      every { domainEventRepository.findWithdrawnRequestForPlacement(requestForPlacement.id) } returns null
-
-      val result = cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement)
-
-      assertThat(result).isNull()
-    }
-
-    @Test
-    fun `getRequestForPlacementWithdrawalDate returns withdrawalDate if request for placement event has been withdrawn`() {
-      val requestForPlacement = RequestForPlacementFactory().produce()
-
-      every { domainEventRepository.findWithdrawnRequestForPlacement(requestForPlacement.id) } returns DomainEventEntityFactory()
-        .withOccurredAt(OffsetDateTime.now().minusDays(1))
-        .produce()
-
-      val result = cas1RequestForPlacementService.getRequestForPlacementWithdrawalDate(requestForPlacement)
-
-      assertThat(result).isEqualTo(LocalDate.now().minusDays(1))
-    }
-  }
 
   @Nested
   inner class GetRequestsForPlacementByApplication {
