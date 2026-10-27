@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.AlertsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
@@ -57,6 +58,11 @@ fun IntegrationTestBase.prisonAPIMockSuccessfulAgencyDetailsCall(agency: Agency)
 fun IntegrationTestBase.prisonAPIMockSuccessfulCsraSummariesCall(nomsNumber: String, summaries: List<CsraSummary>) = mockSuccessfulGetCallWithJsonResponse(
   url = "/api/offender-assessments/csra/$nomsNumber",
   responseBody = summaries,
+)
+
+fun IntegrationTestBase.prisonAPIVerifyCsraSummariesCalls(nomsNumber: String, times: Int) = wiremockServer.verify(
+  WireMock.exactly(times),
+  WireMock.getRequestedFor(WireMock.urlPathEqualTo("/api/offender-assessments/csra/$nomsNumber")),
 )
 
 fun IntegrationTestBase.prisonAPIMockNotFoundCsraSummariesCall(nomsNumber: String) = mockUnsuccessfulGetCall(
