@@ -41,6 +41,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
+  private var accommodationStartDate: Yielded<LocalDate?> = { null }
   private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
   private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
   private var bailHearingDate: Yielded<LocalDate?> = { null }
@@ -143,6 +144,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.conditionalReleaseDate = { conditionalReleaseDate }
   }
 
+  fun withAccommodationStartDate(accommodationStartDate: LocalDate?) = apply {
+    this.accommodationStartDate = { accommodationStartDate }
+  }
+
   fun withApplicationOrigin(applicationOrigin: ApplicationOrigin) = apply {
     this.applicationOrigin = { applicationOrigin }
   }
@@ -182,6 +187,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       preferredAreas = this.preferredAreas(),
       applicationOrigin = this.applicationOrigin(),
       bailHearingDate = this.bailHearingDate(),
+      accommodationStartDate = this.accommodationStartDate(),
       serviceOrigin = this.serviceOrigin(),
       cohort = this.cohort(),
     )
