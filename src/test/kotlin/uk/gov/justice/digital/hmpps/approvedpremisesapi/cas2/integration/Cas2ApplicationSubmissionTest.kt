@@ -891,6 +891,7 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
                     telephoneNumber = "123 456 7891",
                     bailHearingDate = LocalDate.parse("2025-01-14"),
                     applicationOrigin = ApplicationOrigin.courtBail,
+                    accommodationStartDate = LocalDate.parse("2025-01-21"),
                   ),
                 )
                 .exchange()
@@ -955,6 +956,7 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
                 telephoneNumber = "123 456 789",
                 bailHearingDate = LocalDate.parse("2025-01-14"),
                 applicationOrigin = ApplicationOrigin.courtBail,
+                accommodationStartDate = LocalDate.parse("2025-01-21"),
               ),
             )
             .exchange()
@@ -973,7 +975,9 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
             .isEqualTo(Cas2Cohort.COURT_BAIL.longDisplayName)
 
           Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(1)
-          Assertions.assertThat(cas2RealApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!.submittedAt).isNotNull()
+          val persistedApplication = cas2RealApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!
+          Assertions.assertThat(persistedApplication.submittedAt).isNotNull()
+          Assertions.assertThat(persistedApplication.accommodationStartDate).isEqualTo(LocalDate.parse("2025-01-21"))
           Assertions.assertThat(emailAsserter.assertEmailsRequestedCount(2))
         }
       }

@@ -56,6 +56,7 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
   "telephone_number": "${application.telephoneNumber}",
   "hdc_eligibility_date": "$arrivedAtDateOnly",
   "conditional_release_date": "$arrivedAtDateOnly",
+  "accommodation_start_date": "${application.accommodationStartDate}",
   "abandoned_at": null,
   "application_origin": "${application.applicationOrigin}",
   "bail_hearing_date": ${if (application.serviceOrigin == Cas2ServiceOrigin.BAIL) "\"${application.bailHearingDate}\"" else "null"}
@@ -115,6 +116,7 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
     withTelephoneNumber(telephoneNumber)
     withConditionalReleaseDate(LocalDate.parse(arrivedAtDateOnly))
     withHdcEligibilityDate(LocalDate.parse(arrivedAtDateOnly))
+    withAccommodationStartDate(LocalDate.parse(arrivedAtDateOnly))
     if (serviceOrigin == Cas2ServiceOrigin.BAIL) {
       withBailHearingDate(LocalDate.parse(arrivedAtDateOnly))
       withCohort(cohort)

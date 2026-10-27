@@ -32,6 +32,7 @@ class Cas2HdcSubjectAccessRequestRepository(
         	ca.telephone_number,
         	ca.hdc_eligibility_date,
         	ca.conditional_release_date,
+        	ca.accommodation_start_date,
         	ca.abandoned_at,
           ca.application_origin,
           CAST( ca.bail_hearing_date as DATE) 

@@ -321,6 +321,7 @@ class Cas2ApplicationService(
         telephoneNumber = submitCas2Application.telephoneNumber
         bailHearingDate = submitCas2Application.bailHearingDate
         applicationOrigin = submitCas2Application.applicationOrigin
+        accommodationStartDate = submitCas2Application.accommodationStartDate
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())
