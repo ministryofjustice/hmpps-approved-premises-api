@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementAndPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -48,7 +48,7 @@ class Cas1ExternalApplicationService(
   private val applicationSuitabilityComparator = compareBy<ApprovedPremisesApplicationEntity> { APPLICATION_STATUS_TO_SUITABILITY[it.status] }
     .thenBy { it.submittedAt ?: it.createdAt }
 
-  fun getPlacementPairs(applicationId: UUID): List<Cas1PlacementPairDto> {
+  fun getRequestsForPlacementAndPlacements(applicationId: UUID): List<Cas1RequestForPlacementAndPlacementDto> {
     val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, requestingUser = null) as CasResult.Success).value
 
     return rfps.flatMap { rfp ->
@@ -58,7 +58,7 @@ class Cas1ExternalApplicationService(
         val rejectionReason = rfp.rejectionReason
 
         listOf(
-          transformer.transformToCas1PlacementPair(
+          transformer.transformToRequestForPlacementAndPlacement(
             rfp = rfp,
             rejectionReason = rejectionReason,
             withdrawalDate = withdrawalDate,
@@ -68,7 +68,7 @@ class Cas1ExternalApplicationService(
         rfp.placements.map { placement ->
           val premisesEntity = cas1PremisesService.findPremisesById(placement.premises.id)
 
-          transformer.transformToCas1PlacementPair(
+          transformer.transformToRequestForPlacementAndPlacement(
             rfp = rfp,
             rejectionReason = null,
             withdrawalDate = withdrawalDate,
@@ -83,31 +83,31 @@ class Cas1ExternalApplicationService(
   fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
     .maxWithOrNull(applicationSuitabilityComparator)
     ?.let { application ->
-      val placementPairs = getPlacementPairs(application.id)
+      val requestsForPlacementAndPlacements = getRequestsForPlacementAndPlacements(application.id)
 
       val today = LocalDate.now()
 
-      val pastPairs = placementPairs
+      val pastRequestsForPlacementAndPlacements = requestsForPlacementAndPlacements
         .filter { it.dateApplied < today }
         .sortedByDescending { it.dateApplied }
 
-      val suitablePlacementPair = placementPairs
+      val suitableRequestForPlacementAndPlacement = requestsForPlacementAndPlacements
         .lastOrNull { it.dateApplied >= today }
-        ?: pastPairs.firstOrNull()
+        ?: pastRequestsForPlacementAndPlacements.firstOrNull()
 
-      val placementHistory = pastPairs
-        .filterNot { it == suitablePlacementPair }
+      val placementHistory = pastRequestsForPlacementAndPlacements
+        .filterNot { it == suitableRequestForPlacementAndPlacement }
 
       transformer.transformToCas1SuitableApplication(
         application = application,
-        suitablePlacementPair = suitablePlacementPair,
+        suitableRequestForPlacementAndPlacement = suitableRequestForPlacementAndPlacement,
         placementHistory = placementHistory,
       )
     }
 
   fun getCurrentPremisesByCrn(crn: String): Cas1ExternalPremisesDto? = approvedPremisesApplicationRepository.findByCrn(crn)
     .sortedWith(applicationSuitabilityComparator).firstNotNullOfOrNull { application ->
-      getPlacementPairs(application.id)
+      getRequestsForPlacementAndPlacements(application.id)
         .firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
     }
 }

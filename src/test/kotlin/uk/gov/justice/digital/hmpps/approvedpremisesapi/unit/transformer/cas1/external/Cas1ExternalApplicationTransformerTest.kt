@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementAndPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
@@ -98,7 +98,7 @@ class Cas1ExternalApplicationTransformerTest {
 
       application.assessments.add(assessment)
 
-      val suitablePlacementPair = Cas1PlacementPairDto(
+      val suitableRequestForPlacementAndPlacement = Cas1RequestForPlacementAndPlacementDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = PlacementApplicationDecisionDto.rejected,
           rejectionReason = "No space",
@@ -134,8 +134,8 @@ class Cas1ExternalApplicationTransformerTest {
           decision = AssessmentDecisionApi.accepted,
           rejectionRationale = assessment.rejectionRationale,
         ),
-        requestForPlacement = suitablePlacementPair.requestForPlacement,
-        placement = suitablePlacementPair.placement,
+        requestForPlacement = suitableRequestForPlacementAndPlacement.requestForPlacement,
+        placement = suitableRequestForPlacementAndPlacement.placement,
         placementHistory = emptyList(),
       )
 
@@ -143,7 +143,7 @@ class Cas1ExternalApplicationTransformerTest {
       every { mockCas1AssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecisionApi.accepted
       every { mockCas1ApplicationTransformer.getApplicationExpiresAt(application) } returns assessment.submittedAt?.toLocalDate()?.plusDays(365)
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, suitablePlacementPair, emptyList())
+      val result = cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, suitableRequestForPlacementAndPlacement, emptyList())
 
       assertThat(result).isEqualTo(expected)
     }
@@ -208,7 +208,7 @@ class Cas1ExternalApplicationTransformerTest {
   }
 
   @Nested
-  inner class TransformToCas1PlacementPair {
+  inner class TransformToRequestForPlacementAndPlacement {
     @Test
     fun `Transforms to placement history that is departed`() {
       val duration = 12
@@ -264,7 +264,7 @@ class Cas1ExternalApplicationTransformerTest {
         postcode = premisesEntity.postcode,
       )
 
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementAndPlacementDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
@@ -290,7 +290,7 @@ class Cas1ExternalApplicationTransformerTest {
 
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
+      val result = cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
 
       assertThat(result).isEqualTo(expected)
     }
@@ -352,7 +352,7 @@ class Cas1ExternalApplicationTransformerTest {
         postcode = premisesEntity.postcode,
       )
 
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementAndPlacementDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           status = requestForPlacement.status,
           decision = requestForPlacement.decision?.apiValue,
@@ -377,7 +377,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
+      val result = cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
 
       assertThat(result).isEqualTo(expected)
     }
@@ -452,7 +452,7 @@ class Cas1ExternalApplicationTransformerTest {
         postcode = premisesEntity.postcode,
       )
 
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementAndPlacementDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           status = requestForPlacement.status,
           decision = requestForPlacement.decision?.apiValue,
@@ -477,7 +477,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
+      val result = cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
 
       assertThat(result).isEqualTo(expected)
     }
@@ -552,7 +552,7 @@ class Cas1ExternalApplicationTransformerTest {
         postcode = premisesEntity.postcode,
       )
 
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementAndPlacementDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
@@ -576,7 +576,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
+      val result = cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
 
       assertThat(result).isEqualTo(expected)
     }
@@ -609,7 +609,7 @@ class Cas1ExternalApplicationTransformerTest {
         .withCanonicalPlacementPeriod(canonicalPlacementPeriod)
         .withStatusSetDate(expectedArrivalDate)
         .produce()
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementAndPlacementDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
@@ -626,7 +626,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, null, null)
+      val result = cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement, rejectionReason, withdrawalDate, null, null)
 
       assertThat(result).isEqualTo(expected)
     }

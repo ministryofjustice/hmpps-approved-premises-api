@@ -16,11 +16,11 @@ data class Cas1SuitableApplication(
   val assessment: Cas1ExternalAssessmentDto?,
   val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
   val placement: Cas1ExternalPlacementDto?,
-  val placementHistory: List<Cas1PlacementPairDto>,
+  val placementHistory: List<Cas1RequestForPlacementAndPlacementDto>,
 )
 
-@Schema(description = "Will exist for every request for placement and, optionally, one of its placements. If an RfP has multiple placements, multiple Cas1PlacementPairDtos will exist")
-data class Cas1PlacementPairDto(
+@Schema(description = "Will exist for every Request for Placement and, optionally, one of its Placements. If an RfP has multiple Placements, multiple DTOs will exist for the RfP")
+data class Cas1RequestForPlacementAndPlacementDto(
   val requestForPlacement: Cas1ExternalRequestForPlacementDto,
   val placement: Cas1ExternalPlacementDto?,
   val dateApplied: LocalDate,

@@ -449,6 +449,26 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   (4) **side effects** — persisted state changes and **domain events** raised.
   New/changed endpoints must have auth tests.
 
+#### Before running integration tests
+
+Integration tests (anything extending `IntegrationTestBase`, under `integration/**`
+or the `cas1/`, `cas2/`, `cas3/` `integration` packages) need the test
+dependencies (Postgres, etc.) running. Without them every test fails with
+`Failed to load ApplicationContext` / `ApplicationContext failure threshold exceeded`,
+which looks like a code failure but isn't.
+
+* Before running any integration test, check the dependencies are up:
+  `docker ps --format '{{.Names}}'` should list the containers from
+  `script/test-dependencies/docker-compose.test.yml`.
+* If they aren't, run `script/test_database` first (it starts Docker if needed and
+  runs `docker compose ... up -d`), then wait for the containers to be healthy.
+* If you see an `ApplicationContext` load failure, check the test database before
+  investigating code. Don't report integration tests as failing because of your
+  change until you've confirmed the dependencies were running.
+* Unit tests (`unit/**`) don't need the database.
+* If Docker is unavailable, say integration tests were not run rather than
+  presenting the failures as results.
+
 ### Keeping tests in sync
 
 * When adding/removing an entity field, update the entity, repository queries,

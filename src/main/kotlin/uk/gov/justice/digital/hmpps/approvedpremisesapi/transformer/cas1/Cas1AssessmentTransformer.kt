@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementAndPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -82,7 +82,7 @@ class Cas1AssessmentTransformer(
     dueAt = ase.dueAt!!,
   )
 
-  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity, placementHistory: List<Cas1PlacementPairDto>): List<Cas1ReferralHistory> {
+  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity, placementHistory: List<Cas1RequestForPlacementAndPlacementDto>): List<Cas1ReferralHistory> {
     val application = entity.cas1Application()
 
     val referralHistory = Cas1ReferralHistory(

@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementAndPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -27,13 +27,13 @@ class Cas1ExternalApplicationTransformer(
   @Value($$"${url-templates.frontend.application}") private val cas1ApplicationUrlTemplate: String,
 ) {
 
-  fun transformToCas1PlacementPair(
+  fun transformToRequestForPlacementAndPlacement(
     rfp: RequestForPlacement,
     rejectionReason: String? = null,
     withdrawalDate: LocalDate? = null,
     placement: Cas1SpaceBookingShortSummary? = null,
     premises: ApprovedPremisesEntity? = null,
-  ) = Cas1PlacementPairDto(
+  ) = Cas1RequestForPlacementAndPlacementDto(
     dateApplied = placement?.statusSetDate ?: rfp.statusSetDate,
     requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, withdrawalDate, placement),
     placement = placement?.let { transformToPlacement(it, premises) },
@@ -90,16 +90,16 @@ class Cas1ExternalApplicationTransformer(
 
   fun transformToCas1SuitableApplication(
     application: ApprovedPremisesApplicationEntity,
-    suitablePlacementPair: Cas1PlacementPairDto?,
-    placementHistory: List<Cas1PlacementPairDto>,
+    suitableRequestForPlacementAndPlacement: Cas1RequestForPlacementAndPlacementDto?,
+    placementHistory: List<Cas1RequestForPlacementAndPlacementDto>,
   ): Cas1SuitableApplication {
     val latestAssessment = application.getLatestAssessment()
     return Cas1SuitableApplication(
       uiUrl = cas1ApplicationUrlTemplate.replace("#id", application.id.toString()),
       application = transformToApplication(application),
       assessment = latestAssessment?.let { transformToAssessment(it) },
-      requestForPlacement = suitablePlacementPair?.requestForPlacement,
-      placement = suitablePlacementPair?.placement,
+      requestForPlacement = suitableRequestForPlacementAndPlacement?.requestForPlacement,
+      placement = suitableRequestForPlacementAndPlacement?.placement,
       placementHistory = placementHistory,
     )
   }
