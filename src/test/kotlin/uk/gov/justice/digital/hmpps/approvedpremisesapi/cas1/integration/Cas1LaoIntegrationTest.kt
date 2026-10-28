@@ -261,44 +261,6 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
     @Nested
     inner class GetCsraSummariesForOffender {
 
-      @ParameterizedTest(
-        name = "currentExclusion={0}, currentRestriction={1}, userExcluded={2}, userRestricted={3} -> {4}",
-      )
-      @CsvSource(
-        // currentExclusion, currentRestriction, userExcluded, userRestricted, expectedResult
-        value = [
-          "false,            false,              false,        false,          SUCCESS",
-          "false,            true,               false,        false,          SUCCESS",
-          "false,            true,               false,        true,           SUCCESS",
-          "true,             false,              false,        false,          SUCCESS",
-          "true,             false,              true,         false,          SUCCESS",
-          "true,             true,               false,        false,          SUCCESS",
-          "true,             true,               false,        true,           SUCCESS",
-          "true,             true,               true,         false,          SUCCESS",
-          "true,             true,               true,         true,           SUCCESS",
-        ],
-      )
-      @SuppressWarnings("LongParameterList")
-      fun `when the case is held locally, returns the expected result without any delius calls`(
-        currentExclusion: Boolean,
-        currentRestriction: Boolean,
-        userExcluded: Boolean,
-        userRestricted: Boolean,
-        expectedResult: ExpectedCsraResult,
-      ) {
-        val user = givenAUserWithNeverRestrictedStrategy()
-        val caseSummary = givenAnOffenderWithAccess(user, currentExclusion, currentRestriction, userExcluded, userRestricted)
-        givenALocalCase(caseSummary)
-        val csraSummaries = givenCsraSummaries(caseSummary.nomsId!!)
-
-        val result = offenderService.getCsraSummariesForOffender(caseSummary.crn, user.cas1LaoStrategy())
-
-        assertCsraResult(result, expectedResult, csraSummaries)
-        prisonAPIVerifyCsraSummariesCalls(caseSummary.nomsId!!, times = 1)
-        apDeliusContextVerifyCaseSummariesCalls(times = 0)
-        apDeliusContextVerifyUserAccessCalls(times = 0)
-      }
-
       @ParameterizedTest(name = "currentExclusion={0}, currentRestriction={1} -> {2}")
       @CsvSource(
         // currentExclusion, currentRestriction, expectedResult
@@ -309,7 +271,7 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
           "true,             true,               SUCCESS",
         ],
       )
-      fun `when the case is not held locally, falls back to the delius case summary and ignores LAO status`(
+      fun `fetch the delius case summary for NOMs and ignores LAO status`(
         currentExclusion: Boolean,
         currentRestriction: Boolean,
         expectedResult: ExpectedCsraResult,
