@@ -107,9 +107,9 @@ class Cas1AssessmentTransformer(
         date = it.dateApplied,
         placementAddress = toPlacementAddress(it.placement?.premises),
         placementStatus = it.placement?.status,
-        requestForPlacementStatus = it.requestForPlacement?.status,
-        withdrawalReason = it.requestForPlacement?.withdrawalReason,
-        referralRejectionReason = it.requestForPlacement?.rejectionReason,
+        requestForPlacementStatus = it.requestForPlacement.status,
+        withdrawalReason = it.requestForPlacement.withdrawalReason,
+        referralRejectionReason = it.requestForPlacement.rejectionReason,
       )
     }.ifEmpty { listOf(referralHistory) }
   }
