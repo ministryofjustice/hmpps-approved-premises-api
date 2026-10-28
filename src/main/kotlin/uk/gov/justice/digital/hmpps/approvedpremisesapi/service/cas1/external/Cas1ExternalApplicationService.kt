@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -12,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalApplicationTransformer
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @SuppressWarnings("TooGenericExceptionThrown")
@@ -48,7 +47,7 @@ class Cas1ExternalApplicationService(
   private val applicationSuitabilityComparator = compareBy<ApprovedPremisesApplicationEntity> { APPLICATION_STATUS_TO_SUITABILITY[it.status] }
     .thenBy { it.submittedAt ?: it.createdAt }
 
-  fun getPlacementPairs(applicationId: UUID): List<Cas1PlacementPairDto> {
+  fun getPlacementPairs(applicationId: UUID): List<Cas1RfPAndPlacement> {
     val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, requestingUser = null) as CasResult.Success).value
 
     return rfps.flatMap { rfp ->
@@ -58,7 +57,7 @@ class Cas1ExternalApplicationService(
         val rejectionReason = rfp.rejectionReason
 
         listOf(
-          transformer.transformToCas1PlacementPair(
+          transformer.transformToCas1RfpAndPlacement(
             rfp = rfp,
             rejectionReason = rejectionReason,
             withdrawalDate = withdrawalDate,
@@ -68,7 +67,7 @@ class Cas1ExternalApplicationService(
         rfp.placements.map { placement ->
           val premisesEntity = cas1PremisesService.findPremisesById(placement.premises.id)
 
-          transformer.transformToCas1PlacementPair(
+          transformer.transformToCas1RfpAndPlacement(
             rfp = rfp,
             rejectionReason = null,
             withdrawalDate = withdrawalDate,
@@ -85,14 +84,14 @@ class Cas1ExternalApplicationService(
     ?.let { application ->
       val placementPairs = getPlacementPairs(application.id)
 
-      val today = LocalDate.now()
+      val now = LocalDateTime.now()
 
       val pastPairs = placementPairs
-        .filter { it.dateApplied < today }
+        .filter { it.dateApplied < now }
         .sortedByDescending { it.dateApplied }
 
       val suitablePlacementPair = placementPairs
-        .lastOrNull { it.dateApplied >= today }
+        .lastOrNull { it.dateApplied >= now }
         ?: pastPairs.firstOrNull()
 
       val placementHistory = pastPairs

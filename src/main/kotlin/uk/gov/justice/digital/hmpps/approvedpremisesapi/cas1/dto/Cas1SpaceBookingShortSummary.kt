@@ -29,6 +29,6 @@ data class Cas1SpaceBookingShortSummary(
   val additionalInformation: String? = null,
   val transferReason: TransferReason? = null,
   val status: Cas1SpaceBookingStatus? = null,
-  val statusSetDate: LocalDate? = null,
+  val statusSetDate: LocalDateTime? = null,
   val placementRequestApType: ApType? = null,
 )

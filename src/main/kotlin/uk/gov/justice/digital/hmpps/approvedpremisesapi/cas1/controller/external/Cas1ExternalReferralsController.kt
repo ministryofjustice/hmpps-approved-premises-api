@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.toPlacementPairDto
 
 @Cas1ExternalController
 class Cas1ExternalReferralsController(
@@ -20,7 +21,7 @@ class Cas1ExternalReferralsController(
   fun getReferralsByCrn(@PathVariable crn: String): ResponseEntity<List<Cas1ReferralHistory>> = ResponseEntity.ok(
     cas1AssessmentService.getApprovedPremisesAssessmentsByCrnNotReallocated(crn).flatMap {
       val placementHistory = cas1ExternalApplicationService.getPlacementPairs(it.application.id)
-      cas1AssessmentTransformer.transformDomainToApiCas1ReferralHistory(it, placementHistory)
+      cas1AssessmentTransformer.transformDomainToApiCas1ReferralHistory(it, placementHistory.map { it.toPlacementPairDto() })
     },
   )
 }
