@@ -177,6 +177,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 expectedDepartureDate = booking.expectedDepartureDate,
               ),
               placementHistory = emptyList(),
+              requestForPlacementAndPlacementHistory = emptyList(),
             )
 
             val response = webTestClient.get()
@@ -231,6 +232,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               requestForPlacement = null,
               placement = null,
               placementHistory = emptyList(),
+              requestForPlacementAndPlacementHistory = emptyList(),
             )
 
             val response = webTestClient.get()
@@ -324,6 +326,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               ),
               placement = null,
               placementHistory = emptyList(),
+              requestForPlacementAndPlacementHistory = emptyList(),
             )
 
             val response = webTestClient.get()
@@ -475,6 +478,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 expectedDepartureDate = booking.expectedDepartureDate,
               ),
               placementHistory = emptyList(),
+              requestForPlacementAndPlacementHistory = emptyList(),
             )
 
             val response = webTestClient.get()
@@ -607,6 +611,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 expectedDepartureDate = booking.expectedDepartureDate,
               ),
               placementHistory = emptyList(),
+              requestForPlacementAndPlacementHistory = emptyList(),
             )
 
             val response = webTestClient.get()

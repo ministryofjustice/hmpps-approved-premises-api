@@ -1145,6 +1145,7 @@ class Cas1ExternalApplicationServiceTest {
       rejectionRationale = applicationEntity.getLatestAssessment()?.rejectionRationale,
     ),
     placementHistory = emptyList(),
+    requestForPlacementAndPlacementHistory = emptyList(),
   )
 
   private companion object {

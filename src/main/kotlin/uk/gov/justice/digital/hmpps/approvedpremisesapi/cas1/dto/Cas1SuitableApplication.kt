@@ -16,7 +16,10 @@ data class Cas1SuitableApplication(
   val assessment: Cas1ExternalAssessmentDto?,
   val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
   val placement: Cas1ExternalPlacementDto?,
+  @Schema(deprecated = true, description = "Use requestForPlacementAndPlacementHistory instead")
+  @Deprecated("Use requestForPlacementAndPlacementHistory instead", ReplaceWith("requestForPlacementAndPlacementHistory"))
   val placementHistory: List<Cas1RequestForPlacementAndPlacementDto>,
+  val requestForPlacementAndPlacementHistory: List<Cas1RequestForPlacementAndPlacementDto>,
 )
 
 @Schema(description = "Will exist for every Request for Placement and, optionally, one of its Placements. If an RfP has multiple Placements, multiple DTOs will exist for the RfP")
