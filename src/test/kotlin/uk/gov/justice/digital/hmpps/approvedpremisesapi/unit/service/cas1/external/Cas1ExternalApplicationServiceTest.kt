@@ -125,10 +125,10 @@ class Cas1ExternalApplicationServiceTest {
         ),
       ).produce()
 
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2) } returns transformToPlacementHistory(requestForPlacement2)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1) } returns transformToRfpAndPlacement(requestForPlacement1)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2) } returns transformToRfpAndPlacement(requestForPlacement2)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3) } returns transformToRfpAndPlacement(requestForPlacement3)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns transformToRfpAndPlacement(requestForPlacement4)
 
       every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
         listOf(
@@ -143,10 +143,10 @@ class Cas1ExternalApplicationServiceTest {
 
       assertThat(result).isEqualTo(
         listOf(
-          transformToPlacementHistory(requestForPlacement2),
-          transformToPlacementHistory(requestForPlacement4),
-          transformToPlacementHistory(requestForPlacement1),
-          transformToPlacementHistory(requestForPlacement3),
+          transformToRfpAndPlacement(requestForPlacement2),
+          transformToRfpAndPlacement(requestForPlacement4),
+          transformToRfpAndPlacement(requestForPlacement1),
+          transformToRfpAndPlacement(requestForPlacement3),
         ),
       )
     }
@@ -274,90 +274,90 @@ class Cas1ExternalApplicationServiceTest {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement8)
       } returns
-        transformToPlacementHistory(requestForPlacement2, placement8)
+        transformToRfpAndPlacement(requestForPlacement2, placement8)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement10)
       } returns
-        transformToPlacementHistory(requestForPlacement2, placement10)
+        transformToRfpAndPlacement(requestForPlacement2, placement10)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement9)
       } returns
-        transformToPlacementHistory(requestForPlacement2, placement9)
+        transformToRfpAndPlacement(requestForPlacement2, placement9)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement7, premisesEntity)
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
+        transformToRfpAndPlacement(requestForPlacement3, placement7, premisesEntity)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement1)
       } returns
-        transformToPlacementHistory(requestForPlacement1, placement1)
+        transformToRfpAndPlacement(requestForPlacement1, placement1)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement4, rejectionReason, null)
       } returns
-        transformToPlacementHistory(requestForPlacement4, rejectionReason = rejectionReason)
+        transformToRfpAndPlacement(requestForPlacement4, rejectionReason = rejectionReason)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement5, null, withdrawalDate)
       } returns
-        transformToPlacementHistory(requestForPlacement5, withdrawalDate = withdrawalDate)
+        transformToRfpAndPlacement(requestForPlacement5, withdrawalDate = withdrawalDate)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement2)
       } returns
-        transformToPlacementHistory(requestForPlacement1, placement2)
+        transformToRfpAndPlacement(requestForPlacement1, placement2)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement3)
       } returns
-        transformToPlacementHistory(requestForPlacement1, placement3)
+        transformToRfpAndPlacement(requestForPlacement1, placement3)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement4)
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement4)
+        transformToRfpAndPlacement(requestForPlacement3, placement4)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement6)
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement6)
+        transformToRfpAndPlacement(requestForPlacement3, placement6)
       every {
         cas1ExternalApplicationTransformer
           .transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement5)
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement5)
+        transformToRfpAndPlacement(requestForPlacement3, placement5)
 
       val result = service.getRequestsForPlacementAndPlacements(awaitingPlacementApplication.id)
       assertThat(result).isEqualTo(
         listOf(
           // placement8 (+3 days)
-          transformToPlacementHistory(requestForPlacement2, placement8),
+          transformToRfpAndPlacement(requestForPlacement2, placement8),
           // placement10 (+2 days)
-          transformToPlacementHistory(requestForPlacement2, placement10),
+          transformToRfpAndPlacement(requestForPlacement2, placement10),
           // placement9 (+1 day)
-          transformToPlacementHistory(requestForPlacement2, placement9),
+          transformToRfpAndPlacement(requestForPlacement2, placement9),
           // placement7 (0 days)
-          transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity),
+          transformToRfpAndPlacement(requestForPlacement3, placement7, premisesEntity),
           // placement1 (-1)
-          transformToPlacementHistory(requestForPlacement1, placement1),
+          transformToRfpAndPlacement(requestForPlacement1, placement1),
           // rfp4 (no placements) (-2)
-          transformToPlacementHistory(requestForPlacement4, rejectionReason = rejectionReason),
+          transformToRfpAndPlacement(requestForPlacement4, rejectionReason = rejectionReason),
           // placement2 (-3)
-          transformToPlacementHistory(requestForPlacement1, placement2),
+          transformToRfpAndPlacement(requestForPlacement1, placement2),
           // placement3 (-4)
-          transformToPlacementHistory(requestForPlacement1, placement3),
+          transformToRfpAndPlacement(requestForPlacement1, placement3),
           // placement4 (-10)
-          transformToPlacementHistory(requestForPlacement3, placement4),
+          transformToRfpAndPlacement(requestForPlacement3, placement4),
           // placement6 (-15)
-          transformToPlacementHistory(requestForPlacement3, placement6),
+          transformToRfpAndPlacement(requestForPlacement3, placement6),
           // placement5 (-20)
-          transformToPlacementHistory(requestForPlacement3, placement5),
+          transformToRfpAndPlacement(requestForPlacement3, placement5),
           // rfp5 (no placements) (-50)
-          transformToPlacementHistory(requestForPlacement5, withdrawalDate = withdrawalDate),
+          transformToRfpAndPlacement(requestForPlacement5, withdrawalDate = withdrawalDate),
         ),
       )
     }
@@ -410,16 +410,16 @@ class Cas1ExternalApplicationServiceTest {
         ),
       )
       val suitableApplication = transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement2)
-      val suitableRequestForPlacementAndPlacement = transformToPlacementHistory(requestForPlacement2)
+      val suitableRequestForPlacementAndPlacement = transformToRfpAndPlacement(requestForPlacement2)
       val placementHistory = listOf(
-        transformToPlacementHistory(requestForPlacement4),
-        transformToPlacementHistory(requestForPlacement1),
-        transformToPlacementHistory(requestForPlacement3),
+        transformToRfpAndPlacement(requestForPlacement4),
+        transformToRfpAndPlacement(requestForPlacement1),
+        transformToRfpAndPlacement(requestForPlacement3),
       )
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1) } returns transformToRfpAndPlacement(requestForPlacement1)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2) } returns suitableRequestForPlacementAndPlacement
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3) } returns transformToRfpAndPlacement(requestForPlacement3)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns transformToRfpAndPlacement(requestForPlacement4)
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(awaitingPlacementApplication, suitableRequestForPlacementAndPlacement, placementHistory) } returns
         transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement2)
 
@@ -531,30 +531,30 @@ class Cas1ExternalApplicationServiceTest {
         ),
       )
       val suitableApplication = transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement3, placement7, premisesEntity)
-      val suitableRequestForPlacementAndPlacement = transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
+      val suitableRequestForPlacementAndPlacement = transformToRfpAndPlacement(requestForPlacement3, placement7, premisesEntity)
       val placementHistory = listOf(
-        transformToPlacementHistory(requestForPlacement1, placement1),
-        transformToPlacementHistory(requestForPlacement4),
-        transformToPlacementHistory(requestForPlacement1, placement2),
-        transformToPlacementHistory(requestForPlacement1, placement3),
-        transformToPlacementHistory(requestForPlacement3, placement4),
-        transformToPlacementHistory(requestForPlacement3, placement6),
-        transformToPlacementHistory(requestForPlacement3, placement5),
+        transformToRfpAndPlacement(requestForPlacement1, placement1),
+        transformToRfpAndPlacement(requestForPlacement4),
+        transformToRfpAndPlacement(requestForPlacement1, placement2),
+        transformToRfpAndPlacement(requestForPlacement1, placement3),
+        transformToRfpAndPlacement(requestForPlacement3, placement4),
+        transformToRfpAndPlacement(requestForPlacement3, placement6),
+        transformToRfpAndPlacement(requestForPlacement3, placement5),
       )
       every {
         cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
       } returns premisesEntity
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement1) } returns transformToPlacementHistory(requestForPlacement1, placement1)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement2) } returns transformToPlacementHistory(requestForPlacement1, placement2)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement3) } returns transformToPlacementHistory(requestForPlacement1, placement3)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement4) } returns transformToPlacementHistory(requestForPlacement3, placement4)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement5) } returns transformToPlacementHistory(requestForPlacement3, placement5)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement6) } returns transformToPlacementHistory(requestForPlacement3, placement6)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement1) } returns transformToRfpAndPlacement(requestForPlacement1, placement1)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement2) } returns transformToRfpAndPlacement(requestForPlacement1, placement2)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement3) } returns transformToRfpAndPlacement(requestForPlacement1, placement3)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement4) } returns transformToRfpAndPlacement(requestForPlacement3, placement4)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement5) } returns transformToRfpAndPlacement(requestForPlacement3, placement5)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement6) } returns transformToRfpAndPlacement(requestForPlacement3, placement6)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement7, premisesEntity) } returns suitableRequestForPlacementAndPlacement
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement8) } returns transformToPlacementHistory(requestForPlacement2, placement8)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement9) } returns transformToPlacementHistory(requestForPlacement2, placement9)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement10) } returns transformToPlacementHistory(requestForPlacement2, placement10)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement8) } returns transformToRfpAndPlacement(requestForPlacement2, placement8)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement9) } returns transformToRfpAndPlacement(requestForPlacement2, placement9)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement10) } returns transformToRfpAndPlacement(requestForPlacement2, placement10)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns transformToRfpAndPlacement(requestForPlacement4)
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(awaitingPlacementApplication, suitableRequestForPlacementAndPlacement, placementHistory) } returns suitableApplication
 
       every {
@@ -627,7 +627,7 @@ class Cas1ExternalApplicationServiceTest {
       )
         .withStatus(RequestForPlacementStatus.placementBooked).produce()
       val suitableApplication = transformToSuitableApplication(application, requestForPlacement, placement, premisesEntity)
-      val suitableRequestForPlacementAndPlacement = transformToPlacementHistory(requestForPlacement, placement, premisesEntity)
+      val suitableRequestForPlacementAndPlacement = transformToRfpAndPlacement(requestForPlacement, placement, premisesEntity)
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, suitableRequestForPlacementAndPlacement, emptyList()) } returns suitableApplication
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement, null, null, placement, premisesEntity) } returns suitableRequestForPlacementAndPlacement
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
@@ -792,10 +792,10 @@ class Cas1ExternalApplicationServiceTest {
           requestForPlacement4,
         ),
       )
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2) } returns transformToPlacementHistory(requestForPlacement2)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1) } returns transformToRfpAndPlacement(requestForPlacement1)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2) } returns transformToRfpAndPlacement(requestForPlacement2)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3) } returns transformToRfpAndPlacement(requestForPlacement3)
+      every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns transformToRfpAndPlacement(requestForPlacement4)
 
       val result = service.getCurrentPremisesByCrn(awaitingPlacementApplication.crn)
 
@@ -927,13 +927,13 @@ class Cas1ExternalApplicationServiceTest {
         cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
       } returns premisesEntity
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement1) } returns
-        transformToPlacementHistory(requestForPlacement1, placement1)
+        transformToRfpAndPlacement(requestForPlacement1, placement1)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement2, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement1, placement2, premisesEntity)
+        transformToRfpAndPlacement(requestForPlacement1, placement2, premisesEntity)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement1, null, null, placement3, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement1, placement3, premisesEntity)
+        transformToRfpAndPlacement(requestForPlacement1, placement3, premisesEntity)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement4) } returns
-        transformToPlacementHistory(requestForPlacement3, placement4)
+        transformToRfpAndPlacement(requestForPlacement3, placement4)
       every {
         cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(
           requestForPlacement3,
@@ -942,19 +942,19 @@ class Cas1ExternalApplicationServiceTest {
           placement5,
         )
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement5)
+        transformToRfpAndPlacement(requestForPlacement3, placement5)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement6) } returns
-        transformToPlacementHistory(requestForPlacement3, placement6)
+        transformToRfpAndPlacement(requestForPlacement3, placement6)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement3, null, null, placement7, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
+        transformToRfpAndPlacement(requestForPlacement3, placement7, premisesEntity)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement8) } returns
-        transformToPlacementHistory(requestForPlacement2, placement8)
+        transformToRfpAndPlacement(requestForPlacement2, placement8)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement9, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement2, placement9, premisesEntity)
+        transformToRfpAndPlacement(requestForPlacement2, placement9, premisesEntity)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement2, null, null, placement10) } returns
-        transformToPlacementHistory(requestForPlacement2, placement10)
+        transformToRfpAndPlacement(requestForPlacement2, placement10)
       every { cas1ExternalApplicationTransformer.transformToRequestForPlacementAndPlacement(requestForPlacement4) } returns
-        transformToPlacementHistory(requestForPlacement4)
+        transformToRfpAndPlacement(requestForPlacement4)
 
       every {
         cas1PremisesService.findPremisesById(match { it != premisesEntity.id })
@@ -1049,7 +1049,7 @@ class Cas1ExternalApplicationServiceTest {
           premisesEntity,
         )
       } returns
-        transformToPlacementHistory(requestForPlacement, placement, premisesEntity)
+        transformToRfpAndPlacement(requestForPlacement, placement, premisesEntity)
 
       val result = service.getCurrentPremisesByCrn(application.crn)
 
@@ -1057,7 +1057,7 @@ class Cas1ExternalApplicationServiceTest {
     }
   }
 
-  private fun transformToPlacementHistory(
+  private fun transformToRfpAndPlacement(
     requestForPlacement: RequestForPlacement,
     placement: Cas1SpaceBookingShortSummary? = null,
     premisesEntity: ApprovedPremisesEntity? = null,
@@ -1144,6 +1144,7 @@ class Cas1ExternalApplicationServiceTest {
       decision = applicationEntity.getLatestAssessment()?.decision?.apiValue,
       rejectionRationale = applicationEntity.getLatestAssessment()?.rejectionRationale,
     ),
+    nextRequestForPlacementAndPlacement = requestForPlacement?.let { transformToRfpAndPlacement(it, placement, premisesEntity) },
     placementHistory = emptyList(),
     requestForPlacementAndPlacementHistory = emptyList(),
   )

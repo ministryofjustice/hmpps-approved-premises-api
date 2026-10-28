@@ -136,6 +136,7 @@ class Cas1ExternalApplicationTransformerTest {
         ),
         requestForPlacement = suitableRequestForPlacementAndPlacement.requestForPlacement,
         placement = suitableRequestForPlacementAndPlacement.placement,
+        nextRequestForPlacementAndPlacement = suitableRequestForPlacementAndPlacement,
         placementHistory = emptyList(),
         requestForPlacementAndPlacementHistory = emptyList(),
       )
@@ -195,6 +196,7 @@ class Cas1ExternalApplicationTransformerTest {
         ),
         requestForPlacement = null,
         placement = null,
+        nextRequestForPlacementAndPlacement = null,
         placementHistory = emptyList(),
         requestForPlacementAndPlacementHistory = emptyList(),
       )

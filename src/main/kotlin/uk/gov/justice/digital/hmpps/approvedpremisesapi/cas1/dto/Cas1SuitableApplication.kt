@@ -14,11 +14,18 @@ data class Cas1SuitableApplication(
   val uiUrl: String,
   val application: Cas1ExternalApplicationDto,
   val assessment: Cas1ExternalAssessmentDto?,
+  @Schema(deprecated = true, description = "Use nextRequestForPlacementAndPlacement instead")
+  @Deprecated("Use nextRequestForPlacementAndPlacement instead", ReplaceWith("nextRequestForPlacementAndPlacement?.requestForPlacement"))
   val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
+  @Schema(deprecated = true, description = "Use nextRequestForPlacementAndPlacement instead")
+  @Deprecated("Use nextRequestForPlacementAndPlacement instead", ReplaceWith("nextRequestForPlacementAndPlacement?.placement"))
   val placement: Cas1ExternalPlacementDto?,
+  @Schema(description = "The next scheduled Rfp and placement. ")
+  val nextRequestForPlacementAndPlacement: Cas1RequestForPlacementAndPlacementDto?,
   @Schema(deprecated = true, description = "Use requestForPlacementAndPlacementHistory instead")
   @Deprecated("Use requestForPlacementAndPlacementHistory instead", ReplaceWith("requestForPlacementAndPlacementHistory"))
   val placementHistory: List<Cas1RequestForPlacementAndPlacementDto>,
+  @Schema(description = "All RfP and placements occurring before nextRequestForPlacementAndPlacement")
   val requestForPlacementAndPlacementHistory: List<Cas1RequestForPlacementAndPlacementDto>,
 )
 
