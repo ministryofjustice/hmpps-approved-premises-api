@@ -186,7 +186,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 dateApplied = LocalDate.now(),
               ),
               placementHistory = emptyList(),
-              requestForPlacementAndPlacementHistory = emptyList(),
+              pastRequestForPlacementAndPlacements = emptyList(),
             )
 
             val response = webTestClient.get()
@@ -242,7 +242,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               placement = null,
               nextRequestForPlacementAndPlacement = null,
               placementHistory = emptyList(),
-              requestForPlacementAndPlacementHistory = emptyList(),
+              pastRequestForPlacementAndPlacements = emptyList(),
             )
 
             val response = webTestClient.get()
@@ -344,7 +344,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 dateApplied = LocalDate.now(),
               ),
               placementHistory = emptyList(),
-              requestForPlacementAndPlacementHistory = emptyList(),
+              pastRequestForPlacementAndPlacements = emptyList(),
             )
 
             val response = webTestClient.get()
@@ -504,7 +504,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 dateApplied = LocalDate.now().minusDays(10),
               ),
               placementHistory = emptyList(),
-              requestForPlacementAndPlacementHistory = emptyList(),
+              pastRequestForPlacementAndPlacements = emptyList(),
             )
 
             val response = webTestClient.get()
@@ -645,7 +645,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 dateApplied = LocalDate.now(),
               ),
               placementHistory = emptyList(),
-              requestForPlacementAndPlacementHistory = emptyList(),
+              pastRequestForPlacementAndPlacements = emptyList(),
             )
 
             val response = webTestClient.get()

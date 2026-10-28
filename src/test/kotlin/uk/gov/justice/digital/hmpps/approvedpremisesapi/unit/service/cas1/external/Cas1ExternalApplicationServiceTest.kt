@@ -1146,7 +1146,7 @@ class Cas1ExternalApplicationServiceTest {
     ),
     nextRequestForPlacementAndPlacement = requestForPlacement?.let { transformToRfpAndPlacement(it, placement, premisesEntity) },
     placementHistory = emptyList(),
-    requestForPlacementAndPlacementHistory = emptyList(),
+    pastRequestForPlacementAndPlacements = emptyList(),
   )
 
   private companion object {

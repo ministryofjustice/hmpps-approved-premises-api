@@ -138,7 +138,7 @@ class Cas1ExternalApplicationTransformerTest {
         placement = suitableRequestForPlacementAndPlacement.placement,
         nextRequestForPlacementAndPlacement = suitableRequestForPlacementAndPlacement,
         placementHistory = emptyList(),
-        requestForPlacementAndPlacementHistory = emptyList(),
+        pastRequestForPlacementAndPlacements = emptyList(),
       )
 
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns userStaff
@@ -198,7 +198,7 @@ class Cas1ExternalApplicationTransformerTest {
         placement = null,
         nextRequestForPlacementAndPlacement = null,
         placementHistory = emptyList(),
-        requestForPlacementAndPlacementHistory = emptyList(),
+        pastRequestForPlacementAndPlacements = emptyList(),
       )
 
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns userStaff

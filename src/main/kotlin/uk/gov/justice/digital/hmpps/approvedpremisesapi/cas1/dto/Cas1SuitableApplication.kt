@@ -22,11 +22,11 @@ data class Cas1SuitableApplication(
   val placement: Cas1ExternalPlacementDto?,
   @Schema(description = "The next scheduled Rfp and placement. ")
   val nextRequestForPlacementAndPlacement: Cas1RequestForPlacementAndPlacementDto?,
-  @Schema(deprecated = true, description = "Use requestForPlacementAndPlacementHistory instead")
-  @Deprecated("Use requestForPlacementAndPlacementHistory instead", ReplaceWith("requestForPlacementAndPlacementHistory"))
+  @Schema(deprecated = true, description = "Use pastRequestForPlacementAndPlacements instead")
+  @Deprecated("Use pastRequestForPlacementAndPlacements instead", ReplaceWith("pastRequestForPlacementAndPlacements"))
   val placementHistory: List<Cas1RequestForPlacementAndPlacementDto>,
   @Schema(description = "All RfP and placements occurring before nextRequestForPlacementAndPlacement")
-  val requestForPlacementAndPlacementHistory: List<Cas1RequestForPlacementAndPlacementDto>,
+  val pastRequestForPlacementAndPlacements: List<Cas1RequestForPlacementAndPlacementDto>,
 )
 
 @Schema(description = "Will exist for every Request for Placement and, optionally, one of its Placements. If an RfP has multiple Placements, multiple DTOs will exist for the RfP")

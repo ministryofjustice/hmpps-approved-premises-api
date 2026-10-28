@@ -102,7 +102,7 @@ class Cas1ExternalApplicationTransformer(
       placement = suitableRequestForPlacementAndPlacement?.placement,
       nextRequestForPlacementAndPlacement = suitableRequestForPlacementAndPlacement,
       placementHistory = placementHistory,
-      requestForPlacementAndPlacementHistory = placementHistory,
+      pastRequestForPlacementAndPlacements = placementHistory,
     )
   }
 
