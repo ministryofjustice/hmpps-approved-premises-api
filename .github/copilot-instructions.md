@@ -448,6 +448,7 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   (3) **validation/error paths** — `400`/`404`/`409` as applicable;
   (4) **side effects** — persisted state changes and **domain events** raised.
   New/changed endpoints must have auth tests.
+* Wiremock verification. Always add VerifyCalls helpers to the httpmocks files instead of calling wiremockServer.verify directly in tests.
 
 ### Keeping tests in sync
 

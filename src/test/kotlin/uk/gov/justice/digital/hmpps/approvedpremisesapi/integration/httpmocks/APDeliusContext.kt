@@ -235,6 +235,17 @@ fun IntegrationTestBase.apDeliusContextCaseSummariesErrorResponse(responseStatus
   responseStatus = responseStatus,
 )
 
+fun IntegrationTestBase.apDeliusContextVerifyCaseSummariesCalls(times: Int) = wiremockServer.verify(
+  WireMock.exactly(times),
+  WireMock.getRequestedFor(WireMock.urlPathEqualTo("/probation-cases/summaries")),
+)
+
+fun IntegrationTestBase.apDeliusContextVerifyUserAccessCalls(times: Int, username: String = ".*") = wiremockServer.verify(
+  WireMock.exactly(times),
+  WireMock.getRequestedFor(WireMock.urlPathEqualTo("/users/access"))
+    .withQueryParam("username", WireMock.matching(username)),
+)
+
 fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: StaffDetail) {
   mockSuccessfulGetCallWithJsonResponse(
     url = "/staff/${staffDetail.username}",
