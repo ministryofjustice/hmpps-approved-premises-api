@@ -425,8 +425,9 @@ class RequestForPlacementTransformerTest {
     }
 
     @Test
-    fun `Derives the correct status for a withdrawn placement request`() {
-      val statusSetDate = LocalDate.now().plusDays(10)
+    fun `Derives the correct status for a withdrawn placement request, when withdrawal date is defined`() {
+      val withdrawalOccuredAtDate = OffsetDateTime.now().plusDays(10)
+      val createdAt = OffsetDateTime.now().minusDays(5)
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
@@ -437,18 +438,14 @@ class RequestForPlacementTransformerTest {
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .produce()
 
-      val placementRequirements = PlacementRequirementsEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .produce()
-
       val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
         .withApplication(application)
         .withAssessment(assessment)
-        .withPlacementRequirements(placementRequirements)
         .withIsWithdrawn(true)
         .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
-        .withCreatedAt(statusSetDate.toLocalDateTime().truncatedTo(ChronoUnit.SECONDS))
+        .withWithdrawalOccurredAt(withdrawalOccuredAtDate)
+        .withCreatedAt(createdAt)
         .produce()
       every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
         name = application.createdByUser.name,
@@ -458,7 +455,40 @@ class RequestForPlacementTransformerTest {
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
-      assertThat(result.statusSetDate).isEqualTo(statusSetDate)
+      assertThat(result.statusSetDate).isEqualTo(withdrawalOccuredAtDate.toLocalDate())
+    }
+
+    @Test
+    fun `Derives the correct status for a withdrawn placement request, when withdrawal date is not defined`() {
+      val createdAt = OffsetDateTime.now().minusDays(5)
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withIsWithdrawn(true)
+        .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
+        .withWithdrawalOccurredAt(null)
+        .withCreatedAt(createdAt)
+        .produce()
+      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
+        name = application.createdByUser.name,
+        username = application.createdByUser.deliusUsername,
+        staffCode = application.createdByUser.deliusStaffCode,
+      )
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+      assertThat(result.statusSetDate).isEqualTo(createdAt.toLocalDate())
     }
 
     @Test

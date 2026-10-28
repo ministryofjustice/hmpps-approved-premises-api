@@ -145,8 +145,7 @@ class RequestForPlacementTransformer(
   }
 
   private fun PlacementRequestEntity.deriveStatus() = when {
-    // TODO requestWithdrawn date should be gotten from Domain Events table
-    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.createdAt.toLocalDate())
+    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.withdrawalOccurredAt?.toLocalDate() ?: this.createdAt.toLocalDate())
     this.hasActiveBooking() -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.placementBooked, this.activeSpaceBookings().getOldestCreationDate())
     else -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.awaitingMatch, this.createdAt.toLocalDate())
   }
