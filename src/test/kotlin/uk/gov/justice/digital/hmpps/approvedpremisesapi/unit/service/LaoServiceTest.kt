@@ -76,6 +76,25 @@ class LaoServiceTest {
     }
 
     @Test
+    fun `returns not visible without calling delius when strategy says the case summary cannot be viewed`() {
+      val caseSummary = CaseSummaryFactory().produce()
+
+      every {
+        mockLaoStrategy.canView(caseSummary)
+      } returns LaoStrategy.CaseSummaryViewResult.CANNOT_VIEW
+
+      val result = laoService.isVisibleForCaseSummaries(listOf(caseSummary), mockLaoStrategy)
+
+      assertThat(result).isEqualTo(
+        mapOf(
+          caseSummary.crn to false,
+        ),
+      )
+
+      verify { mockApDeliusContextApiClient wasNot Called }
+    }
+
+    @Test
     fun `returns visible when case access is required and strategy allows the case access to be viewed`() {
       val caseSummary = CaseSummaryFactory().produce()
       val caseAccess = CaseAccessFactory().withCrn(caseSummary.crn).produce()

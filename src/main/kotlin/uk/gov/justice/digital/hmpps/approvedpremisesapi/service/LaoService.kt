@@ -49,6 +49,7 @@ class LaoService(
 
   private fun CaseSummaryViewResult.toIsVisible() = when (this) {
     CaseSummaryViewResult.CAN_VIEW -> true
+    CaseSummaryViewResult.CANNOT_VIEW -> false
     CaseSummaryViewResult.CHECK_CASE_ACCESS -> error("cannot determine visibility")
   }
 
