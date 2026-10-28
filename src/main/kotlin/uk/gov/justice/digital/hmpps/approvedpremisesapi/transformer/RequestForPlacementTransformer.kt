@@ -132,8 +132,7 @@ class RequestForPlacementTransformer(
   }
 
   private fun PlacementApplicationEntity.deriveStatus() = when {
-    // TODO requestWithdrawn date should be gotten from Domain Events table
-    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.submittedAt!!.toLocalDate())
+    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.withdrawalOccurredAt?.toLocalDate() ?: this.submittedAt!!.toLocalDate())
     this.placementRequest?.hasActiveBooking() == true ->
       {
         val occurredAt = this.placementRequest!!.activeSpaceBookings().getOldestCreationDate()

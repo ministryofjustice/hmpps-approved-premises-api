@@ -107,25 +107,21 @@ class RequestForPlacementTransformerTest {
     }
 
     @Test
-    fun `Maintains the correct status for a withdrawn placement application`() {
+    fun `Maintains the correct status for a withdrawn placement application with a withdrawal date`() {
       val statusSetDate = LocalDate.now().plusDays(10)
+      val submittedAt = OffsetDateTime.now().plusDays(5)
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .produce()
 
       val placementApplication = PlacementApplicationEntityFactory()
-        .withDefaults()
+        .withSubmittedDefaults()
         .withApplication(application)
-        .withSubmittedAt(statusSetDate.toLocalDateTime().truncatedTo(ChronoUnit.SECONDS))
-        .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withSubmittedAt(submittedAt)
         .withIsWithdrawn(true)
-        .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
-        .withExpectedArrival(LocalDate.of(2012, 9, 9))
-        .withRequestedDuration(47)
-        .withRequestedDuration(6)
-        .withAuthorisedDuration(7)
-        .withAutomatic(false)
+        .withWithdrawalOccurredAt(statusSetDate.toLocalDateTime().truncatedTo(ChronoUnit.SECONDS))
         .produce()
+
       every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
         name = placementApplication.createdByUser.name,
         username = placementApplication.createdByUser.deliusUsername,
@@ -135,6 +131,32 @@ class RequestForPlacementTransformerTest {
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
       assertThat(result.statusSetDate).isEqualTo(statusSetDate)
+    }
+
+    @Test
+    fun `Maintains the correct status for a withdrawn placement application with no withdrawal date`() {
+      val submittedAt = OffsetDateTime.now().plusDays(5)
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withSubmittedDefaults()
+        .withApplication(application)
+        .withSubmittedAt(submittedAt)
+        .withIsWithdrawn(true)
+        .withWithdrawalOccurredAt(null)
+        .produce()
+
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
+        name = placementApplication.createdByUser.name,
+        username = placementApplication.createdByUser.deliusUsername,
+        staffCode = placementApplication.createdByUser.deliusStaffCode,
+      )
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+      assertThat(result.statusSetDate).isEqualTo(submittedAt.toLocalDate())
     }
 
     @Test
