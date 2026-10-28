@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersonSummaryDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
@@ -166,5 +168,11 @@ class PersonTransformer {
     InmateStatus.OUT -> PersonStatus.inCommunity
     InmateStatus.TRN -> PersonStatus.inCustody
     null -> PersonStatus.unknown
+  }
+
+  fun transformCas2PersonSummaryToDto(personSummary: Cas2PersonSummary): Cas2PersonSummaryDto = when (personSummary) {
+    is Cas2PersonSummary.Summary -> Cas2PersonSummaryDto.Found(personSummary.crn, personSummary.name)
+    is Cas2PersonSummary.NotFound -> Cas2PersonSummaryDto.NotFound(personSummary.crn)
+    is Cas2PersonSummary.LimitedAccess -> Cas2PersonSummaryDto.LimitedAccess(personSummary.crn)
   }
 }

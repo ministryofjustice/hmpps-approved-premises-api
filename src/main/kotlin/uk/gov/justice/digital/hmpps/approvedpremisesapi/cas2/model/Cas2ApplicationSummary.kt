@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import java.time.Instant
@@ -19,6 +20,7 @@ data class Cas2ApplicationSummary(
 
   @get:JsonProperty("status", required = true) val status: ApplicationStatus,
 
+  @Schema(deprecated = true, description = "Use personSummary instead")
   @get:JsonProperty("personName", required = true) val personName: String,
 
   @get:JsonProperty("crn", required = true) val crn: String,
@@ -43,4 +45,6 @@ data class Cas2ApplicationSummary(
   @get:JsonProperty("prisonCode") val prisonCode: String? = null,
 
   @get:JsonProperty("cohort") val cohort: Cas2CohortDto? = null,
+
+  @get:JsonProperty("personSummary", required = true) val personSummary: Cas2PersonSummaryDto,
 )

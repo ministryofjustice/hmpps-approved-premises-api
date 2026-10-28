@@ -15,12 +15,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersonSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.LatestCas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2StatusUpdateTransformer
@@ -227,6 +229,14 @@ class Cas2ApplicationTransformerTest {
   @Nested
   inner class TransformJpaSummaryToSummary {
 
+    private val personSummary = Cas2PersonSummary.Summary(crn = "CRNNUM", name = "firstName surname")
+    private val personSummaryDto = Cas2PersonSummaryDto.Found(crn = "CRNNUM", name = "firstName surname")
+
+    @BeforeEach
+    fun setup() {
+      every { mockPersonTransformer.transformCas2PersonSummaryToDto(personSummary) } returns personSummaryDto
+    }
+
     @Test
     fun `transforms an in progress CAS2v2 application correctly`() {
       val application = Cas2ApplicationSummaryEntity(
@@ -252,11 +262,13 @@ class Cas2ApplicationTransformerTest {
       val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
         "firstName surname",
+        personSummary,
       )
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
       assertThat(result.personName).isEqualTo("firstName surname")
+      assertThat(result.personSummary).isEqualTo(personSummaryDto)
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.hdcEligibilityDate).isNull()
@@ -292,12 +304,14 @@ class Cas2ApplicationTransformerTest {
       val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
         "firstName surname",
+        personSummary,
       )
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
       assertThat(result.personName).isEqualTo("firstName surname")
+      assertThat(result.personSummary).isEqualTo(personSummaryDto)
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.latestStatusUpdate?.label).isEqualTo("my latest status update")

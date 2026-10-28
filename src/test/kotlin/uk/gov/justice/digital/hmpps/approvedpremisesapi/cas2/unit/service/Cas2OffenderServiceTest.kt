@@ -26,12 +26,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
 class Cas2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockTierService = mockk<TierService>()
+  private val mockOffenderService = mockk<OffenderService>()
 
   private val cas2PersonTransformer = Cas2PersonTransformer()
 
@@ -40,6 +42,7 @@ class Cas2OffenderServiceTest {
     mockApDeliusContextApiClient,
     cas2PersonTransformer,
     mockTierService,
+    mockOffenderService,
   )
 
   @Nested

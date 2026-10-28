@@ -66,6 +66,7 @@ class OffenderService(
     crns: Set<String>,
     laoStrategy: LaoStrategy,
     batchSize: Int = 500,
+    includeTier: Boolean = true,
   ): List<PersonSummaryInfoResult> {
     if (batchSize > MAX_OFFENDER_REQUEST_COUNT) {
       throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. A batch size of $batchSize has been requested.")
@@ -74,7 +75,7 @@ class OffenderService(
     return ListUtils.partition(crns.toList(), batchSize)
       .stream()
       .map { crnSubset ->
-        getPersonSummaryInfoResults(crnSubset.toSet(), laoStrategy)
+        getPersonSummaryInfoResults(crnSubset.toSet(), laoStrategy, includeTier)
       }
       .flatMap { it.stream() }
       .collect(Collectors.toList())
