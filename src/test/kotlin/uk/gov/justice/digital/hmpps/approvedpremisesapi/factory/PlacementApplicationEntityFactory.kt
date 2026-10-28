@@ -52,6 +52,13 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.application = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
   }
 
+  fun withSubmittedDefaults() = apply {
+    this.withDefaults()
+    this.expectedArrival = { LocalDate.now().plusDays(5) }
+    this.requestedDuration = { 5 }
+    this.submittedAt = { OffsetDateTime.now() }
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
