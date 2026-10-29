@@ -23,8 +23,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity.Companion.CHARACTERISTICS_OF_INTEREST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
@@ -681,18 +679,26 @@ data class Cas1SpaceBookingEntity(
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
 
-  fun getSpaceBookingStatus(): Cas1SpaceBookingStatusAndWhen = when {
-    isCancelled() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.CANCELLED, this.cancellationOccurredAt!!)
-    hasNonArrival() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.NOT_ARRIVED, this.expectedArrivalDate)
-    hasDeparted() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.DEPARTED, this.actualDepartureDate!!)
-    hasArrival() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.ARRIVED, this.actualArrivalDate!!)
-    else -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.UPCOMING, this.expectedArrivalDate)
+  fun getSpaceBookingStatus(): StatusAndWhen = when {
+    isCancelled() -> StatusAndWhen(Status.CANCELLED, this.cancellationOccurredAt!!)
+    hasNonArrival() -> StatusAndWhen(Status.NOT_ARRIVED, this.expectedArrivalDate)
+    hasDeparted() -> StatusAndWhen(Status.DEPARTED, this.actualDepartureDate!!)
+    hasArrival() -> StatusAndWhen(Status.ARRIVED, this.actualArrivalDate!!)
+    else -> StatusAndWhen(Status.UPCOMING, this.expectedArrivalDate)
   }
 
-  data class Cas1SpaceBookingStatusAndWhen(
-    val status: Cas1SpaceBookingStatus,
+  data class StatusAndWhen(
+    val status: Status,
     val occurredAt: LocalDate,
   )
+
+  enum class Status {
+    CANCELLED,
+    NOT_ARRIVED,
+    DEPARTED,
+    ARRIVED,
+    UPCOMING,
+  }
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade

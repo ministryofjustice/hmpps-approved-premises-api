@@ -216,6 +216,47 @@ data class PlacementApplicationEntity(
     null
   }
 
+  fun getStatus(): StatusAndWhen = when {
+    isWithdrawn -> StatusAndWhen(
+      Status.REQUEST_WITHDRAWN,
+      withdrawalOccurredAt?.toLocalDate() ?: submittedAt!!.toLocalDate(),
+    )
+    placementRequest?.hasActiveBooking() == true -> StatusAndWhen(
+      Status.PLACEMENT_BOOKED,
+      placementRequest!!.activeSpaceBookings().minOf { it.createdAt.toLocalDate() },
+    )
+    decision == PlacementApplicationDecision.REJECTED -> StatusAndWhen(
+      Status.REQUEST_REJECTED,
+      decisionMadeAt!!.toLocalDate(),
+    )
+    decision == PlacementApplicationDecision.ACCEPTED -> StatusAndWhen(
+      Status.AWAITING_MATCH,
+      decisionMadeAt!!.toLocalDate(),
+    )
+    isSubmitted() -> StatusAndWhen(
+      Status.REQUEST_SUBMITTED,
+      submittedAt!!.toLocalDate(),
+    )
+    else -> StatusAndWhen(
+      Status.REQUEST_UNSUBMITTED,
+      createdAt.toLocalDate(),
+    )
+  }
+
+  enum class Status {
+    REQUEST_UNSUBMITTED,
+    REQUEST_REJECTED,
+    REQUEST_SUBMITTED,
+    AWAITING_MATCH,
+    REQUEST_WITHDRAWN,
+    PLACEMENT_BOOKED,
+  }
+
+  data class StatusAndWhen(
+    val status: Status,
+    val occurredAt: LocalDate,
+  )
+
   override fun toString() = "PlacementApplicationEntity: $id"
 }
 
