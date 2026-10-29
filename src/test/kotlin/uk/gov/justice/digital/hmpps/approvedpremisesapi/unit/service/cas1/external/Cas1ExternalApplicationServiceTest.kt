@@ -11,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
@@ -25,31 +23,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingShortSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacementFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1PlacementPairService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.stream.Stream
 import kotlin.collections.emptyList
 
@@ -60,10 +50,7 @@ class Cas1ExternalApplicationServiceTest {
   private lateinit var approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository
 
   @MockK
-  private lateinit var cas1RequestForPlacementService: Cas1RequestForPlacementService
-
-  @MockK
-  private lateinit var cas1PremisesService: Cas1PremisesService
+  private lateinit var cas1PlacementPairService: Cas1PlacementPairService
 
   @MockK
   private lateinit var cas1ExternalApplicationTransformer: Cas1ExternalApplicationTransformer
@@ -74,296 +61,6 @@ class Cas1ExternalApplicationServiceTest {
   fun transformToStaffDto(user: UserEntity) = Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 
   @Nested
-  inner class GetPlacementHistory {
-
-    @Test
-    fun `getPlacementHistory returns requestForPlacement status and no placement status when no placements`() {
-      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-
-      val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
-      ).withStatus(RequestForPlacementStatus.placementBooked)
-        .withCanonicalPlacementPeriod(
-          Cas1RequestedPlacementPeriod(
-            arrival = LocalDate.now().plusDays(3),
-            arrivalFlexible = true,
-            duration = 10,
-          ),
-        )
-        .produce()
-      val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted)
-        .withCanonicalPlacementPeriod(
-          Cas1RequestedPlacementPeriod(
-            arrival = LocalDate.now().plusDays(1),
-            arrivalFlexible = true,
-            duration = 5,
-          ),
-        ).produce()
-      val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
-      ).withStatus(RequestForPlacementStatus.requestSubmitted)
-        .withCanonicalPlacementPeriod(
-          Cas1RequestedPlacementPeriod(
-            arrival = LocalDate.now().plusDays(2),
-            arrivalFlexible = true,
-            duration = 8,
-          ),
-        ).produce()
-      val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
-      ).withStatus(RequestForPlacementStatus.awaitingMatch).withCanonicalPlacementPeriod(
-        Cas1RequestedPlacementPeriod(
-          arrival = LocalDate.now().plusDays(1),
-          arrivalFlexible = true,
-          duration = 11,
-        ),
-      ).produce()
-
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2) } returns transformToPlacementHistory(requestForPlacement2)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
-
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
-        listOf(
-          requestForPlacement1,
-          requestForPlacement2,
-          requestForPlacement3,
-          requestForPlacement4,
-        ),
-      )
-
-      val result = service.getPlacementPairs(awaitingPlacementApplication.id)
-
-      assertThat(result).isEqualTo(
-        listOf(
-          transformToPlacementHistory(requestForPlacement2),
-          transformToPlacementHistory(requestForPlacement4),
-          transformToPlacementHistory(requestForPlacement1),
-          transformToPlacementHistory(requestForPlacement3),
-        ),
-      )
-    }
-
-    @Test
-    fun `getPlacementHistory returns requestForPlacement status and placement status when placements`() {
-      val premisesEntity = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .withSupportsSpaceBookings(true)
-        .produce()
-      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-      val placement1 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(1))
-        .withStatus(Cas1SpaceBookingStatus.DEPARTED)
-        .produce()
-      val placement2 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(3))
-        .withStatus(Cas1SpaceBookingStatus.CANCELLED)
-        .produce()
-      val placement3 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(4))
-        .withStatus(Cas1SpaceBookingStatus.ARRIVED)
-        .produce()
-      val placement4 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(10))
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .produce()
-      val placement5 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(20))
-        .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
-        .produce()
-      val placement6 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(15))
-        .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
-        .produce()
-      val placement7 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now())
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .withPremises(
-          NamedId(
-            id = premisesEntity.id,
-            name = premisesEntity.name,
-            code = null,
-          ),
-        )
-        .produce()
-      val placement8 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(3))
-        .withStatus(Cas1SpaceBookingStatus.DEPARTED)
-        .produce()
-      val placement9 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(1))
-        .withStatus(Cas1SpaceBookingStatus.ARRIVED)
-        .produce()
-      val placement10 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(2))
-        .withStatus(Cas1SpaceBookingStatus.CANCELLED)
-        .produce()
-      val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
-      ).withPlacements(
-        listOf(
-          placement1,
-          placement2,
-          placement3,
-        ),
-      )
-        .withStatus(RequestForPlacementStatus.placementBooked).produce()
-      val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
-      ).withPlacements(
-        listOf(
-          placement8,
-          placement9,
-          placement10,
-        ),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
-      val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
-      ).withPlacements(
-        listOf(
-          placement5,
-          placement6,
-          placement7,
-          placement4,
-        ),
-      ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
-
-      val withdrawalDate = LocalDate.now().minusDays(10)
-      val rejectionReason = "No space"
-
-      val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
-      ).withStatus(RequestForPlacementStatus.requestRejected)
-        .withDecision(PlacementApplicationDecision.REJECTED).produce()
-        .copy(rejectionReason = rejectionReason)
-      val requestForPlacement5 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(50),
-      ).withStatus(RequestForPlacementStatus.requestWithdrawn)
-        .withIsWithdrawn(true).produce()
-        .copy(withdrawalDate = withdrawalDate.atStartOfDay().atOffset(ZoneOffset.UTC))
-
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
-        listOf(
-          requestForPlacement1,
-          requestForPlacement2,
-          requestForPlacement3,
-          requestForPlacement4,
-          requestForPlacement5,
-        ),
-      )
-      every {
-        cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
-      } returns premisesEntity
-
-      every {
-        cas1PremisesService.findPremisesById(match { it != premisesEntity.id })
-      } returns null
-
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement8)
-      } returns
-        transformToPlacementHistory(requestForPlacement2, placement8)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement10)
-      } returns
-        transformToPlacementHistory(requestForPlacement2, placement10)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement9)
-      } returns
-        transformToPlacementHistory(requestForPlacement2, placement9)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement7, premisesEntity)
-      } returns
-        transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement1)
-      } returns
-        transformToPlacementHistory(requestForPlacement1, placement1)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement4, rejectionReason, null)
-      } returns
-        transformToPlacementHistory(requestForPlacement4, rejectionReason = rejectionReason)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement5, null, withdrawalDate)
-      } returns
-        transformToPlacementHistory(requestForPlacement5, withdrawalDate = withdrawalDate)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement2)
-      } returns
-        transformToPlacementHistory(requestForPlacement1, placement2)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement3)
-      } returns
-        transformToPlacementHistory(requestForPlacement1, placement3)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement4)
-      } returns
-        transformToPlacementHistory(requestForPlacement3, placement4)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement6)
-      } returns
-        transformToPlacementHistory(requestForPlacement3, placement6)
-      every {
-        cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement5)
-      } returns
-        transformToPlacementHistory(requestForPlacement3, placement5)
-
-      val result = service.getPlacementPairs(awaitingPlacementApplication.id)
-      assertThat(result).isEqualTo(
-        listOf(
-          // placement8 (+3 days)
-          transformToPlacementHistory(requestForPlacement2, placement8),
-          // placement10 (+2 days)
-          transformToPlacementHistory(requestForPlacement2, placement10),
-          // placement9 (+1 day)
-          transformToPlacementHistory(requestForPlacement2, placement9),
-          // placement7 (0 days)
-          transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity),
-          // placement1 (-1)
-          transformToPlacementHistory(requestForPlacement1, placement1),
-          // rfp4 (no placements) (-2)
-          transformToPlacementHistory(requestForPlacement4, rejectionReason = rejectionReason),
-          // placement2 (-3)
-          transformToPlacementHistory(requestForPlacement1, placement2),
-          // placement3 (-4)
-          transformToPlacementHistory(requestForPlacement1, placement3),
-          // placement4 (-10)
-          transformToPlacementHistory(requestForPlacement3, placement4),
-          // placement6 (-15)
-          transformToPlacementHistory(requestForPlacement3, placement6),
-          // placement5 (-20)
-          transformToPlacementHistory(requestForPlacement3, placement5),
-          // rfp5 (no placements) (-50)
-          transformToPlacementHistory(requestForPlacement5, withdrawalDate = withdrawalDate),
-        ),
-      )
-    }
-  }
-
-  @Nested
   inner class GetSuitableApplicationByCrn {
     private val crn = "ABC123"
     private val user = UserEntityFactory()
@@ -371,7 +68,7 @@ class Cas1ExternalApplicationServiceTest {
       .produce()
 
     @Test
-    fun `getSuitableApplicationByCrn returns null as no applications of that crn`() {
+    fun `returns null as no applications of that crn`() {
       every { approvedPremisesApplicationRepository.findByCrn(crn) } returns emptyList()
 
       val result = service.getSuitableApplicationByCrn(crn)
@@ -379,373 +76,164 @@ class Cas1ExternalApplicationServiceTest {
       assertThat(result).isNull()
     }
 
-    @Test
-    fun `getSuitableApplicationByCrn returns requestForPlacement status and no placement status when no placements`() {
-      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
+    @Nested
+    inner class SuitablePlacementPair {
+      @Test
+      fun `uses the future placement pair closest to today as suitable and returns past pairs as history`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withCrn(CRN)
+          .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+          .produce()
 
-      val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
-      ).withStatus(RequestForPlacementStatus.placementBooked).produce()
-      val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
-      val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
-      ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
-      val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
-      ).withStatus(RequestForPlacementStatus.awaitingMatch).produce()
+        val future2 = placementPair(LocalDate.now().plusDays(3))
+        val future1 = placementPair(LocalDate.now().plusDays(1))
+        val today = placementPair(LocalDate.now())
+        val past1 = placementPair(LocalDate.now().minusDays(1))
+        val past2 = placementPair(LocalDate.now().minusDays(5))
 
-      every { approvedPremisesApplicationRepository.findByCrn(awaitingPlacementApplication.crn) } returns listOf(awaitingPlacementApplication)
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
-        listOf(
-          requestForPlacement1,
-          requestForPlacement2,
-          requestForPlacement3,
-          requestForPlacement4,
-        ),
-      )
-      val suitableApplication = transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement2)
-      val suitablePlacementPair = transformToPlacementHistory(requestForPlacement2)
-      val placementHistory = listOf(
-        transformToPlacementHistory(requestForPlacement4),
-        transformToPlacementHistory(requestForPlacement1),
-        transformToPlacementHistory(requestForPlacement3),
-      )
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2) } returns suitablePlacementPair
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
-      every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(awaitingPlacementApplication, suitablePlacementPair, placementHistory) } returns
-        transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement2)
+        val suitableApplication = transformToSuitableApplication(application)
 
-      val result = service.getSuitableApplicationByCrn(awaitingPlacementApplication.crn)
+        every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
+        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(future2, future1, today, past1, past2)
+        every {
+          cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, today, listOf(past1, past2))
+        } returns suitableApplication
 
-      assertThat(result).isEqualTo(
-        suitableApplication,
-      )
+        val result = service.getSuitableApplicationByCrn(application.crn)
+
+        assertThat(result).isEqualTo(suitableApplication)
+      }
+
+      @Test
+      fun `uses the most recent past placement pair as suitable when there are no future pairs`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withCrn(CRN)
+          .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+          .produce()
+
+        val past1 = placementPair(LocalDate.now().minusDays(1))
+        val past2 = placementPair(LocalDate.now().minusDays(5))
+
+        val suitableApplication = transformToSuitableApplication(application)
+
+        every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
+        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(past1, past2)
+        every {
+          cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, past1, listOf(past2))
+        } returns suitableApplication
+
+        val result = service.getSuitableApplicationByCrn(application.crn)
+
+        assertThat(result).isEqualTo(suitableApplication)
+      }
     }
 
-    @Test
-    fun `getSuitableApplicationByCrn returns requestForPlacement status and placement status when placements`() {
-      val premisesEntity = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .withSupportsSpaceBookings(true)
-        .produce()
-      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-      val placement1 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(1))
-        .withStatus(Cas1SpaceBookingStatus.DEPARTED)
-        .produce()
-      val placement2 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(3))
-        .withStatus(Cas1SpaceBookingStatus.CANCELLED)
-        .produce()
-      val placement3 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(4))
-        .withStatus(Cas1SpaceBookingStatus.ARRIVED)
-        .produce()
-      val placement4 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(10))
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .produce()
-      val placement5 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(20))
-        .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
-        .produce()
-      val placement6 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(15))
-        .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
-        .produce()
-      val placement7 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now())
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .withPremises(
-          NamedId(
-            id = premisesEntity.id,
-            name = premisesEntity.name,
-            code = null,
-          ),
+    @Nested
+    inner class MostSuitableApplication {
+      @ParameterizedTest
+      @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.external.Cas1ExternalApplicationServiceTest#suitableApplicationScenarioArguments")
+      fun `returns application with most advanced status`(
+        applications: List<ApprovedPremisesApplicationEntity>,
+        expectedSuitableApplication: ApprovedPremisesApplicationEntity,
+      ) {
+        every { approvedPremisesApplicationRepository.findByCrn(expectedSuitableApplication.crn) } returns applications
+
+        val suitableApplication = transformToSuitableApplication(expectedSuitableApplication)
+
+        every { cas1PlacementPairService.getPlacementPairs(suitableApplication.application.id) } returns emptyList()
+        every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(expectedSuitableApplication, null, emptyList()) } returns suitableApplication
+
+        val result = service.getSuitableApplicationByCrn(expectedSuitableApplication.crn)
+        assertThat(result).isEqualTo(suitableApplication)
+      }
+
+      @Test
+      fun `returns application with latest submitted date as suitable application when some have same status`() {
+        val awaitingPlacementApplication1 = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withSubmittedAt(OffsetDateTime.now().minusDays(1))
+          .withCrn(crn)
+          .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+          .produce()
+        val awaitingPlacementApplication2 = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withSubmittedAt(OffsetDateTime.now().minusDays(2))
+          .withCrn(crn)
+          .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+          .produce()
+        val unallocatedAssessment = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withSubmittedAt(OffsetDateTime.now().plusDays(2))
+          .withCrn(crn)
+          .withStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+          .produce()
+        val latestAwaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withSubmittedAt(OffsetDateTime.now())
+          .withCrn(crn)
+          .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+          .produce()
+
+        every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
+          awaitingPlacementApplication1,
+          latestAwaitingPlacementApplication,
+          awaitingPlacementApplication2,
+          unallocatedAssessment,
         )
-        .produce()
-      val placement8 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(3))
-        .withStatus(Cas1SpaceBookingStatus.DEPARTED)
-        .produce()
-      val placement9 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(1))
-        .withStatus(Cas1SpaceBookingStatus.ARRIVED)
-        .produce()
-      val placement10 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(2))
-        .withStatus(Cas1SpaceBookingStatus.CANCELLED)
-        .produce()
-      val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
-      ).withPlacements(
-        listOf(
-          placement1,
-          placement2,
-          placement3,
-        ),
-      )
-        .withStatus(RequestForPlacementStatus.placementBooked).produce()
-      val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
-      ).withPlacements(
-        listOf(
-          placement8,
-          placement9,
-          placement10,
-        ),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
-      val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
-      ).withPlacements(
-        listOf(
-          placement5,
-          placement6,
-          placement7,
-          placement4,
-        ),
-      ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
-      val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
-      ).withStatus(RequestForPlacementStatus.awaitingMatch).produce()
+        val suitableApplication = transformToSuitableApplication(latestAwaitingPlacementApplication)
 
-      every { approvedPremisesApplicationRepository.findByCrn(awaitingPlacementApplication.crn) } returns listOf(awaitingPlacementApplication)
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
-        listOf(
-          requestForPlacement1,
-          requestForPlacement2,
-          requestForPlacement3,
-          requestForPlacement4,
-        ),
-      )
-      val suitableApplication = transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement3, placement7, premisesEntity)
-      val suitablePlacementPair = transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
-      val placementHistory = listOf(
-        transformToPlacementHistory(requestForPlacement1, placement1),
-        transformToPlacementHistory(requestForPlacement4),
-        transformToPlacementHistory(requestForPlacement1, placement2),
-        transformToPlacementHistory(requestForPlacement1, placement3),
-        transformToPlacementHistory(requestForPlacement3, placement4),
-        transformToPlacementHistory(requestForPlacement3, placement6),
-        transformToPlacementHistory(requestForPlacement3, placement5),
-      )
-      every {
-        cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
-      } returns premisesEntity
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement1) } returns transformToPlacementHistory(requestForPlacement1, placement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement2) } returns transformToPlacementHistory(requestForPlacement1, placement2)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement3) } returns transformToPlacementHistory(requestForPlacement1, placement3)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement4) } returns transformToPlacementHistory(requestForPlacement3, placement4)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement5) } returns transformToPlacementHistory(requestForPlacement3, placement5)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement6) } returns transformToPlacementHistory(requestForPlacement3, placement6)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement7, premisesEntity) } returns suitablePlacementPair
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement8) } returns transformToPlacementHistory(requestForPlacement2, placement8)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement9) } returns transformToPlacementHistory(requestForPlacement2, placement9)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement10) } returns transformToPlacementHistory(requestForPlacement2, placement10)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
-      every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(awaitingPlacementApplication, suitablePlacementPair, placementHistory) } returns suitableApplication
+        every { cas1PlacementPairService.getPlacementPairs(latestAwaitingPlacementApplication.id) } returns emptyList()
+        every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(latestAwaitingPlacementApplication, null, emptyList()) } returns suitableApplication
 
-      every {
-        cas1PremisesService.findPremisesById(match { it != premisesEntity.id })
-      } returns null
-      val result = service.getSuitableApplicationByCrn(awaitingPlacementApplication.crn)
+        val result = service.getSuitableApplicationByCrn(crn)
 
-      assertThat(result).isEqualTo(
-        suitableApplication,
-      )
-    }
+        assertThat(result).isEqualTo(suitableApplication)
+      }
 
-    @Test
-    fun `getSuitableApplicationByCrn returns requestForPlacement status and placement status UPCOMING and premises`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
-        .produce()
+      @Test
+      fun `returns application with latest created date as suitable application when some have same status but no submitted at date`() {
+        val startedApplication1 = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withCreatedAt(OffsetDateTime.now().minusDays(1))
+          .withCrn(crn)
+          .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+          .produce()
+        val startedApplication2 = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withCreatedAt(OffsetDateTime.now().minusDays(2))
+          .withCrn(crn)
+          .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+          .produce()
+        val inapplicableAssessment = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withCreatedAt(OffsetDateTime.now().plusDays(2))
+          .withCrn(crn)
+          .withStatus(ApprovedPremisesApplicationStatus.INAPPLICABLE)
+          .produce()
+        val latestStartedApplication = ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withCreatedAt(OffsetDateTime.now())
+          .withCrn(crn)
+          .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+          .produce()
 
-      val premisesEntity = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .withSupportsSpaceBookings(true)
-        .produce()
-
-      val booking = Cas1SpaceBookingEntityFactory()
-        .withPremises(premisesEntity)
-        .withExpectedArrivalDate(LocalDate.now().plusDays(1))
-        .withExpectedDepartureDate(LocalDate.now().plusDays(10))
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withSpaceBookings(mutableListOf(booking))
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
+        every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
+          startedApplication1,
+          latestStartedApplication,
+          startedApplication2,
+          inapplicableAssessment,
         )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .produce()
-      application.placementRequests = mutableListOf(placementRequest)
+        val suitableApplication = transformToSuitableApplication(latestStartedApplication)
 
-      val placement = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(booking.expectedArrivalDate)
-        .withExpectedDepartureDate(booking.expectedDepartureDate)
-        .withExpectedArrivalDate(booking.expectedArrivalDate)
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .withId(booking.id)
-        .withPremises(
-          NamedId(
-            id = premisesEntity.id,
-            name = premisesEntity.name,
-            code = null,
-          ),
-        )
-        .produce()
+        every { cas1PlacementPairService.getPlacementPairs(latestStartedApplication.id) } returns emptyList()
+        every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(latestStartedApplication, null, emptyList()) } returns suitableApplication
 
-      val requestForPlacement = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
-      ).withPlacements(
-        listOf(
-          placement,
-        ),
-      )
-        .withStatus(RequestForPlacementStatus.placementBooked).produce()
-      val suitableApplication = transformToSuitableApplication(application, requestForPlacement, placement, premisesEntity)
-      val suitablePlacementPair = transformToPlacementHistory(requestForPlacement, placement, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, suitablePlacementPair, emptyList()) } returns suitableApplication
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, null, null, placement, premisesEntity) } returns suitablePlacementPair
-      every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, null) } returns CasResult.Success(
-        listOf(
-          requestForPlacement,
-        ),
-      )
-      every { cas1PremisesService.findPremisesById(premisesEntity.id) } returns premisesEntity
+        val result = service.getSuitableApplicationByCrn(crn)
 
-      val result = service.getSuitableApplicationByCrn(application.crn)
-
-      assertThat(result).isEqualTo(suitableApplication)
-    }
-
-    @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.external.Cas1ExternalApplicationServiceTest#provideApplications")
-    fun `getSuitableApplicationByCrn returns appropriate suitable application`(
-      applications: List<ApprovedPremisesApplicationEntity>,
-      suitableApprovedPremisesApplication: ApprovedPremisesApplicationEntity,
-    ) {
-      every { approvedPremisesApplicationRepository.findByCrn(suitableApprovedPremisesApplication.crn) } returns applications
-
-      val suitableApplication = transformToSuitableApplication(suitableApprovedPremisesApplication)
-
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(suitableApplication.application.id, null) } returns CasResult.Success(emptyList())
-      every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(suitableApprovedPremisesApplication, null, emptyList()) } returns suitableApplication
-
-      val result = service.getSuitableApplicationByCrn(suitableApprovedPremisesApplication.crn)
-      assertThat(result).isEqualTo(suitableApplication)
-    }
-
-    @Test
-    fun `getSuitableApplicationByCrn returns application with latest submitted date as suitable application when some have same status`() {
-      val awaitingPlacementApplication1 = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now().minusDays(1))
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-      val awaitingPlacementApplication2 = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now().minusDays(2))
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-      val unallocatedAssessment = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now().plusDays(2))
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
-        .produce()
-      val latestAwaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-
-      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
-        awaitingPlacementApplication1,
-        latestAwaitingPlacementApplication,
-        awaitingPlacementApplication2,
-        unallocatedAssessment,
-      )
-      val suitableApplication = transformToSuitableApplication(latestAwaitingPlacementApplication)
-
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(latestAwaitingPlacementApplication.id, null) } returns CasResult.Success(emptyList())
-      every { cas1PremisesService.findPremisesById(any()) } returns null
-      every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(latestAwaitingPlacementApplication, null, emptyList()) } returns suitableApplication
-
-      val result = service.getSuitableApplicationByCrn(crn)
-
-      assertThat(result).isEqualTo(suitableApplication)
-    }
-
-    @Test
-    fun `getSuitableApplicationByCrn returns application with latest created date as suitable application when some have same status but no submitted at date`() {
-      val startedApplication1 = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCreatedAt(OffsetDateTime.now().minusDays(1))
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
-        .produce()
-      val startedApplication2 = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCreatedAt(OffsetDateTime.now().minusDays(2))
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
-        .produce()
-      val inapplicableAssessment = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCreatedAt(OffsetDateTime.now().plusDays(2))
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.INAPPLICABLE)
-        .produce()
-      val latestStartedApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCreatedAt(OffsetDateTime.now())
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
-        .produce()
-
-      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
-        startedApplication1,
-        latestStartedApplication,
-        startedApplication2,
-        inapplicableAssessment,
-      )
-      val suitableApplication = transformToSuitableApplication(latestStartedApplication)
-
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(latestStartedApplication.id, null) } returns CasResult.Success(emptyList())
-      every { cas1PremisesService.findPremisesById(any()) } returns null
-      every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(latestStartedApplication, null, emptyList()) } returns suitableApplication
-
-      val result = service.getSuitableApplicationByCrn(crn)
-
-      assertThat(result).isEqualTo(suitableApplication)
+        assertThat(result).isEqualTo(suitableApplication)
+      }
     }
   }
 
@@ -754,7 +242,7 @@ class Cas1ExternalApplicationServiceTest {
     private val crn = "ABC123"
 
     @Test
-    fun `getArrivedApplicationByCrn returns null as no applications of that crn`() {
+    fun `returns null as no applications of that crn`() {
       every { approvedPremisesApplicationRepository.findByCrn(crn) } returns emptyList()
 
       val result = service.getCurrentPremisesByCrn(crn)
@@ -763,298 +251,87 @@ class Cas1ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `getArrivedApplicationByCrn returns null when no placements`() {
-      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-
-      val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
-      ).withStatus(RequestForPlacementStatus.placementBooked).produce()
-      val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
-      val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
-      ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
-      val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
-      ).withStatus(RequestForPlacementStatus.awaitingMatch).produce()
-
-      every { approvedPremisesApplicationRepository.findByCrn(awaitingPlacementApplication.crn) } returns listOf(awaitingPlacementApplication)
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
-        listOf(
-          requestForPlacement1,
-          requestForPlacement2,
-          requestForPlacement3,
-          requestForPlacement4,
-        ),
-      )
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2) } returns transformToPlacementHistory(requestForPlacement2)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
-
-      val result = service.getCurrentPremisesByCrn(awaitingPlacementApplication.crn)
-
-      assertThat(result).isNull()
-    }
-
-    @Test
-    fun `getArrivedApplicationByCrn returns requestForPlacement status and placement status when arrived placement`() {
-      val premisesEntity = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .withSupportsSpaceBookings(true)
-        .produce()
-      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-      val placement1 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(1))
-        .withStatus(Cas1SpaceBookingStatus.DEPARTED)
-        .produce()
-      val placement2 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(3))
-        .withStatus(Cas1SpaceBookingStatus.ARRIVED)
-        .withPremises(
-          NamedId(
-            id = premisesEntity.id,
-            name = premisesEntity.name,
-            code = null,
-          ),
-        )
-        .produce()
-      val placement3 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(4))
-        .withStatus(Cas1SpaceBookingStatus.ARRIVED)
-        .withPremises(
-          NamedId(
-            id = premisesEntity.id,
-            name = premisesEntity.name,
-            code = null,
-          ),
-        )
-        .produce()
-      val placement4 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(10))
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .produce()
-      val placement5 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(20))
-        .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
-        .produce()
-      val placement6 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(15))
-        .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
-        .produce()
-      val placement7 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now())
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .withPremises(
-          NamedId(
-            id = premisesEntity.id,
-            name = premisesEntity.name,
-            code = null,
-          ),
-        )
-        .produce()
-      val placement8 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(3))
-        .withStatus(Cas1SpaceBookingStatus.DEPARTED)
-        .produce()
-      val placement9 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(1))
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .withPremises(
-          NamedId(
-            id = premisesEntity.id,
-            name = premisesEntity.name,
-            code = null,
-          ),
-        )
-        .produce()
-      val placement10 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(2))
-        .withStatus(Cas1SpaceBookingStatus.CANCELLED)
-        .produce()
-      val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
-      ).withPlacements(
-        listOf(
-          placement1,
-          placement2,
-          placement3,
-        ),
-      )
-        .withStatus(RequestForPlacementStatus.placementBooked).produce()
-      val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
-      ).withPlacements(
-        listOf(
-          placement8,
-          placement9,
-          placement10,
-        ),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
-      val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
-      ).withPlacements(
-        listOf(
-          placement5,
-          placement6,
-          placement7,
-          placement4,
-        ),
-      ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
-      val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
-      ).withStatus(RequestForPlacementStatus.awaitingMatch).produce()
-
-      every { approvedPremisesApplicationRepository.findByCrn(awaitingPlacementApplication.crn) } returns listOf(awaitingPlacementApplication)
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
-        listOf(
-          requestForPlacement1,
-          requestForPlacement2,
-          requestForPlacement3,
-          requestForPlacement4,
-        ),
-      )
-      every {
-        cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
-      } returns premisesEntity
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement1) } returns
-        transformToPlacementHistory(requestForPlacement1, placement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement2, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement1, placement2, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement3, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement1, placement3, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement4) } returns
-        transformToPlacementHistory(requestForPlacement3, placement4)
-      every {
-        cas1ExternalApplicationTransformer.transformToCas1PlacementPair(
-          requestForPlacement3,
-          null,
-          null,
-          placement5,
-        )
-      } returns
-        transformToPlacementHistory(requestForPlacement3, placement5)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement6) } returns
-        transformToPlacementHistory(requestForPlacement3, placement6)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement7, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement8) } returns
-        transformToPlacementHistory(requestForPlacement2, placement8)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement9, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement2, placement9, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement10) } returns
-        transformToPlacementHistory(requestForPlacement2, placement10)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns
-        transformToPlacementHistory(requestForPlacement4)
-
-      every {
-        cas1PremisesService.findPremisesById(match { it != premisesEntity.id })
-      } returns null
-      val result = service.getCurrentPremisesByCrn(awaitingPlacementApplication.crn)
-
-      assertThat(result).isEqualTo(
-        Cas1ExternalPremisesDto(
-          startDate = placement3.expectedArrivalDate,
-          endDate = placement3.expectedDepartureDate,
-          addressLine1 = premisesEntity.addressLine1,
-          addressLine2 = premisesEntity.addressLine2,
-          town = premisesEntity.town,
-          postcode = premisesEntity.postcode,
-        ),
-      )
-    }
-
-    @Test
-    fun `getArrivedApplicationByCrn returns null when no arrived placements`() {
+    fun `returns null when no placement pairs`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
         .produce()
-
-      val premisesEntity = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .withSupportsSpaceBookings(true)
-        .produce()
-
-      val booking = Cas1SpaceBookingEntityFactory()
-        .withPremises(premisesEntity)
-        .withExpectedArrivalDate(LocalDate.now().plusDays(1))
-        .withExpectedDepartureDate(LocalDate.now().plusDays(10))
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withSpaceBookings(mutableListOf(booking))
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .produce()
-      application.placementRequests = mutableListOf(placementRequest)
-
-      val placement = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(booking.expectedArrivalDate)
-        .withExpectedDepartureDate(booking.expectedDepartureDate)
-        .withExpectedArrivalDate(booking.expectedArrivalDate)
-        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
-        .withId(booking.id)
-        .withPremises(
-          NamedId(
-            id = premisesEntity.id,
-            name = premisesEntity.name,
-            code = null,
-          ),
-        )
-        .produce()
-
-      val requestForPlacement = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
-      ).withPlacements(
-        listOf(
-          placement,
-        ),
-      )
-        .withStatus(RequestForPlacementStatus.placementBooked).produce()
 
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
-      every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, null) } returns CasResult.Success(
-        listOf(
-          requestForPlacement,
-        ),
+      every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(
+        placementPair(LocalDate.now().minusDays(1)),
+        placementPair(LocalDate.now().minusDays(2)),
       )
-      every { cas1PremisesService.findPremisesById(premisesEntity.id) } returns premisesEntity
-      every {
-        cas1ExternalApplicationTransformer.transformToCas1PlacementPair(
-          requestForPlacement,
-          null,
-          null,
-          placement,
-          premisesEntity,
-        )
-      } returns
-        transformToPlacementHistory(requestForPlacement, placement, premisesEntity)
 
       val result = service.getCurrentPremisesByCrn(application.crn)
 
       assertThat(result).isNull()
     }
+
+    @Test
+    fun `returns premises of the most recent arrived placement`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+
+      val premises1Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
+      val premises2Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
+      val premises3Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
+
+      val upcoming = placementPair(LocalDate.now().plusDays(1), Cas1SpaceBookingStatus.UPCOMING, premises1Entity)
+      val arrived = placementPair(LocalDate.now().minusDays(3), Cas1SpaceBookingStatus.ARRIVED, premises2Entity)
+      val departed = placementPair(LocalDate.now().minusDays(10), Cas1SpaceBookingStatus.DEPARTED, premises3Entity)
+
+      every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
+      every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(upcoming, arrived, departed)
+
+      val result = service.getCurrentPremisesByCrn(application.crn)
+
+      assertThat(result).isEqualTo(arrived.placement!!.premises)
+    }
+
+    @Test
+    fun `returns null when no arrived placements`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+        .produce()
+      val premisesEntity = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .withSupportsSpaceBookings(true)
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
+      every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(
+        placementPair(LocalDate.now().plusDays(1), Cas1SpaceBookingStatus.UPCOMING, premisesEntity),
+      )
+
+      val result = service.getCurrentPremisesByCrn(application.crn)
+
+      assertThat(result).isNull()
+    }
+  }
+
+  private fun placementPair(
+    dateApplied: LocalDate,
+    status: Cas1SpaceBookingStatus? = null,
+    premises: ApprovedPremisesEntity? = null,
+  ): Cas1PlacementPairDto {
+    val requestForPlacement = RequestForPlacementFactory()
+      .withStatusSetDate(dateApplied)
+      .withStatus(RequestForPlacementStatus.placementBooked)
+      .produce()
+    val placement = status?.let {
+      Cas1SpaceBookingShortSummaryFactory()
+        .withStatusSetDate(dateApplied)
+        .withStatus(it)
+        .produce()
+    }
+    return transformToPlacementHistory(requestForPlacement, placement, premises)
   }
 
   private fun transformToPlacementHistory(
@@ -1209,7 +486,7 @@ class Cas1ExternalApplicationServiceTest {
       .produce()
 
     @JvmStatic
-    fun provideApplications(): Stream<Arguments> = Stream.of(
+    fun suitableApplicationScenarioArguments(): Stream<Arguments> = Stream.of(
       Arguments.of(
         listOf(
           inapplicableApplication,
