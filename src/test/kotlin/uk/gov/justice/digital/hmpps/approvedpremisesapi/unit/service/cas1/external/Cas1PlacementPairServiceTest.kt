@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-@SuppressWarnings("UnusedPrivateProperty")
 @ExtendWith(MockKExtension::class)
 class Cas1PlacementPairServiceTest {
   @MockK
@@ -120,7 +119,7 @@ class Cas1PlacementPairServiceTest {
         ),
       )
 
-      val result = service.getPlacementPairs(awaitingPlacementApplication.id)
+      val result = service.getPlacementPairs(awaitingPlacementApplication.id).sortedByDescending { it.dateApplied }
 
       assertThat(result).isEqualTo(
         listOf(
@@ -312,7 +311,7 @@ class Cas1PlacementPairServiceTest {
       } returns
         toPlacementPair(requestForPlacement3, placement5)
 
-      val result = service.getPlacementPairs(awaitingPlacementApplication.id)
+      val result = service.getPlacementPairs(awaitingPlacementApplication.id).sortedByDescending { it.dateApplied }
       assertThat(result).isEqualTo(
         listOf(
           // placement8 (+3 days)

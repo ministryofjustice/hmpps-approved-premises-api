@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.externa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 import java.util.stream.Stream
 import kotlin.collections.emptyList
 
@@ -95,7 +96,7 @@ class Cas1ExternalApplicationServiceTest {
         val suitableApplication = transformToSuitableApplication(application)
 
         every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
-        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(future2, future1, today, past1, past2)
+        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(today, past1, past2, future2, future1)
         every {
           cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, today, listOf(past1, past2))
         } returns suitableApplication
@@ -234,6 +235,66 @@ class Cas1ExternalApplicationServiceTest {
 
         assertThat(result).isEqualTo(suitableApplication)
       }
+    }
+  }
+
+  @Nested
+  inner class GetPlacementPairsNewestFirst {
+    private val applicationId = UUID.randomUUID()
+
+    @Test
+    fun `returns empty list when there are no placement pairs`() {
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns emptyList()
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `returns a single placement pair unchanged`() {
+      val pair = placementPair(LocalDate.of(2025, 1, 1))
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(pair)
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).containsExactly(pair)
+    }
+
+    @Test
+    fun `sorts placement pairs by date applied descending`() {
+      val oldest = placementPair(LocalDate.of(2025, 1, 1))
+      val middle = placementPair(LocalDate.of(2025, 6, 1))
+      val newest = placementPair(LocalDate.of(2025, 12, 1))
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(middle, newest, oldest)
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).containsExactly(newest, middle, oldest)
+    }
+
+    @Test
+    fun `sorts future and past placement pairs together newest first`() {
+      val past = placementPair(LocalDate.now().minusDays(5))
+      val future = placementPair(LocalDate.now().plusDays(5))
+      val today = placementPair(LocalDate.now())
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(past, future, today)
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).containsExactly(future, today, past)
+    }
+
+    @Test
+    fun `keeps original order for pairs with the same date applied`() {
+      val date = LocalDate.of(2025, 3, 1)
+      val first = placementPair(date, Cas1SpaceBookingStatus.ARRIVED)
+      val second = placementPair(date, Cas1SpaceBookingStatus.UPCOMING)
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(first, second)
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).containsExactly(first, second)
     }
   }
 

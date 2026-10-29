@@ -50,13 +50,12 @@ class Cas1ExternalApplicationService(
     ?.let { toSuitableApplication(it) }
 
   private fun toSuitableApplication(application: ApprovedPremisesApplicationEntity): Cas1SuitableApplication {
-    val placementPairs = cas1PlacementPairService.getPlacementPairs(application.id)
+    val placementPairs = cas1PlacementPairService.getPlacementPairs(application.id).sortedByDescending { it.dateApplied }
 
     val today = LocalDate.now()
 
     val pastPairs = placementPairs
       .filter { it.dateApplied < today }
-      .sortedByDescending { it.dateApplied }
 
     val suitablePlacementPair = placementPairs
       .lastOrNull { it.dateApplied >= today }
@@ -72,7 +71,9 @@ class Cas1ExternalApplicationService(
     )
   }
 
-  fun getPlacementPairs(applicationId: UUID): List<Cas1PlacementPairDto> = cas1PlacementPairService.getPlacementPairs(applicationId)
+  fun getPlacementPairsNewestFirst(applicationId: UUID): List<Cas1PlacementPairDto> = cas1PlacementPairService
+    .getPlacementPairs(applicationId)
+    .sortedByDescending { it.dateApplied }
 
   fun getCurrentPremisesByCrn(crn: String): Cas1ExternalPremisesDto? = approvedPremisesApplicationRepository
     .findByCrn(crn)

@@ -44,6 +44,6 @@ class Cas1PlacementPairService(
           )
         }
       }
-    }.sortedByDescending { it.dateApplied }
+    }
   }
 }
