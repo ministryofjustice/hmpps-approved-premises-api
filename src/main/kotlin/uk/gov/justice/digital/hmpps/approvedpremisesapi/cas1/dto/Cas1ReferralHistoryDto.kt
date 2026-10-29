@@ -7,7 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import java.time.LocalDate
 import java.util.UUID
 
-data class Cas1ReferralHistory(
+// Represents one request for placement on a given application
+data class Cas1ReferralHistoryDto(
   val type: ServiceType,
   val id: UUID,
   val applicationId: UUID,
