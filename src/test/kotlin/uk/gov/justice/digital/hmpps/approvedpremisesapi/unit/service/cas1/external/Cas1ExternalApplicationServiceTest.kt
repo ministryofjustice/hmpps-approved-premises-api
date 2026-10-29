@@ -341,17 +341,19 @@ class Cas1ExternalApplicationServiceTest {
       val premises1Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
       val premises2Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
       val premises3Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
+      val premises4Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
 
       val upcoming = placementPair(LocalDate.now().plusDays(1), Cas1SpaceBookingStatus.UPCOMING, premises1Entity)
-      val arrived = placementPair(LocalDate.now().minusDays(3), Cas1SpaceBookingStatus.ARRIVED, premises2Entity)
-      val departed = placementPair(LocalDate.now().minusDays(10), Cas1SpaceBookingStatus.DEPARTED, premises3Entity)
+      val arrived1 = placementPair(LocalDate.now().minusDays(3), Cas1SpaceBookingStatus.ARRIVED, premises2Entity)
+      val arrived2 = placementPair(LocalDate.now().minusDays(1), Cas1SpaceBookingStatus.ARRIVED, premises3Entity)
+      val departed = placementPair(LocalDate.now().minusDays(10), Cas1SpaceBookingStatus.DEPARTED, premises4Entity)
 
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
-      every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(upcoming, arrived, departed)
+      every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(arrived1, arrived2, departed, upcoming)
 
       val result = service.getCurrentPremisesByCrn(application.crn)
 
-      assertThat(result).isEqualTo(arrived.placement!!.premises)
+      assertThat(result).isEqualTo(arrived2.placement!!.premises)
     }
 
     @Test

@@ -79,6 +79,8 @@ class Cas1ExternalApplicationService(
     .findByCrn(crn)
     .sortedWith(applicationSuitabilityComparator)
     .firstNotNullOfOrNull { application ->
-      cas1PlacementPairService.getPlacementPairs(application.id).firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
+      cas1PlacementPairService.getPlacementPairs(application.id)
+        .sortedByDescending { it.dateApplied }
+        .firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
     }
 }
