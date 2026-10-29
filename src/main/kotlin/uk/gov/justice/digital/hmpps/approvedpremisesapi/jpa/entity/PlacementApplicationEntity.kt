@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementApplicationDates
@@ -215,6 +216,38 @@ data class PlacementApplicationEntity(
   } else {
     null
   }
+
+  fun getStatus(): StatusAndWhen = when {
+    isWithdrawn -> StatusAndWhen(
+      RequestForPlacementStatus.requestWithdrawn,
+      withdrawalOccurredAt?.toLocalDate() ?: submittedAt!!.toLocalDate(),
+    )
+    placementRequest?.hasActiveBooking() == true -> StatusAndWhen(
+      RequestForPlacementStatus.placementBooked,
+      placementRequest!!.activeSpaceBookings().minOf { it.createdAt.toLocalDate() },
+    )
+    decision == PlacementApplicationDecision.REJECTED -> StatusAndWhen(
+      RequestForPlacementStatus.requestRejected,
+      decisionMadeAt!!.toLocalDate(),
+    )
+    decision == PlacementApplicationDecision.ACCEPTED -> StatusAndWhen(
+      RequestForPlacementStatus.awaitingMatch,
+      decisionMadeAt!!.toLocalDate(),
+    )
+    isSubmitted() -> StatusAndWhen(
+      RequestForPlacementStatus.requestSubmitted,
+      submittedAt!!.toLocalDate(),
+    )
+    else -> StatusAndWhen(
+      RequestForPlacementStatus.requestUnsubmitted,
+      createdAt.toLocalDate(),
+    )
+  }
+
+  data class StatusAndWhen(
+    val status: RequestForPlacementStatus,
+    val occurredAt: LocalDate,
+  )
 
   override fun toString() = "PlacementApplicationEntity: $id"
 }

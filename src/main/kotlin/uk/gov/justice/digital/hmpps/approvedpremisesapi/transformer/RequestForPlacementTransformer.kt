@@ -25,7 +25,7 @@ class RequestForPlacementTransformer(
     placementApplicationEntity: PlacementApplicationEntity,
     canBeDirectlyWithdrawn: Boolean,
   ): RequestForPlacement {
-    val statusAndWhen = placementApplicationEntity.deriveStatus()
+    val statusAndWhen = placementApplicationEntity.getStatus()
     val requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementApplicationEntity.expectedArrival!!,
       arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
@@ -129,19 +129,6 @@ class RequestForPlacementTransformer(
       decision = PlacementApplicationDecision.ACCEPTED,
       submittedBy = cas1AssessmentTransformer.transformToStaffDto(application.createdByUser),
     )
-  }
-
-  private fun PlacementApplicationEntity.deriveStatus() = when {
-    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.withdrawalOccurredAt?.toLocalDate() ?: this.submittedAt!!.toLocalDate())
-    this.placementRequest?.hasActiveBooking() == true ->
-      {
-        val occurredAt = this.placementRequest!!.activeSpaceBookings().getOldestCreationDate()
-        RequestForPlacementStatusAndWhen(RequestForPlacementStatus.placementBooked, occurredAt)
-      }
-    this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestRejected, this.decisionMadeAt!!.toLocalDate())
-    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.awaitingMatch, this.decisionMadeAt!!.toLocalDate())
-    this.isSubmitted() -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestSubmitted, this.submittedAt!!.toLocalDate())
-    else -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestUnsubmitted, this.createdAt.toLocalDate())
   }
 
   private fun PlacementRequestEntity.deriveStatus() = when {
