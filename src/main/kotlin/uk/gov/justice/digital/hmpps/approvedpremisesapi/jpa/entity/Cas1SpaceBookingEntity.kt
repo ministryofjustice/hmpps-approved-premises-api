@@ -684,7 +684,7 @@ data class Cas1SpaceBookingEntity(
     hasNonArrival() -> StatusAndWhen(Status.NOT_ARRIVED, this.expectedArrivalDate)
     hasDeparted() -> StatusAndWhen(Status.DEPARTED, this.actualDepartureDate!!)
     hasArrival() -> StatusAndWhen(Status.ARRIVED, this.actualArrivalDate!!)
-    else -> StatusAndWhen(Status.UPCOMING, this.expectedArrivalDate)
+    else -> StatusAndWhen(Status.UPCOMING, this.createdAt.toLocalDate())
   }
 
   data class StatusAndWhen(
@@ -707,6 +707,8 @@ data class Cas1SpaceBookingEntity(
 
 enum class ManagementInfoSource {
   DELIUS,
+
+  // whilst not used in code, this exists in database entries. do not remove!
   LEGACY_CAS_1,
 }
 

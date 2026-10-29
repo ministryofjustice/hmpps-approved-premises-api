@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 class Cas1SpaceBookingEntityTest {
 
@@ -21,12 +22,12 @@ class Cas1SpaceBookingEntityTest {
       .withNonArrivalConfirmedAt(null)
 
     @Test
-    fun `Returns upcoming with expected arrival date when no arrival, departure, non arrival or cancellation`() {
-      val expectedArrivalDate = LocalDate.of(2025, 1, 10)
-      val result = booking().withExpectedArrivalDate(expectedArrivalDate).produce().getSpaceBookingStatus()
+    fun `Returns upcoming with creation date date when no arrival, departure, non arrival or cancellation`() {
+      val creationDate = OffsetDateTime.now().minusDays(5)
+      val result = booking().withCreatedAt(creationDate).produce().getSpaceBookingStatus()
 
       assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.UPCOMING)
-      assertThat(result.occurredAt).isEqualTo(expectedArrivalDate)
+      assertThat(result.occurredAt).isEqualTo(creationDate.toLocalDate())
     }
 
     @Test

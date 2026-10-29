@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
@@ -35,11 +35,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1PlacementPairService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1RequestForPlacementOutcomeService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 import java.util.stream.Stream
 import kotlin.collections.emptyList
 
@@ -50,7 +51,7 @@ class Cas1ExternalApplicationServiceTest {
   private lateinit var approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository
 
   @MockK
-  private lateinit var cas1PlacementPairService: Cas1PlacementPairService
+  private lateinit var cas1PlacementPairService: Cas1RequestForPlacementOutcomeService
 
   @MockK
   private lateinit var cas1ExternalApplicationTransformer: Cas1ExternalApplicationTransformer
@@ -95,7 +96,7 @@ class Cas1ExternalApplicationServiceTest {
         val suitableApplication = transformToSuitableApplication(application)
 
         every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
-        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(future2, future1, today, past1, past2)
+        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(today, past1, past2, future2, future1)
         every {
           cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, today, listOf(past1, past2))
         } returns suitableApplication
@@ -238,6 +239,66 @@ class Cas1ExternalApplicationServiceTest {
   }
 
   @Nested
+  inner class GetPlacementPairsNewestFirst {
+    private val applicationId = UUID.randomUUID()
+
+    @Test
+    fun `returns empty list when there are no placement pairs`() {
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns emptyList()
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `returns a single placement pair unchanged`() {
+      val pair = placementPair(LocalDate.of(2025, 1, 1))
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(pair)
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).containsExactly(pair)
+    }
+
+    @Test
+    fun `sorts placement pairs by date applied descending`() {
+      val oldest = placementPair(LocalDate.of(2025, 1, 1))
+      val middle = placementPair(LocalDate.of(2025, 6, 1))
+      val newest = placementPair(LocalDate.of(2025, 12, 1))
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(middle, newest, oldest)
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).containsExactly(newest, middle, oldest)
+    }
+
+    @Test
+    fun `sorts future and past placement pairs together newest first`() {
+      val past = placementPair(LocalDate.now().minusDays(5))
+      val future = placementPair(LocalDate.now().plusDays(5))
+      val today = placementPair(LocalDate.now())
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(past, future, today)
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).containsExactly(future, today, past)
+    }
+
+    @Test
+    fun `keeps original order for pairs with the same date applied`() {
+      val date = LocalDate.of(2025, 3, 1)
+      val first = placementPair(date, Cas1SpaceBookingStatus.ARRIVED)
+      val second = placementPair(date, Cas1SpaceBookingStatus.UPCOMING)
+      every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(first, second)
+
+      val result = service.getPlacementPairsNewestFirst(applicationId)
+
+      assertThat(result).containsExactly(first, second)
+    }
+  }
+
+  @Nested
   inner class GetCurrentPremisesByCrn {
     private val crn = "ABC123"
 
@@ -280,17 +341,19 @@ class Cas1ExternalApplicationServiceTest {
       val premises1Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
       val premises2Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
       val premises3Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
+      val premises4Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
 
       val upcoming = placementPair(LocalDate.now().plusDays(1), Cas1SpaceBookingStatus.UPCOMING, premises1Entity)
-      val arrived = placementPair(LocalDate.now().minusDays(3), Cas1SpaceBookingStatus.ARRIVED, premises2Entity)
-      val departed = placementPair(LocalDate.now().minusDays(10), Cas1SpaceBookingStatus.DEPARTED, premises3Entity)
+      val arrived1 = placementPair(LocalDate.now().minusDays(3), Cas1SpaceBookingStatus.ARRIVED, premises2Entity)
+      val arrived2 = placementPair(LocalDate.now().minusDays(1), Cas1SpaceBookingStatus.ARRIVED, premises3Entity)
+      val departed = placementPair(LocalDate.now().minusDays(10), Cas1SpaceBookingStatus.DEPARTED, premises4Entity)
 
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
-      every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(upcoming, arrived, departed)
+      every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(arrived1, arrived2, departed, upcoming)
 
       val result = service.getCurrentPremisesByCrn(application.crn)
 
-      assertThat(result).isEqualTo(arrived.placement!!.premises)
+      assertThat(result).isEqualTo(arrived2.placement!!.premises)
     }
 
     @Test
@@ -320,7 +383,7 @@ class Cas1ExternalApplicationServiceTest {
     dateApplied: LocalDate,
     status: Cas1SpaceBookingStatus? = null,
     premises: ApprovedPremisesEntity? = null,
-  ): Cas1PlacementPairDto {
+  ): Cas1RequestForPlacementOutcomeDto {
     val requestForPlacement = RequestForPlacementFactory()
       .withStatusSetDate(dateApplied)
       .withStatus(RequestForPlacementStatus.placementBooked)
@@ -340,7 +403,7 @@ class Cas1ExternalApplicationServiceTest {
     premisesEntity: ApprovedPremisesEntity? = null,
     rejectionReason: String? = null,
     withdrawalDate: LocalDate? = null,
-  ) = Cas1PlacementPairDto(
+  ) = Cas1RequestForPlacementOutcomeDto(
     dateApplied = placement?.statusSetDate ?: requestForPlacement.statusSetDate,
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
       decision = requestForPlacement.decision?.apiValue,

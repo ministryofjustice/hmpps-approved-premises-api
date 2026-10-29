@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
@@ -9,13 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.externa
 import java.util.UUID
 
 @Service
-class Cas1PlacementPairService(
+class Cas1RequestForPlacementOutcomeService(
   private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
   private val cas1PremisesService: Cas1PremisesService,
   private val transformer: Cas1ExternalApplicationTransformer,
 ) {
 
-  fun getPlacementPairs(applicationId: UUID): List<Cas1PlacementPairDto> {
+  fun getPlacementPairs(applicationId: UUID): List<Cas1RequestForPlacementOutcomeDto> {
     val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, requestingUser = null) as CasResult.Success).value
 
     return rfps.flatMap { rfp ->
@@ -44,6 +44,6 @@ class Cas1PlacementPairService(
           )
         }
       }
-    }.sortedByDescending { it.dateApplied }
+    }
   }
 }

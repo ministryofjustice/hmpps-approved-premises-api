@@ -47,8 +47,8 @@ class Cas1SpaceBookingShortSummaryFactory : Factory<Cas1SpaceBookingShortSummary
   private var departure: Yielded<Cas1SpaceBookingDeparture?> = { null }
   private var keyWorkerAllocation: Yielded<Cas1KeyWorkerAllocation?> = { null }
   private var nonArrival: Yielded<Cas1SpaceBookingNonArrival?> = { null }
-  private var status: Yielded<Cas1SpaceBookingStatus?> = { null }
-  private var statusSetDate: Yielded<LocalDate?> = { null }
+  private var status: Yielded<Cas1SpaceBookingStatus> = { Cas1SpaceBookingStatus.UPCOMING }
+  private var statusSetDate: Yielded<LocalDate> = { LocalDate.now() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }

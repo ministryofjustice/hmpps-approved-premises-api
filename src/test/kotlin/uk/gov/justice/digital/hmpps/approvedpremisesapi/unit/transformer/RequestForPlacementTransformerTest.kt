@@ -15,13 +15,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1StaffDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -73,11 +73,11 @@ class RequestForPlacementTransformerTest {
         .withReleaseType(Cas1ReleaseType.licence)
         .withSituation(SituationOption.bailSentence.name)
         .produce()
-      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
-        name = placementApplication.createdByUser.name,
-        username = placementApplication.createdByUser.deliusUsername,
-        staffCode = placementApplication.createdByUser.deliusStaffCode,
-      )
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDtoFactory()
+        .withName(placementApplication.createdByUser.name)
+        .withUsername(placementApplication.createdByUser.deliusUsername)
+        .withStaffCode(placementApplication.createdByUser.deliusStaffCode)
+        .produce()
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.id).isEqualTo(placementApplication.id)
@@ -121,11 +121,11 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(47)
         .withAutomatic(true)
         .produce()
-      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
-        name = placementApplication.createdByUser.name,
-        username = placementApplication.createdByUser.deliusUsername,
-        staffCode = placementApplication.createdByUser.deliusStaffCode,
-      )
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDtoFactory()
+        .withName(placementApplication.createdByUser.name)
+        .withUsername(placementApplication.createdByUser.deliusUsername)
+        .withStaffCode(placementApplication.createdByUser.deliusStaffCode)
+        .produce()
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.type).isEqualTo(RequestForPlacementType.automatic)
@@ -149,11 +149,11 @@ class RequestForPlacementTransformerTest {
         .withAutomatic(false)
         .produce()
 
-      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDto(
-        name = placementApplication.createdByUser.name,
-        username = placementApplication.createdByUser.deliusUsername,
-        staffCode = placementApplication.createdByUser.deliusStaffCode,
-      )
+      every { cas1AssessmentTransformer.transformToStaffDto(placementApplication.createdByUser) } returns Cas1StaffDtoFactory()
+        .withName(placementApplication.createdByUser.name)
+        .withUsername(placementApplication.createdByUser.deliusUsername)
+        .withStaffCode(placementApplication.createdByUser.deliusStaffCode)
+        .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
         placementApplication,
@@ -191,11 +191,11 @@ class RequestForPlacementTransformerTest {
         .withPlacementRequirements(placementRequirements)
         .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
         .produce()
-      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
-        name = application.createdByUser.name,
-        username = application.createdByUser.deliusUsername,
-        staffCode = application.createdByUser.deliusStaffCode,
-      )
+      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDtoFactory()
+        .withName(application.createdByUser.name)
+        .withUsername(application.createdByUser.deliusUsername)
+        .withStaffCode(application.createdByUser.deliusStaffCode)
+        .produce()
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 
       assertThat(result.id).isEqualTo(placementRequest.id)
@@ -244,11 +244,11 @@ class RequestForPlacementTransformerTest {
         .withAssessment(assessment)
         .withPlacementRequirements(placementRequirements)
         .produce()
-      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
-        name = application.createdByUser.name,
-        username = application.createdByUser.deliusUsername,
-        staffCode = application.createdByUser.deliusStaffCode,
-      )
+      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDtoFactory()
+        .withName(application.createdByUser.name)
+        .withUsername(application.createdByUser.deliusUsername)
+        .withStaffCode(application.createdByUser.deliusStaffCode)
+        .produce()
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(
         placementRequest,
         canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,

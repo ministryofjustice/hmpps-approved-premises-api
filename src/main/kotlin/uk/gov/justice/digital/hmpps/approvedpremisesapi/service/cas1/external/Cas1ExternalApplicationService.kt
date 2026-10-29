@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -16,7 +16,7 @@ import java.util.UUID
 @Service
 class Cas1ExternalApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
-  private val cas1PlacementPairService: Cas1PlacementPairService,
+  private val cas1PlacementPairService: Cas1RequestForPlacementOutcomeService,
   private val transformer: Cas1ExternalApplicationTransformer,
 ) {
 
@@ -50,13 +50,12 @@ class Cas1ExternalApplicationService(
     ?.let { toSuitableApplication(it) }
 
   private fun toSuitableApplication(application: ApprovedPremisesApplicationEntity): Cas1SuitableApplication {
-    val placementPairs = cas1PlacementPairService.getPlacementPairs(application.id)
+    val placementPairs = cas1PlacementPairService.getPlacementPairs(application.id).sortedByDescending { it.dateApplied }
 
     val today = LocalDate.now()
 
     val pastPairs = placementPairs
       .filter { it.dateApplied < today }
-      .sortedByDescending { it.dateApplied }
 
     val suitablePlacementPair = placementPairs
       .lastOrNull { it.dateApplied >= today }
@@ -72,12 +71,16 @@ class Cas1ExternalApplicationService(
     )
   }
 
-  fun getPlacementPairs(applicationId: UUID): List<Cas1PlacementPairDto> = cas1PlacementPairService.getPlacementPairs(applicationId)
+  fun getPlacementPairsNewestFirst(applicationId: UUID): List<Cas1RequestForPlacementOutcomeDto> = cas1PlacementPairService
+    .getPlacementPairs(applicationId)
+    .sortedByDescending { it.dateApplied }
 
   fun getCurrentPremisesByCrn(crn: String): Cas1ExternalPremisesDto? = approvedPremisesApplicationRepository
     .findByCrn(crn)
     .sortedWith(applicationSuitabilityComparator)
     .firstNotNullOfOrNull { application ->
-      cas1PlacementPairService.getPlacementPairs(application.id).firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
+      cas1PlacementPairService.getPlacementPairs(application.id)
+        .sortedByDescending { it.dateApplied }
+        .firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
     }
 }

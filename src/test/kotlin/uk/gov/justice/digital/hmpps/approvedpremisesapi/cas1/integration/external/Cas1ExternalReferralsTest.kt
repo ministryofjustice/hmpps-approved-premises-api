@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason.noCapacity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistoryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
@@ -85,7 +85,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
           val assessment5 = createCas1Assessment(crn, user, apArea = apArea, cruManagementArea = cruManagementArea, premises = premises, withdrawalReason = noCapacity)
 
           val expectedReferrals = listOf(
-            Cas1ReferralHistory(
+            Cas1ReferralHistoryDto(
               id = assessment1.id,
               applicationId = assessment1.application.id,
               date = assessment1.createdAt.toLocalDate(),
@@ -101,7 +101,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               uiUrl = "http://frontend/applications/${assessment1.application.id}",
               withdrawalReason = null,
             ),
-            Cas1ReferralHistory(
+            Cas1ReferralHistoryDto(
               id = assessment2.id,
               applicationId = assessment2.application.id,
               date = assessment2.createdAt.toLocalDate(),
@@ -117,7 +117,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               uiUrl = "http://frontend/applications/${assessment2.application.id}",
               withdrawalReason = null,
             ),
-            Cas1ReferralHistory(
+            Cas1ReferralHistoryDto(
               id = assessment3.id,
               applicationId = assessment3.application.id,
               date = assessment3.createdAt.toLocalDate(),
@@ -133,7 +133,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               uiUrl = "http://frontend/applications/${assessment3.application.id}",
               withdrawalReason = null,
             ),
-            Cas1ReferralHistory(
+            Cas1ReferralHistoryDto(
               id = assessment4.id,
               applicationId = assessment4.application.id,
               date = assessment4.createdAt.toLocalDate(),
@@ -149,7 +149,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               uiUrl = "http://frontend/applications/${assessment4.application.id}",
               withdrawalReason = null,
             ),
-            Cas1ReferralHistory(
+            Cas1ReferralHistoryDto(
               id = assessment5.id,
               applicationId = assessment5.application.id,
               date = assessment5.createdAt.toLocalDate(),
@@ -173,7 +173,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBodyList<Cas1ReferralHistory>()
+            .expectBodyList<Cas1ReferralHistoryDto>()
             .returnResult()
             .responseBody
 
@@ -235,7 +235,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
           }
 
           val expectedReferrals = listOf(
-            Cas1ReferralHistory(
+            Cas1ReferralHistoryDto(
               id = assessment.id,
               applicationId = application.id,
               date = assessment.createdAt.toLocalDate(),
@@ -259,7 +259,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBodyList<Cas1ReferralHistory>()
+            .expectBodyList<Cas1ReferralHistoryDto>()
             .returnResult()
             .responseBody
 
@@ -301,7 +301,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBodyList<Cas1ReferralHistory>()
+            .expectBodyList<Cas1ReferralHistoryDto>()
             .returnResult()
             .responseBody
 

@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -29,15 +29,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Approved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1PlacementPairService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1RequestForPlacementOutcomeService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-@SuppressWarnings("UnusedPrivateProperty")
 @ExtendWith(MockKExtension::class)
-class Cas1PlacementPairServiceTest {
+class Cas1RequestForPlacementOutcomeServiceTest {
   @MockK
   private lateinit var cas1RequestForPlacementService: Cas1RequestForPlacementService
 
@@ -48,7 +47,7 @@ class Cas1PlacementPairServiceTest {
   private lateinit var cas1ExternalApplicationTransformer: Cas1ExternalApplicationTransformer
 
   @InjectMockKs
-  private lateinit var service: Cas1PlacementPairService
+  private lateinit var service: Cas1RequestForPlacementOutcomeService
 
   private val user = UserEntityFactory()
     .withDefaults()
@@ -120,7 +119,7 @@ class Cas1PlacementPairServiceTest {
         ),
       )
 
-      val result = service.getPlacementPairs(awaitingPlacementApplication.id)
+      val result = service.getPlacementPairs(awaitingPlacementApplication.id).sortedByDescending { it.dateApplied }
 
       assertThat(result).isEqualTo(
         listOf(
@@ -312,7 +311,7 @@ class Cas1PlacementPairServiceTest {
       } returns
         toPlacementPair(requestForPlacement3, placement5)
 
-      val result = service.getPlacementPairs(awaitingPlacementApplication.id)
+      val result = service.getPlacementPairs(awaitingPlacementApplication.id).sortedByDescending { it.dateApplied }
       assertThat(result).isEqualTo(
         listOf(
           // placement8 (+3 days)
@@ -350,7 +349,7 @@ class Cas1PlacementPairServiceTest {
     placementPremises: ApprovedPremisesEntity? = null,
     requestForPlacementRejectionReason: String? = null,
     requestForPlacementWithdrawalDate: LocalDate? = null,
-  ) = Cas1PlacementPairDto(
+  ) = Cas1RequestForPlacementOutcomeDto(
     dateApplied = placement?.statusSetDate ?: requestForPlacement.statusSetDate,
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
       decision = requestForPlacement.decision?.apiValue,
