@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -34,7 +35,15 @@ class Cas1ExternalApplicationTransformer(
     placement: Cas1SpaceBookingShortSummary? = null,
     premises: ApprovedPremisesEntity? = null,
   ) = Cas1RequestForPlacementOutcomeDto(
-    dateApplied = placement?.statusSetDate ?: rfp.statusSetDate,
+    dateApplied = if (placement != null) {
+      if (placement.status == Cas1SpaceBookingStatus.UPCOMING) {
+        placement.expectedArrivalDate
+      } else {
+        placement.statusSetDate
+      }
+    } else {
+      rfp.statusSetDate
+    },
     requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, withdrawalDate, placement),
     placement = placement?.let { transformToPlacement(it, premises) },
   )

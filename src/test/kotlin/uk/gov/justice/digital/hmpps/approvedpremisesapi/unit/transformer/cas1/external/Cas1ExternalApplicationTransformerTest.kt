@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalReq
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -26,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingShortSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacementFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1StaffDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
@@ -67,17 +67,17 @@ class Cas1ExternalApplicationTransformerTest {
         .withName("Tom")
         .produce()
 
-      val requestSubmittedBy = Cas1StaffDto(
-        name = "Bob",
-        username = "bob1",
-        staffCode = "bob123",
-      )
+      val requestSubmittedBy = Cas1StaffDtoFactory()
+        .withName("Bob")
+        .withUsername("bob1")
+        .withStaffCode("bob123")
+        .produce()
 
-      val userStaff = Cas1StaffDto(
-        name = user.name,
-        username = user.deliusUsername,
-        staffCode = user.deliusStaffCode,
-      )
+      val userStaff = Cas1StaffDtoFactory()
+        .withName(user.name)
+        .withUsername(user.deliusUsername)
+        .withStaffCode(user.deliusStaffCode)
+        .produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withDefaults()
@@ -154,11 +154,11 @@ class Cas1ExternalApplicationTransformerTest {
         .withDefaults()
         .withName("Tom")
         .produce()
-      val userStaff = Cas1StaffDto(
-        name = user.name,
-        username = user.deliusUsername,
-        staffCode = user.deliusStaffCode,
-      )
+      val userStaff = Cas1StaffDtoFactory()
+        .withName(user.name)
+        .withUsername(user.deliusUsername)
+        .withStaffCode(user.deliusStaffCode)
+        .produce()
       val application = ApprovedPremisesApplicationEntityFactory()
         .withDefaults()
         .withStatus(ApprovedPremisesApplicationStatus.EXPIRED)
@@ -208,9 +208,36 @@ class Cas1ExternalApplicationTransformerTest {
   }
 
   @Nested
-  inner class TransformToCas1PlacementPair {
+  inner class TransformToCas1RequestForPlacementOutcomeDto {
     @Test
-    fun `Transforms to placement history that is departed`() {
+    fun `If placement is upcoming set dateApplied to expected arrival date`() {
+      val expectedArrivalDate = LocalDate.now().minusDays(100)
+      val rejectionReason = null
+      val withdrawalDate = null
+      val requestForPlacement = RequestForPlacementFactory().produce()
+
+      val placement = Cas1SpaceBookingShortSummaryFactory()
+        .withStatus(Cas1SpaceBookingStatus.UPCOMING)
+        .withExpectedArrivalDate(expectedArrivalDate)
+        .produce()
+
+      val premisesEntity = ApprovedPremisesEntityFactory().withDefaults().produce()
+
+      every { mockCas1AssessmentTransformer.transformToStaffDto(any()) } returns Cas1StaffDtoFactory().produce()
+
+      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(
+        rfp = requestForPlacement,
+        rejectionReason = rejectionReason,
+        withdrawalDate = withdrawalDate,
+        placement = placement,
+        premises = premisesEntity,
+      )
+
+      assertThat(result.dateApplied).isEqualTo(expectedArrivalDate)
+    }
+
+    @Test
+    fun `Transforms to outcome that is departed`() {
       val duration = 12
       val expectedArrivalDate = LocalDate.now().minusDays(100)
       val expectedDepartureDate = expectedArrivalDate.plusWeeks(duration.toLong())
@@ -221,11 +248,11 @@ class Cas1ExternalApplicationTransformerTest {
         .withDefaults()
         .withName("Bob")
         .produce()
-      val requestSubmittedBy = Cas1StaffDto(
-        name = user.name,
-        username = user.deliusUsername,
-        staffCode = user.deliusStaffCode,
-      )
+      val requestSubmittedBy = Cas1StaffDtoFactory()
+        .withName(user.name)
+        .withUsername(user.deliusUsername)
+        .withStaffCode(user.deliusStaffCode)
+        .produce()
       val canonicalPlacementPeriod = Cas1RequestedPlacementPeriod(
         arrival = expectedArrivalDate,
         arrivalFlexible = false,
@@ -296,7 +323,7 @@ class Cas1ExternalApplicationTransformerTest {
     }
 
     @Test
-    fun `Transforms to placement history that is arrived`() {
+    fun `Transforms to outcome that is arrived`() {
       val duration = 12
       val expectedArrivalDate = LocalDate.now().minusDays(100)
       val actualArrivalDate = expectedArrivalDate.plusDays(1)
@@ -313,11 +340,11 @@ class Cas1ExternalApplicationTransformerTest {
         .withDefaults()
         .withName("Bob")
         .produce()
-      val requestSubmittedBy = Cas1StaffDto(
-        name = user.name,
-        username = user.deliusUsername,
-        staffCode = user.deliusStaffCode,
-      )
+      val requestSubmittedBy = Cas1StaffDtoFactory()
+        .withName(user.name)
+        .withUsername(user.deliusUsername)
+        .withStaffCode(user.deliusStaffCode)
+        .produce()
       val requestForPlacement = RequestForPlacementFactory()
         .withDecision(PlacementApplicationDecision.ACCEPTED)
         .withStatus(RequestForPlacementStatus.placementBooked)
@@ -383,7 +410,7 @@ class Cas1ExternalApplicationTransformerTest {
     }
 
     @Test
-    fun `Transforms to placement history that is withdrawn`() {
+    fun `Transforms to outcome that is withdrawn`() {
       val duration = 12
       val expectedArrivalDate = LocalDate.now().minusDays(100)
       val actualArrivalDate = null
@@ -400,11 +427,11 @@ class Cas1ExternalApplicationTransformerTest {
         .withDefaults()
         .withName("Bob")
         .produce()
-      val requestSubmittedBy = Cas1StaffDto(
-        name = user.name,
-        username = user.deliusUsername,
-        staffCode = user.deliusStaffCode,
-      )
+      val requestSubmittedBy = Cas1StaffDtoFactory()
+        .withName(user.name)
+        .withUsername(user.deliusUsername)
+        .withStaffCode(user.deliusStaffCode)
+        .produce()
       val requestForPlacement = RequestForPlacementFactory()
         .withDecision(PlacementApplicationDecision.ACCEPTED)
         .withStatus(RequestForPlacementStatus.requestWithdrawn)
@@ -483,7 +510,7 @@ class Cas1ExternalApplicationTransformerTest {
     }
 
     @Test
-    fun `Transforms to placement history that is withdrawn with Other reason`() {
+    fun `Transforms to outcome that is withdrawn with Other reason`() {
       val duration = 12
       val expectedArrivalDate = LocalDate.now().minusDays(100)
       val actualArrivalDate = null
@@ -500,11 +527,11 @@ class Cas1ExternalApplicationTransformerTest {
         .withDefaults()
         .withName("Bob")
         .produce()
-      val requestSubmittedBy = Cas1StaffDto(
-        name = user.name,
-        username = user.deliusUsername,
-        staffCode = user.deliusStaffCode,
-      )
+      val requestSubmittedBy = Cas1StaffDtoFactory()
+        .withName(user.name)
+        .withUsername(user.deliusUsername)
+        .withStaffCode(user.deliusStaffCode)
+        .produce()
       val requestForPlacement = RequestForPlacementFactory()
         .withDecision(PlacementApplicationDecision.ACCEPTED)
         .withStatus(RequestForPlacementStatus.requestWithdrawn)
@@ -582,7 +609,7 @@ class Cas1ExternalApplicationTransformerTest {
     }
 
     @Test
-    fun `Transforms to placement history that's rejected`() {
+    fun `Transforms to outcome that's rejected`() {
       val duration = 12
       val expectedArrivalDate = LocalDate.now().minusDays(100)
       val canonicalPlacementPeriod = Cas1RequestedPlacementPeriod(
@@ -596,11 +623,11 @@ class Cas1ExternalApplicationTransformerTest {
         .withDefaults()
         .withName("Bob")
         .produce()
-      val requestSubmittedBy = Cas1StaffDto(
-        name = user.name,
-        username = user.deliusUsername,
-        staffCode = user.deliusStaffCode,
-      )
+      val requestSubmittedBy = Cas1StaffDtoFactory()
+        .withName(user.name)
+        .withUsername(user.deliusUsername)
+        .withStaffCode(user.deliusStaffCode)
+        .produce()
       val requestForPlacement = RequestForPlacementFactory()
         .withDecision(PlacementApplicationDecision.REJECTED)
         .withStatus(RequestForPlacementStatus.requestRejected)
