@@ -45,6 +45,10 @@ fun LocalDate.getDaysUntilExclusiveEnd(end: LocalDate): List<LocalDate> {
   return result
 }
 
+fun LocalDate.atTimeOrStartOfDay(time: LocalTime?) = time?.let {
+  atTime(it)
+} ?: atStartOfDay()
+
 fun LocalDate.toLocalDateTime(zoneOffset: ZoneOffset = ZoneOffset.UTC) = OffsetDateTime.of(this, LocalTime.MIN, zoneOffset)
 
 infix fun ClosedRange<LocalDate>.overlaps(other: ClosedRange<LocalDate>): Boolean {

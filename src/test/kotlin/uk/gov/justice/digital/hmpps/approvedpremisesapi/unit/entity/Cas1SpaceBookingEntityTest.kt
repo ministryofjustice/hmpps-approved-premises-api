@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 
 class Cas1SpaceBookingEntityTest {
@@ -22,36 +24,70 @@ class Cas1SpaceBookingEntityTest {
       .withNonArrivalConfirmedAt(null)
 
     @Test
-    fun `Returns upcoming with creation date date when no arrival, departure, non arrival or cancellation`() {
+    fun `Returns upcoming with creation date when no arrival, departure, non arrival or cancellation`() {
       val creationDate = OffsetDateTime.now().minusDays(5)
       val result = booking().withCreatedAt(creationDate).produce().getSpaceBookingStatus()
 
       assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.UPCOMING)
-      assertThat(result.occurredAt).isEqualTo(creationDate.toLocalDate())
+      assertThat(result.occurredAt).isEqualTo(creationDate.toLocalDateTime())
     }
 
     @Test
-    fun `Returns arrived with actual arrival date when arrived but not departed`() {
+    fun `Returns arrived with actual arrival date and time when arrived but not departed`() {
       val actualArrival = LocalDate.of(2025, 1, 11)
-
-      val result = booking().withActualArrivalDate(actualArrival).produce().getSpaceBookingStatus()
-
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.ARRIVED)
-      assertThat(result.occurredAt).isEqualTo(actualArrival)
-    }
-
-    @Test
-    fun `Returns departed with actual departure date when arrived and departed`() {
-      val actualDeparture = LocalDate.of(2025, 2, 1)
+      val actualArrivalTime = LocalTime.parse("12:14")
 
       val result = booking()
-        .withActualArrivalDate(LocalDate.of(2025, 1, 11))
+        .withActualArrivalDate(actualArrival)
+        .withActualArrivalTime(actualArrivalTime)
+        .produce()
+        .getSpaceBookingStatus()
+
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.ARRIVED)
+      assertThat(result.occurredAt).isEqualTo(LocalDateTime.parse("2025-01-11T12:14"))
+    }
+
+    @Test
+    fun `Returns arrived with actual arrival date with no time when arrived but not departed`() {
+      val actualArrival = LocalDate.of(2025, 1, 11)
+
+      val result = booking()
+        .withActualArrivalDate(actualArrival)
+        .withActualArrivalTime(null)
+        .produce()
+        .getSpaceBookingStatus()
+
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.ARRIVED)
+      assertThat(result.occurredAt).isEqualTo(LocalDateTime.parse("2025-01-11T00:00"))
+    }
+
+    @Test
+    fun `Returns departed with actual departure date and time when arrived and departed`() {
+      val actualDeparture = LocalDate.of(2025, 2, 1)
+      val actualDepartureTime = LocalTime.parse("01:59")
+
+      val result = booking()
         .withActualDepartureDate(actualDeparture)
+        .withActualDepartureTime(actualDepartureTime)
         .produce()
         .getSpaceBookingStatus()
 
       assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.DEPARTED)
-      assertThat(result.occurredAt).isEqualTo(actualDeparture)
+      assertThat(result.occurredAt).isEqualTo(LocalDateTime.parse("2025-02-01T01:59"))
+    }
+
+    @Test
+    fun `Returns departed with actual departure date and no time when arrived and departed`() {
+      val actualDeparture = LocalDate.of(2025, 2, 1)
+
+      val result = booking()
+        .withActualDepartureDate(actualDeparture)
+        .withActualDepartureTime(null)
+        .produce()
+        .getSpaceBookingStatus()
+
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.DEPARTED)
+      assertThat(result.occurredAt).isEqualTo(LocalDateTime.parse("2025-02-01T00:00"))
     }
 
     @Test
@@ -60,7 +96,7 @@ class Cas1SpaceBookingEntityTest {
       val result = booking().withExpectedArrivalDate(expectedArrivalDate).withNonArrivalConfirmedAt(Instant.now()).produce().getSpaceBookingStatus()
 
       assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.NOT_ARRIVED)
-      assertThat(result.occurredAt).isEqualTo(expectedArrivalDate)
+      assertThat(result.occurredAt).isEqualTo(expectedArrivalDate.atStartOfDay())
     }
 
     @Test
@@ -70,7 +106,7 @@ class Cas1SpaceBookingEntityTest {
       val result = booking().withCancellationOccurredAt(cancelledOn).produce().getSpaceBookingStatus()
 
       assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.CANCELLED)
-      assertThat(result.occurredAt).isEqualTo(cancelledOn)
+      assertThat(result.occurredAt).isEqualTo(cancelledOn.atStartOfDay())
     }
 
     @Test
@@ -86,7 +122,7 @@ class Cas1SpaceBookingEntityTest {
         .getSpaceBookingStatus()
 
       assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.CANCELLED)
-      assertThat(result.occurredAt).isEqualTo(cancelledOn)
+      assertThat(result.occurredAt).isEqualTo(cancelledOn.atStartOfDay())
     }
 
     @Test
@@ -101,7 +137,7 @@ class Cas1SpaceBookingEntityTest {
         .getSpaceBookingStatus()
 
       assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.NOT_ARRIVED)
-      assertThat(result.occurredAt).isEqualTo(expectedArrivalDate)
+      assertThat(result.occurredAt).isEqualTo(expectedArrivalDate.atStartOfDay())
     }
   }
 }
