@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -59,35 +60,120 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
  *
  * See [cas3LaoStrategy()] below
  */
-sealed interface LaoStrategy {
-  /**
-   * Even if the calling user has exclusions or restrictions for a given offender,
-   * return [PersonSummaryInfoResult.Success.Full] or [PersonInfoResult.Success.Full] regardless.
-   *
-   * This strategy should be used with care, typically when the calling user
-   * has a specific qualification that indicates they can always view limited
-   * access offender information
-   */
-  data object NeverRestricted : LaoStrategy
+data class LaoStrategy(
+  val restrictionHandling: RestrictionHandling,
+  val exclusionHandling: ExclusionHandling,
+  val deliusUsername: String?,
+) {
+
+  init {
+    if (restrictionHandling == RestrictionHandling.ALWAYS_CHECK || exclusionHandling == ExclusionHandling.ALWAYS_CHECK) {
+      requireNotNull(deliusUsername) { "Delius username is required when applying LAO checks" }
+    }
+  }
+
+  enum class RestrictionHandling {
+    ALWAYS_CHECK,
+    IGNORE,
+  }
+  enum class ExclusionHandling {
+    ALWAYS_CHECK,
+    IGNORE,
+  }
+
+  companion object {
+
+    /**
+     * Even if the calling user has exclusions or restrictions for a given offender,
+     * return [PersonSummaryInfoResult.Success.Full] or [PersonInfoResult.Success.Full] regardless.
+     *
+     * This strategy should be used with care, typically when the calling user
+     * has a specific qualification that indicates they can always view limited
+     * access offender information
+     */
+    val NeverRestricted = LaoStrategy(
+      restrictionHandling = RestrictionHandling.IGNORE,
+      exclusionHandling = ExclusionHandling.IGNORE,
+      deliusUsername = null,
+    )
+
+    /**
+     * If the offender is LAO, retrieve the access information for the calling delius user.
+     * If the user has limited access to this offender (either restricted or excluded), return
+     * [PersonInfoResult.Success.Restricted] or [PersonSummaryInfoResult.Success.Restricted]
+     */
+    fun checkUserAccess(deliusUserName: String) = LaoStrategy(
+      restrictionHandling = RestrictionHandling.ALWAYS_CHECK,
+      exclusionHandling = ExclusionHandling.ALWAYS_CHECK,
+      deliusUsername = deliusUserName,
+    )
+  }
 
   /**
-   * If the offender is LAO, retrieve the access information for the calling delius user.
-   * If the user has limited access to this offender (either restricted or excluded), return
-   * [PersonInfoResult.Success.Restricted] or [PersonSummaryInfoResult.Success.Restricted]
+   * return true if the strategy means callers can view any offenders
+   * without any LAO checks required
    */
-  data class CheckUserAccess(val deliusUsername: String) : LaoStrategy
+  fun isNeverRestricted() = restrictionHandling == RestrictionHandling.IGNORE && exclusionHandling == ExclusionHandling.IGNORE
+
+  /**
+   * The CaseSummary indicates if any restrictions/exclusions exist on the CRN,
+   * but doesn't indicate if they apply to this specific user
+   *
+   * Depending on the LaoStrategy, the CaseSummary may be sufficient to determine access
+   */
+  fun canView(caseSummary: CaseSummary): CaseSummaryViewResult {
+    val checkCaseAccessToDetermineExclusion = caseSummary.currentExclusion &&
+      when (exclusionHandling) {
+        ExclusionHandling.ALWAYS_CHECK -> true
+        ExclusionHandling.IGNORE -> false
+      }
+
+    val checkCaseAccessToDetermineRestriction = caseSummary.currentRestriction &&
+      when (restrictionHandling) {
+        RestrictionHandling.ALWAYS_CHECK -> true
+        RestrictionHandling.IGNORE -> false
+      }
+
+    return if (checkCaseAccessToDetermineExclusion || checkCaseAccessToDetermineRestriction) {
+      CaseSummaryViewResult.CHECK_CASE_ACCESS
+    } else {
+      CaseSummaryViewResult.CAN_VIEW
+    }
+  }
+
+  /**
+   * CaseAccess indicates if there are any restrictions/exclusions that apply to a specific user.
+   */
+  fun canView(caseAccess: CaseAccess): Boolean {
+    val exclusionDoesntApply = when (exclusionHandling) {
+      ExclusionHandling.ALWAYS_CHECK -> !caseAccess.userExcluded
+      ExclusionHandling.IGNORE -> true
+    }
+
+    val restrictionDoesntApply = when (restrictionHandling) {
+      RestrictionHandling.ALWAYS_CHECK -> !caseAccess.userRestricted
+      RestrictionHandling.IGNORE -> true
+    }
+
+    return exclusionDoesntApply && restrictionDoesntApply
+  }
+
+  enum class CaseSummaryViewResult {
+    CAN_VIEW,
+    CHECK_CASE_ACCESS,
+  }
 }
 
 /**
  * This strategy is _not_ applied when creating an application. In that case, use cas1CreateApplicationLaoStrategy, which
- * always applies [LaoStrategy.CheckUserAccess]
+ * always applies [LaoStrategy.checkUserAccess]
  */
 fun UserEntity.cas1LaoStrategy() = if (this.hasQualification(UserQualification.LAO)) {
   LaoStrategy.NeverRestricted
 } else {
-  LaoStrategy.CheckUserAccess(this.deliusUsername)
+  LaoStrategy.checkUserAccess(this.deliusUsername)
 }
 
-fun UserEntity.cas1CreateApplicationLaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
+fun UserEntity.cas1CreateApplicationLaoStrategy() = LaoStrategy.checkUserAccess(this.deliusUsername)
 
-fun UserEntity.cas3LaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
+fun UserEntity.cas3LaoStrategy() = LaoStrategy.checkUserAccess(this.deliusUsername)

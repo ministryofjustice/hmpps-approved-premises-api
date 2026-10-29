@@ -428,6 +428,26 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   parameterised tests for role/enum/date matrices, following existing examples.
 * Fast check while iterating: `./gradlew compileTestKotlin -q`.
 * Tests mirror the main source package structure.
+* Stub in call order.** Declare `every { }` stubs in the order the production
+  code calls them. Read the method under test first to work this out.
+* Assert exceptions with AssertJ and check the message.** Use
+  `assertThatThrownBy { ... }.isInstanceOf(X::class.java).hasMessage("...")`, not
+  JUnit `assertThrows`. For `ClientResult.Failure` parameterised tests, derive the
+  expectation from `response.toException()` (type and message).
+* Cover mixed outcomes for list/batch methods.
+** Where a method maps over
+  several inputs, include a test where results differ per item (e.g. some `true`,
+  some `false`). Also cover the empty input, the boundary at a limit (limit and
+  limit + 1), and a missing item in a response.
+* Reuse existing factories.
+** Check `src/test/.../factory` (e.g.
+  `CaseAccessFactory`, `CaseSummaryFactory`) and `util/` helpers
+  (`randomNumberChars`, `ClientResultFailureArgumentsProvider`) before writing
+  test data by hand. Mirror a neighbouring test for imports and style
+  (e.g. `OffenderServiceTest`).
+* Name tests by behaviour.** Use backtick names that describe the outcome and
+  condition. Do not start with "test", and do not add Arrange/Act/Assert comments.
+
 
 ### Integration tests
 

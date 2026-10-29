@@ -261,44 +261,6 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
     @Nested
     inner class GetCsraSummariesForOffender {
 
-      @ParameterizedTest(
-        name = "currentExclusion={0}, currentRestriction={1}, userExcluded={2}, userRestricted={3} -> {4}",
-      )
-      @CsvSource(
-        // currentExclusion, currentRestriction, userExcluded, userRestricted, expectedResult
-        value = [
-          "false,            false,              false,        false,          SUCCESS",
-          "false,            true,               false,        false,          SUCCESS",
-          "false,            true,               false,        true,           SUCCESS",
-          "true,             false,              false,        false,          SUCCESS",
-          "true,             false,              true,         false,          SUCCESS",
-          "true,             true,               false,        false,          SUCCESS",
-          "true,             true,               false,        true,           SUCCESS",
-          "true,             true,               true,         false,          SUCCESS",
-          "true,             true,               true,         true,           SUCCESS",
-        ],
-      )
-      @SuppressWarnings("LongParameterList")
-      fun `when the case is held locally, returns the expected result without any delius calls`(
-        currentExclusion: Boolean,
-        currentRestriction: Boolean,
-        userExcluded: Boolean,
-        userRestricted: Boolean,
-        expectedResult: ExpectedCsraResult,
-      ) {
-        val user = givenAUserWithNeverRestrictedStrategy()
-        val caseSummary = givenAnOffenderWithAccess(user, currentExclusion, currentRestriction, userExcluded, userRestricted)
-        givenALocalCase(caseSummary)
-        val csraSummaries = givenCsraSummaries(caseSummary.nomsId!!)
-
-        val result = offenderService.getCsraSummariesForOffender(caseSummary.crn, user.cas1LaoStrategy())
-
-        assertCsraResult(result, expectedResult, csraSummaries)
-        prisonAPIVerifyCsraSummariesCalls(caseSummary.nomsId!!, times = 1)
-        apDeliusContextVerifyCaseSummariesCalls(times = 0)
-        apDeliusContextVerifyUserAccessCalls(times = 0)
-      }
-
       @ParameterizedTest(name = "currentExclusion={0}, currentRestriction={1} -> {2}")
       @CsvSource(
         // currentExclusion, currentRestriction, expectedResult
@@ -309,7 +271,7 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
           "true,             true,               SUCCESS",
         ],
       )
-      fun `when the case is not held locally, falls back to the delius case summary and ignores LAO status`(
+      fun `fetch the delius case summary for NOMs and ignores LAO status`(
         currentExclusion: Boolean,
         currentRestriction: Boolean,
         expectedResult: ExpectedCsraResult,
@@ -371,8 +333,10 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
       @Test
       fun `returns NotFound for the CSRA summary when the prison API has no record`() {
         val user = givenAUserWithNeverRestrictedStrategy()
-        val caseSummary = CaseSummaryFactory().withCurrentRestriction(true).produce()
+        val caseSummary = CaseSummaryFactory().withCurrentRestriction(false).withCurrentExclusion(false).produce()
+        apDeliusContextCaseSummariesSingleCase(caseSummary)
         givenALocalCase(caseSummary)
+
         prisonAPIMockNotFoundCsraSummariesCall(caseSummary.nomsId!!)
 
         val result = offenderService.getCsraSummariesForOffender(caseSummary.crn, user.cas1LaoStrategy())
@@ -387,7 +351,7 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
 
     private fun givenAUserWithCheckUserAccessStrategy(): UserEntity {
       val (user, _) = givenAUser()
-      assertThat(user.cas1LaoStrategy()).isEqualTo(LaoStrategy.CheckUserAccess(user.deliusUsername))
+      assertThat(user.cas1LaoStrategy()).isEqualTo(LaoStrategy.checkUserAccess(user.deliusUsername))
       return user
     }
 
@@ -455,28 +419,6 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `returns NotFound when the offender is LAO but no user access information is returned`() {
-        val user = givenAUserWithCheckUserAccessStrategy()
-
-        val caseSummary = CaseSummaryFactory()
-          .withCurrentRestriction(true)
-          .produce()
-
-        apDeliusContextCaseSummariesSingleCase(caseSummary)
-        apDeliusContextUserAccessAddCase(emptyList(), username = user.deliusUsername)
-
-        val results = offenderService.getPersonSummaryInfoResults(
-          crns = setOf(caseSummary.crn),
-          laoStrategy = user.cas1LaoStrategy(),
-          includeTier = false,
-        )
-
-        assertThat(results).hasSize(1)
-        assertNotFound(results.first(), caseSummary.crn)
-        apDeliusContextVerifyUserAccessCalls(times = 1, username = user.deliusUsername)
-      }
-
-      @Test
       fun `returns empty list and makes no upstream calls when no CRNs are provided`() {
         val user = givenAUserWithCheckUserAccessStrategy()
 
@@ -503,7 +445,6 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
           .withCurrentExclusion(true)
           .withCurrentRestriction(true)
           .produce()
-        val laoWithNoAccessInfo = CaseSummaryFactory().withCurrentRestriction(true).produce()
         val notFoundCrn = randomStringUpperCase(8)
 
         val caseSummaries = listOf(
@@ -513,7 +454,6 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
           restrictedUserRestricted,
           restrictedUserHasAccess,
           excludedAndRestrictedUserExcludedAndRestricted,
-          laoWithNoAccessInfo,
         )
         val crns = caseSummaries.map { it.crn } + notFoundCrn
 
@@ -549,7 +489,6 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
           results.forCrn(excludedAndRestrictedUserExcludedAndRestricted.crn),
           excludedAndRestrictedUserExcludedAndRestricted,
         )
-        assertNotFound(results.forCrn(laoWithNoAccessInfo.crn), laoWithNoAccessInfo.crn)
         assertNotFound(results.forCrn(notFoundCrn), notFoundCrn)
 
         apDeliusContextVerifyUserAccessCalls(times = 1, username = user.deliusUsername)
@@ -685,19 +624,6 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
 
         assertThat(result).isEqualTo(CasResult.NotFound<List<CsraSummary>>("Person", crn))
         apDeliusContextVerifyUserAccessCalls(times = 0)
-      }
-
-      @Test
-      fun `returns NotFound for the person when the offender is LAO but no user access information is returned`() {
-        val user = givenAUserWithCheckUserAccessStrategy()
-        val caseSummary = CaseSummaryFactory().withCurrentRestriction(true).produce()
-        apDeliusContextCaseSummariesSingleCase(caseSummary)
-        apDeliusContextUserAccessAddCase(emptyList(), username = user.deliusUsername)
-
-        val result = offenderService.getCsraSummariesForOffender(caseSummary.crn, user.cas1LaoStrategy())
-
-        assertThat(result).isEqualTo(CasResult.NotFound<List<CsraSummary>>("Person", caseSummary.crn))
-        prisonAPIVerifyCsraSummariesCalls(caseSummary.nomsId!!, times = 0)
       }
 
       @Test

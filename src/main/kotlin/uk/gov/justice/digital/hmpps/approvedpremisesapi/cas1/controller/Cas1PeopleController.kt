@@ -96,7 +96,7 @@ class Cas1PeopleController(
   @GetMapping("/people/{crn}/csra-summaries")
   fun getCsraSummaries(@PathVariable crn: String): ResponseEntity<List<CsraSummary>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
-    val laoStrategy = LaoStrategy.CheckUserAccess(userService.getDeliusUserNameForRequest())
+    val laoStrategy = LaoStrategy.checkUserAccess(userService.getDeliusUserNameForRequest())
 
     val csraSummaries = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
 

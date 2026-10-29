@@ -120,28 +120,6 @@ class Cas3LaoIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns NotFound when the offender is LAO but no user access information is returned`() {
-      val (user, _) = givenAUser()
-
-      val caseSummary = CaseSummaryFactory()
-        .withCurrentRestriction(true)
-        .produce()
-
-      apDeliusContextCaseSummariesSingleCase(caseSummary)
-      apDeliusContextUserAccessAddCase(emptyList(), username = user.deliusUsername)
-
-      val results = offenderService.getPersonSummaryInfoResults(
-        crns = setOf(caseSummary.crn),
-        laoStrategy = user.cas3LaoStrategy(),
-        includeTier = false,
-      )
-
-      assertThat(results).hasSize(1)
-      assertNotFound(results.first(), caseSummary.crn)
-      apDeliusContextVerifyUserAccessCalls(times = 1, username = user.deliusUsername)
-    }
-
-    @Test
     fun `returns empty list and makes no upstream calls when no CRNs are provided`() {
       val (user, _) = givenAUser()
 
@@ -168,7 +146,6 @@ class Cas3LaoIntegrationTest : IntegrationTestBase() {
         .withCurrentExclusion(true)
         .withCurrentRestriction(true)
         .produce()
-      val laoWithNoAccessInfo = CaseSummaryFactory().withCurrentRestriction(true).produce()
       val notFoundCrn = randomStringUpperCase(8)
 
       val caseSummaries = listOf(
@@ -178,7 +155,6 @@ class Cas3LaoIntegrationTest : IntegrationTestBase() {
         restrictedUserRestricted,
         restrictedUserHasAccess,
         excludedAndRestrictedUserExcludedAndRestricted,
-        laoWithNoAccessInfo,
       )
       val crns = caseSummaries.map { it.crn } + notFoundCrn
 
@@ -214,7 +190,6 @@ class Cas3LaoIntegrationTest : IntegrationTestBase() {
         results.forCrn(excludedAndRestrictedUserExcludedAndRestricted.crn),
         excludedAndRestrictedUserExcludedAndRestricted,
       )
-      assertNotFound(results.forCrn(laoWithNoAccessInfo.crn), laoWithNoAccessInfo.crn)
       assertNotFound(results.forCrn(notFoundCrn), notFoundCrn)
 
       apDeliusContextVerifyUserAccessCalls(times = 1, username = user.deliusUsername)

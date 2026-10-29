@@ -23,7 +23,13 @@ data class CaseSummary(
   val gender: String?,
   val profile: Profile?,
   val manager: Manager,
+  /**
+   * Indicates if any exclusions have been applied for this CRN (i.e. it's an LAO)
+   */
   val currentExclusion: Boolean,
+  /**
+   * Indicates if any restrictions have been applied for this CRN (i.e. it's an LAO)
+   */
   val currentRestriction: Boolean,
 )
 

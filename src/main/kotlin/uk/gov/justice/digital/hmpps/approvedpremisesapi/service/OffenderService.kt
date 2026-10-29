@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
@@ -22,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.toCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
@@ -36,11 +34,11 @@ class OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val prisionerAlertsApiClient: PrisonerAlertsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val offenderDetailsDataSource: OffenderDetailsDataSource,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
   private val offenderRiskNoteParser: OffenderRiskNoteParser,
   private val caseService: CaseService,
   private val tierService: TierService,
+  private val laoService: LaoService,
 ) {
   companion object {
     const val MAX_OFFENDER_REQUEST_COUNT = 500
@@ -81,6 +79,7 @@ class OffenderService(
       .flatMap { it.stream() }
       .collect(Collectors.toList())
   }
+
   fun getPersonSummaryInfoResult(
     crn: String,
     laoStrategy: LaoStrategy,
@@ -104,91 +103,55 @@ class OffenderService(
       throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
-    val crnsList = crns.toList()
-
-    val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getCaseSummaries(crnsList)) {
+    val caseSummaries = when (val result = apDeliusContextApiClient.getCaseSummaries(crns.toList())) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
-    }.cases.associateBy(
-      keySelector = { it.crn },
-      valueTransform = { it },
-    )
+    }.cases
 
-    val caseAccessByCrn = when (laoStrategy) {
-      is LaoStrategy.NeverRestricted -> emptyMap()
-      is LaoStrategy.CheckUserAccess -> {
-        getUserAccessForCrns(
-          deliusUsername = laoStrategy.deliusUsername,
-          crns = crnsList.filter { caseSummariesByCrn[it]?.hasLimitedAccess() == true },
-        )
-      }
-    }
+    val visibilityByCrn = laoService.isVisibleForCaseSummaries(caseSummaries, laoStrategy)
 
     val tiersByCrn = when (includeTier) {
       true -> tierService.getTiers(crns)
       false -> emptyMap()
     }
 
+    val caseSummaryInfoByCrn = caseSummaries.associate {
+      it.crn to CaseSummaryInfo(
+        caseSummary = it,
+        visible = visibilityByCrn[it.crn] ?: false,
+        tier = tiersByCrn[it.crn.uppercase()],
+      )
+    }
+
     return crns.map { crn ->
       toPersonSummaryInfo(
         crn = crn,
-        caseSummary = caseSummariesByCrn[crn],
-        caseAccess = caseAccessByCrn[crn],
-        laoStrategy = laoStrategy,
-        tier = tiersByCrn[crn.uppercase()],
+        caseSummaryInfo = caseSummaryInfoByCrn[crn],
       )
     }
   }
 
-  private fun getUserAccessForCrns(
-    deliusUsername: String,
-    crns: List<String>,
-  ): Map<String, CaseAccess> = if (crns.isNotEmpty()) {
-    when (val result = apDeliusContextApiClient.getUserAccessForCrns(deliusUsername, crns)) {
-      is ClientResult.Success -> result.body
-      is ClientResult.Failure -> result.throwException()
-    }.access.associateBy(
-      keySelector = { it.crn },
-      valueTransform = { it },
-    )
-  } else {
-    emptyMap()
-  }
+  private data class CaseSummaryInfo(
+    val caseSummary: CaseSummary,
+    val visible: Boolean,
+    val tier: TierDto?,
+  )
 
   private fun toPersonSummaryInfo(
     crn: String,
-    caseSummary: CaseSummary?,
-    caseAccess: CaseAccess?,
-    laoStrategy: LaoStrategy,
-    tier: TierDto?,
+    caseSummaryInfo: CaseSummaryInfo?,
   ): PersonSummaryInfoResult {
-    if (caseSummary == null) {
+    if (caseSummaryInfo == null) {
       log.debug("Could not find case summary for '$crn'. Returning not found")
       return PersonSummaryInfoResult.NotFound(crn)
     }
 
-    if (!caseSummary.hasLimitedAccess() || laoStrategy is LaoStrategy.NeverRestricted) {
-      log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
-      return PersonSummaryInfoResult.Success.Full(
-        crn = crn,
-        summary = caseSummary,
-        tier = tier,
-      )
-    }
+    val caseSummary = caseSummaryInfo.caseSummary
+    val visible = caseSummaryInfo.visible
+    val tier = caseSummaryInfo.tier
 
-    return if (caseAccess == null) {
-      // This shouldn't happen
-      log.warn("Could not find case access details for LAO '$crn'. Returning 'Not Found'")
-      PersonSummaryInfoResult.NotFound(crn)
-    } else {
-      if (caseAccess.hasLimitedAccess()) {
-        log.debug("Caller cannot access LAO '$crn'. Returning restricted")
-        PersonSummaryInfoResult.Success.Restricted(
-          crn = crn,
-          nomsNumber = caseSummary.nomsId,
-          tier = tier,
-        )
-      } else {
+    return when {
+      visible -> {
         log.debug("Caller can access LAO '$crn'. Returning full details")
         PersonSummaryInfoResult.Success.Full(
           crn = crn,
@@ -196,12 +159,17 @@ class OffenderService(
           tier = tier,
         )
       }
+
+      else -> {
+        log.debug("Caller cannot access LAO '$crn'. Returning restricted")
+        PersonSummaryInfoResult.Success.Restricted(
+          crn = crn,
+          nomsNumber = caseSummary.nomsId,
+          tier = tier,
+        )
+      }
     }
   }
-
-  private fun CaseSummary.hasLimitedAccess() = this.currentExclusion || this.currentRestriction
-  private fun CaseAccess.hasLimitedAccess() = this.userExcluded || this.userRestricted
-  private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
 
   fun isLao(crn: String): Boolean {
     val offender = when (val offenderResponse = apDeliusContextApiClient.getCaseSummaries(listOf(crn))) {
@@ -215,38 +183,18 @@ class OffenderService(
   fun canAccessOffender(
     crn: String,
     laoStrategy: LaoStrategy,
-  ) = when (laoStrategy) {
-    is LaoStrategy.NeverRestricted -> true
-    is LaoStrategy.CheckUserAccess -> canAccessOffender(
-      username = laoStrategy.deliusUsername,
-      crn = crn,
-    )
-  }
+  ) = canAccessOffenders(
+    crns = listOf(crn),
+    laoStrategy = laoStrategy,
+  ).entries.first().value
 
-  fun canAccessOffender(username: String, crn: String) = canAccessOffenders(username, listOf(crn))[crn]!!
-
-  fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {
-    if (crns.isEmpty()) return emptyMap()
-
-    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
-      throw InternalServerErrorProblem("Cannot request access details for more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
-    }
-
-    return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(username, crns)) {
-      is ClientResult.Success -> {
-        val crnToAccessResult = clientResult.body.access.associateBy(
-          keySelector = { it.crn },
-          valueTransform = { it },
-        )
-
-        crns.associateBy(
-          keySelector = { crn -> crn },
-          valueTransform = { crn -> crnToAccessResult[crn]!!.hasNotLimitedAccess() },
-        )
-      }
-      is ClientResult.Failure -> clientResult.throwException()
-    }
-  }
+  fun canAccessOffenders(
+    crns: List<String>,
+    laoStrategy: LaoStrategy,
+  ) = laoService.isVisible(
+    crns = crns,
+    laoStrategy = laoStrategy,
+  )
 
   fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
     val allAdjudications = mutableListOf<Adjudication>()
@@ -315,18 +263,7 @@ class OffenderService(
   fun getCsraSummariesForOffender(
     crn: String,
     laoStrategy: LaoStrategy,
-  ): CasResult<List<CsraSummary>> = when (laoStrategy) {
-    is LaoStrategy.NeverRestricted -> {
-      caseService.getCase(crn)?.nomsNumber?.let { nomsNumber ->
-        prisonsApiClient.getCsraSummariesForOffender(nomsNumber)
-          .toCasResult(entityType = "CsraSummary", id = crn)
-      } ?: getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
-    }
-
-    is LaoStrategy.CheckUserAccess -> {
-      getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
-    }
-  }
+  ) = getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
 
   private fun PersonSummaryInfoResult.toCsraSummaries(crn: String): CasResult<List<CsraSummary>> = when (this) {
     is PersonSummaryInfoResult.Success.Full -> {

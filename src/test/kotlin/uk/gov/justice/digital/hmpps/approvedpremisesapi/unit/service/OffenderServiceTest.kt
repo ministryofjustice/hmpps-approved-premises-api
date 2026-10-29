@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
@@ -42,8 +41,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -53,7 +52,6 @@ class OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockOffenderRiskNoteParser = mockk<OffenderRiskNoteParser>()
   private val mockCaseService = mockk<CaseService>()
   private val mockTierService = mockk<TierService>()
@@ -66,11 +64,11 @@ class OffenderServiceTest {
     mockPrisonsApiClient,
     mockPrisonerAlertsApiClient,
     mockApDeliusContextApiClient,
-    mockOffenderDetailsDataSource,
     adjudicationsConfigBindingModel,
     mockOffenderRiskNoteParser,
     mockCaseService,
     mockTierService,
+    laoService = LaoService(mockApDeliusContextApiClient),
   )
 
   @Nested
@@ -101,7 +99,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
+      val result = offenderService.canAccessOffender(crn, LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result).isFalse()
     }
 
@@ -120,7 +118,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
+      val result = offenderService.canAccessOffender(crn, LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result).isFalse()
     }
 
@@ -140,7 +138,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
+      val result = offenderService.canAccessOffender(crn, LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result).isTrue()
     }
 
@@ -151,7 +149,7 @@ class OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns response
 
-      assertThrows<Throwable> { offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name")) }
+      assertThrows<Throwable> { offenderService.canAccessOffender(crn, LaoStrategy.checkUserAccess("distinguished.name")) }
     }
   }
 
@@ -160,14 +158,14 @@ class OffenderServiceTest {
 
     @Test
     fun `return empty result when crns list is empty`() {
-      val result = offenderService.canAccessOffenders("distinguished.name", emptyList())
+      val result = offenderService.canAccessOffenders(emptyList(), LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result.isEmpty()).isTrue()
     }
 
     @Test
     fun `return error if greater than 500 crns are requested`() {
       assertThatThrownBy {
-        offenderService.canAccessOffenders("distinguished.name", (0..500).map { "$it" })
+        offenderService.canAccessOffenders((0..500).map { "$it" }, LaoStrategy.checkUserAccess("distinguished.name"))
       }.isInstanceOf(InternalServerErrorProblem::class.java)
         .hasMessage("Cannot request access details for more than 500 CRNs. 501 have been provided.")
     }
@@ -187,7 +185,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      val result = offenderService.canAccessOffenders(listOf(crn), LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result[crn]).isFalse()
     }
 
@@ -206,7 +204,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      val result = offenderService.canAccessOffenders(listOf(crn), LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result[crn]).isFalse()
     }
 
@@ -226,7 +224,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      val result = offenderService.canAccessOffenders(listOf(crn), LaoStrategy.checkUserAccess("distinguished.name"))
       assertThat(result[crn]).isTrue()
     }
 
@@ -267,7 +265,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, userAccess)
 
-      val result = offenderService.canAccessOffenders("distinguished.name", crns)
+      val result = offenderService.canAccessOffenders(crns, LaoStrategy.checkUserAccess("distinguished.name"))
 
       assertThat(result["CRN1"]).isTrue()
       assertThat(result["CRN2"]).isFalse()
@@ -282,7 +280,7 @@ class OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns response
 
-      assertThrows<Throwable> { offenderService.canAccessOffenders("distinguished.name", listOf(crn)) }
+      assertThrows<Throwable> { offenderService.canAccessOffenders(listOf(crn), LaoStrategy.checkUserAccess("distinguished.name")) }
     }
   }
 
@@ -466,7 +464,7 @@ class OffenderServiceTest {
     fun `if no crns provided immediately return empty list`() {
       val result = offenderService.getPersonSummaryInfoResults(
         crns = emptySet(),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
       )
 
       assertThat(result).isEmpty()
@@ -482,7 +480,7 @@ class OffenderServiceTest {
       assertThrows<Throwable> {
         offenderService.getPersonSummaryInfoResults(
           crns = setOf(OFFENDER_1_CRN),
-          laoStrategy = CheckUserAccess(USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         )
       }
     }
@@ -506,7 +504,7 @@ class OffenderServiceTest {
       assertThrows<Throwable> {
         offenderService.getPersonSummaryInfoResults(
           crns = setOf(OFFENDER_1_CRN),
-          laoStrategy = CheckUserAccess(USERNAME),
+          laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
           includeTier = true,
         )
       }
@@ -528,7 +526,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -560,7 +558,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         includeTier = true,
       )
 
@@ -591,7 +589,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         includeTier = false,
       )
 
@@ -624,7 +622,7 @@ class OffenderServiceTest {
 
       val result = offenderService.getPersonSummaryInfoResult(
         crn = OFFENDER_1_CRN,
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         includeTier = false,
       )
 
@@ -635,46 +633,6 @@ class OffenderServiceTest {
       assertThat(result.tier).isNull()
 
       verify(exactly = 0) { mockTierService.getTiers(any()) }
-    }
-
-    @ParameterizedTest
-    @CsvSource(
-      "true,false",
-      "false,true",
-      "true,true",
-    )
-    fun `single crn with limited access, ReturnRestrictedIfLimitedAccess strategy, no limited access record returned, return NotFound`(
-      currentExclusion: Boolean,
-      currentRestriction: Boolean,
-    ) {
-      val offender1CaseSummary = CaseSummaryFactory()
-        .withCrn(OFFENDER_1_CRN)
-        .withCurrentExclusion(currentExclusion)
-        .withCurrentRestriction(currentRestriction)
-        .produce()
-
-      every {
-        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
-      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
-
-      every {
-        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
-      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
-
-      every {
-        mockTierService.getTiers(setOf(OFFENDER_1_CRN))
-      } returns mapOf(OFFENDER_1_CRN to null)
-
-      val results = offenderService.getPersonSummaryInfoResults(
-        crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = CheckUserAccess(USERNAME),
-        includeTier = true,
-      )
-
-      assertThat(results).hasSize(1)
-      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
-      val result0 = results[0] as PersonSummaryInfoResult.NotFound
-      assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
     }
 
     @ParameterizedTest
@@ -719,7 +677,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         includeTier = true,
       )
 
@@ -773,7 +731,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         includeTier = true,
       )
 
@@ -918,7 +876,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN, OFFENDER_4_CRN, OFFENDER_5_CRN),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         includeTier = true,
       )
 
@@ -976,7 +934,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         includeTier = true,
       )
 
@@ -1031,7 +989,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResultsInBatches(
         crns = crns.toSet(),
-        laoStrategy = CheckUserAccess(USERNAME),
+        laoStrategy = LaoStrategy.checkUserAccess(USERNAME),
         batchSize = 400,
       )
 
@@ -1051,7 +1009,7 @@ class OffenderServiceTest {
   inner class GetCsraSummariesForOffender {
     private val crn = "CRN123"
     private val nomsNumber = "NOMS456"
-    private val laoStrategy = CheckUserAccess(USERNAME)
+    private val laoStrategy = LaoStrategy.checkUserAccess(USERNAME)
 
     @Test
     fun `returns Success when NOMS number is in repository and Prisons API returns success`() {
