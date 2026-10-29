@@ -42,34 +42,38 @@ class Cas1ExternalApplicationService(
   private val applicationSuitabilityComparator = compareBy<ApprovedPremisesApplicationEntity> { APPLICATION_STATUS_TO_SUITABILITY[it.status] }
     .thenBy { it.submittedAt ?: it.createdAt }
 
-  fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
+  fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository
+    .findByCrn(crn)
     .maxWithOrNull(applicationSuitabilityComparator)
-    ?.let { application ->
-      val placementPairs = cas1PlacementPairService.getPlacementPairs(application.id)
+    ?.let { toSuitableApplication(it) }
 
-      val today = LocalDate.now()
+  private fun toSuitableApplication(application: ApprovedPremisesApplicationEntity): Cas1SuitableApplication {
+    val placementPairs = cas1PlacementPairService.getPlacementPairs(application.id)
 
-      val pastPairs = placementPairs
-        .filter { it.dateApplied < today }
-        .sortedByDescending { it.dateApplied }
+    val today = LocalDate.now()
 
-      val suitablePlacementPair = placementPairs
-        .lastOrNull { it.dateApplied >= today }
-        ?: pastPairs.firstOrNull()
+    val pastPairs = placementPairs
+      .filter { it.dateApplied < today }
+      .sortedByDescending { it.dateApplied }
 
-      val placementHistory = pastPairs
-        .filterNot { it == suitablePlacementPair }
+    val suitablePlacementPair = placementPairs
+      .lastOrNull { it.dateApplied >= today }
+      ?: pastPairs.firstOrNull()
 
-      transformer.transformToCas1SuitableApplication(
-        application = application,
-        suitablePlacementPair = suitablePlacementPair,
-        placementHistory = placementHistory,
-      )
-    }
+    val placementHistory = pastPairs
+      .filterNot { it == suitablePlacementPair }
 
-  fun getCurrentPremisesByCrn(crn: String): Cas1ExternalPremisesDto? = approvedPremisesApplicationRepository.findByCrn(crn)
-    .sortedWith(applicationSuitabilityComparator).firstNotNullOfOrNull { application ->
-      cas1PlacementPairService.getPlacementPairs(application.id)
-        .firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
+    return transformer.transformToCas1SuitableApplication(
+      application = application,
+      suitablePlacementPair = suitablePlacementPair,
+      placementHistory = placementHistory,
+    )
+  }
+
+  fun getCurrentPremisesByCrn(crn: String): Cas1ExternalPremisesDto? = approvedPremisesApplicationRepository
+    .findByCrn(crn)
+    .sortedWith(applicationSuitabilityComparator)
+    .firstNotNullOfOrNull { application ->
+      cas1PlacementPairService.getPlacementPairs(application.id).firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
     }
 }
