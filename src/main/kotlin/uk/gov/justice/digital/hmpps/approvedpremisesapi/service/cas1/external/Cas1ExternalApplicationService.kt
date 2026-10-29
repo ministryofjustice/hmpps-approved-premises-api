@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -16,7 +16,7 @@ import java.util.UUID
 @Service
 class Cas1ExternalApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
-  private val cas1PlacementPairService: Cas1PlacementPairService,
+  private val cas1PlacementPairService: Cas1RequestForPlacementOutcomeService,
   private val transformer: Cas1ExternalApplicationTransformer,
 ) {
 
@@ -71,7 +71,7 @@ class Cas1ExternalApplicationService(
     )
   }
 
-  fun getPlacementPairsNewestFirst(applicationId: UUID): List<Cas1PlacementPairDto> = cas1PlacementPairService
+  fun getPlacementPairsNewestFirst(applicationId: UUID): List<Cas1RequestForPlacementOutcomeDto> = cas1PlacementPairService
     .getPlacementPairs(applicationId)
     .sortedByDescending { it.dateApplied }
 

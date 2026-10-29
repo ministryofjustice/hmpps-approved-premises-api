@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -33,7 +33,7 @@ class Cas1ExternalApplicationTransformer(
     withdrawalDate: LocalDate? = null,
     placement: Cas1SpaceBookingShortSummary? = null,
     premises: ApprovedPremisesEntity? = null,
-  ) = Cas1PlacementPairDto(
+  ) = Cas1RequestForPlacementOutcomeDto(
     dateApplied = placement?.statusSetDate ?: rfp.statusSetDate,
     requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, withdrawalDate, placement),
     placement = placement?.let { transformToPlacement(it, premises) },
@@ -90,8 +90,8 @@ class Cas1ExternalApplicationTransformer(
 
   fun transformToCas1SuitableApplication(
     application: ApprovedPremisesApplicationEntity,
-    suitablePlacementPair: Cas1PlacementPairDto?,
-    placementHistory: List<Cas1PlacementPairDto>,
+    suitablePlacementPair: Cas1RequestForPlacementOutcomeDto?,
+    placementHistory: List<Cas1RequestForPlacementOutcomeDto>,
   ): Cas1SuitableApplication {
     val latestAssessment = application.getLatestAssessment()
     return Cas1SuitableApplication(

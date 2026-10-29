@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
@@ -98,7 +98,7 @@ class Cas1ExternalApplicationTransformerTest {
 
       application.assessments.add(assessment)
 
-      val suitablePlacementPair = Cas1PlacementPairDto(
+      val suitablePlacementPair = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = PlacementApplicationDecisionDto.rejected,
           rejectionReason = "No space",
@@ -264,7 +264,7 @@ class Cas1ExternalApplicationTransformerTest {
         postcode = premisesEntity.postcode,
       )
 
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
@@ -352,7 +352,7 @@ class Cas1ExternalApplicationTransformerTest {
         postcode = premisesEntity.postcode,
       )
 
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           status = requestForPlacement.status,
           decision = requestForPlacement.decision?.apiValue,
@@ -452,7 +452,7 @@ class Cas1ExternalApplicationTransformerTest {
         postcode = premisesEntity.postcode,
       )
 
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           status = requestForPlacement.status,
           decision = requestForPlacement.decision?.apiValue,
@@ -552,7 +552,7 @@ class Cas1ExternalApplicationTransformerTest {
         postcode = premisesEntity.postcode,
       )
 
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,
@@ -609,7 +609,7 @@ class Cas1ExternalApplicationTransformerTest {
         .withCanonicalPlacementPeriod(canonicalPlacementPeriod)
         .withStatusSetDate(expectedArrivalDate)
         .produce()
-      val expected = Cas1PlacementPairDto(
+      val expected = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
           rejectionReason = rejectionReason,

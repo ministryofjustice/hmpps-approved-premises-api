@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1PlacementPairService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1RequestForPlacementOutcomeService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
@@ -51,7 +51,7 @@ class Cas1ExternalApplicationServiceTest {
   private lateinit var approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository
 
   @MockK
-  private lateinit var cas1PlacementPairService: Cas1PlacementPairService
+  private lateinit var cas1PlacementPairService: Cas1RequestForPlacementOutcomeService
 
   @MockK
   private lateinit var cas1ExternalApplicationTransformer: Cas1ExternalApplicationTransformer
@@ -381,7 +381,7 @@ class Cas1ExternalApplicationServiceTest {
     dateApplied: LocalDate,
     status: Cas1SpaceBookingStatus? = null,
     premises: ApprovedPremisesEntity? = null,
-  ): Cas1PlacementPairDto {
+  ): Cas1RequestForPlacementOutcomeDto {
     val requestForPlacement = RequestForPlacementFactory()
       .withStatusSetDate(dateApplied)
       .withStatus(RequestForPlacementStatus.placementBooked)
@@ -401,7 +401,7 @@ class Cas1ExternalApplicationServiceTest {
     premisesEntity: ApprovedPremisesEntity? = null,
     rejectionReason: String? = null,
     withdrawalDate: LocalDate? = null,
-  ) = Cas1PlacementPairDto(
+  ) = Cas1RequestForPlacementOutcomeDto(
     dateApplied = placement?.statusSetDate ?: requestForPlacement.statusSetDate,
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
       decision = requestForPlacement.decision?.apiValue,
