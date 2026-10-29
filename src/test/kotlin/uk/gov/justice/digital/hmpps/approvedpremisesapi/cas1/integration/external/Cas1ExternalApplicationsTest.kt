@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -707,6 +708,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               withExpectedArrivalDate(LocalDate.now().minusDays(1))
               withExpectedDepartureDate(LocalDate.now().plusDays(10))
               withActualArrivalDate(LocalDate.now())
+              withActualArrivalTime(LocalTime.now())
               withActualDepartureDate(null)
             }
 

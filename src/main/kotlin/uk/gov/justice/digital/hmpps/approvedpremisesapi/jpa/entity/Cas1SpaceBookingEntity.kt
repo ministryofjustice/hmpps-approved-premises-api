@@ -682,16 +682,18 @@ data class Cas1SpaceBookingEntity(
     canonicalDepartureDate > day
 
   fun getSpaceBookingStatus(): Cas1SpaceBookingStatusAndWhen = when {
-    isCancelled() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.CANCELLED, this.cancellationOccurredAt!!)
-    hasNonArrival() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.NOT_ARRIVED, this.expectedArrivalDate)
-    hasDeparted() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.DEPARTED, this.actualDepartureDate!!)
-    hasArrival() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.ARRIVED, this.actualArrivalDate!!)
-    else -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.UPCOMING, this.expectedArrivalDate)
+    // TODO - i think cancellation recorded at should be used here?
+    isCancelled() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.CANCELLED, this.cancellationOccurredAt!!.atStartOfDay())
+    // TODO - i think non arrival confirmed at should be used here (that's when status was updated?)
+    hasNonArrival() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.NOT_ARRIVED, this.expectedArrivalDate.atStartOfDay())
+    hasDeparted() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.DEPARTED, this.actualDepartureDate!!.atStartOfDay())
+    hasArrival() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.ARRIVED, this.actualArrivalDate!!.atTime(actualArrivalTime))
+    else -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.UPCOMING, this.expectedArrivalDate.atStartOfDay())
   }
 
   data class Cas1SpaceBookingStatusAndWhen(
     val status: Cas1SpaceBookingStatus,
-    val occurredAt: LocalDate,
+    val occurredAt: LocalDateTime,
   )
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"

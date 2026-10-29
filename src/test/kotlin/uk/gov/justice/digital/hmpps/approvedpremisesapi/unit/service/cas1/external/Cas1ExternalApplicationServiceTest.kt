@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementPairDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
@@ -45,15 +44,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1RfPAndPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.stream.Stream
 import kotlin.collections.emptyList
 
-@SuppressWarnings("UnusedPrivateProperty")
 @ExtendWith(MockKExtension::class)
 class Cas1ExternalApplicationServiceTest {
   @MockK
@@ -85,7 +85,7 @@ class Cas1ExternalApplicationServiceTest {
         .produce()
 
       val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
+        LocalDateTime.now().minusDays(4),
       ).withStatus(RequestForPlacementStatus.placementBooked)
         .withCanonicalPlacementPeriod(
           Cas1RequestedPlacementPeriod(
@@ -96,7 +96,7 @@ class Cas1ExternalApplicationServiceTest {
         )
         .produce()
       val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
+        LocalDateTime.now().minusDays(1),
       ).withStatus(RequestForPlacementStatus.requestUnsubmitted)
         .withCanonicalPlacementPeriod(
           Cas1RequestedPlacementPeriod(
@@ -106,7 +106,7 @@ class Cas1ExternalApplicationServiceTest {
           ),
         ).produce()
       val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
+        LocalDateTime.now().minusDays(5),
       ).withStatus(RequestForPlacementStatus.requestSubmitted)
         .withCanonicalPlacementPeriod(
           Cas1RequestedPlacementPeriod(
@@ -116,7 +116,7 @@ class Cas1ExternalApplicationServiceTest {
           ),
         ).produce()
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
+        LocalDateTime.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.awaitingMatch).withCanonicalPlacementPeriod(
         Cas1RequestedPlacementPeriod(
           arrival = LocalDate.now().plusDays(1),
@@ -125,10 +125,10 @@ class Cas1ExternalApplicationServiceTest {
         ),
       ).produce()
 
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2) } returns transformToPlacementHistory(requestForPlacement2)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1) } returns transformToRfpAndPlacement(requestForPlacement1)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2) } returns transformToRfpAndPlacement(requestForPlacement2)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3) } returns transformToRfpAndPlacement(requestForPlacement3)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement4) } returns transformToRfpAndPlacement(requestForPlacement4)
 
       every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
         listOf(
@@ -143,10 +143,10 @@ class Cas1ExternalApplicationServiceTest {
 
       assertThat(result).isEqualTo(
         listOf(
-          transformToPlacementHistory(requestForPlacement2),
-          transformToPlacementHistory(requestForPlacement4),
-          transformToPlacementHistory(requestForPlacement1),
-          transformToPlacementHistory(requestForPlacement3),
+          transformToRfpAndPlacement(requestForPlacement2),
+          transformToRfpAndPlacement(requestForPlacement4),
+          transformToRfpAndPlacement(requestForPlacement1),
+          transformToRfpAndPlacement(requestForPlacement3),
         ),
       )
     }
@@ -163,31 +163,31 @@ class Cas1ExternalApplicationServiceTest {
         .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
         .produce()
       val placement1 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(1))
+        .withStatusSetDate(LocalDateTime.now().minusDays(1))
         .withStatus(Cas1SpaceBookingStatus.DEPARTED)
         .produce()
       val placement2 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(3))
+        .withStatusSetDate(LocalDateTime.now().minusDays(3))
         .withStatus(Cas1SpaceBookingStatus.CANCELLED)
         .produce()
       val placement3 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(4))
+        .withStatusSetDate(LocalDateTime.now().minusDays(4))
         .withStatus(Cas1SpaceBookingStatus.ARRIVED)
         .produce()
       val placement4 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(10))
+        .withStatusSetDate(LocalDateTime.now().minusDays(10))
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
         .produce()
       val placement5 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(20))
+        .withStatusSetDate(LocalDateTime.now().minusDays(20))
         .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
         .produce()
       val placement6 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(15))
+        .withStatusSetDate(LocalDateTime.now().minusDays(15))
         .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
         .produce()
       val placement7 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now())
+        .withStatusSetDate(LocalDateTime.now())
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
         .withPremises(
           NamedId(
@@ -198,19 +198,19 @@ class Cas1ExternalApplicationServiceTest {
         )
         .produce()
       val placement8 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(3))
+        .withStatusSetDate(LocalDateTime.now().plusDays(3))
         .withStatus(Cas1SpaceBookingStatus.DEPARTED)
         .produce()
       val placement9 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(1))
+        .withStatusSetDate(LocalDateTime.now().plusDays(1))
         .withStatus(Cas1SpaceBookingStatus.ARRIVED)
         .produce()
       val placement10 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(2))
+        .withStatusSetDate(LocalDateTime.now().plusDays(2))
         .withStatus(Cas1SpaceBookingStatus.CANCELLED)
         .produce()
       val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
+        LocalDateTime.now().minusDays(4),
       ).withPlacements(
         listOf(
           placement1,
@@ -220,7 +220,7 @@ class Cas1ExternalApplicationServiceTest {
       )
         .withStatus(RequestForPlacementStatus.placementBooked).produce()
       val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
+        LocalDateTime.now().minusDays(1),
       ).withPlacements(
         listOf(
           placement8,
@@ -229,7 +229,7 @@ class Cas1ExternalApplicationServiceTest {
         ),
       ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
       val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
+        LocalDateTime.now().minusDays(5),
       ).withPlacements(
         listOf(
           placement5,
@@ -243,12 +243,12 @@ class Cas1ExternalApplicationServiceTest {
       val rejectionReason = "No space"
 
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
+        LocalDateTime.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.requestRejected)
         .withDecision(PlacementApplicationDecision.REJECTED).produce()
         .copy(rejectionReason = rejectionReason)
       val requestForPlacement5 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(50),
+        LocalDateTime.now().minusDays(50),
       ).withStatus(RequestForPlacementStatus.requestWithdrawn)
         .withIsWithdrawn(true).produce()
         .copy(withdrawalDate = withdrawalDate.atStartOfDay().atOffset(ZoneOffset.UTC))
@@ -272,92 +272,92 @@ class Cas1ExternalApplicationServiceTest {
 
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement8)
+          .transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement8)
       } returns
-        transformToPlacementHistory(requestForPlacement2, placement8)
+        transformToRfpAndPlacement(requestForPlacement2, placement8)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement10)
+          .transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement10)
       } returns
-        transformToPlacementHistory(requestForPlacement2, placement10)
+        transformToRfpAndPlacement(requestForPlacement2, placement10)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement9)
+          .transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement9)
       } returns
-        transformToPlacementHistory(requestForPlacement2, placement9)
+        transformToRfpAndPlacement(requestForPlacement2, placement9)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement7, premisesEntity)
+          .transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement7, premisesEntity)
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
+        transformToRfpAndPlacement(requestForPlacement3, placement7, premisesEntity)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement1)
+          .transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement1)
       } returns
-        transformToPlacementHistory(requestForPlacement1, placement1)
+        transformToRfpAndPlacement(requestForPlacement1, placement1)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement4, rejectionReason, null)
+          .transformToCas1RfpAndPlacement(requestForPlacement4, rejectionReason, null)
       } returns
-        transformToPlacementHistory(requestForPlacement4, rejectionReason = rejectionReason)
+        transformToRfpAndPlacement(requestForPlacement4, rejectionReason = rejectionReason)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement5, null, withdrawalDate)
+          .transformToCas1RfpAndPlacement(requestForPlacement5, null, withdrawalDate)
       } returns
-        transformToPlacementHistory(requestForPlacement5, withdrawalDate = withdrawalDate)
+        transformToRfpAndPlacement(requestForPlacement5, withdrawalDate = withdrawalDate)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement2)
+          .transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement2)
       } returns
-        transformToPlacementHistory(requestForPlacement1, placement2)
+        transformToRfpAndPlacement(requestForPlacement1, placement2)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement3)
+          .transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement3)
       } returns
-        transformToPlacementHistory(requestForPlacement1, placement3)
+        transformToRfpAndPlacement(requestForPlacement1, placement3)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement4)
+          .transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement4)
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement4)
+        transformToRfpAndPlacement(requestForPlacement3, placement4)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement6)
+          .transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement6)
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement6)
+        transformToRfpAndPlacement(requestForPlacement3, placement6)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement5)
+          .transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement5)
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement5)
+        transformToRfpAndPlacement(requestForPlacement3, placement5)
 
       val result = service.getPlacementPairs(awaitingPlacementApplication.id)
       assertThat(result).isEqualTo(
         listOf(
           // placement8 (+3 days)
-          transformToPlacementHistory(requestForPlacement2, placement8),
+          transformToRfpAndPlacement(requestForPlacement2, placement8),
           // placement10 (+2 days)
-          transformToPlacementHistory(requestForPlacement2, placement10),
+          transformToRfpAndPlacement(requestForPlacement2, placement10),
           // placement9 (+1 day)
-          transformToPlacementHistory(requestForPlacement2, placement9),
+          transformToRfpAndPlacement(requestForPlacement2, placement9),
           // placement7 (0 days)
-          transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity),
+          transformToRfpAndPlacement(requestForPlacement3, placement7, premisesEntity),
           // placement1 (-1)
-          transformToPlacementHistory(requestForPlacement1, placement1),
+          transformToRfpAndPlacement(requestForPlacement1, placement1),
           // rfp4 (no placements) (-2)
-          transformToPlacementHistory(requestForPlacement4, rejectionReason = rejectionReason),
+          transformToRfpAndPlacement(requestForPlacement4, rejectionReason = rejectionReason),
           // placement2 (-3)
-          transformToPlacementHistory(requestForPlacement1, placement2),
+          transformToRfpAndPlacement(requestForPlacement1, placement2),
           // placement3 (-4)
-          transformToPlacementHistory(requestForPlacement1, placement3),
+          transformToRfpAndPlacement(requestForPlacement1, placement3),
           // placement4 (-10)
-          transformToPlacementHistory(requestForPlacement3, placement4),
+          transformToRfpAndPlacement(requestForPlacement3, placement4),
           // placement6 (-15)
-          transformToPlacementHistory(requestForPlacement3, placement6),
+          transformToRfpAndPlacement(requestForPlacement3, placement6),
           // placement5 (-20)
-          transformToPlacementHistory(requestForPlacement3, placement5),
+          transformToRfpAndPlacement(requestForPlacement3, placement5),
           // rfp5 (no placements) (-50)
-          transformToPlacementHistory(requestForPlacement5, withdrawalDate = withdrawalDate),
+          transformToRfpAndPlacement(requestForPlacement5, withdrawalDate = withdrawalDate),
         ),
       )
     }
@@ -388,16 +388,16 @@ class Cas1ExternalApplicationServiceTest {
         .produce()
 
       val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
+        LocalDateTime.now().minusDays(4),
       ).withStatus(RequestForPlacementStatus.placementBooked).produce()
       val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
+        LocalDateTime.now().minusDays(1),
       ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
       val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
+        LocalDateTime.now().minusDays(5),
       ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
+        LocalDateTime.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.awaitingMatch).produce()
 
       every { approvedPremisesApplicationRepository.findByCrn(awaitingPlacementApplication.crn) } returns listOf(awaitingPlacementApplication)
@@ -410,16 +410,16 @@ class Cas1ExternalApplicationServiceTest {
         ),
       )
       val suitableApplication = transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement2)
-      val suitablePlacementPair = transformToPlacementHistory(requestForPlacement2)
+      val suitablePlacementPair = transformToRfpAndPlacement(requestForPlacement2)
       val placementHistory = listOf(
-        transformToPlacementHistory(requestForPlacement4),
-        transformToPlacementHistory(requestForPlacement1),
-        transformToPlacementHistory(requestForPlacement3),
+        transformToRfpAndPlacement(requestForPlacement4),
+        transformToRfpAndPlacement(requestForPlacement1),
+        transformToRfpAndPlacement(requestForPlacement3),
       )
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2) } returns suitablePlacementPair
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1) } returns transformToRfpAndPlacement(requestForPlacement1)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2) } returns suitablePlacementPair
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3) } returns transformToRfpAndPlacement(requestForPlacement3)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement4) } returns transformToRfpAndPlacement(requestForPlacement4)
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(awaitingPlacementApplication, suitablePlacementPair, placementHistory) } returns
         transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement2)
 
@@ -442,31 +442,31 @@ class Cas1ExternalApplicationServiceTest {
         .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
         .produce()
       val placement1 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(1))
+        .withStatusSetDate(LocalDateTime.now().minusDays(1))
         .withStatus(Cas1SpaceBookingStatus.DEPARTED)
         .produce()
       val placement2 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(3))
+        .withStatusSetDate(LocalDateTime.now().minusDays(3))
         .withStatus(Cas1SpaceBookingStatus.CANCELLED)
         .produce()
       val placement3 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(4))
+        .withStatusSetDate(LocalDateTime.now().minusDays(4))
         .withStatus(Cas1SpaceBookingStatus.ARRIVED)
         .produce()
       val placement4 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(10))
+        .withStatusSetDate(LocalDateTime.now().minusDays(10))
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
         .produce()
       val placement5 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(20))
+        .withStatusSetDate(LocalDateTime.now().minusDays(20))
         .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
         .produce()
       val placement6 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(15))
+        .withStatusSetDate(LocalDateTime.now().minusDays(15))
         .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
         .produce()
       val placement7 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now())
+        .withStatusSetDate(LocalDateTime.now().plusMinutes(30))
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
         .withPremises(
           NamedId(
@@ -477,19 +477,19 @@ class Cas1ExternalApplicationServiceTest {
         )
         .produce()
       val placement8 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(3))
+        .withStatusSetDate(LocalDateTime.now().plusMinutes(45))
         .withStatus(Cas1SpaceBookingStatus.DEPARTED)
         .produce()
       val placement9 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(1))
+        .withStatusSetDate(LocalDateTime.now().plusDays(1))
         .withStatus(Cas1SpaceBookingStatus.ARRIVED)
         .produce()
       val placement10 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(2))
+        .withStatusSetDate(LocalDateTime.now().plusDays(2))
         .withStatus(Cas1SpaceBookingStatus.CANCELLED)
         .produce()
       val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
+        LocalDateTime.now().minusDays(4),
       ).withPlacements(
         listOf(
           placement1,
@@ -499,7 +499,7 @@ class Cas1ExternalApplicationServiceTest {
       )
         .withStatus(RequestForPlacementStatus.placementBooked).produce()
       val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
+        LocalDateTime.now().minusDays(1),
       ).withPlacements(
         listOf(
           placement8,
@@ -508,7 +508,7 @@ class Cas1ExternalApplicationServiceTest {
         ),
       ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
       val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
+        LocalDateTime.now().minusDays(5),
       ).withPlacements(
         listOf(
           placement5,
@@ -518,7 +518,7 @@ class Cas1ExternalApplicationServiceTest {
         ),
       ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
+        LocalDateTime.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.awaitingMatch).produce()
 
       every { approvedPremisesApplicationRepository.findByCrn(awaitingPlacementApplication.crn) } returns listOf(awaitingPlacementApplication)
@@ -531,30 +531,30 @@ class Cas1ExternalApplicationServiceTest {
         ),
       )
       val suitableApplication = transformToSuitableApplication(awaitingPlacementApplication, requestForPlacement3, placement7, premisesEntity)
-      val suitablePlacementPair = transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
+      val suitablePlacementPair = transformToRfpAndPlacement(requestForPlacement3, placement7, premisesEntity)
       val placementHistory = listOf(
-        transformToPlacementHistory(requestForPlacement1, placement1),
-        transformToPlacementHistory(requestForPlacement4),
-        transformToPlacementHistory(requestForPlacement1, placement2),
-        transformToPlacementHistory(requestForPlacement1, placement3),
-        transformToPlacementHistory(requestForPlacement3, placement4),
-        transformToPlacementHistory(requestForPlacement3, placement6),
-        transformToPlacementHistory(requestForPlacement3, placement5),
+        transformToRfpAndPlacement(requestForPlacement1, placement1),
+        transformToRfpAndPlacement(requestForPlacement4),
+        transformToRfpAndPlacement(requestForPlacement1, placement2),
+        transformToRfpAndPlacement(requestForPlacement1, placement3),
+        transformToRfpAndPlacement(requestForPlacement3, placement4),
+        transformToRfpAndPlacement(requestForPlacement3, placement6),
+        transformToRfpAndPlacement(requestForPlacement3, placement5),
       )
       every {
         cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
       } returns premisesEntity
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement1) } returns transformToPlacementHistory(requestForPlacement1, placement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement2) } returns transformToPlacementHistory(requestForPlacement1, placement2)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement3) } returns transformToPlacementHistory(requestForPlacement1, placement3)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement4) } returns transformToPlacementHistory(requestForPlacement3, placement4)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement5) } returns transformToPlacementHistory(requestForPlacement3, placement5)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement6) } returns transformToPlacementHistory(requestForPlacement3, placement6)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement7, premisesEntity) } returns suitablePlacementPair
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement8) } returns transformToPlacementHistory(requestForPlacement2, placement8)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement9) } returns transformToPlacementHistory(requestForPlacement2, placement9)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement10) } returns transformToPlacementHistory(requestForPlacement2, placement10)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement1) } returns transformToRfpAndPlacement(requestForPlacement1, placement1)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement2) } returns transformToRfpAndPlacement(requestForPlacement1, placement2)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement3) } returns transformToRfpAndPlacement(requestForPlacement1, placement3)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement4) } returns transformToRfpAndPlacement(requestForPlacement3, placement4)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement5) } returns transformToRfpAndPlacement(requestForPlacement3, placement5)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement6) } returns transformToRfpAndPlacement(requestForPlacement3, placement6)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement7, premisesEntity) } returns suitablePlacementPair
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement8) } returns transformToRfpAndPlacement(requestForPlacement2, placement8)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement9) } returns transformToRfpAndPlacement(requestForPlacement2, placement9)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement10) } returns transformToRfpAndPlacement(requestForPlacement2, placement10)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement4) } returns transformToRfpAndPlacement(requestForPlacement4)
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(awaitingPlacementApplication, suitablePlacementPair, placementHistory) } returns suitableApplication
 
       every {
@@ -604,7 +604,7 @@ class Cas1ExternalApplicationServiceTest {
       application.placementRequests = mutableListOf(placementRequest)
 
       val placement = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(booking.expectedArrivalDate)
+        .withStatusSetDate(booking.expectedArrivalDate.atStartOfDay())
         .withExpectedDepartureDate(booking.expectedDepartureDate)
         .withExpectedArrivalDate(booking.expectedArrivalDate)
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
@@ -619,7 +619,7 @@ class Cas1ExternalApplicationServiceTest {
         .produce()
 
       val requestForPlacement = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
+        LocalDateTime.now().minusDays(4),
       ).withPlacements(
         listOf(
           placement,
@@ -627,9 +627,9 @@ class Cas1ExternalApplicationServiceTest {
       )
         .withStatus(RequestForPlacementStatus.placementBooked).produce()
       val suitableApplication = transformToSuitableApplication(application, requestForPlacement, placement, premisesEntity)
-      val suitablePlacementPair = transformToPlacementHistory(requestForPlacement, placement, premisesEntity)
+      val suitablePlacementPair = transformToRfpAndPlacement(requestForPlacement, placement, premisesEntity)
       every { cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, suitablePlacementPair, emptyList()) } returns suitableApplication
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, null, null, placement, premisesEntity) } returns suitablePlacementPair
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement, null, null, placement, premisesEntity) } returns suitablePlacementPair
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
       every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, null) } returns CasResult.Success(
         listOf(
@@ -771,16 +771,16 @@ class Cas1ExternalApplicationServiceTest {
         .produce()
 
       val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
+        LocalDateTime.now().minusDays(4),
       ).withStatus(RequestForPlacementStatus.placementBooked).produce()
       val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
+        LocalDateTime.now().minusDays(1),
       ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
       val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
+        LocalDateTime.now().minusDays(5),
       ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
+        LocalDateTime.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.awaitingMatch).produce()
 
       every { approvedPremisesApplicationRepository.findByCrn(awaitingPlacementApplication.crn) } returns listOf(awaitingPlacementApplication)
@@ -792,10 +792,10 @@ class Cas1ExternalApplicationServiceTest {
           requestForPlacement4,
         ),
       )
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1) } returns transformToPlacementHistory(requestForPlacement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2) } returns transformToPlacementHistory(requestForPlacement2)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3) } returns transformToPlacementHistory(requestForPlacement3)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns transformToPlacementHistory(requestForPlacement4)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1) } returns transformToRfpAndPlacement(requestForPlacement1)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2) } returns transformToRfpAndPlacement(requestForPlacement2)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3) } returns transformToRfpAndPlacement(requestForPlacement3)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement4) } returns transformToRfpAndPlacement(requestForPlacement4)
 
       val result = service.getCurrentPremisesByCrn(awaitingPlacementApplication.crn)
 
@@ -814,11 +814,11 @@ class Cas1ExternalApplicationServiceTest {
         .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
         .produce()
       val placement1 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(1))
+        .withStatusSetDate(LocalDateTime.now().minusDays(1))
         .withStatus(Cas1SpaceBookingStatus.DEPARTED)
         .produce()
       val placement2 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(3))
+        .withStatusSetDate(LocalDateTime.now().minusDays(3))
         .withStatus(Cas1SpaceBookingStatus.ARRIVED)
         .withPremises(
           NamedId(
@@ -829,7 +829,7 @@ class Cas1ExternalApplicationServiceTest {
         )
         .produce()
       val placement3 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(4))
+        .withStatusSetDate(LocalDateTime.now().minusDays(4))
         .withStatus(Cas1SpaceBookingStatus.ARRIVED)
         .withPremises(
           NamedId(
@@ -840,19 +840,19 @@ class Cas1ExternalApplicationServiceTest {
         )
         .produce()
       val placement4 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(10))
+        .withStatusSetDate(LocalDateTime.now().minusDays(10))
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
         .produce()
       val placement5 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(20))
+        .withStatusSetDate(LocalDateTime.now().minusDays(20))
         .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
         .produce()
       val placement6 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().minusDays(15))
+        .withStatusSetDate(LocalDateTime.now().minusDays(15))
         .withStatus(Cas1SpaceBookingStatus.NOT_ARRIVED)
         .produce()
       val placement7 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now())
+        .withStatusSetDate(LocalDateTime.now())
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
         .withPremises(
           NamedId(
@@ -863,11 +863,11 @@ class Cas1ExternalApplicationServiceTest {
         )
         .produce()
       val placement8 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(3))
+        .withStatusSetDate(LocalDateTime.now().plusDays(3))
         .withStatus(Cas1SpaceBookingStatus.DEPARTED)
         .produce()
       val placement9 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(1))
+        .withStatusSetDate(LocalDateTime.now().plusDays(1))
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
         .withPremises(
           NamedId(
@@ -878,11 +878,11 @@ class Cas1ExternalApplicationServiceTest {
         )
         .produce()
       val placement10 = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(LocalDate.now().plusDays(2))
+        .withStatusSetDate(LocalDateTime.now().plusDays(2))
         .withStatus(Cas1SpaceBookingStatus.CANCELLED)
         .produce()
       val requestForPlacement1 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
+        LocalDateTime.now().minusDays(4),
       ).withPlacements(
         listOf(
           placement1,
@@ -892,7 +892,7 @@ class Cas1ExternalApplicationServiceTest {
       )
         .withStatus(RequestForPlacementStatus.placementBooked).produce()
       val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(1),
+        LocalDateTime.now().minusDays(1),
       ).withPlacements(
         listOf(
           placement8,
@@ -901,7 +901,7 @@ class Cas1ExternalApplicationServiceTest {
         ),
       ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
       val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(5),
+        LocalDateTime.now().minusDays(5),
       ).withPlacements(
         listOf(
           placement5,
@@ -911,7 +911,7 @@ class Cas1ExternalApplicationServiceTest {
         ),
       ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(2),
+        LocalDateTime.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.awaitingMatch).produce()
 
       every { approvedPremisesApplicationRepository.findByCrn(awaitingPlacementApplication.crn) } returns listOf(awaitingPlacementApplication)
@@ -926,35 +926,35 @@ class Cas1ExternalApplicationServiceTest {
       every {
         cas1PremisesService.findPremisesById(match { it == premisesEntity.id })
       } returns premisesEntity
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement1) } returns
-        transformToPlacementHistory(requestForPlacement1, placement1)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement2, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement1, placement2, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement1, null, null, placement3, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement1, placement3, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement4) } returns
-        transformToPlacementHistory(requestForPlacement3, placement4)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement1) } returns
+        transformToRfpAndPlacement(requestForPlacement1, placement1)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement2, premisesEntity) } returns
+        transformToRfpAndPlacement(requestForPlacement1, placement2, premisesEntity)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement1, null, null, placement3, premisesEntity) } returns
+        transformToRfpAndPlacement(requestForPlacement1, placement3, premisesEntity)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement4) } returns
+        transformToRfpAndPlacement(requestForPlacement3, placement4)
       every {
-        cas1ExternalApplicationTransformer.transformToCas1PlacementPair(
+        cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(
           requestForPlacement3,
           null,
           null,
           placement5,
         )
       } returns
-        transformToPlacementHistory(requestForPlacement3, placement5)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement6) } returns
-        transformToPlacementHistory(requestForPlacement3, placement6)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement3, null, null, placement7, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement3, placement7, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement8) } returns
-        transformToPlacementHistory(requestForPlacement2, placement8)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement9, premisesEntity) } returns
-        transformToPlacementHistory(requestForPlacement2, placement9, premisesEntity)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement2, null, null, placement10) } returns
-        transformToPlacementHistory(requestForPlacement2, placement10)
-      every { cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement4) } returns
-        transformToPlacementHistory(requestForPlacement4)
+        transformToRfpAndPlacement(requestForPlacement3, placement5)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement6) } returns
+        transformToRfpAndPlacement(requestForPlacement3, placement6)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement3, null, null, placement7, premisesEntity) } returns
+        transformToRfpAndPlacement(requestForPlacement3, placement7, premisesEntity)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement8) } returns
+        transformToRfpAndPlacement(requestForPlacement2, placement8)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement9, premisesEntity) } returns
+        transformToRfpAndPlacement(requestForPlacement2, placement9, premisesEntity)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement2, null, null, placement10) } returns
+        transformToRfpAndPlacement(requestForPlacement2, placement10)
+      every { cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(requestForPlacement4) } returns
+        transformToRfpAndPlacement(requestForPlacement4)
 
       every {
         cas1PremisesService.findPremisesById(match { it != premisesEntity.id })
@@ -1010,7 +1010,7 @@ class Cas1ExternalApplicationServiceTest {
       application.placementRequests = mutableListOf(placementRequest)
 
       val placement = Cas1SpaceBookingShortSummaryFactory()
-        .withStatusSetDate(booking.expectedArrivalDate)
+        .withStatusSetDate(booking.expectedArrivalDate.atStartOfDay())
         .withExpectedDepartureDate(booking.expectedDepartureDate)
         .withExpectedArrivalDate(booking.expectedArrivalDate)
         .withStatus(Cas1SpaceBookingStatus.UPCOMING)
@@ -1025,7 +1025,7 @@ class Cas1ExternalApplicationServiceTest {
         .produce()
 
       val requestForPlacement = RequestForPlacementFactory().withStatusSetDate(
-        LocalDate.now().minusDays(4),
+        LocalDateTime.now().minusDays(4),
       ).withPlacements(
         listOf(
           placement,
@@ -1041,7 +1041,7 @@ class Cas1ExternalApplicationServiceTest {
       )
       every { cas1PremisesService.findPremisesById(premisesEntity.id) } returns premisesEntity
       every {
-        cas1ExternalApplicationTransformer.transformToCas1PlacementPair(
+        cas1ExternalApplicationTransformer.transformToCas1RfpAndPlacement(
           requestForPlacement,
           null,
           null,
@@ -1049,7 +1049,7 @@ class Cas1ExternalApplicationServiceTest {
           premisesEntity,
         )
       } returns
-        transformToPlacementHistory(requestForPlacement, placement, premisesEntity)
+        transformToRfpAndPlacement(requestForPlacement, placement, premisesEntity)
 
       val result = service.getCurrentPremisesByCrn(application.crn)
 
@@ -1057,13 +1057,13 @@ class Cas1ExternalApplicationServiceTest {
     }
   }
 
-  private fun transformToPlacementHistory(
+  private fun transformToRfpAndPlacement(
     requestForPlacement: RequestForPlacement,
     placement: Cas1SpaceBookingShortSummary? = null,
     premisesEntity: ApprovedPremisesEntity? = null,
     rejectionReason: String? = null,
     withdrawalDate: LocalDate? = null,
-  ) = Cas1PlacementPairDto(
+  ) = Cas1RfPAndPlacement(
     dateApplied = placement?.statusSetDate ?: requestForPlacement.statusSetDate,
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
       decision = requestForPlacement.decision?.apiValue,

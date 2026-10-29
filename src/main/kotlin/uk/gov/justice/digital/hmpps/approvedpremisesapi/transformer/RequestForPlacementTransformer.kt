@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Component
 class RequestForPlacementTransformer(
@@ -132,28 +132,28 @@ class RequestForPlacementTransformer(
   }
 
   private fun PlacementApplicationEntity.deriveStatus() = when {
-    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.withdrawalOccurredAt?.toLocalDate() ?: this.submittedAt!!.toLocalDate())
+    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.withdrawalOccurredAt?.toLocalDateTime() ?: this.submittedAt!!.toLocalDateTime())
     this.placementRequest?.hasActiveBooking() == true ->
       {
         val occurredAt = this.placementRequest!!.activeSpaceBookings().getOldestCreationDate()
         RequestForPlacementStatusAndWhen(RequestForPlacementStatus.placementBooked, occurredAt)
       }
-    this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestRejected, this.decisionMadeAt!!.toLocalDate())
-    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.awaitingMatch, this.decisionMadeAt!!.toLocalDate())
-    this.isSubmitted() -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestSubmitted, this.submittedAt!!.toLocalDate())
-    else -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestUnsubmitted, this.createdAt.toLocalDate())
+    this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestRejected, this.decisionMadeAt!!.toLocalDateTime())
+    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.awaitingMatch, this.decisionMadeAt!!.toLocalDateTime())
+    this.isSubmitted() -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestSubmitted, this.submittedAt!!.toLocalDateTime())
+    else -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestUnsubmitted, this.createdAt.toLocalDateTime())
   }
 
   private fun PlacementRequestEntity.deriveStatus() = when {
-    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.withdrawalOccurredAt?.toLocalDate() ?: this.createdAt.toLocalDate())
+    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.withdrawalOccurredAt?.toLocalDateTime() ?: this.createdAt.toLocalDateTime())
     this.hasActiveBooking() -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.placementBooked, this.activeSpaceBookings().getOldestCreationDate())
-    else -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.awaitingMatch, this.createdAt.toLocalDate())
+    else -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.awaitingMatch, this.createdAt.toLocalDateTime())
   }
 
-  fun List<Cas1SpaceBookingEntity>.getOldestCreationDate() = mapNotNull { it.createdAt.toLocalDate() }.minOf { it }
+  fun List<Cas1SpaceBookingEntity>.getOldestCreationDate() = mapNotNull { it.createdAt.toLocalDateTime() }.minOf { it }
 }
 
 data class RequestForPlacementStatusAndWhen(
   val status: RequestForPlacementStatus,
-  val occurredAt: LocalDate,
+  val occurredAt: LocalDateTime,
 )

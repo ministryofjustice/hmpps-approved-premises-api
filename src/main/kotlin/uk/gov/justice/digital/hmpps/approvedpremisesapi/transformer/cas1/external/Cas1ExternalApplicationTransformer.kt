@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1RfPAndPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.LocalDate
@@ -27,13 +28,13 @@ class Cas1ExternalApplicationTransformer(
   @Value($$"${url-templates.frontend.application}") private val cas1ApplicationUrlTemplate: String,
 ) {
 
-  fun transformToCas1PlacementPair(
+  fun transformToCas1RfpAndPlacement(
     rfp: RequestForPlacement,
     rejectionReason: String? = null,
     withdrawalDate: LocalDate? = null,
     placement: Cas1SpaceBookingShortSummary? = null,
     premises: ApprovedPremisesEntity? = null,
-  ) = Cas1PlacementPairDto(
+  ) = Cas1RfPAndPlacement(
     dateApplied = placement?.statusSetDate ?: rfp.statusSetDate,
     requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, withdrawalDate, placement),
     placement = placement?.let { transformToPlacement(it, premises) },
@@ -90,8 +91,8 @@ class Cas1ExternalApplicationTransformer(
 
   fun transformToCas1SuitableApplication(
     application: ApprovedPremisesApplicationEntity,
-    suitablePlacementPair: Cas1PlacementPairDto?,
-    placementHistory: List<Cas1PlacementPairDto>,
+    suitablePlacementPair: Cas1RfPAndPlacement?,
+    placementHistory: List<Cas1RfPAndPlacement>,
   ): Cas1SuitableApplication {
     val latestAssessment = application.getLatestAssessment()
     return Cas1SuitableApplication(
@@ -100,7 +101,7 @@ class Cas1ExternalApplicationTransformer(
       assessment = latestAssessment?.let { transformToAssessment(it) },
       requestForPlacement = suitablePlacementPair?.requestForPlacement,
       placement = suitablePlacementPair?.placement,
-      placementHistory = placementHistory,
+      placementHistory = placementHistory.map { it.toPlacementPairDto() },
     )
   }
 
@@ -122,3 +123,9 @@ class Cas1ExternalApplicationTransformer(
     rejectionRationale = latestAssessment.rejectionRationale,
   )
 }
+
+fun Cas1RfPAndPlacement.toPlacementPairDto() = Cas1PlacementPairDto(
+  requestForPlacement,
+  placement,
+  dateApplied.toLocalDate(),
+)

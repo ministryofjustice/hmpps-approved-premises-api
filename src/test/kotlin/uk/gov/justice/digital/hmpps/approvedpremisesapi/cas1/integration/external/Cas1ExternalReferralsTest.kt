@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Approved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -368,6 +369,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
           withExpectedArrivalDate(LocalDate.now())
           withExpectedDepartureDate(LocalDate.now().plusDays(7))
           withActualArrivalDate(LocalDate.now())
+          withActualArrivalTime(LocalTime.now())
         }
       }
     }

@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
@@ -57,6 +58,13 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.expectedArrival = { LocalDate.now().plusDays(5) }
     this.requestedDuration = { 5 }
     this.submittedAt = { OffsetDateTime.now() }
+  }
+
+  fun withApprovedDefaults() = apply {
+    withSubmittedDefaults()
+    withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+    withDecision(PlacementApplicationDecision.ACCEPTED)
+    withAuthorisedDuration(7)
   }
 
   fun withId(id: UUID) = apply {

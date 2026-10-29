@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class RequestForPlacementFactory : Factory<RequestForPlacement> {
@@ -48,7 +49,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
 
   private var authorisedPlacementPeriod: Yielded<Cas1AuthorisedPlacementPeriod?> = { null }
   private var status: Yielded<RequestForPlacementStatus> = { RequestForPlacementStatus.placementBooked }
-  private var statusSetDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var statusSetDate: Yielded<LocalDateTime> = { LocalDateTime.now() }
   private var submittedBy: Yielded<Cas1StaffDto?> = { null }
   private var decision: Yielded<PlacementApplicationDecision?> = { null }
   private var requestReviewedAt: Yielded<Instant?> = { null }
@@ -67,7 +68,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     this.submittedBy = { submittedBy }
   }
 
-  fun withStatusSetDate(statusSetDate: LocalDate) = apply {
+  fun withStatusSetDate(statusSetDate: LocalDateTime) = apply {
     this.statusSetDate = { statusSetDate }
   }
 
