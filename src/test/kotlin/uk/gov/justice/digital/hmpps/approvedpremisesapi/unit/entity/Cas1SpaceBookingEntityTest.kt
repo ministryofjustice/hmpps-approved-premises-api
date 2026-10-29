@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.entity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import java.time.Instant
 import java.time.LocalDate
 
@@ -25,7 +25,7 @@ class Cas1SpaceBookingEntityTest {
       val expectedArrivalDate = LocalDate.of(2025, 1, 10)
       val result = booking().withExpectedArrivalDate(expectedArrivalDate).produce().getSpaceBookingStatus()
 
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.UPCOMING)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.UPCOMING)
       assertThat(result.occurredAt).isEqualTo(expectedArrivalDate)
     }
 
@@ -35,7 +35,7 @@ class Cas1SpaceBookingEntityTest {
 
       val result = booking().withActualArrivalDate(actualArrival).produce().getSpaceBookingStatus()
 
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.ARRIVED)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.ARRIVED)
       assertThat(result.occurredAt).isEqualTo(actualArrival)
     }
 
@@ -49,7 +49,7 @@ class Cas1SpaceBookingEntityTest {
         .produce()
         .getSpaceBookingStatus()
 
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.DEPARTED)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.DEPARTED)
       assertThat(result.occurredAt).isEqualTo(actualDeparture)
     }
 
@@ -58,7 +58,7 @@ class Cas1SpaceBookingEntityTest {
       val expectedArrivalDate = LocalDate.of(2025, 1, 10)
       val result = booking().withExpectedArrivalDate(expectedArrivalDate).withNonArrivalConfirmedAt(Instant.now()).produce().getSpaceBookingStatus()
 
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.NOT_ARRIVED)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.NOT_ARRIVED)
       assertThat(result.occurredAt).isEqualTo(expectedArrivalDate)
     }
 
@@ -68,7 +68,7 @@ class Cas1SpaceBookingEntityTest {
 
       val result = booking().withCancellationOccurredAt(cancelledOn).produce().getSpaceBookingStatus()
 
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.CANCELLED)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.CANCELLED)
       assertThat(result.occurredAt).isEqualTo(cancelledOn)
     }
 
@@ -84,7 +84,7 @@ class Cas1SpaceBookingEntityTest {
         .produce()
         .getSpaceBookingStatus()
 
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.CANCELLED)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.CANCELLED)
       assertThat(result.occurredAt).isEqualTo(cancelledOn)
     }
 
@@ -99,7 +99,7 @@ class Cas1SpaceBookingEntityTest {
         .produce()
         .getSpaceBookingStatus()
 
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.NOT_ARRIVED)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingEntity.Status.NOT_ARRIVED)
       assertThat(result.occurredAt).isEqualTo(expectedArrivalDate)
     }
   }

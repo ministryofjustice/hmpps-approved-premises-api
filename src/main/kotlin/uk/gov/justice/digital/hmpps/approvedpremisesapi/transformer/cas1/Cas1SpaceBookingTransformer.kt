@@ -89,7 +89,7 @@ class Cas1SpaceBookingTransformer(
       openChangeRequests = emptyList(),
       additionalInformation = jpa.additionalInformation,
       transferReason = jpa.transferReason,
-      status = jpa.getSpaceBookingStatus().status,
+      status = jpa.getSpaceBookingStatus().status.toApiType(),
     )
   }
 
@@ -125,7 +125,7 @@ class Cas1SpaceBookingTransformer(
       additionalInformation = spaceBooking.additionalInformation,
       departure = spaceBooking.extractDeparture(),
       bookedBy = spaceBooking.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
-      status = statusAndWhen.status,
+      status = statusAndWhen.status.toApiType(),
       statusSetDate = statusAndWhen.occurredAt,
       placementRequestApType = spaceBooking.placementRequest?.placementRequirements?.apType?.apiType,
     )
@@ -227,7 +227,7 @@ class Cas1SpaceBookingTransformer(
       createdAt = spaceBooking.createdAt.toInstant(),
       transferReason = spaceBooking.transferReason,
       additionalInformation = spaceBooking.additionalInformation,
-      status = spaceBooking.getSpaceBookingStatus().status,
+      status = spaceBooking.getSpaceBookingStatus().status.toApiType(),
     )
   }
 
@@ -300,5 +300,13 @@ class Cas1SpaceBookingTransformer(
     hasDeparted -> Cas1SpaceBookingStatus.DEPARTED
     hasArrival -> Cas1SpaceBookingStatus.ARRIVED
     else -> Cas1SpaceBookingStatus.UPCOMING
+  }
+
+  private fun Cas1SpaceBookingEntity.Status.toApiType() = when (this) {
+    Cas1SpaceBookingEntity.Status.CANCELLED -> Cas1SpaceBookingStatus.CANCELLED
+    Cas1SpaceBookingEntity.Status.NOT_ARRIVED -> Cas1SpaceBookingStatus.NOT_ARRIVED
+    Cas1SpaceBookingEntity.Status.DEPARTED -> Cas1SpaceBookingStatus.DEPARTED
+    Cas1SpaceBookingEntity.Status.ARRIVED -> Cas1SpaceBookingStatus.ARRIVED
+    Cas1SpaceBookingEntity.Status.UPCOMING -> Cas1SpaceBookingStatus.UPCOMING
   }
 }
