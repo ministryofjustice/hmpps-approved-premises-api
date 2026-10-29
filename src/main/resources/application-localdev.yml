@@ -69,6 +69,9 @@ refresh-inmate-details-cache:
 notify:
   log-emails: true
 
+s3:
+  bucket-name: "approved-premises"
+
 logging:
   level:
     # Log hibernate queries

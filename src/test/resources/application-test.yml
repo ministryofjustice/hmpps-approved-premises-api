@@ -62,12 +62,6 @@ spring:
             client-secret: clientsecret
             client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
-          document-management-api:
-            provider: hmpps-auth
-            client-id: approved-premises-api
-            client-secret: clientsecret
-            client-authentication-method: client_secret_basic
-            authorization-grant-type: client_credentials
   cache:
     type: none
 
@@ -287,3 +281,6 @@ refresh-inmate-details-cache:
 
 feature-flags:
   cas1-disable-overbooking-summary: false
+
+s3:
+  bucket-name: "test-bucket"

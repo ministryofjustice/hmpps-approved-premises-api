@@ -8,23 +8,29 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvJdbcRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.Cas2DataScienceReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.Cas3DataScienceReportRepository
 import java.io.File
-import java.time.LocalDate
-import java.util.UUID
+import java.time.Clock
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 class DataScienceReportsGenerator(
   private val cas1DataScienceReportRepository: Cas1DataScienceReportRepository,
   private val cas2DataScienceReportRepository: Cas2DataScienceReportRepository,
   private val cas3DataScienceReportRepository: Cas3DataScienceReportRepository,
+  private val clock: Clock,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  @Transactional(readOnly = true)
-  fun generateReport(documentSubType: CasDocumentSubType, executionDate: LocalDate, targetFile: File): GeneratedReport {
-    val filename = "${documentSubType.value.lowercase()}_data_science_report_$executionDate.csv"
-    val documentUuid = UUID.randomUUID()
+  companion object {
+    val TIMESTAMP_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+  }
 
-    log.info("Generating $documentSubType Data Science report (filename: $filename, documentUuid: $documentUuid)")
+  @Transactional(readOnly = true)
+  fun generateReport(documentSubType: CasDocumentSubType, targetFile: File): GeneratedReport {
+    val timestamp = LocalDateTime.now(clock).format(TIMESTAMP_FORMAT)
+    val filename = "${documentSubType.value.lowercase()}_data_science_report_$timestamp.csv"
+
+    log.info("Generating $documentSubType Data Science report (filename: $filename)")
 
     targetFile.outputStream().buffered().use { outputStream ->
       CsvJdbcResultSetConsumer(outputStream).use { consumer ->
@@ -41,9 +47,7 @@ class DataScienceReportsGenerator(
 
     return GeneratedReport(
       filename = filename,
-      documentUuid = documentUuid,
       documentSubType = documentSubType,
-      executionDate = executionDate,
     )
   }
 }
@@ -56,7 +60,5 @@ enum class CasDocumentSubType(val value: String) {
 
 data class GeneratedReport(
   val filename: String,
-  val documentUuid: UUID,
   val documentSubType: CasDocumentSubType,
-  val executionDate: LocalDate,
 )
