@@ -103,9 +103,8 @@ class RequestForPlacementTransformerTest {
       assertThat(result.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(result.submittedBy?.name).isEqualTo(placementApplication.createdByUser.name)
 
-      val expectedStatus = placementApplication.getStatus()
-      assertThat(result.status).isEqualTo(expectedStatus.status)
-      assertThat(result.statusSetDate).isEqualTo(expectedStatus.occurredAt)
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+      assertThat(result.statusSetDate).isEqualTo(placementApplication.decisionMadeAt!!.toLocalDate())
 
       verify(exactly = 1) { jsonMapper.readTree(placementApplication.document) }
     }

@@ -63,7 +63,7 @@ class RequestForPlacementTransformer(
       withdrawalReason = placementApplicationEntity.withdrawalReason?.apiValue,
       withdrawalDate = placementApplicationEntity.withdrawalOccurredAt,
       rejectionReason = placementApplicationEntity.decisionSummary.takeIf { placementApplicationEntity.decision == PlacementApplicationDecision.REJECTED },
-      status = statusAndWhen.status,
+      status = statusAndWhen.status.toApi(),
       statusSetDate = statusAndWhen.occurredAt,
       sentenceType = placementApplicationEntity.sentenceType?.let { SentenceTypeOption.valueOf(it) },
       releaseType = placementApplicationEntity.releaseType?.apiType,
@@ -129,6 +129,15 @@ class RequestForPlacementTransformer(
       decision = PlacementApplicationDecision.ACCEPTED,
       submittedBy = cas1AssessmentTransformer.transformToStaffDto(application.createdByUser),
     )
+  }
+
+  private fun PlacementApplicationEntity.Status.toApi() = when (this) {
+    PlacementApplicationEntity.Status.REQUEST_UNSUBMITTED -> RequestForPlacementStatus.requestUnsubmitted
+    PlacementApplicationEntity.Status.REQUEST_REJECTED -> RequestForPlacementStatus.requestRejected
+    PlacementApplicationEntity.Status.REQUEST_SUBMITTED -> RequestForPlacementStatus.requestSubmitted
+    PlacementApplicationEntity.Status.AWAITING_MATCH -> RequestForPlacementStatus.awaitingMatch
+    PlacementApplicationEntity.Status.REQUEST_WITHDRAWN -> RequestForPlacementStatus.requestWithdrawn
+    PlacementApplicationEntity.Status.PLACEMENT_BOOKED -> RequestForPlacementStatus.placementBooked
   }
 
   private fun PlacementRequestEntity.deriveStatus() = when {

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -97,7 +96,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(RequestForPlacementStatus.requestWithdrawn, now.minusDays(2).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_WITHDRAWN, now.minusDays(2).toLocalDate()),
       )
     }
 
@@ -111,7 +110,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(RequestForPlacementStatus.requestWithdrawn, now.minusDays(5).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_WITHDRAWN, now.minusDays(5).toLocalDate()),
       )
     }
 
@@ -126,7 +125,7 @@ class PlacementApplicationEntityTest {
         .withPlacementRequest(placementRequestWithBookings(now.minusDays(1)))
         .produce()
 
-      assertThat(placementApplication.getStatus().status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+      assertThat(placementApplication.getStatus().status).isEqualTo(PlacementApplicationEntity.Status.REQUEST_WITHDRAWN)
     }
 
     @Test
@@ -139,7 +138,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(RequestForPlacementStatus.placementBooked, now.minusDays(3).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.PLACEMENT_BOOKED, now.minusDays(3).toLocalDate()),
       )
     }
 
@@ -164,7 +163,7 @@ class PlacementApplicationEntityTest {
         )
         .produce()
 
-      assertThat(placementApplication.getStatus().status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+      assertThat(placementApplication.getStatus().status).isEqualTo(PlacementApplicationEntity.Status.AWAITING_MATCH)
     }
 
     @Test
@@ -176,7 +175,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(RequestForPlacementStatus.requestRejected, now.minusDays(1).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_REJECTED, now.minusDays(1).toLocalDate()),
       )
     }
 
@@ -189,7 +188,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(RequestForPlacementStatus.awaitingMatch, now.minusDays(1).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.AWAITING_MATCH, now.minusDays(1).toLocalDate()),
       )
     }
 
@@ -201,7 +200,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(RequestForPlacementStatus.requestSubmitted, now.minusDays(4).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_SUBMITTED, now.minusDays(4).toLocalDate()),
       )
     }
 
@@ -214,7 +213,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(RequestForPlacementStatus.requestUnsubmitted, now.minusDays(6).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_UNSUBMITTED, now.minusDays(6).toLocalDate()),
       )
     }
 

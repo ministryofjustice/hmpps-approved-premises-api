@@ -23,7 +23,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementApplicationDates
@@ -219,33 +218,42 @@ data class PlacementApplicationEntity(
 
   fun getStatus(): StatusAndWhen = when {
     isWithdrawn -> StatusAndWhen(
-      RequestForPlacementStatus.requestWithdrawn,
+      Status.REQUEST_WITHDRAWN,
       withdrawalOccurredAt?.toLocalDate() ?: submittedAt!!.toLocalDate(),
     )
     placementRequest?.hasActiveBooking() == true -> StatusAndWhen(
-      RequestForPlacementStatus.placementBooked,
+      Status.PLACEMENT_BOOKED,
       placementRequest!!.activeSpaceBookings().minOf { it.createdAt.toLocalDate() },
     )
     decision == PlacementApplicationDecision.REJECTED -> StatusAndWhen(
-      RequestForPlacementStatus.requestRejected,
+      Status.REQUEST_REJECTED,
       decisionMadeAt!!.toLocalDate(),
     )
     decision == PlacementApplicationDecision.ACCEPTED -> StatusAndWhen(
-      RequestForPlacementStatus.awaitingMatch,
+      Status.AWAITING_MATCH,
       decisionMadeAt!!.toLocalDate(),
     )
     isSubmitted() -> StatusAndWhen(
-      RequestForPlacementStatus.requestSubmitted,
+      Status.REQUEST_SUBMITTED,
       submittedAt!!.toLocalDate(),
     )
     else -> StatusAndWhen(
-      RequestForPlacementStatus.requestUnsubmitted,
+      Status.REQUEST_UNSUBMITTED,
       createdAt.toLocalDate(),
     )
   }
 
+  enum class Status {
+    REQUEST_UNSUBMITTED,
+    REQUEST_REJECTED,
+    REQUEST_SUBMITTED,
+    AWAITING_MATCH,
+    REQUEST_WITHDRAWN,
+    PLACEMENT_BOOKED,
+  }
+
   data class StatusAndWhen(
-    val status: RequestForPlacementStatus,
+    val status: Status,
     val occurredAt: LocalDate,
   )
 
