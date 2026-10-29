@@ -19,7 +19,7 @@ class Cas3DataScienceReportsScheduledJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  @Scheduled(cron = "0 20 * * * THU")
+  @Scheduled(cron = "0 30 9 * * MON")
   @SchedulerLock(name = "cas3_data_science_reports_upload", lockAtMostFor = "60m", lockAtLeastFor = "15m")
   fun generateAndUploadReport() {
     if (!featureFlagService.getBooleanFlag(FEATURE_FLAG_DATA_SCIENCE_REPORTS_SCHEDULED_JOB_ENABLED)) {
