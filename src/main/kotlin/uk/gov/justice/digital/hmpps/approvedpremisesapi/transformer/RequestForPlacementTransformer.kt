@@ -9,12 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
-import java.time.LocalDate
 
 @Component
 class RequestForPlacementTransformer(
@@ -90,7 +88,7 @@ class RequestForPlacementTransformer(
     }
 
     val application = placementRequestEntity.application
-    val statusAndWhen = placementRequestEntity.deriveStatus()
+    val statusAndWhen = placementRequestEntity.getStatus()
     val canonicalPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementRequestEntity.expectedArrival,
       arrivalFlexible = null,
@@ -121,7 +119,7 @@ class RequestForPlacementTransformer(
       canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
       withdrawalReason = placementRequestEntity.withdrawalReason?.apiValue,
       withdrawalDate = placementRequestEntity.withdrawalOccurredAt,
-      status = statusAndWhen.status,
+      status = statusAndWhen.status.toApi(),
       statusSetDate = statusAndWhen.occurredAt,
       sentenceType = application.sentenceType?.let { SentenceTypeOption.valueOf(it) },
       releaseType = application.releaseType?.apiType,
@@ -140,16 +138,9 @@ class RequestForPlacementTransformer(
     PlacementApplicationEntity.Status.PLACEMENT_BOOKED -> RequestForPlacementStatus.placementBooked
   }
 
-  private fun PlacementRequestEntity.deriveStatus() = when {
-    this.isWithdrawn -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.requestWithdrawn, this.withdrawalOccurredAt?.toLocalDate() ?: this.createdAt.toLocalDate())
-    this.hasActiveBooking() -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.placementBooked, this.activeSpaceBookings().getOldestCreationDate())
-    else -> RequestForPlacementStatusAndWhen(RequestForPlacementStatus.awaitingMatch, this.createdAt.toLocalDate())
+  private fun PlacementRequestEntity.Status.toApi() = when (this) {
+    PlacementRequestEntity.Status.AWAITING_MATCH -> RequestForPlacementStatus.awaitingMatch
+    PlacementRequestEntity.Status.REQUEST_WITHDRAWN -> RequestForPlacementStatus.requestWithdrawn
+    PlacementRequestEntity.Status.PLACEMENT_BOOKED -> RequestForPlacementStatus.placementBooked
   }
-
-  fun List<Cas1SpaceBookingEntity>.getOldestCreationDate() = mapNotNull { it.createdAt.toLocalDate() }.minOf { it }
 }
-
-data class RequestForPlacementStatusAndWhen(
-  val status: RequestForPlacementStatus,
-  val occurredAt: LocalDate,
-)

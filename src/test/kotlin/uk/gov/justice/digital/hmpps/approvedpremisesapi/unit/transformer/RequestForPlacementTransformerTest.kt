@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOptio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -30,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Rele
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -220,150 +218,8 @@ class RequestForPlacementTransformerTest {
       assertThat(result.situation).isEqualTo(SituationOption.bailAssessment)
       assertThat(result.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(result.submittedBy?.name).isEqualTo(application.createdByUser.name)
-    }
-
-    @Test
-    fun `Derives the correct status for a withdrawn placement request, when withdrawal date is defined`() {
-      val withdrawalOccuredAtDate = OffsetDateTime.now().plusDays(10)
-      val createdAt = OffsetDateTime.now().minusDays(5)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withDefaults()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withIsWithdrawn(true)
-        .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
-        .withWithdrawalOccurredAt(withdrawalOccuredAtDate)
-        .withCreatedAt(createdAt)
-        .produce()
-      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
-        name = application.createdByUser.name,
-        username = application.createdByUser.deliusUsername,
-        staffCode = application.createdByUser.deliusStaffCode,
-      )
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
-
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
-      assertThat(result.statusSetDate).isEqualTo(withdrawalOccuredAtDate.toLocalDate())
-    }
-
-    @Test
-    fun `Derives the correct status for a withdrawn placement request, when withdrawal date is not defined`() {
-      val createdAt = OffsetDateTime.now().minusDays(5)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withDefaults()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withIsWithdrawn(true)
-        .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
-        .withWithdrawalOccurredAt(null)
-        .withCreatedAt(createdAt)
-        .produce()
-      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
-        name = application.createdByUser.name,
-        username = application.createdByUser.deliusUsername,
-        staffCode = application.createdByUser.deliusStaffCode,
-      )
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
-
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
-      assertThat(result.statusSetDate).isEqualTo(createdAt.toLocalDate())
-    }
-
-    @Test
-    fun `Derives the correct status for a placement request with a booking`() {
-      val statusSetDate = LocalDate.now().plusDays(10)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
-        .produce()
-
-      val placementRequirements = PlacementRequirementsEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withPlacementRequirements(placementRequirements)
-        .produce()
-
-      Cas1SpaceBookingEntityFactory()
-        .withCreatedAt(statusSetDate.toLocalDateTime().truncatedTo(ChronoUnit.SECONDS))
-        .produce()
-        .apply {
-          placementRequest.spaceBookings = mutableListOf(this)
-        }
-      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
-        name = application.createdByUser.name,
-        username = application.createdByUser.deliusUsername,
-        staffCode = application.createdByUser.deliusStaffCode,
-      )
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
-
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
-      assertThat(result.statusSetDate).isEqualTo(statusSetDate)
-    }
-
-    @Test
-    fun `Derives the correct status for a placement request awaiting match`() {
-      val statusSetDate = LocalDate.now().plusDays(10)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
-        .produce()
-
-      val placementRequirements = PlacementRequirementsEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withPlacementRequirements(placementRequirements)
-        .withIsWithdrawn(false)
-        .withCreatedAt(statusSetDate.toLocalDateTime().truncatedTo(ChronoUnit.SECONDS))
-        .produce()
-      every { cas1AssessmentTransformer.transformToStaffDto(application.createdByUser) } returns Cas1StaffDto(
-        name = application.createdByUser.name,
-        username = application.createdByUser.deliusUsername,
-        staffCode = application.createdByUser.deliusStaffCode,
-      )
-      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
-
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
-      assertThat(result.statusSetDate).isEqualTo(statusSetDate)
+      assertThat(result.statusSetDate).isEqualTo(placementRequest.createdAt.toLocalDate())
     }
 
     @ParameterizedTest

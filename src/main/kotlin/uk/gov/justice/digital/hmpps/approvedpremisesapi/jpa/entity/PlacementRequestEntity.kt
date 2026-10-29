@@ -202,6 +202,32 @@ data class PlacementRequestEntity(
 
   fun isActive() = !isWithdrawn
 
+  fun getStatus(): StatusAndWhen = when {
+    isWithdrawn -> StatusAndWhen(
+      Status.REQUEST_WITHDRAWN,
+      withdrawalOccurredAt?.toLocalDate() ?: createdAt.toLocalDate(),
+    )
+    hasActiveBooking() -> StatusAndWhen(
+      Status.PLACEMENT_BOOKED,
+      activeSpaceBookings().minOf { it.createdAt.toLocalDate() },
+    )
+    else -> StatusAndWhen(
+      Status.AWAITING_MATCH,
+      createdAt.toLocalDate(),
+    )
+  }
+
+  enum class Status {
+    AWAITING_MATCH,
+    REQUEST_WITHDRAWN,
+    PLACEMENT_BOOKED,
+  }
+
+  data class StatusAndWhen(
+    val status: Status,
+    val occurredAt: LocalDate,
+  )
+
   /**
    * Before 26/8/25, if a request for placement was made as part of the original
    * application (i.e. an arrival date was defined), a corresponding [PlacementApplicationEntity]
