@@ -12,6 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
 @Service
 @Suppress(
@@ -22,6 +25,7 @@ class Cas2OffenderService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val cas2PersonTransformer: Cas2PersonTransformer,
   private val tierService: TierService,
+  private val offenderService: OffenderService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -110,6 +114,21 @@ class Cas2OffenderService(
     return AuthorisableActionResult.Success(inmateDetail)
   }
 
+  fun getPersonSummaries(laoStrategy: LaoStrategy, crns: List<String>): List<Cas2PersonSummary> {
+    val personSummaryInfoResults = offenderService.getPersonSummaryInfoResultsInBatches(
+      crns = crns.toSet(),
+      laoStrategy = laoStrategy,
+      includeTier = false,
+    )
+    return personSummaryInfoResults.map { personSummaryInfoResult ->
+      when (personSummaryInfoResult) {
+        is PersonSummaryInfoResult.Success.Full -> Cas2PersonSummary.Summary(personSummaryInfoResult.crn, cas2PersonTransformer.transformCaseSummaryNameToFullName(personSummaryInfoResult.summary.name))
+        is PersonSummaryInfoResult.Success.Restricted -> Cas2PersonSummary.LimitedAccess(personSummaryInfoResult.crn)
+        is PersonSummaryInfoResult.NotFound -> Cas2PersonSummary.NotFound(personSummaryInfoResult.crn)
+      }
+    }
+  }
+
   private fun emitMessageAndCreateNotFound(message: String, nomisIdOrCrn: String): Cas2v2OffenderSearchResult.NotFound {
     log.warn(message)
     return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn)
@@ -129,4 +148,12 @@ sealed interface Cas2v2OffenderSearchResult {
   data class NotFound(override val nomisIdOrCrn: String) : Cas2v2OffenderSearchResult
   data class Unknown(override val nomisIdOrCrn: String, val throwable: Throwable? = null) : Cas2v2OffenderSearchResult
   data class Forbidden(override val nomisIdOrCrn: String, val throwable: Throwable? = null) : Cas2v2OffenderSearchResult
+}
+
+sealed interface Cas2PersonSummary {
+  val crn: String
+
+  data class Summary(override val crn: String, val name: String) : Cas2PersonSummary
+  data class NotFound(override val crn: String) : Cas2PersonSummary
+  data class LimitedAccess(override val crn: String) : Cas2PersonSummary
 }

@@ -15,16 +15,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Submitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -36,7 +38,6 @@ class Cas2SubmissionsController(
   private val cas2SubmissionsTransformer: Cas2SubmissionsTransformer,
   private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
   private val cas2OffenderService: Cas2OffenderService,
-  private val offenderService: Cas2HdcOffenderService,
   private val userService: Cas2UserService,
 ) {
 
@@ -54,7 +55,7 @@ class Cas2SubmissionsController(
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
-    ).body(getPersonNamesAndTransformToSummaries(applications))
+    ).body(getPersonNamesAndTransformToSummaries(userService.getUserForRequest().cas2LaoStrategy(), applications))
   }
 
   @Operation(description = "Get a submitted application. There are no constraints on who can access this endpoint")
@@ -84,14 +85,25 @@ class Cas2SubmissionsController(
   }
 
   private fun getPersonNamesAndTransformToSummaries(
+    laoStrategy: LaoStrategy,
     applicationSummaries: List<Cas2ApplicationSummaryEntity>,
   ): List<Cas2SubmittedApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
-    val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
+    val personSummaries = cas2OffenderService.getPersonSummaries(laoStrategy, crns)
+
+    val personNamesMap = personSummaries.associate {
+      it.crn to when (it) {
+        is Cas2PersonSummary.Summary -> it.name
+        is Cas2PersonSummary.LimitedAccess -> "Restricted Access"
+        is Cas2PersonSummary.NotFound -> "Person Not Found"
+      }
+    }
+
+    val personSummariesMap = personSummaries.associateBy { it.crn }
 
     return applicationSummaries.map { application ->
-      cas2SubmissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.crn]!!)
+      cas2SubmissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.crn]!!, personSummariesMap[application.crn]!!)
     }
   }
 

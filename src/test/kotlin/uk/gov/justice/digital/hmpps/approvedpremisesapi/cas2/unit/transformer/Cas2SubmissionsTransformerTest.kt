@@ -9,11 +9,13 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersonSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2TimelineEventsTransformer
@@ -143,6 +145,11 @@ class Cas2SubmissionsTransformerTest {
         cohort = Cas2Cohort.COURT_BAIL,
       )
 
+      val personSummary = Cas2PersonSummary.Summary(crn = "CRN123", name = "Example Offender")
+      val personSummaryDto = Cas2PersonSummaryDto.Found(crn = "CRN123", name = "Example Offender")
+
+      every { mockPersonTransformer.transformCas2PersonSummaryToDto(personSummary) } returns personSummaryDto
+
       val expectedSubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRN123",
@@ -152,11 +159,13 @@ class Cas2SubmissionsTransformerTest {
         submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
         personName = "Example Offender",
         cohort = Cas2CohortDto.COURT_BAIL,
+        personSummary = personSummaryDto,
       )
 
       val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(
         applicationSummary,
         "Example Offender",
+        personSummary,
       )
 
       assertThat(transformation).isEqualTo(expectedSubmittedApplicationSummary)

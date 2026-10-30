@@ -4,9 +4,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2LaoStrategy
 
 class LaoStrategyTest {
 
@@ -20,6 +22,15 @@ class LaoStrategyTest {
       assertThat(result.deliusUsername).isEqualTo("the username")
       assertThat(result.restrictionHandling).isEqualTo(LaoStrategy.RestrictionHandling.ALWAYS_CHECK)
       assertThat(result.exclusionHandling).isEqualTo(LaoStrategy.ExclusionHandling.ALWAYS_CHECK)
+    }
+
+    @Test
+    fun `cas2LaoStrategy returns correct strategy`() {
+      val result = Cas2UserEntityFactory().produce().cas2LaoStrategy()
+
+      assertThat(result.deliusUsername).isNull()
+      assertThat(result.restrictionHandling).isEqualTo(LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER)
+      assertThat(result.exclusionHandling).isEqualTo(LaoStrategy.ExclusionHandling.IGNORE)
     }
   }
 
@@ -48,6 +59,17 @@ class LaoStrategyTest {
         )
       }.isInstanceOf(IllegalArgumentException::class.java)
         .hasMessage("Delius username is required when applying LAO checks")
+    }
+
+    @Test
+    fun `constructor does not require a username when restrictions are blocked regardless of user`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
+        deliusUsername = null,
+      )
+
+      assertThat(strategy.deliusUsername).isNull()
     }
   }
 
@@ -82,6 +104,17 @@ class LaoStrategyTest {
         restrictionHandling = LaoStrategy.RestrictionHandling.ALWAYS_CHECK,
         exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
         deliusUsername = "user1",
+      )
+
+      assertThat(strategy.isNeverRestricted()).isFalse()
+    }
+
+    @Test
+    fun `returns false when restrictions are blocked regardless of user`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
+        deliusUsername = null,
       )
 
       assertThat(strategy.isNeverRestricted()).isFalse()
@@ -183,6 +216,82 @@ class LaoStrategyTest {
 
       assertThat(result)
         .isEqualTo(LaoStrategy.CaseSummaryViewResult.CAN_VIEW)
+    }
+
+    @Test
+    fun `returns CANNOT_VIEW when restrictions are blocked regardless of user and a restriction is present`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
+        deliusUsername = null,
+      )
+
+      val result = strategy.canView(
+        CaseSummaryFactory()
+          .withCurrentRestriction(currentRestriction = true)
+          .withCurrentExclusion(currentExclusion = false)
+          .produce(),
+      )
+
+      assertThat(result)
+        .isEqualTo(LaoStrategy.CaseSummaryViewResult.CANNOT_VIEW)
+    }
+
+    @Test
+    fun `returns CAN_VIEW when restrictions are blocked regardless of user but no restriction is present`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
+        deliusUsername = null,
+      )
+
+      val result = strategy.canView(
+        CaseSummaryFactory()
+          .withCurrentRestriction(currentRestriction = false)
+          .withCurrentExclusion(currentExclusion = false)
+          .produce(),
+      )
+
+      assertThat(result)
+        .isEqualTo(LaoStrategy.CaseSummaryViewResult.CAN_VIEW)
+    }
+
+    @Test
+    fun `returns CAN_VIEW when restrictions are blocked regardless of user, exclusions are ignored and only an exclusion is present`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
+        deliusUsername = null,
+      )
+
+      val result = strategy.canView(
+        CaseSummaryFactory()
+          .withCurrentRestriction(currentRestriction = false)
+          .withCurrentExclusion(currentExclusion = true)
+          .produce(),
+      )
+
+      assertThat(result)
+        .isEqualTo(LaoStrategy.CaseSummaryViewResult.CAN_VIEW)
+    }
+
+    @Test
+    fun `returns CHECK_CASE_ACCESS when restrictions are blocked regardless of user, exclusion checks are enabled and only an exclusion is present`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.ALWAYS_CHECK,
+        deliusUsername = "user1",
+      )
+
+      val result = strategy.canView(
+        CaseSummaryFactory()
+          .withCurrentRestriction(currentRestriction = false)
+          .withCurrentExclusion(currentExclusion = true)
+          .produce(),
+      )
+
+      assertThat(result)
+        .isEqualTo(LaoStrategy.CaseSummaryViewResult.CHECK_CASE_ACCESS)
     }
   }
 
@@ -313,6 +422,60 @@ class LaoStrategyTest {
       )
 
       assertThat(result).isTrue()
+    }
+
+    @Test
+    fun `returns false when restrictions are blocked regardless of user even if the user is not restricted`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
+        deliusUsername = null,
+      )
+
+      val result = strategy.canView(
+        CaseAccessFactory()
+          .withUserRestricted(false)
+          .withUserExcluded(false)
+          .produce(),
+      )
+
+      assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `returns false when restrictions are blocked regardless of user, exclusion checks are enabled and the user is excluded`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.ALWAYS_CHECK,
+        deliusUsername = "user1",
+      )
+
+      val result = strategy.canView(
+        CaseAccessFactory()
+          .withUserRestricted(false)
+          .withUserExcluded(true)
+          .produce(),
+      )
+
+      assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `returns false when restrictions are blocked regardless of user, exclusion checks are enabled and the user is not excluded`() {
+      val strategy = LaoStrategy(
+        restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+        exclusionHandling = LaoStrategy.ExclusionHandling.ALWAYS_CHECK,
+        deliusUsername = "user1",
+      )
+
+      val result = strategy.canView(
+        CaseAccessFactory()
+          .withUserRestricted(false)
+          .withUserExcluded(false)
+          .produce(),
+      )
+
+      assertThat(result).isFalse()
     }
   }
 }

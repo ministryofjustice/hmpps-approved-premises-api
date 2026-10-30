@@ -16,6 +16,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersonSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
@@ -41,7 +42,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextVerifyUserAccessCalls
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -300,6 +303,75 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
 
       Assertions.assertThat(response.personName)
         .isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+
+      Assertions.assertThat(response.personSummary).isEqualTo(
+        Cas2PersonSummaryDto.Found(
+          crn = offenderDetails.otherIds.crn,
+          name = "${offenderDetails.firstName} ${offenderDetails.surname}",
+        ),
+      )
+    }
+
+    @Test
+    fun `Get all submitted applications returns a personSummary reflecting the LAO status of each person`() {
+      givenACas2v2Assessor { _, jwt ->
+        givenACas2v2PomUser { user, _ ->
+          val (fullOffender, _) = givenAnOffender()
+          val (excludedOffender, _) = givenAnOffender(offenderDetailsConfigBlock = { withCurrentExclusion(true) })
+          val (restrictedOffender, _) = givenAnOffender(offenderDetailsConfigBlock = { withCurrentRestriction(true) })
+          val notFoundCrn = randomStringUpperCase(8)
+
+          fun createSubmittedApplication(crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(user)
+            withCrn(crn)
+            withSubmittedAt(OffsetDateTime.now())
+            withData("{}")
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          }
+
+          val fullApplication = createSubmittedApplication(fullOffender.otherIds.crn)
+          val excludedApplication = createSubmittedApplication(excludedOffender.otherIds.crn)
+          val restrictedApplication = createSubmittedApplication(restrictedOffender.otherIds.crn)
+          val notFoundApplication = createSubmittedApplication(notFoundCrn)
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2/submissions")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val summariesById = jsonMapper
+            .readValue(rawResponseBody, object : TypeReference<List<Cas2SubmittedApplicationSummary>>() {})
+            .associateBy { it.id }
+
+          val fullName = "${fullOffender.firstName} ${fullOffender.surname}"
+          Assertions.assertThat(summariesById[fullApplication.id]!!.personName).isEqualTo(fullName)
+          Assertions.assertThat(summariesById[fullApplication.id]!!.personSummary)
+            .isEqualTo(Cas2PersonSummaryDto.Found(fullOffender.otherIds.crn, fullName))
+
+          // CAS2 ignores exclusions
+          val excludedName = "${excludedOffender.firstName} ${excludedOffender.surname}"
+          Assertions.assertThat(summariesById[excludedApplication.id]!!.personName).isEqualTo(excludedName)
+          Assertions.assertThat(summariesById[excludedApplication.id]!!.personSummary)
+            .isEqualTo(Cas2PersonSummaryDto.Found(excludedOffender.otherIds.crn, excludedName))
+
+          // CAS2 blocks restricted offenders regardless of user
+          Assertions.assertThat(summariesById[restrictedApplication.id]!!.personName).isEqualTo("Restricted Access")
+          Assertions.assertThat(summariesById[restrictedApplication.id]!!.personSummary)
+            .isEqualTo(Cas2PersonSummaryDto.LimitedAccess(restrictedOffender.otherIds.crn))
+
+          Assertions.assertThat(summariesById[notFoundApplication.id]!!.personName).isEqualTo("Person Not Found")
+          Assertions.assertThat(summariesById[notFoundApplication.id]!!.personSummary)
+            .isEqualTo(Cas2PersonSummaryDto.NotFound(notFoundCrn))
+
+          apDeliusContextVerifyUserAccessCalls(times = 0)
+        }
+      }
     }
   }
 

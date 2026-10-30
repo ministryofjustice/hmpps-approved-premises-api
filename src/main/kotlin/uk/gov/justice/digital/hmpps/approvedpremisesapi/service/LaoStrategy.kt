@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
@@ -43,7 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
  *
  * This logic has been applied because CAS2 is used by NOMIS and External Users, so we can't always check restrictions.
  *
- * Implemented in [Cas2HdcOffenderService]
+ * Implemented in [Cas2HdcOffenderService]. See [cas2LaoStrategy()] below
  *
  * # CAS2 Bail
  *
@@ -54,7 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
  *
  * We _could_ tighten this up for Delius users
  *
- * Implemented in [Cas2OffenderService]
+ * Implemented in [Cas2OffenderService]. See [cas2LaoStrategy()] below
  *
  * # CAS3
  *
@@ -73,7 +74,20 @@ data class LaoStrategy(
   }
 
   enum class RestrictionHandling {
+    /**
+     * If a restriction exists, check whether it applies to the calling Delius user
+     */
     ALWAYS_CHECK,
+
+    /**
+     * If a restriction exists, block access for all users without checking whether it
+     * applies to the calling user (e.g. for users that don't have a Delius account)
+     */
+    BLOCK_REGARDLESS_OF_USER,
+
+    /**
+     * Ignore restrictions
+     */
     IGNORE,
   }
   enum class ExclusionHandling {
@@ -131,10 +145,13 @@ data class LaoStrategy(
     val checkCaseAccessToDetermineRestriction = caseSummary.currentRestriction &&
       when (restrictionHandling) {
         RestrictionHandling.ALWAYS_CHECK -> true
+        RestrictionHandling.BLOCK_REGARDLESS_OF_USER -> false
         RestrictionHandling.IGNORE -> false
       }
 
-    return if (checkCaseAccessToDetermineExclusion || checkCaseAccessToDetermineRestriction) {
+    return if (caseSummary.currentRestriction && restrictionHandling == RestrictionHandling.BLOCK_REGARDLESS_OF_USER) {
+      CaseSummaryViewResult.CANNOT_VIEW
+    } else if (checkCaseAccessToDetermineExclusion || checkCaseAccessToDetermineRestriction) {
       CaseSummaryViewResult.CHECK_CASE_ACCESS
     } else {
       CaseSummaryViewResult.CAN_VIEW
@@ -152,6 +169,7 @@ data class LaoStrategy(
 
     val restrictionDoesntApply = when (restrictionHandling) {
       RestrictionHandling.ALWAYS_CHECK -> !caseAccess.userRestricted
+      RestrictionHandling.BLOCK_REGARDLESS_OF_USER -> false
       RestrictionHandling.IGNORE -> true
     }
 
@@ -160,6 +178,7 @@ data class LaoStrategy(
 
   enum class CaseSummaryViewResult {
     CAN_VIEW,
+    CANNOT_VIEW,
     CHECK_CASE_ACCESS,
   }
 }
@@ -177,3 +196,9 @@ fun UserEntity.cas1LaoStrategy() = if (this.hasQualification(UserQualification.L
 fun UserEntity.cas1CreateApplicationLaoStrategy() = LaoStrategy.checkUserAccess(this.deliusUsername)
 
 fun UserEntity.cas3LaoStrategy() = LaoStrategy.checkUserAccess(this.deliusUsername)
+
+fun Cas2UserEntity.cas2LaoStrategy() = LaoStrategy(
+  restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+  exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
+  deliusUsername = null,
+)

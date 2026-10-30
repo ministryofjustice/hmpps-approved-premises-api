@@ -6,12 +6,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 
 @Component
 class Cas2PersonTransformer {
 
   fun transformCaseSummaryToFullPerson(caseSummary: CaseSummary, tier: TierDto?): FullPerson = FullPerson(
-    name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+    name = transformCaseSummaryNameToFullName(caseSummary.name),
     dateOfBirth = caseSummary.dateOfBirth,
     sex = caseSummary.gender ?: "Unknown",
     status = PersonStatus.unknown,
@@ -22,4 +23,6 @@ class Cas2PersonTransformer {
     nationality = caseSummary.profile?.nationality ?: "Unknown",
     tier = tier,
   )
+
+  fun transformCaseSummaryNameToFullName(name: Name): String = "${name.forename} ${name.surname}"
 }

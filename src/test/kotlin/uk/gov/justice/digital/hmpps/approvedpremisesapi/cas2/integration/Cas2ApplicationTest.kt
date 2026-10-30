@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersonSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
@@ -42,10 +43,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesErrorResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextVerifyUserAccessCalls
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -585,6 +588,62 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("$[0].personName")
           .isEqualTo("Person Not Found")
+          .jsonPath("$[0].personSummary.personType")
+          .isEqualTo("NotFound")
+          .jsonPath("$[0].personSummary.crn")
+          .isEqualTo(crn)
+      }
+    }
+
+    @Test
+    fun `Get all applications returns a personSummary reflecting the LAO status of each person`() {
+      givenACas2v2DeliusUser { userEntity, jwt ->
+        val (fullOffender, _) = givenAnOffender()
+        val (excludedOffender, _) = givenAnOffender(offenderDetailsConfigBlock = { withCurrentExclusion(true) })
+        val (restrictedOffender, _) = givenAnOffender(offenderDetailsConfigBlock = { withCurrentRestriction(true) })
+        val notFoundCrn = randomStringUpperCase(8)
+
+        val fullApplication = produceAndPersistBasicApplication(fullOffender.otherIds.crn, userEntity)
+        val excludedApplication = produceAndPersistBasicApplication(excludedOffender.otherIds.crn, userEntity)
+        val restrictedApplication = produceAndPersistBasicApplication(restrictedOffender.otherIds.crn, userEntity)
+        val notFoundApplication = produceAndPersistBasicApplication(notFoundCrn, userEntity)
+
+        val rawResponseBody = webTestClient.get()
+          .uri("/cas2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.cas2.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val summariesById = jsonMapper
+          .readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          .associateBy { it.id }
+
+        val fullName = "${fullOffender.firstName} ${fullOffender.surname}"
+        assertThat(summariesById[fullApplication.id]!!.personName).isEqualTo(fullName)
+        assertThat(summariesById[fullApplication.id]!!.personSummary)
+          .isEqualTo(Cas2PersonSummaryDto.Found(fullOffender.otherIds.crn, fullName))
+
+        // CAS2 ignores exclusions
+        val excludedName = "${excludedOffender.firstName} ${excludedOffender.surname}"
+        assertThat(summariesById[excludedApplication.id]!!.personName).isEqualTo(excludedName)
+        assertThat(summariesById[excludedApplication.id]!!.personSummary)
+          .isEqualTo(Cas2PersonSummaryDto.Found(excludedOffender.otherIds.crn, excludedName))
+
+        // CAS2 blocks restricted offenders regardless of user
+        assertThat(summariesById[restrictedApplication.id]!!.personName).isEqualTo("Restricted Access")
+        assertThat(summariesById[restrictedApplication.id]!!.personSummary)
+          .isEqualTo(Cas2PersonSummaryDto.LimitedAccess(restrictedOffender.otherIds.crn))
+
+        assertThat(summariesById[notFoundApplication.id]!!.personName).isEqualTo("Person Not Found")
+        assertThat(summariesById[notFoundApplication.id]!!.personSummary)
+          .isEqualTo(Cas2PersonSummaryDto.NotFound(notFoundCrn))
+
+        apDeliusContextVerifyUserAccessCalls(times = 0)
       }
     }
 
@@ -1086,10 +1145,16 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     private fun createdUnsubmittedApplication(
       cas2UserEntity: Cas2UserEntity,
       applicationOrigin: ApplicationOrigin,
-    ) = cas2ApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(cas2UserEntity)
-      withApplicationOrigin(applicationOrigin)
-      withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    ): Cas2ApplicationEntity {
+      val (offenderDetails, _) = givenAnOffender()
+
+      return cas2ApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(cas2UserEntity)
+        withApplicationOrigin(applicationOrigin)
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        withCrn(offenderDetails.otherIds.crn)
+        withNomsNumber(offenderDetails.otherIds.nomsNumber)
+      }
     }
   }
 

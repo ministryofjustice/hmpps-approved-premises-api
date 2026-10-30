@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
@@ -66,6 +67,7 @@ class Cas2ApplicationsTransformer(
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
+    personSummary: Cas2PersonSummary,
   ): Cas2ApplicationSummary = Cas2ApplicationSummary(
     id = jpaSummary.id,
     createdByUserId = UUID.fromString(jpaSummary.userId),
@@ -82,6 +84,7 @@ class Cas2ApplicationsTransformer(
     prisonCode = jpaSummary.prisonCode,
     applicationOrigin = jpaSummary.applicationOrigin?.let { ApplicationOrigin.forValue(it) } ?: ApplicationOrigin.homeDetentionCurfew,
     cohort = jpaSummary.cohort?.apiType,
+    personSummary = personTransformer.transformCas2PersonSummaryToDto(personSummary),
   )
 
   fun applicationOriginFromText(applicationOrigin: String): ApplicationOrigin = when (applicationOrigin) {

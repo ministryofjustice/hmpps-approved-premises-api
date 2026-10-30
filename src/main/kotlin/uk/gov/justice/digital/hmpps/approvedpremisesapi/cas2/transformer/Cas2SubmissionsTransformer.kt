@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -40,6 +41,7 @@ class Cas2SubmissionsTransformer(
   fun transformJpaSummaryToApiRepresentation(
     jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
+    personSummary: Cas2PersonSummary,
   ): Cas2SubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
     id = jpaSummary.id,
     personName = personName,
@@ -49,5 +51,6 @@ class Cas2SubmissionsTransformer(
     crn = jpaSummary.crn,
     nomsNumber = jpaSummary.nomsNumber,
     cohort = jpaSummary.cohort?.apiType,
+    personSummary = personTransformer.transformCas2PersonSummaryToDto(personSummary),
   )
 }
