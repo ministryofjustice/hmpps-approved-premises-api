@@ -15,7 +15,7 @@ jobs:
     steps:
       - id: app_version
         name: Application version creators
-        uses: ministryofjustice/hmpps-github-shared-actions/.github/actions/build-test-and-deploy/create_app_version@c89a206b6b32888d13f6aec01af0f7694df6b42f # v1
+        uses: ministryofjustice/hmpps-github-shared-actions/.github/actions/build-test-and-deploy/create_app_version@90bdfa991e9944e4997eba4c1f2709d21ec807ea # v1
 
   gradle_assemble:
     name: Validate the kotlin
