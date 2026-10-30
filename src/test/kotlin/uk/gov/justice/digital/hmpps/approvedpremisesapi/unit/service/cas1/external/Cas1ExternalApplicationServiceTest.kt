@@ -435,6 +435,7 @@ class Cas1ExternalApplicationServiceTest {
       status = placement?.status,
       expectedDepartureDate = placement?.expectedDepartureDate,
     ),
+    statusLastUpdated = LocalDate.now(),
   )
 
   private fun transformToSuitableApplication(

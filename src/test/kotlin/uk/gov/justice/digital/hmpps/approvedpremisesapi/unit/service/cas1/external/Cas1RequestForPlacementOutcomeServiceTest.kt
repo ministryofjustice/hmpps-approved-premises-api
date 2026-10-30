@@ -351,6 +351,7 @@ class Cas1RequestForPlacementOutcomeServiceTest {
     requestForPlacementWithdrawalDate: LocalDate? = null,
   ) = Cas1RequestForPlacementOutcomeDto(
     dateApplied = placement?.statusSetDate ?: requestForPlacement.statusSetDate,
+    statusLastUpdated = placement?.statusSetDate ?: requestForPlacement.statusSetDate,
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
       decision = requestForPlacement.decision?.apiValue,
       submittedBy = requestForPlacement.submittedBy,
