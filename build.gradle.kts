@@ -1,3 +1,7 @@
+import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Socket
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.14"
   kotlin("plugin.spring") version "2.4.20"
@@ -178,8 +182,25 @@ tasks.register<Test>("integrationTest") {
   }
 }
 
+tasks.register<Exec>("ensureTestDatabase") {
+  group = "sar"
+  description = "Runs script/test_database if the integration test database is not already accepting connections"
+
+  commandLine("script/test_database")
+  onlyIf {
+    val running = try {
+      Socket().use { it.connect(InetSocketAddress("localhost", 5433), 1000) }
+      true
+    } catch (e: IOException) {
+      false
+    }
+    !running
+  }
+}
+
 tasks.register<Test>("generateSarPdfs") {
-  group = "documentation"
+  dependsOn("ensureTestDatabase")
+  group = "sar"
   description = "Runs the SAR compliance report tests for all CAS services and writes a PDF per service to build/test-generated"
 
   testClassesDirs = sourceSets["test"].output.classesDirs
@@ -201,6 +222,97 @@ tasks.register<Test>("generateSarPdfs") {
   doLast {
     fileTree("$buildDir/test-generated") { include("*-sar-generated-report.pdf") }.forEach {
       println("Generated SAR PDF: ${it.relativeTo(projectDir)}")
+    }
+  }
+}
+
+tasks.register<Test>("updateSarSchemaTrackers") {
+  group = "sar"
+  description = "Updates expected-flyway-schema-version in application-test-sar.yml and regenerates sar/cas-entities-schema.json."
+
+  testClassesDirs = sourceSets["test"].output.classesDirs
+  classpath = sourceSets["test"].runtimeClasspath
+
+  useJUnitPlatform()
+  filter {
+    includeTestsMatching("*SarIntegrationTest*JpaEntitiesTest*")
+  }
+
+  environment("SAR_GENERATE_ACTUAL", "true")
+  outputs.upToDateWhen { false }
+  // The generated schema is compared to the fixture before being written, so the task may report test failures
+  ignoreFailures = true
+
+  reports {
+    junitXml.outputLocation.set(file("$buildDir/test-results/updateSarSchema"))
+  }
+
+  val migrationsDir = file("src/main/resources/db/migration/all")
+  val sarConfig = file("src/test/resources/application-test-sar.yml")
+  val generatedSchema = file("src/test/resources/entity-schema.json.log")
+  val schemaFixture = file("src/test/resources/sar/cas-entities-schema.json")
+
+  doFirst {
+    val latestVersion = migrationsDir.listFiles { f -> f.name.matches(Regex("""\d+__.*\.sql""")) }!!
+      .maxOf { it.name.substringBefore("__").toLong() }
+    val updated = sarConfig.readText().replace(
+      Regex("""(expected-flyway-schema-version:\s*)\d+"""),
+      "$1$latestVersion",
+    )
+    sarConfig.writeText(updated)
+    println("Set expected-flyway-schema-version to $latestVersion")
+    // Avoid copying a stale file from a previous run if nothing is regenerated
+    generatedSchema.delete()
+  }
+
+  doLast {
+    if (generatedSchema.exists()) {
+      generatedSchema.copyTo(schemaFixture, overwrite = true)
+      generatedSchema.delete()
+      println("Updated ${schemaFixture.relativeTo(projectDir)}")
+    } else {
+      println("No schema generated; ${schemaFixture.relativeTo(projectDir)} left unchanged")
+    }
+  }
+}
+
+tasks.register<Test>("updateSarFixtures") {
+  dependsOn("ensureTestDatabase")
+  group = "sar"
+  description = "Regenerates the expected API response and HTML report fixtures for all CAS services in src/test/resources/sar."
+
+  testClassesDirs = sourceSets["test"].output.classesDirs
+  classpath = sourceSets["test"].runtimeClasspath
+
+  useJUnitPlatform()
+  filter {
+    includeTestsMatching("*SarComplianceTest*")
+  }
+
+  environment("SAR_GENERATE_ACTUAL", "true")
+  outputs.upToDateWhen { false }
+  // Tests fail when the existing fixtures are out of date, which is the situation this task fixes
+  ignoreFailures = true
+
+  reports {
+    junitXml.outputLocation.set(file("$buildDir/test-results/updateSarFixtures"))
+  }
+
+  val resourcesDir = file("src/test/resources")
+  val fixturesDir = file("src/test/resources/sar")
+  val generatedFixtures = { resourcesDir.listFiles { f -> f.name.matches(Regex("""cas.*-expected-(api-response\.json|report\.html)\.log""")) }!! }
+
+  doFirst {
+    // Avoid copying stale files from a previous run
+    generatedFixtures().forEach { it.delete() }
+  }
+
+  doLast {
+    generatedFixtures().forEach {
+      val target = fixturesDir.resolve(it.name.removeSuffix(".log"))
+      it.copyTo(target, overwrite = true)
+      it.delete()
+      println("Updated ${target.relativeTo(projectDir)}")
     }
   }
 }

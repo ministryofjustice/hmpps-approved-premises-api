@@ -1,0 +1,12 @@
+hmpps:
+  sar:
+    template:
+      path: /sar/template_hmpps-approved-premises-api.mustache
+      enabled: true
+    tests:
+      attachments-expected: false
+      # if this value is being changed, ensure that you have considered
+      # whether updates to SAR templates are required
+      expected-flyway-schema-version: 20261104144047000
+      expected-jpa-entity-schema:
+        path: /sar/cas-entities-schema.json
