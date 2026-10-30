@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -9,31 +10,35 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2LaoStrategy
 
 class Cas2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockTierService = mockk<TierService>()
   private val mockOffenderService = mockk<OffenderService>()
+  private val mockLaoService = mockk<LaoService>()
+  private val mockCas2UserService = mockk<Cas2UserService>()
 
   private val cas2PersonTransformer = Cas2PersonTransformer()
 
@@ -43,7 +48,23 @@ class Cas2OffenderServiceTest {
     cas2PersonTransformer,
     mockTierService,
     mockOffenderService,
+    mockLaoService,
+    mockCas2UserService,
   )
+
+  private val user = Cas2UserEntityFactory().produce()
+  private val laoStrategy = user.cas2LaoStrategy()
+
+  @BeforeEach
+  fun setupUser() {
+    every { mockCas2UserService.getUserForRequest() } returns user
+  }
+
+  private fun givenVisibility(caseSummary: CaseSummary, isVisible: Boolean) {
+    every {
+      mockLaoService.isVisibleForCaseSummaries(listOf(caseSummary), laoStrategy)
+    } returns mapOf(caseSummary.crn to isVisible)
+  }
 
   @Nested
   inner class GetPersonByNomsNumber {
@@ -55,6 +76,7 @@ class Cas2OffenderServiceTest {
         StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.NOT_FOUND, null)
 
       assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      verify(exactly = 0) { mockLaoService.isVisibleForCaseSummaries(any(), any()) }
     }
 
     @Test
@@ -63,6 +85,7 @@ class Cas2OffenderServiceTest {
         ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
 
       assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      verify(exactly = 0) { mockLaoService.isVisibleForCaseSummaries(any(), any()) }
     }
 
     @Test
@@ -73,6 +96,8 @@ class Cas2OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
+
+      givenVisibility(offenderDetails, isVisible = true)
 
       every { mockTierService.getTier(crn) } returns null
 
@@ -106,6 +131,7 @@ class Cas2OffenderServiceTest {
       assertThat(result is Cas2v2OffenderSearchResult.Unknown).isTrue
       result as Cas2v2OffenderSearchResult.Unknown
       assertThat(result.throwable).isNotNull()
+      verify(exactly = 0) { mockLaoService.isVisibleForCaseSummaries(any(), any()) }
     }
 
     @Test
@@ -117,6 +143,8 @@ class Cas2OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
+
+      givenVisibility(offenderDetails, isVisible = true)
 
       every { mockTierService.getTier(crn) } returns tier
 
@@ -155,6 +183,8 @@ class Cas2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
 
+      givenVisibility(offenderDetails, isVisible = true)
+
       every { mockTierService.getTier(crn) } returns null
 
       val inmateDetail = InmateDetailFactory()
@@ -180,6 +210,19 @@ class Cas2OffenderServiceTest {
       result as Cas2v2OffenderSearchResult.Success.Full
       assertThat(result.person.crn).isEqualTo(crn)
       assertThat(result.person.nomsNumber).isEqualTo(offenderDetails.nomsId)
+    }
+
+    @Test
+    fun `returns Forbidden when LaoService does not return a visibility result for the offender`() {
+      val offenderDetails = CaseSummaryFactory().withCrn("ABC123").withNomsId(nomsNumber).produce()
+
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
+        ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
+
+      every { mockLaoService.isVisibleForCaseSummaries(listOf(offenderDetails), laoStrategy) } returns emptyMap()
+
+      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.Forbidden).isTrue
+      verify(exactly = 0) { mockTierService.getTier(any()) }
     }
   }
 
@@ -281,28 +324,14 @@ class Cas2OffenderServiceTest {
 
     @BeforeEach
     fun setup() {
-      val offenderDetailSummary = OffenderDetailsSummaryFactory()
+      val caseSummary = CaseSummaryFactory()
         .withCrn(crn)
-        .withFirstName("Bob")
-        .withLastName("Doe")
+        .withNomsId(nomsNumber)
         .withCurrentRestriction(true)
         .withCurrentExclusion(false)
         .produce()
 
-      every {
-        mockOffenderDetailsDataSource.getOffenderDetailSummary(crn)
-      } returns ClientResult.Success(HttpStatus.OK, offenderDetailSummary)
-
-      val caseSummaries = CaseSummaries(
-        listOf(
-          CaseSummaryFactory()
-            .withCrn(crn)
-            .withNomsId(nomsNumber)
-            .withCurrentRestriction(true)
-            .withCurrentExclusion(false)
-            .produce(),
-        ),
-      )
+      val caseSummaries = CaseSummaries(listOf(caseSummary))
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -312,12 +341,7 @@ class Cas2OffenderServiceTest {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))
       } returns ClientResult.Success(HttpStatus.OK, caseSummaries)
 
-      every { mockTierService.getTier(crn) } returns null
-
-      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
-        HttpStatus.OK,
-        InmateDetailFactory().produce(),
-      )
+      givenVisibility(caseSummary, isVisible = false)
     }
 
     @Test
@@ -338,28 +362,14 @@ class Cas2OffenderServiceTest {
 
     @BeforeEach
     fun setup() {
-      val offenderDetailSummary = OffenderDetailsSummaryFactory()
+      val caseSummary = CaseSummaryFactory()
         .withCrn(crn)
-        .withFirstName("Bob")
-        .withLastName("Doe")
+        .withNomsId(nomsNumber)
         .withCurrentRestriction(false)
         .withCurrentExclusion(true)
         .produce()
 
-      every {
-        mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn")
-      } returns ClientResult.Success(HttpStatus.OK, offenderDetailSummary)
-
-      val caseSummaries = CaseSummaries(
-        listOf(
-          CaseSummaryFactory()
-            .withCrn(crn)
-            .withNomsId(nomsNumber)
-            .withCurrentRestriction(false)
-            .withCurrentExclusion(true)
-            .produce(),
-        ),
-      )
+      val caseSummaries = CaseSummaries(listOf(caseSummary))
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -369,12 +379,9 @@ class Cas2OffenderServiceTest {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))
       } returns ClientResult.Success(HttpStatus.OK, caseSummaries)
 
-      every { mockTierService.getTier(crn) } returns null
+      givenVisibility(caseSummary, isVisible = true)
 
-      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
-        HttpStatus.OK,
-        InmateDetailFactory().produce(),
-      )
+      every { mockTierService.getTier(crn) } returns null
     }
 
     @Test
