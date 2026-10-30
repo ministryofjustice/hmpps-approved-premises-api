@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
@@ -60,7 +59,6 @@ class Cas1RequestForPlacementServiceTest {
   private val cas1SpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val cas1SpaceBookingTransformer = mockk<Cas1SpaceBookingTransformer>()
   private val tierService = mockk<TierService>()
-  private val sentryService = mockk<SentryService>(relaxed = true)
 
   private val cas1RequestForPlacementService = Cas1RequestForPlacementService(
     applicationService,
@@ -71,7 +69,6 @@ class Cas1RequestForPlacementServiceTest {
     cas1SpaceBookingRepository,
     cas1SpaceBookingTransformer,
     tierService,
-    sentryService,
   )
 
   @BeforeEach
@@ -452,31 +449,6 @@ class Cas1RequestForPlacementServiceTest {
             assertThat(it.defaultDurationDays).isEqualTo(expectation.expectedDurationWeeks * 7)
           }
           assertThat(it.maxDurationDays).isNull()
-        }
-
-        if (expectation.expectedDurationWeeks == null) {
-          verify {
-            sentryService.captureErrorMessage(
-              withArg { actual ->
-                val expectedError = buildString {
-                  append("Could not calculate duration for criteria ")
-                  append("DurationCriteria(")
-                  append("apType=${expectation.apType.name}")
-                  append(", application=${application.id}")
-                  append(", isWomensApplication=${expectation.isWomensApplication}")
-                  append(", sentenceType=${expectation.sentenceType.name}")
-                  append(", tierScore=${expectation.tier}")
-                  append(", exceptionalApplication=${expectation.exceptionStatus}")
-                  append(")")
-                }
-
-                assertThat(actual).isEqualTo(expectedError)
-              },
-              "cas1-cant-calculate-duration",
-            )
-          }
-        } else {
-          verify(exactly = 0) { sentryService.captureErrorMessage(any(), any()) }
         }
       }
     }

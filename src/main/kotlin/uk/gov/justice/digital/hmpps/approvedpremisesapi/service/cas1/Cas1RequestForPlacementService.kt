@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import java.time.Period
@@ -33,7 +32,6 @@ class Cas1RequestForPlacementService(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceBookingTransformer: Cas1SpaceBookingTransformer,
   private val tierService: TierService,
-  private val sentryService: SentryService,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -202,10 +200,6 @@ class Cas1RequestForPlacementService(
           fixedPeriodIfApplicable(Period.ofWeeks(16))
         }
       }
-    }
-
-    if (period == null) {
-      sentryService.captureErrorMessage(message = "Could not calculate duration for criteria $criteria", groupId = "cas1-cant-calculate-duration")
     }
 
     log.info("Have calculated duration as $period for criteria $criteria")
