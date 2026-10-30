@@ -1,13 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
@@ -84,7 +86,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
           assertThat(persistedApplicationExpiredEvent.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
 
           val envelope =
-            jsonMapper.readValue(persistedApplicationExpiredEvent.data, ApplicationExpiredEnvelope::class.java)
+            jsonMapper.readValue<Cas1DomainEventEnvelope<ApplicationExpired>>(persistedApplicationExpiredEvent.data!!)
           assertThat(envelope.eventDetails.previousStatus).isEqualTo(it.status.name)
           assertThat(envelope.eventDetails.updatedStatus).isEqualTo(ApprovedPremisesApplicationStatus.EXPIRED.name)
         }
