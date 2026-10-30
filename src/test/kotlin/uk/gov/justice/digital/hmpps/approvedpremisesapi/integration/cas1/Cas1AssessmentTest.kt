@@ -20,19 +20,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1InProgress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1NotStarted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1Reallocated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejectionReasonDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
@@ -966,7 +966,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .uri("/cas1/assessments/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              UpdateAssessment(
+              Cas1UpdateAssessment(
                 data = mapOf("some text" to 5),
               ),
             )
@@ -1008,7 +1008,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .uri("/cas1/assessments/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              UpdateAssessment(
+              Cas1UpdateAssessment(
                 data = mapOf("some text" to 5),
               ),
             )
@@ -1046,7 +1046,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .uri("/cas1/assessments/${assessment.id}/notes")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              NewClarificationNote(
+              Cas1NewClarificationNote(
                 query = "some text",
               ),
             )
@@ -1098,7 +1098,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .uri("/cas1/assessments/${assessment.id}/notes/${clarificationNote.id}")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              UpdatedClarificationNote(
+              Cas1UpdatedClarificationNote(
                 response = "some text",
                 responseReceivedOn = LocalDate.parse("2022-03-04"),
               ),

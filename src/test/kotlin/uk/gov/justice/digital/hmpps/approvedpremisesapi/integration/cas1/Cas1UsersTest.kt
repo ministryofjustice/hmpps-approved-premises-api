@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
@@ -247,7 +246,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
           .header("Authorization", "Bearer $jwt")
           .header("Content-Type", "application/json")
           .bodyValue(
-            UserRolesAndQualifications(
+            Cas1UpdateUser(
               listOf(),
               listOf(),
             ),
@@ -266,7 +265,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
           .uri("/cas1/users/$id")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            UserRolesAndQualifications(
+            Cas1UpdateUser(
               listOf(),
               listOf(),
             ),

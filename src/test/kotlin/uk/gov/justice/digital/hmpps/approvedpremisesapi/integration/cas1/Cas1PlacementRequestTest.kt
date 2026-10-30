@@ -13,12 +13,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary.PlacementRequestStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -1898,7 +1898,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
                   .header("Authorization", "Bearer $jwt")
                   .bodyValue(
-                    WithdrawPlacementRequest(
+                    Cas1WithdrawPlacementRequest(
                       reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
                     ),
                   )
@@ -1928,7 +1928,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             webTestClient.post()
               .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
               .bodyValue(
-                WithdrawPlacementRequest(
+                Cas1WithdrawPlacementRequest(
                   reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
                 ),
               )
