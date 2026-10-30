@@ -38,6 +38,7 @@ class Cas2DataScienceReportRepository(
             cas2.submitted_at :: date as cas2_submitted_at,
             cas2.hdc_eligibility_date :: date as cas2_hdc_eligibility_date,
             cas2.conditional_release_date :: date as cas2_conditional_release_date,
+            cas2.accommodation_start_date :: date as cas2_accommodation_start_date,
             cas2.bail_hearing_date :: date as cas2_bail_hearing_date,
             cas2.service_origin as cas2_service_origin,
             cas2.application_origin as cas2_application_origin,
