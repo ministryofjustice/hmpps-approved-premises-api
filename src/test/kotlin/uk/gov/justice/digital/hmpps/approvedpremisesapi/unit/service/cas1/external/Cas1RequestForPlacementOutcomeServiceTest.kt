@@ -380,6 +380,7 @@ class Cas1RequestForPlacementOutcomeServiceTest {
         )
       },
       status = placement?.status,
+      expectedArrivalDate = placement?.expectedArrivalDate,
       expectedDepartureDate = placement?.expectedDepartureDate,
     ),
   )
