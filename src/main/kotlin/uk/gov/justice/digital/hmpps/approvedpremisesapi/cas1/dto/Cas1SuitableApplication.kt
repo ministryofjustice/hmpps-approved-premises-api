@@ -28,6 +28,7 @@ data class Cas1RequestForPlacementOutcomeDto(
   val placement: Cas1ExternalPlacementDto?,
   @Schema(description = "The most recent status change date, or expected arrival date if placement exists in the future")
   val dateApplied: LocalDate,
+  val statusLastUpdated: LocalDate,
 )
 
 data class Cas1ExternalApplicationDto(
@@ -60,6 +61,7 @@ data class Cas1ExternalPlacementDto(
   val status: Cas1SpaceBookingStatus?,
   val actualArrivalDate: LocalDate?,
   val actualDepartureDate: LocalDate?,
+  val expectedArrivalDate: LocalDate?,
   val expectedDepartureDate: LocalDate?,
   val cancellationReason: String?,
   val premises: Cas1ExternalPremisesDto?,
