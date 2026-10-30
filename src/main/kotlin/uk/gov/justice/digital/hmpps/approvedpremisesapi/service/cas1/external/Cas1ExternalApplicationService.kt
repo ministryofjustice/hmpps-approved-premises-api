@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
@@ -44,9 +47,7 @@ class Cas1ExternalApplicationService(
   private val applicationSuitabilityComparator = compareBy<ApprovedPremisesApplicationEntity> { APPLICATION_STATUS_TO_SUITABILITY[it.status] }
     .thenBy { it.submittedAt ?: it.createdAt }
 
-  fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository
-    .findByCrn(crn)
-    .maxWithOrNull(applicationSuitabilityComparator)
+  fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = getSuitableApplication(crn)
     ?.let { toSuitableApplication(it) }
 
   private fun toSuitableApplication(application: ApprovedPremisesApplicationEntity): Cas1SuitableApplication {
@@ -54,6 +55,7 @@ class Cas1ExternalApplicationService(
 
     val today = LocalDate.now()
 
+    // this filters out any with a pending arrival in the future or that have been updated today
     val pastPairs = placementPairs
       .filter { it.dateApplied < today }
 
@@ -70,6 +72,61 @@ class Cas1ExternalApplicationService(
       placementHistory = placementHistory,
     )
   }
+
+  private fun getSuitableApplicationByCrnV2(crn: String) = getSuitableApplication(crn) ?.let {
+    toSuitableApplicationV2(it)
+  }
+
+  /*
+  Some unexpected scenarios this creates (matching existing logic)
+
+  - if you have a pending arrival in the past (e.g. they didn't turn up on the day), this goes into the 'history' list
+  - history won't include anything that doesn't have a pending arrival that has been updated today
+   */
+  private fun toSuitableApplicationV2(application: ApprovedPremisesApplicationEntity): Cas1SuitableApplication {
+    val all = cas1PlacementPairService.getPlacementPairs(application.id)
+
+    val today = LocalDate.now()
+
+    val allWithFuturePendingArrival = all.filter { rfpOutcome ->
+      rfpOutcome.pendingArrivalDate()?.let {
+        it >= today
+      } ?: false
+    }
+
+    val nextPendingArrival = allWithFuturePendingArrival.sortedBy { it.pendingArrivalDate() }.firstOrNull()
+
+    val allWithoutAFuturePendingArrival = all - allWithFuturePendingArrival.toSet()
+
+    return transformer.transformToCas1SuitableApplication(
+      application = application,
+      suitablePlacementPair = nextPendingArrival ?: allWithoutAFuturePendingArrival.firstOrNull(),
+      placementHistory = allWithoutAFuturePendingArrival.sortedByDescending { it.statusLastUpdated },
+    )
+  }
+
+  private fun Cas1RequestForPlacementOutcomeDto.pendingArrivalDate() = placement?.pendingArrivalDate() ?: requestForPlacement.pendingArrivalDate()
+
+  private fun Cas1ExternalRequestForPlacementDto.pendingArrivalDate() = if (
+    listOf(
+      RequestForPlacementStatus.requestSubmitted,
+      RequestForPlacementStatus.awaitingMatch,
+    ).contains(status)
+  ) {
+    expectedArrivalDate
+  } else {
+    null
+  }
+
+  private fun Cas1ExternalPlacementDto.pendingArrivalDate() = if (status == Cas1SpaceBookingStatus.UPCOMING) {
+    expectedArrivalDate
+  } else {
+    null
+  }
+
+  private fun getSuitableApplication(crn: String) = approvedPremisesApplicationRepository
+    .findByCrn(crn)
+    .maxWithOrNull(applicationSuitabilityComparator)
 
   fun getPlacementPairsNewestFirst(applicationId: UUID): List<Cas1RequestForPlacementOutcomeDto> = cas1PlacementPairService
     .getPlacementPairs(applicationId)

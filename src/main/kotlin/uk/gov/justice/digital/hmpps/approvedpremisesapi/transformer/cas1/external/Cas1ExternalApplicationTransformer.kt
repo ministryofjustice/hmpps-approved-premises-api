@@ -37,15 +37,17 @@ class Cas1ExternalApplicationTransformer(
   ): Cas1RequestForPlacementOutcomeDto {
     val statusLastUpdated = placement?.statusSetDate ?: rfp.statusSetDate
     return Cas1RequestForPlacementOutcomeDto(
-      dateApplied = if (placement?.status == Cas1SpaceBookingStatus.UPCOMING) {
-        placement.expectedArrivalDate
-      } else {
-        statusLastUpdated
-      },
+      dateApplied = placement?.getPendingArrivalDate() ?: statusLastUpdated,
       requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, withdrawalDate, placement),
       placement = placement?.let { transformToPlacement(it, premises) },
       statusLastUpdated = placement?.statusSetDate ?: rfp.statusSetDate,
     )
+  }
+
+  private fun Cas1SpaceBookingShortSummary.getPendingArrivalDate() = if (status == Cas1SpaceBookingStatus.UPCOMING) {
+    expectedArrivalDate
+  } else {
+    null
   }
 
   private fun transformToRequestForPlacement(
