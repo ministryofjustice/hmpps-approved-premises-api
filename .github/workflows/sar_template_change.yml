@@ -1,0 +1,49 @@
+name: SAR Template Change
+
+# Flags PRs that modify the SAR template, as an offline process must be completed before merging.
+# PRs from forks are not supported, as their GITHUB_TOKEN is read-only.
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, reopened, synchronize]
+    paths:
+      - src/main/resources/sar/template_hmpps-approved-premises-api.mustache
+
+permissions:
+  pull-requests: write
+
+jobs:
+  comment:
+    name: Comment on SAR template change
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      MARKER: "<!-- sar-template-change -->"
+    steps:
+      - name: Post checklist comment (once per PR)
+        run: |
+          existing=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER/comments" --paginate \
+            --jq ".[] | select(.body | contains(\"$MARKER\")) | .id" | head -n 1)
+
+          # Don't update an existing comment, as that would reset any ticked checkboxes
+          if [ -n "$existing" ]; then
+            echo "SAR template comment already exists ($existing)"
+            exit 0
+          fi
+
+          cat > comment.md <<EOF
+          $MARKER
+          ## ⚠️ This PR changes the SAR template
+
+          \`src/main/resources/sar/template_hmpps-approved-premises-api.mustache\` has been modified.
+          The offline SAR process must be completed **before** this PR is merged to \`main\`:
+
+          - [ ] TODO: describe step 1 (link to process documentation)
+          - [ ] TODO: describe step 2
+          - [ ] TODO: sign-off obtained from <team/person>
+          EOF
+
+          gh pr comment "$PR_NUMBER" --body-file comment.md

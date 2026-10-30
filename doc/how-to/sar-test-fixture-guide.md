@@ -61,6 +61,7 @@ The `template_hmpps-approved-premises-api.mustache` file is shared across all se
 - Use conditional sections like `{{#CAS1}}...{{/CAS1}}` or `{{#CAS3}}...{{/CAS3}}` to isolate service-specific sections.
 - If you add new data to the API response, you must update the template to display it.
 - After updating the template, you **must** regenerate the HTML fixtures for **all** services that might be affected to ensure their compliance tests still pass.
+- Changes to the template require an offline process to be completed before merging to `main`. The `SAR Template Change` workflow (`.github/workflows/sar_template_change.yml`) posts a checklist comment on any PR that modifies the template.
 
 ## Schema and Integration Tests
 
