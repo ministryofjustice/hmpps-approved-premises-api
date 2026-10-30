@@ -433,6 +433,7 @@ class Cas1ExternalApplicationServiceTest {
         )
       },
       status = placement?.status,
+      expectedArrivalDate = placement?.expectedArrivalDate,
       expectedDepartureDate = placement?.expectedDepartureDate,
     ),
     statusLastUpdated = LocalDate.now(),
@@ -470,6 +471,7 @@ class Cas1ExternalApplicationServiceTest {
         )
       },
       status = placement?.status,
+      expectedArrivalDate = placement?.expectedArrivalDate,
       expectedDepartureDate = placement?.expectedDepartureDate,
     ),
     uiUrl = "http://localhost:3000/applications/${applicationEntity.id}",

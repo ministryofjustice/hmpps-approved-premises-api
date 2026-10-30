@@ -71,6 +71,7 @@ class Cas1ExternalApplicationTransformer(
   ) = Cas1ExternalPlacementDto(
     actualArrivalDate = placement.actualArrivalDate,
     actualDepartureDate = placement.actualDepartureDate,
+    expectedArrivalDate = placement.expectedArrivalDate,
     expectedDepartureDate = placement.expectedDepartureDate,
     cancellationReason = getCancellationReason(placement),
     premises = premises?.let { transformToPremises(placement, it) },
