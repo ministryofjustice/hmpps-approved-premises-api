@@ -9,7 +9,11 @@ The SAR implementation in CAS (Approved Premises) aggregates data from all servi
 - **Template**: The report is rendered using a single Mustache template located at `src/main/resources/sar/template_hmpps-approved-premises-api.mustache`.
 - **API Response**: The raw data returned by the SAR service is a JSON object.
 - **Fixtures**: Each service has its own set of "expected" fixtures (JSON and HTML) used for compliance testing. These are located in `src/test/resources/sar/`.
-- **PDF Creation**: During test execution (e.g. Cas1SarComplianceTest), a PDF version of the report is generated and saved to `build/test-generated/sar-generated-report.pdf`. This allows for manual verification of the final PDF layout and styling. Note that this file will be overwritten when running a different CAS test
+- **PDF Creation**: During test execution (e.g. Cas1SarComplianceTest), a PDF version of the report is generated and saved to `build/test-generated/<service>-sar-generated-report.pdf` (e.g. `cas1-sar-generated-report.pdf`). This allows for manual verification of the final PDF layout and styling. To generate the PDFs for all four services in one go (requires `script/test_database`), run:
+
+  ```bash
+  ./gradlew generateSarPdfs
+  ```
 - **Asserter**: The `CasSarFixtureAsserter` class is used to verify the actual output against these fixtures. The rationale for using this custom asserter instead of the standard library components is documented in its Javadoc.
 
 ## Generating Test Fixtures

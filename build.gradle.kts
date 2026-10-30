@@ -178,6 +178,33 @@ tasks.register<Test>("integrationTest") {
   }
 }
 
+tasks.register<Test>("generateSarPdfs") {
+  group = "documentation"
+  description = "Runs the SAR compliance report tests for all CAS services and writes a PDF per service to build/test-generated"
+
+  testClassesDirs = sourceSets["test"].output.classesDirs
+  classpath = sourceSets["test"].runtimeClasspath
+
+  useJUnitPlatform()
+  filter {
+    includeTestsMatching("*SarComplianceTest.*report should render as expected")
+  }
+
+  // Ensures PDFs are produced even when the HTML fixtures are out of date
+  environment("SAR_GENERATE_ACTUAL", "true")
+  outputs.upToDateWhen { false }
+
+  reports {
+    junitXml.outputLocation.set(file("$buildDir/test-results/generateSarPdfs"))
+  }
+
+  doLast {
+    fileTree("$buildDir/test-generated") { include("*-sar-generated-report.pdf") }.forEach {
+      println("Generated SAR PDF: ${it.relativeTo(projectDir)}")
+    }
+  }
+}
+
 tasks.register<Test>("unitTest") {
   group = "verification"
   testClassesDirs = sourceSets["test"].output.classesDirs

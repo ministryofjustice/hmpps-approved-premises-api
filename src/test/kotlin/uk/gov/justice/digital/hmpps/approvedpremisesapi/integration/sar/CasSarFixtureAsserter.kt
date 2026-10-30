@@ -22,6 +22,7 @@ import java.time.LocalDate
  *   <li>service-specific classpath fixture locations</li>
  *   <li>service-specific `.log` filenames used when
  *       `SAR_GENERATE_ACTUAL=true` is enabled</li>
+ *   <li>a service-specific PDF filename, written to `build/test-generated`</li>
  * </ul>
  *
  * <p>Using unique output filenames ensures concurrent test runs do not overwrite
@@ -39,10 +40,12 @@ class CasSarFixtureAsserter(
   private val expectedReportResourcePath: String,
   private val generatedApiResponseFilename: String,
   private val generatedReportFilename: String,
+  private val generatedPdfFilename: String,
 ) {
 
   companion object {
     val DEFAULT_CONTENT_TYPE = Any::class.java
+    const val GENERATED_PDF_PATH = "build/test-generated"
   }
 
   fun assertApiDataMatchesFixture(
@@ -86,7 +89,10 @@ class CasSarFixtureAsserter(
       templateResponse,
     )
 
-    sarHelper.renderAndSaveReportAsPdf(renderResult, prn, crn)
+    // SarIntegrationTestHelper.renderAndSaveReportAsPdf always writes to the same filename,
+    // so render directly to keep a separate PDF per CAS service
+    val pdf = sarHelper.pdfRenderer.renderSubjectAccessRequestPdf(renderResult, prn, crn)
+    sarHelper.saveContentToFile(pdf.toByteArray(), generatedPdfFilename, GENERATED_PDF_PATH)
 
     if (generateActual()) {
       sarHelper.saveContentToFile(renderResult, generatedReportFilename)
