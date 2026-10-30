@@ -119,6 +119,7 @@ class Cas1ExternalApplicationTransformerTest {
           expectedDepartureDate = LocalDate.now().plusDays(2),
         ),
         dateApplied = LocalDate.now(),
+        statusLastUpdated = LocalDate.now(),
       )
       val expected = Cas1SuitableApplication(
         uiUrl = "http://localhost:3000/applications/${application.id}",
@@ -312,7 +313,8 @@ class Cas1ExternalApplicationTransformerTest {
           premises = premises,
           expectedDepartureDate = placement.expectedDepartureDate,
         ),
-        dateApplied = placement.statusSetDate!!,
+        dateApplied = placement.statusSetDate,
+        statusLastUpdated = placement.statusSetDate,
       )
 
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
@@ -400,7 +402,8 @@ class Cas1ExternalApplicationTransformerTest {
           premises = premises,
           expectedDepartureDate = placement.expectedDepartureDate,
         ),
-        dateApplied = placement.statusSetDate!!,
+        dateApplied = placement.statusSetDate,
+        statusLastUpdated = placement.statusSetDate,
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
@@ -500,7 +503,8 @@ class Cas1ExternalApplicationTransformerTest {
           premises = premises,
           expectedDepartureDate = placement.expectedDepartureDate,
         ),
-        dateApplied = placement.statusSetDate!!,
+        dateApplied = placement.statusSetDate,
+        statusLastUpdated = placement.statusSetDate,
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
@@ -599,7 +603,8 @@ class Cas1ExternalApplicationTransformerTest {
           premises = premises,
           expectedDepartureDate = placement.expectedDepartureDate,
         ),
-        dateApplied = placement.statusSetDate!!,
+        dateApplied = placement.statusSetDate,
+        statusLastUpdated = placement.statusSetDate,
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
@@ -650,6 +655,7 @@ class Cas1ExternalApplicationTransformerTest {
         ),
         placement = null,
         dateApplied = requestForPlacement.statusSetDate,
+        statusLastUpdated = requestForPlacement.statusSetDate,
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
