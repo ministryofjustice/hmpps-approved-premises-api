@@ -14,8 +14,11 @@ data class Cas1SuitableApplication(
   val uiUrl: String,
   val application: Cas1ExternalApplicationDto,
   val assessment: Cas1ExternalAssessmentDto?,
+  @Deprecated("Use suitableRequestForPlacement.requestForPlacement")
   val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
+  @Deprecated("Use suitableRequestForPlacement.placement")
   val placement: Cas1ExternalPlacementDto?,
+  val suitableRequestForPlacement: Cas1RequestForPlacementOutcomeDto?,
   val placementHistory: List<Cas1RequestForPlacementOutcomeDto>,
 )
 

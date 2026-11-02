@@ -110,6 +110,7 @@ class Cas1ExternalApplicationTransformer(
       assessment = latestAssessment?.let { transformToAssessment(it) },
       requestForPlacement = suitablePlacementPair?.requestForPlacement,
       placement = suitablePlacementPair?.placement,
+      suitableRequestForPlacement = suitablePlacementPair,
       placementHistory = placementHistory,
     )
   }
