@@ -20,12 +20,9 @@ class Cas1RequestForPlacementOutcomeService(
 
     return rfps.flatMap { rfp ->
       if (rfp.placements.isEmpty()) {
-        val rejectionReason = rfp.rejectionReason
-
         listOf(
           transformer.transformToCas1PlacementPair(
             rfp = rfp,
-            rejectionReason = rejectionReason,
           ),
         )
       } else {
@@ -34,7 +31,6 @@ class Cas1RequestForPlacementOutcomeService(
 
           transformer.transformToCas1PlacementPair(
             rfp = rfp,
-            rejectionReason = null,
             placement = placement,
             premises = premisesEntity,
           )

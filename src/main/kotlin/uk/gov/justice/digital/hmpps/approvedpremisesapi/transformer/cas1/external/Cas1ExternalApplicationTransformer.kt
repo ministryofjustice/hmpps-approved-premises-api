@@ -29,7 +29,6 @@ class Cas1ExternalApplicationTransformer(
 
   fun transformToCas1PlacementPair(
     rfp: RequestForPlacement,
-    rejectionReason: String? = null,
     placement: Cas1SpaceBookingShortSummary? = null,
     premises: ApprovedPremisesEntity? = null,
   ): Cas1RequestForPlacementOutcomeDto {
@@ -40,7 +39,7 @@ class Cas1ExternalApplicationTransformer(
       } else {
         statusLastUpdated
       },
-      requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, placement),
+      requestForPlacement = transformToRequestForPlacement(rfp, placement),
       placement = placement?.let { transformToPlacement(it, premises) },
       statusLastUpdated = placement?.statusSetDate ?: rfp.statusSetDate,
     )
@@ -48,11 +47,10 @@ class Cas1ExternalApplicationTransformer(
 
   private fun transformToRequestForPlacement(
     rfp: RequestForPlacement,
-    rejectionReason: String?,
     placement: Cas1SpaceBookingShortSummary?,
   ) = Cas1ExternalRequestForPlacementDto(
     decision = rfp.decision?.apiValue,
-    rejectionReason = rejectionReason,
+    rejectionReason = rfp.rejectionReason,
     submittedBy = rfp.submittedBy,
     submittedAt = rfp.submittedAt?.toLocalDate(),
     withdrawalReason = if (rfp.isWithdrawn) rfp.withdrawalReason else null,
