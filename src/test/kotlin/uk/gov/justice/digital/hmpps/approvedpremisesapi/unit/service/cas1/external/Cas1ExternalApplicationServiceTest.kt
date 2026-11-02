@@ -433,8 +433,10 @@ class Cas1ExternalApplicationServiceTest {
         )
       },
       status = placement?.status,
+      expectedArrivalDate = placement?.expectedArrivalDate,
       expectedDepartureDate = placement?.expectedDepartureDate,
     ),
+    statusLastUpdated = LocalDate.now(),
   )
 
   private fun transformToSuitableApplication(
@@ -442,8 +444,8 @@ class Cas1ExternalApplicationServiceTest {
     requestForPlacement: RequestForPlacement? = null,
     placement: Cas1SpaceBookingShortSummary? = null,
     premisesEntity: ApprovedPremisesEntity? = null,
-  ) = Cas1SuitableApplication(
-    requestForPlacement = Cas1ExternalRequestForPlacementDto(
+  ): Cas1SuitableApplication {
+    val externalRequestForPlacement = Cas1ExternalRequestForPlacementDto(
       decision = requestForPlacement?.decision?.apiValue,
       rejectionReason = null,
       submittedBy = requestForPlacement?.submittedBy,
@@ -453,8 +455,8 @@ class Cas1ExternalApplicationServiceTest {
       expectedArrivalDate = placement?.expectedArrivalDate ?: requestForPlacement?.canonicalPlacementPeriod?.arrival,
       durationDays = requestForPlacement?.canonicalPlacementPeriod?.duration,
       status = requestForPlacement?.status,
-    ),
-    placement = Cas1ExternalPlacementDto(
+    )
+    val externalPlacement = Cas1ExternalPlacementDto(
       actualArrivalDate = placement?.actualArrivalDate,
       actualDepartureDate = placement?.actualDepartureDate,
       cancellationReason = placement?.cancellation?.reason?.name,
@@ -469,23 +471,34 @@ class Cas1ExternalApplicationServiceTest {
         )
       },
       status = placement?.status,
+      expectedArrivalDate = placement?.expectedArrivalDate,
       expectedDepartureDate = placement?.expectedDepartureDate,
-    ),
-    uiUrl = "http://localhost:3000/applications/${applicationEntity.id}",
-    application = Cas1ExternalApplicationDto(
-      createdAt = applicationEntity.createdAt,
-      createdBy = transformToStaffDto(applicationEntity.createdByUser),
-      submittedAt = applicationEntity.submittedAt,
-      expiresAt = if (applicationEntity.getLatestAssessment()?.decision == AssessmentDecision.ACCEPTED) applicationEntity.getLatestAssessment()?.submittedAt?.toLocalDate()?.plusDays(365) else null,
-      status = applicationEntity.status,
-      id = applicationEntity.id,
-    ),
-    assessment = Cas1ExternalAssessmentDto(
-      decision = applicationEntity.getLatestAssessment()?.decision?.apiValue,
-      rejectionRationale = applicationEntity.getLatestAssessment()?.rejectionRationale,
-    ),
-    placementHistory = emptyList(),
-  )
+    )
+    return Cas1SuitableApplication(
+      requestForPlacement = externalRequestForPlacement,
+      placement = externalPlacement,
+      suitableRequestForPlacement = Cas1RequestForPlacementOutcomeDto(
+        requestForPlacement = externalRequestForPlacement,
+        placement = externalPlacement,
+        dateApplied = LocalDate.now(),
+        statusLastUpdated = LocalDate.now(),
+      ),
+      uiUrl = "http://localhost:3000/applications/${applicationEntity.id}",
+      application = Cas1ExternalApplicationDto(
+        createdAt = applicationEntity.createdAt,
+        createdBy = transformToStaffDto(applicationEntity.createdByUser),
+        submittedAt = applicationEntity.submittedAt,
+        expiresAt = if (applicationEntity.getLatestAssessment()?.decision == AssessmentDecision.ACCEPTED) applicationEntity.getLatestAssessment()?.submittedAt?.toLocalDate()?.plusDays(365) else null,
+        status = applicationEntity.status,
+        id = applicationEntity.id,
+      ),
+      assessment = Cas1ExternalAssessmentDto(
+        decision = applicationEntity.getLatestAssessment()?.decision?.apiValue,
+        rejectionRationale = applicationEntity.getLatestAssessment()?.rejectionRationale,
+      ),
+      placementHistory = emptyList(),
+    )
+  }
 
   private companion object {
     const val CRN = "X99999"

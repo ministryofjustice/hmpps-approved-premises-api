@@ -14,8 +14,11 @@ data class Cas1SuitableApplication(
   val uiUrl: String,
   val application: Cas1ExternalApplicationDto,
   val assessment: Cas1ExternalAssessmentDto?,
+  @Deprecated("Use suitableRequestForPlacement.requestForPlacement")
   val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
+  @Deprecated("Use suitableRequestForPlacement.placement")
   val placement: Cas1ExternalPlacementDto?,
+  val suitableRequestForPlacement: Cas1RequestForPlacementOutcomeDto?,
   val placementHistory: List<Cas1RequestForPlacementOutcomeDto>,
 )
 
@@ -28,6 +31,7 @@ data class Cas1RequestForPlacementOutcomeDto(
   val placement: Cas1ExternalPlacementDto?,
   @Schema(description = "The most recent status change date, or expected arrival date if placement exists in the future")
   val dateApplied: LocalDate,
+  val statusLastUpdated: LocalDate,
 )
 
 data class Cas1ExternalApplicationDto(
@@ -60,6 +64,7 @@ data class Cas1ExternalPlacementDto(
   val status: Cas1SpaceBookingStatus?,
   val actualArrivalDate: LocalDate?,
   val actualDepartureDate: LocalDate?,
+  val expectedArrivalDate: LocalDate?,
   val expectedDepartureDate: LocalDate?,
   val cancellationReason: String?,
   val premises: Cas1ExternalPremisesDto?,
