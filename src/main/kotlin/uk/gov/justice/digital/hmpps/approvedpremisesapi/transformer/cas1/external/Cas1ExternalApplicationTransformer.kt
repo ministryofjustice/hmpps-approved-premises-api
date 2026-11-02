@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Approved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
-import java.time.LocalDate
 
 @Component
 class Cas1ExternalApplicationTransformer(
@@ -31,7 +30,6 @@ class Cas1ExternalApplicationTransformer(
   fun transformToCas1PlacementPair(
     rfp: RequestForPlacement,
     rejectionReason: String? = null,
-    withdrawalDate: LocalDate? = null,
     placement: Cas1SpaceBookingShortSummary? = null,
     premises: ApprovedPremisesEntity? = null,
   ): Cas1RequestForPlacementOutcomeDto {
@@ -42,7 +40,7 @@ class Cas1ExternalApplicationTransformer(
       } else {
         statusLastUpdated
       },
-      requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, withdrawalDate, placement),
+      requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, placement),
       placement = placement?.let { transformToPlacement(it, premises) },
       statusLastUpdated = placement?.statusSetDate ?: rfp.statusSetDate,
     )
@@ -51,7 +49,6 @@ class Cas1ExternalApplicationTransformer(
   private fun transformToRequestForPlacement(
     rfp: RequestForPlacement,
     rejectionReason: String?,
-    withdrawalDate: LocalDate?,
     placement: Cas1SpaceBookingShortSummary?,
   ) = Cas1ExternalRequestForPlacementDto(
     decision = rfp.decision?.apiValue,
@@ -59,7 +56,7 @@ class Cas1ExternalApplicationTransformer(
     submittedBy = rfp.submittedBy,
     submittedAt = rfp.submittedAt?.toLocalDate(),
     withdrawalReason = if (rfp.isWithdrawn) rfp.withdrawalReason else null,
-    withdrawalDate = withdrawalDate,
+    withdrawalDate = if (rfp.isWithdrawn) rfp.withdrawalDate?.toLocalDate() else null,
     expectedArrivalDate = placement?.expectedArrivalDate ?: rfp.canonicalPlacementPeriod.arrival,
     durationDays = rfp.canonicalPlacementPeriod.duration,
     status = rfp.status,
