@@ -2,14 +2,18 @@
 <!-- This is in addition to the baseline ignore file provided by hmpps-gradle-spring-boot
      see https://github.com/ministryofjustice/hmpps-gradle-spring-boot#owasp-dependency-check-and-suppression-files -->
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <suppress until="2026-10-01Z">
+    <suppress until="2027-01-01Z">
         <notes><![CDATA[
-    Suppressed until 2.4.20 is released (due September 2026). Note that this is being pulled in from detekt,
-    hence this suppression rule which is in addition to the suppression provided by hmpps-gradle-plugin
+    This suppression was originally added into the hmpps gradle plugin with a suppress until date of 2026/10/01
 
     This only affects the kotlin build cache, and we use the gradle build cache that has built in encryption anyway.
-    Bundled with detekt which is only used for static code analysis
-    file name: kotlinx-coroutines-core-jvm-1.10.2-intellij-1.jar
+    So it's safe to suppress
+
+    This issue still occurred after October because we have other libraries that pull in kotlin lib versions
+    < 2.4.10 (e.g. ktlint)
+
+    We've extended the supression until the new year, at which point hopefully these libraries will pull in
+    newer versions that don't trigger this CVE
     ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.jetbrains\.intellij\.deps\.kotlinx/kotlinx-coroutines-core-jvm@.*$</packageUrl>
         <vulnerabilityName>CVE-2026-53914</vulnerabilityName>
