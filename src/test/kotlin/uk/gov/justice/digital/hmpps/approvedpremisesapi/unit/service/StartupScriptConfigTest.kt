@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcStartupScript
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
@@ -95,6 +97,18 @@ class StartupScriptConfigTest {
 
     verify(exactly = 3) { mockApplicationRepository.save(any()) }
     verify(exactly = 3) { insertHdcDates(any()) }
+  }
+
+  @Test
+  fun `creates all applications with the HDC cohort`() {
+    every { insertHdcDates(any<String>()) } returns "{}"
+    val savedApplications = mutableListOf<Cas2ApplicationEntity>()
+    every { mockApplicationRepository.save(capture(savedApplications)) } answers { mockApplicationEntity }
+
+    autoScript.script()
+
+    assertThat(savedApplications).hasSize(3)
+    assertThat(savedApplications).allSatisfy { assertThat(it.cohort).isEqualTo(Cas2Cohort.HDC) }
   }
 
   @Test
