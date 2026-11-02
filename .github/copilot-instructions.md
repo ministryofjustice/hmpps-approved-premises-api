@@ -17,20 +17,18 @@ database migrations, domain events, feature flags, testing, and the lint/build
 gates. Follow these patterns when adding or changing code so new work stays
 consistent with what already exists.
 
-The typical request flow is:
-
-`Controller` -> `Service` (business logic + `CasResult`) -> `Repository` (JPA)
--> entities returned to the `Service` -> `Transformer` (entity -> API model) ->
-`Controller` returns a `ResponseEntity`.
-
-Service packages are scoped by product: **CAS1** (Approved Premises, `cas1`),
-**CAS2** (`cas2`, `cas2hdc`), **CAS3** (Temporary Accommodation,
-`cas3`). Shared/legacy code lives in the root `approvedpremisesapi` package.
-Prefer the service-scoped types when working in a CAS-specific area.
+**Trust these instructions.** Prefer this guide over re-deriving conventions by
+searching. Only fall back to exploring the codebase when the information here is
+incomplete, ambiguous, or demonstrably out of date — and when you find it wrong,
+prefer updating this file so the next change benefits.
 
 ---
 
 ## Quick orientation (read first)
+
+* **Request flow:** `Controller` -> `Service` (business logic, returns
+  `CasResult<T>`) -> `Repository` (JPA) -> entity -> `Transformer` (entity ->
+  DTO/API model) -> `Controller` returns `ResponseEntity`.
 
 * **Stack:** Kotlin (JDK 25 — see `.sdkmanrc`), Spring Boot, Spring Data JPA,
   PostgreSQL + Flyway, Gradle (`./gradlew`).
@@ -42,10 +40,8 @@ Prefer the service-scoped types when working in a CAS-specific area.
   are editing. Shared/legacy code lives in the root `approvedpremisesapi`
   package (`config`, `common`, `client`, `cmd`, plus legacy `api`, `jpa`,
   `service`, `transformer`). New service-specific code belongs under `casx/**`;
-  add sub-packages by domain (reports, applications, assessment, ...).
-* **Request flow:** `Controller` -> `Service` (returns `CasResult<T>`) ->
-  `Repository` (JPA) -> entity -> `Transformer` (entity -> DTO/API model) ->
-  `Controller` returns `ResponseEntity`.
+  add sub-packages by domain (reports, applications, assessment, ...). Prefer
+  the service-scoped types when working in a CAS-specific area.
 * **Key files:** `common/results/CasResult.kt`, `util/EntityUtils.kt` (result
   unwrapping), `config/OAuth2ResourceServerSecurityConfiguration.kt` (endpoint
   security), `integration/IntegrationTestBase.kt` (integration test base).
@@ -66,6 +62,15 @@ script/test_database            # start test dependencies (Postgres etc.) — ru
 ./gradlew test --tests '*Cas1PremisesTest'     # run a focused test locally
 ./script/test                   # full suite (slow; prefer CI for the whole run)
 ```
+
+Tooling notes:
+
+* Make file changes with the `create`/`edit` tools, not shell heredocs or
+  scripted rewrites.
+* macOS `sed -i` needs an extension argument; prefer `edit` instead.
+* Validate with
+  `./gradlew ktlintFormat -q && ./gradlew test --tests '<pattern>' ktlintCheck detekt`
+  and check the final `BUILD SUCCESSFUL` line (test output can be noisy).
 
 ---
 
@@ -414,6 +419,7 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   scenario under test (e.g. `TransformJpaToApi`, `WhenThereAreTimelineEvents`,
   `WithExternalUser`); nest further for sub-scenarios (e.g. a
   `FeatureFlagFalse`/`FeatureFlagTrue` split inside a per-method class).
+  Private helpers go at the bottom of the class.
 * Before writing, read a neighbouring test in the same package and mirror its
   imports, structure, and assertion style.
 
@@ -421,38 +427,58 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
 
 * Live under `unit/**` (e.g. `unit/service`, `unit/transformer`) and the
   service-scoped `cas1/unit/**`, `cas2/unit/**`, `cas3/unit/**`.
-* Pure JVM — **no Spring context**. Mock collaborators with MockK; verify
-  interactions with `verify`/`confirmVerified`.
-* Build data with in-memory factories: `XxxEntityFactory().withY(...).produce()`.
-* Cover the happy path plus **every branch, boundary, and error condition**. Use
-  parameterised tests for role/enum/date matrices, following existing examples.
-* Fast check while iterating: `./gradlew compileTestKotlin -q`.
-* Tests mirror the main source package structure.
-* Stub in call order.** Declare `every { }` stubs in the order the production
+* Pure JVM — **no Spring context**. Fast check while iterating:
+  `./gradlew compileTestKotlin -q`.
+
+**Setup and mocking**
+
+* Use `@ExtendWith(MockKExtension::class)` with `@MockK` fields (and
+  `@InjectMockKs` where the constructor only takes mocks). Where constructor
+  args include non-mocks (e.g. `Clock`, URL strings), build the subject in
+  `@BeforeEach`.
+* Verify interactions with `verify`/`confirmVerified`.
+* Stub in call order: declare `every { }` stubs in the order the production
   code calls them. Read the method under test first to work this out.
-* Assert exceptions with AssertJ and check the message.** Use
+
+**Test data**
+
+* Build data with in-memory factories: `XxxEntityFactory().withY(...).produce()`.
+  Check `src/test/.../factory` (e.g. `CaseAccessFactory`, `CaseSummaryFactory`)
+  and `util/` helpers (`randomNumberChars`, `ClientResultFailureArgumentsProvider`)
+  before writing test data by hand.
+* Don't use `.copy(...)` on a produced object to override a field. If the
+  factory lacks a builder for the field, add one (backing `Yielded` field,
+  `withX(...)` function, and the assignment in `produce()`), then use it. Only
+  use `copy()` when the object has no factory.
+
+**Structure and coverage**
+
+* Group by method or scenario with `@Nested inner class`. Put private helpers
+  at the bottom of the class (or nested class), not at the top.
+* Name tests by behaviour with backtick names describing outcome and
+  condition. Do not start with "test", and do not add Arrange/Act/Assert comments.
+* One concern per test, but not one assertion per field.
+* Cover the happy path plus every branch, boundary, and error condition.
+* Use parameterised tests for role/enum/date matrices: a companion-object
+  `@MethodSource` (e.g. status-priority selection, see the v1 service tests), or
+  `@CsvSource` where it keeps the setup readable.
+* Cover mixed outcomes for list/batch methods: where a method maps over several
+  inputs, include a test where results differ per item (e.g. some `true`, some
+  `false`). Also cover the empty input, the boundary at a limit (limit and
+  limit + 1), and a missing item in a response.
+* Assert exceptions with AssertJ and check the message:
   `assertThatThrownBy { ... }.isInstanceOf(X::class.java).hasMessage("...")`, not
   JUnit `assertThrows`. For `ClientResult.Failure` parameterised tests, derive the
   expectation from `response.toException()` (type and message).
-* Cover mixed outcomes for list/batch methods.
-** Where a method maps over
-  several inputs, include a test where results differ per item (e.g. some `true`,
-  some `false`). Also cover the empty input, the boundary at a limit (limit and
-  limit + 1), and a missing item in a response.
-* Reuse existing factories.
-** Check `src/test/.../factory` (e.g.
-  `CaseAccessFactory`, `CaseSummaryFactory`) and `util/` helpers
-  (`randomNumberChars`, `ClientResultFailureArgumentsProvider`) before writing
-  test data by hand.
-**Use factories, don't `copy()`.
-** Build test data with the `Xxx Factory` and its
-  `with*` builders. Don't call `.copy(...)` on a produced object to override a
-  field. If the factory lacks a builder for the field, add one (backing `Yielded`
-  field, `withX(...)` function, and the assignment in `produce()`), then use it.
-  Only use `copy()` when the object has no factory.
-* Name tests by behaviour.** Use backtick names that describe the outcome and
-  condition. Do not start with "test", and do not add Arrange/Act/Assert comments.
 
+**Transformer tests**
+
+* Write one top-level `maps all fields` test per method that asserts as many
+  mappings as possible, then add small focused tests only for variations worth
+  testing (precedence rules, conditional logic such as the "other" cancellation
+  reason, withdrawn vs not withdrawn).
+* Don't write `null when none supplied` tests where the value is a direct
+  assignment. Only test null/empty handling when the mapping has logic.
 
 ### Integration tests
 
@@ -473,7 +499,16 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   (3) **validation/error paths** — `400`/`404`/`409` as applicable;
   (4) **side effects** — persisted state changes and **domain events** raised.
   New/changed endpoints must have auth tests.
-* Wiremock verification. Always add VerifyCalls helpers to the httpmocks files instead of calling wiremockServer.verify directly in tests.
+* Wiremock verification: always add `VerifyCalls` helpers to the httpmocks files
+  instead of calling `wiremockServer.verify` directly in tests.
+* Don't nest test bodies inside `given*` lambdas where a block-less overload
+  exists. Capture the returned value instead:
+  `val (user, jwt) = givenAUser()`, `val (_, application) = givenAnAssessmentForApprovedPremises(...)`.
+  Only use the block form when no value-returning overload exists.
+* Where several entities carry a similar value (e.g. expected arrival on a
+  placement application, placement request and space booking), give each a
+  distinct value so tests prove which source a field is mapped from.
+* Extract a private helper for repeated HTTP calls and response parsing.
 
 ### Keeping tests in sync
 
@@ -554,11 +589,3 @@ remove stale baseline entries for code you delete).
 * `prek`/`pre-commit` hooks can run the baseline checks on every commit locally
   (`prek install` — see `README.md`).
 
----
-
-## Trust these instructions
-
-Trust the information in this guide and prefer it over re-deriving conventions by
-searching. Only fall back to exploring the codebase when the information here is
-incomplete, ambiguous, or demonstrably out of date — and when you find it wrong,
-prefer updating this file so the next change benefits.
