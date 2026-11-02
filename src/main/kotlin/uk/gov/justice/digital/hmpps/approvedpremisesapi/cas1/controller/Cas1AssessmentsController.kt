@@ -28,9 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewClarific
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
@@ -49,6 +50,7 @@ class Cas1AssessmentsController(
   private val jsonMapper: JsonMapper,
   private val cas1AssessmentClarificationNoteTransformer: Cas1AssessmentClarificationNoteTransformer,
   private val offenderDetailService: OffenderDetailService,
+  private val offenderService: OffenderService,
 ) {
 
   @PaginationHeaders
@@ -292,13 +294,13 @@ class Cas1AssessmentsController(
     laoStrategy: LaoStrategy,
   ): List<Cas1AssessmentSummary> {
     val crns = summaries.map { it.crn }
-    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personSummaryInfoResults = offenderService.getPersonSummaryInfoResults(crns.toSet(), laoStrategy)
 
     return summaries.map {
       val crn = it.crn
       cas1AssessmentTransformer.transformDomainToCas1AssessmentSummary(
         it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.NotFound(crn),
+        personSummaryInfoResults.firstOrNull { it.crn == crn } ?: PersonSummaryInfoResult.NotFound(crn),
       )
     }
   }

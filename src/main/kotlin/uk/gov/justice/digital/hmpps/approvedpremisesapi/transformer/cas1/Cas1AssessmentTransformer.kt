@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -64,7 +65,7 @@ class Cas1AssessmentTransformer(
 
   fun transformDomainToCas1AssessmentSummary(
     ase: DomainAssessmentSummary,
-    personInfo: PersonInfoResult,
+    personSummaryInfo: PersonSummaryInfoResult,
   ): Cas1AssessmentSummary = Cas1AssessmentSummary(
     id = ase.id,
     applicationId = ase.applicationId,
@@ -78,7 +79,7 @@ class Cas1AssessmentTransformer(
         ase.crn,
       )
     },
-    person = personTransformer.personInfoResultToPerson(personInfo),
+    person = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
     dueAt = ase.dueAt!!,
   )
 

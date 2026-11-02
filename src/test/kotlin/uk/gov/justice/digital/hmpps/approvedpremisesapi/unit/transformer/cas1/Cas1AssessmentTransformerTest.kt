@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Assessment
@@ -270,7 +270,7 @@ class Cas1AssessmentTransformerTest {
         probationDeliveryUnitName = null,
       )
 
-      every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
+      every { mockPersonTransformer.personSummaryInfoResultToPersonSummary(any()) } returns mockk<PersonSummary>()
       val apiSummary = cas1AssessmentTransformer.transformDomainToCas1AssessmentSummary(domainSummary, mockk())
 
       assertThat(apiSummary).isInstanceOf(Cas1AssessmentSummary::class.java)
