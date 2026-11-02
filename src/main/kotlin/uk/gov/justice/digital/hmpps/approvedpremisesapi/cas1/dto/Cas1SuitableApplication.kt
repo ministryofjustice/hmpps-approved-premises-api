@@ -24,11 +24,25 @@ data class Cas1SuitableApplication(
   |If an RfP has many placements, many of these instances will exists""",
 )
 data class Cas1RequestForPlacementOutcomeDto(
-  val requestForPlacement: Cas1ExternalRequestForPlacementDto,
-  val placement: Cas1ExternalPlacementDto?,
-  @Schema(description = "The most recent status change date, or expected arrival date if placement exists in the future")
+  //val requestForPlacement: Cas1ExternalRequestForPlacementDto,
+  //val placement: Cas1ExternalPlacementDto?,
+  @Schema(description = "The most recent status change date, or expected arrival date if placement exists in the future", deprecated = true)
+  @Deprecated("Use [statusLastUpdated]")
   val dateApplied: LocalDate,
   val statusLastUpdated: LocalDate,
+
+
+  val status: RequestForPlacementStatus?,
+  val decision: PlacementApplicationDecisionDto?,
+  val rejectionReason: String?,
+  val submittedBy: Cas1StaffDto?,
+  val submittedAt: LocalDate?,
+  val withdrawalReason: WithdrawPlacementRequestReason?,
+  val withdrawalDate: LocalDate?,
+  val expectedArrivalDate: LocalDate?,
+  val durationDays: Int?,
+  val placement: Cas1ExternalPlacementDto,
+
 )
 
 data class Cas1ExternalApplicationDto(
@@ -55,6 +69,7 @@ data class Cas1ExternalRequestForPlacementDto(
   val withdrawalDate: LocalDate?,
   val expectedArrivalDate: LocalDate?,
   val durationDays: Int?,
+  val placement: Cas1ExternalPlacementDto,
 )
 
 data class Cas1ExternalPlacementDto(

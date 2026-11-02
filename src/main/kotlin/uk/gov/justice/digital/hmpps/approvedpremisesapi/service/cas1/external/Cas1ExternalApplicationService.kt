@@ -77,46 +77,49 @@ class Cas1ExternalApplicationService(
     toSuitableApplicationV2(it)
   }
 
-  /*
-  Some unexpected scenarios this creates (matching existing logic)
-
-  - if you have a pending arrival in the past (e.g. they didn't turn up on the day), this goes into the 'history' list
-  - history won't include anything that doesn't have a pending arrival that has been updated today
-   */
   private fun toSuitableApplicationV2(application: ApprovedPremisesApplicationEntity): Cas1SuitableApplication {
-    val all = cas1PlacementPairService.getPlacementPairs(application.id)
+    val allRequestsForPlacements = cas1PlacementPairService.getPlacementPairs(application.id)
 
     val today = LocalDate.now()
 
-    val allWithFuturePendingArrival = all.filter { rfpOutcome ->
+    val pendingArrivals = allRequestsForPlacements.filter { rfpOutcome ->
       rfpOutcome.pendingArrivalDate()?.let {
         it >= today
       } ?: false
     }
 
-    val nextPendingArrival = allWithFuturePendingArrival.sortedBy { it.pendingArrivalDate() }.firstOrNull()
+    val nextPendingArrival = pendingArrivals.sortedBy { it.pendingArrivalDate() }.firstOrNull()
 
-    val allWithoutAFuturePendingArrival = all - allWithFuturePendingArrival.toSet()
+    val pastOrRejectedRequestForPlacements = allRequestsForPlacements - pendingArrivals.toSet()
+
+    val suitablePlacementPair = nextPendingArrival ?: pastOrRejectedRequestForPlacements.firstOrNull()
 
     return transformer.transformToCas1SuitableApplication(
       application = application,
-      suitablePlacementPair = nextPendingArrival ?: allWithoutAFuturePendingArrival.firstOrNull(),
-      placementHistory = allWithoutAFuturePendingArrival.sortedByDescending { it.statusLastUpdated },
+      suitablePlacementPair = suitablePlacementPair,
+      placementHistory = (pastOrRejectedRequestForPlacements - suitablePlacementPair).sortedByDescending { it.statusLastUpdated },
     )
+
   }
 
-  private fun Cas1RequestForPlacementOutcomeDto.pendingArrivalDate() = placement?.pendingArrivalDate() ?: requestForPlacement.pendingArrivalDate()
+  /*
+  val nextPendingArrival: Cas1RequestForPlacementOutcomeDto?,
+  val history: List<Cas1RequestForPlacementOutcomeDto>,
+   */
 
-  private fun Cas1ExternalRequestForPlacementDto.pendingArrivalDate() = if (
-    listOf(
-      RequestForPlacementStatus.requestSubmitted,
-      RequestForPlacementStatus.awaitingMatch,
-    ).contains(status)
-  ) {
-    expectedArrivalDate
-  } else {
-    null
-  }
+  // TODO: push version without checking RFP (functionally identical)
+  private fun Cas1RequestForPlacementOutcomeDto.pendingArrivalDate() = placement?.pendingArrivalDate()// ?: requestForPlacement.pendingArrivalDate()
+
+//  private fun Cas1ExternalRequestForPlacementDto.pendingArrivalDate() = if (
+//    listOf(
+//      RequestForPlacementStatus.requestSubmitted,
+//      RequestForPlacementStatus.awaitingMatch,
+//    ).contains(status)
+//  ) {
+//    expectedArrivalDate
+//  } else {
+//    null
+//  }
 
   private fun Cas1ExternalPlacementDto.pendingArrivalDate() = if (status == Cas1SpaceBookingStatus.UPCOMING) {
     expectedArrivalDate
