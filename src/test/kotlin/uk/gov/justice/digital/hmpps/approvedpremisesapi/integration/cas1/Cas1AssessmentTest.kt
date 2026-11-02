@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -67,10 +66,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.Instant
@@ -123,7 +122,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             jwt,
             "/cas1/assessments",
             ExpectedResponse.OK(
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummaries(assessment, status = responseStatus),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummaries(assessment, status = responseStatus),
             ),
           )
         }
@@ -144,7 +143,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           val notStarted2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails.asCaseSummary(), cas1NotStarted)
           val completed2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails.asCaseSummary(), cas1Completed)
 
-          val mapper = assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails)
+          val mapper = assessmentSummaryMapper(offenderDetails.asCaseSummary())
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
@@ -181,7 +180,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
-            assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummaries(
+            assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummaries(
               notStarted1,
               notStarted2,
               status = NOT_STARTED,
@@ -209,7 +208,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
-            assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummaries(
+            assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummaries(
               inProgress1,
               inProgress2,
               status = IN_PROGRESS,
@@ -237,7 +236,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
-            assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummaries(
+            assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummaries(
               awaitingResponse1,
               awaitingResponse2,
               status = AWAITING_RESPONSE,
@@ -265,7 +264,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
-            assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummaries(
+            assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummaries(
               completed1,
               completed2,
               status = COMPLETED,
@@ -319,7 +318,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           val completed2 =
             createApprovedPremisesAssessmentForStatus(user, offenderDetails.asCaseSummary(), cas1Completed)
 
-          val mapper = assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails)
+          val mapper = assessmentSummaryMapper(offenderDetails.asCaseSummary())
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
@@ -376,7 +375,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(99)) },
           )
 
-          val mapper = assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails)
+          val mapper = assessmentSummaryMapper(offenderDetails.asCaseSummary())
 
           val page1Response = assertResponseForUrl(
             jwt,
@@ -479,7 +478,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
-            assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummaries(
+            assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummaries(
               veryOld,
               old,
               new,
@@ -506,13 +505,13 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           assertAssessmentsReturnedGivenStatus(
             jwt,
             listOf(
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(
                 awaitingResponse,
                 status = AWAITING_RESPONSE,
               ),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(completed, status = COMPLETED),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(inProgress, status = IN_PROGRESS),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(notStarted, status = NOT_STARTED),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(completed, status = COMPLETED),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(inProgress, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(notStarted, status = NOT_STARTED),
             ),
             sortBy = AssessmentSortField.assessmentStatus,
             status = listOf(cas1NotStarted, cas1Reallocated, cas1InProgress, cas1Completed, cas1AwaitingResponse),
@@ -553,10 +552,10 @@ class Cas1AssessmentTest : IntegrationTestBase() {
         assertAssessmentsReturnedGivenStatus(
           jwt,
           listOf(
-            assessmentSummaryMapper(offender3.asCaseSummary(), inmate3).toSummary(assessAgatha, status = IN_PROGRESS),
-            assessmentSummaryMapper(offender2.asCaseSummary(), inmate2).toSummary(assessArthur, status = IN_PROGRESS),
-            assessmentSummaryMapper(offender4.asCaseSummary(), inmate4).toSummary(assessBagatha, status = IN_PROGRESS),
-            assessmentSummaryMapper(offender1.asCaseSummary(), inmate1).toSummary(assessZendaya, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender3.asCaseSummary()).toSummary(assessAgatha, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender2.asCaseSummary()).toSummary(assessArthur, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender4.asCaseSummary()).toSummary(assessBagatha, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender1.asCaseSummary()).toSummary(assessZendaya, status = IN_PROGRESS),
           ),
           sortBy = AssessmentSortField.personName,
           status = listOf(cas1InProgress),
@@ -584,10 +583,10 @@ class Cas1AssessmentTest : IntegrationTestBase() {
         assertAssessmentsReturnedGivenStatus(
           jwt,
           listOf(
-            assessmentSummaryMapper(offender1.asCaseSummary(), inmate1).toSummary(assessCrn1, status = IN_PROGRESS),
-            assessmentSummaryMapper(offender3.asCaseSummary(), inmate3).toSummary(assessCrn2, status = IN_PROGRESS),
-            assessmentSummaryMapper(offender4.asCaseSummary(), inmate4).toSummary(assessCrn3, status = IN_PROGRESS),
-            assessmentSummaryMapper(offender2.asCaseSummary(), inmate2).toSummary(assessCrn4, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender1.asCaseSummary()).toSummary(assessCrn1, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender3.asCaseSummary()).toSummary(assessCrn2, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender4.asCaseSummary()).toSummary(assessCrn3, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender2.asCaseSummary()).toSummary(assessCrn4, status = IN_PROGRESS),
           ),
           sortBy = AssessmentSortField.personCrn,
           status = listOf(cas1InProgress),
@@ -631,10 +630,10 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           assertAssessmentsReturnedGivenStatus(
             jwt,
             listOf(
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(veryOld, status = IN_PROGRESS),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(old, status = IN_PROGRESS),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(new, status = IN_PROGRESS),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(veryNew, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(veryOld, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(old, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(new, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(veryNew, status = IN_PROGRESS),
             ),
             sortBy = AssessmentSortField.assessmentArrivalDate,
             status = emptyList(),
@@ -679,10 +678,10 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           assertAssessmentsReturnedGivenStatus(
             jwt,
             listOf(
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(dueVerySoon, status = IN_PROGRESS),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(dueSoon, status = IN_PROGRESS),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(dueLater, status = IN_PROGRESS),
-              assessmentSummaryMapper(offenderDetails.asCaseSummary(), inmateDetails).toSummary(dueMuchLater, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(dueVerySoon, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(dueSoon, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(dueLater, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails.asCaseSummary()).toSummary(dueMuchLater, status = IN_PROGRESS),
             ),
             sortBy = AssessmentSortField.assessmentDueAt,
             status = emptyList(),
@@ -693,14 +692,12 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
     fun assessmentSummaryMapper(
       offenderDetails: CaseSummary,
-      inmateDetails: InmateDetail?,
-    ) = AssessmentSummaryMapper(cas1AssessmentTransformer, jackson3JsonMapper, offenderDetails, inmateDetails)
+    ) = AssessmentSummaryMapper(cas1AssessmentTransformer, jackson3JsonMapper, offenderDetails)
 
     inner class AssessmentSummaryMapper(
       private val cas1AssessmentTransformer: Cas1AssessmentTransformer,
       private val jsonMapper: JsonMapper,
       private val offenderDetails: CaseSummary,
-      private val inmateDetails: InmateDetail?,
     ) {
 
       fun toSummaries(
@@ -710,7 +707,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
       fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): Cas1AssessmentSummary = cas1AssessmentTransformer.transformDomainToCas1AssessmentSummary(
         toAssessmentSummaryEntity(assessment, status),
-        PersonInfoResult.Success.Full(offenderDetails.crn, offenderDetails.asOffenderDetailSummary(), inmateDetails, tier = null),
+        PersonSummaryInfoResult.Success.Full(offenderDetails.crn, offenderDetails, tier = null),
       )
 
       private fun toAssessmentSummaryEntity(

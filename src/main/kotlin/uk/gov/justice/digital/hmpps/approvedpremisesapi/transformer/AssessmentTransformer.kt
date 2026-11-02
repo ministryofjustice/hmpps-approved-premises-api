@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
@@ -104,23 +103,6 @@ class AssessmentTransformer(
     JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.rejected
     null -> null
   }
-
-  fun transformDomainToCas1AssessmentSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): Cas1AssessmentSummary = Cas1AssessmentSummary(
-    id = ase.id,
-    applicationId = ase.applicationId,
-    createdAt = ase.createdAt,
-    arrivalDate = ase.arrivalDate,
-    status = getStatusForCas1Assessment(ase),
-    decision = transformDomainSummaryDecisionToApi(ase.decision),
-    risks = ase.riskRatings?.let {
-      risksTransformer.transformDomainToApi(
-        jsonMapper.readValue<PersonRisks>(it),
-        ase.crn,
-      )
-    },
-    person = personTransformer.personInfoResultToPerson(personInfo),
-    dueAt = ase.dueAt!!,
-  )
 
   private fun transformDomainSummaryDecisionToApi(decision: String?) = when (decision) {
     "ACCEPTED" -> ApiAssessmentDecision.accepted

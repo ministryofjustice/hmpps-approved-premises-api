@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import java.time.Instant
 import java.util.UUID
 
@@ -15,7 +15,7 @@ data class Cas1AssessmentSummary(
 
   @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  @get:JsonProperty("person", required = true) val person: PersonSummary,
 
   @get:JsonProperty("status", required = true) val status: Cas1AssessmentStatus,
 
