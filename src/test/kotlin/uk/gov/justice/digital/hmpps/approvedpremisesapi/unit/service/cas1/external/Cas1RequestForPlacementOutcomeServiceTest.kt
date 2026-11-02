@@ -225,8 +225,9 @@ class Cas1RequestForPlacementOutcomeServiceTest {
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.requestRejected)
-        .withDecision(PlacementApplicationDecision.REJECTED).produce()
-        .copy(rejectionReason = rejectionReason)
+        .withDecision(PlacementApplicationDecision.REJECTED)
+        .withRejectionReason(rejectionReason)
+        .produce()
       val requestForPlacement5 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(50),
       ).withStatus(RequestForPlacementStatus.requestWithdrawn)

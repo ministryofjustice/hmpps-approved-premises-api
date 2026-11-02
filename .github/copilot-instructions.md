@@ -443,8 +443,13 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
 ** Check `src/test/.../factory` (e.g.
   `CaseAccessFactory`, `CaseSummaryFactory`) and `util/` helpers
   (`randomNumberChars`, `ClientResultFailureArgumentsProvider`) before writing
-  test data by hand. Mirror a neighbouring test for imports and style
-  (e.g. `OffenderServiceTest`).
+  test data by hand.
+**Use factories, don't `copy()`.
+** Build test data with the `Xxx Factory` and its
+  `with*` builders. Don't call `.copy(...)` on a produced object to override a
+  field. If the factory lacks a builder for the field, add one (backing `Yielded`
+  field, `withX(...)` function, and the assignment in `produce()`), then use it.
+  Only use `copy()` when the object has no factory.
 * Name tests by behaviour.** Use backtick names that describe the outcome and
   condition. Do not start with "test", and do not add Arrange/Act/Assert comments.
 

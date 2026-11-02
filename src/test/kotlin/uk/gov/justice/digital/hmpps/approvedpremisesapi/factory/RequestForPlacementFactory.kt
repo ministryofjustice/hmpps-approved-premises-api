@@ -27,6 +27,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
   private var submittedAt: Yielded<Instant?> = { null }
   private var withdrawalReason: Yielded<WithdrawPlacementRequestReason?> = { null }
   private var withdrawalDate: Yielded<OffsetDateTime?> = { null }
+  private var rejectionReason: Yielded<String?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var sentenceType: Yielded<SentenceTypeOption?> = { null }
   private var releaseType: Yielded<ReleaseTypeOption?> = { null }
@@ -105,6 +106,10 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     this.withdrawalDate = { withdrawalDate }
   }
 
+  fun withRejectionReason(rejectionReason: String?) = apply {
+    this.rejectionReason = { rejectionReason }
+  }
+
   fun withIsWithdrawn(isWithdrawn: Boolean) = apply {
     this.isWithdrawn = { isWithdrawn }
   }
@@ -128,6 +133,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     submittedAt = this.submittedAt(),
     withdrawalReason = this.withdrawalReason(),
     withdrawalDate = this.withdrawalDate(),
+    rejectionReason = this.rejectionReason(),
     isWithdrawn = this.isWithdrawn(),
     sentenceType = this.sentenceType(),
     releaseType = this.releaseType(),
