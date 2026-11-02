@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as AssessmentDecisionJpa
@@ -216,8 +217,6 @@ class Cas1ExternalApplicationTransformerTest {
     @Test
     fun `If placement is upcoming set dateApplied to expected arrival date`() {
       val expectedArrivalDate = LocalDate.now().minusDays(100)
-      val rejectionReason = null
-      val withdrawalDate = null
       val requestForPlacement = RequestForPlacementFactory().produce()
 
       val placement = Cas1SpaceBookingShortSummaryFactory()
@@ -231,8 +230,6 @@ class Cas1ExternalApplicationTransformerTest {
 
       val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(
         rfp = requestForPlacement,
-        rejectionReason = rejectionReason,
-        withdrawalDate = withdrawalDate,
         placement = placement,
         premises = premisesEntity,
       )
@@ -246,8 +243,6 @@ class Cas1ExternalApplicationTransformerTest {
       val expectedArrivalDate = LocalDate.now().minusDays(100)
       val expectedDepartureDate = expectedArrivalDate.plusWeeks(duration.toLong())
       val actualDepartureDate = expectedDepartureDate.minusDays(1)
-      val rejectionReason = null
-      val withdrawalDate = null
       val user = UserEntityFactory()
         .withDefaults()
         .withName("Bob")
@@ -298,11 +293,11 @@ class Cas1ExternalApplicationTransformerTest {
       val expected = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
-          rejectionReason = rejectionReason,
+          rejectionReason = requestForPlacement.rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
           withdrawalReason = requestForPlacement.withdrawalReason,
-          withdrawalDate = withdrawalDate,
+          withdrawalDate = null,
           expectedArrivalDate = placement.expectedArrivalDate,
           durationDays = duration,
           status = requestForPlacement.status,
@@ -323,7 +318,7 @@ class Cas1ExternalApplicationTransformerTest {
 
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
+      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, placement, premisesEntity)
 
       assertThat(result).isEqualTo(expected)
     }
@@ -340,8 +335,6 @@ class Cas1ExternalApplicationTransformerTest {
         arrivalFlexible = false,
         duration = duration,
       )
-      val rejectionReason = null
-      val withdrawalDate = null
       val user = UserEntityFactory()
         .withDefaults()
         .withName("Bob")
@@ -389,11 +382,11 @@ class Cas1ExternalApplicationTransformerTest {
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           status = requestForPlacement.status,
           decision = requestForPlacement.decision?.apiValue,
-          rejectionReason = rejectionReason,
+          rejectionReason = requestForPlacement.rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
           withdrawalReason = requestForPlacement.withdrawalReason,
-          withdrawalDate = withdrawalDate,
+          withdrawalDate = null,
           expectedArrivalDate = placement.expectedArrivalDate,
           durationDays = duration,
         ),
@@ -412,7 +405,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
+      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, placement, premisesEntity)
 
       assertThat(result).isEqualTo(expected)
     }
@@ -429,7 +422,6 @@ class Cas1ExternalApplicationTransformerTest {
         arrivalFlexible = false,
         duration = duration,
       )
-      val rejectionReason = null
       val withdrawalDate = expectedArrivalDate.minusDays(1)
       val user = UserEntityFactory()
         .withDefaults()
@@ -446,6 +438,7 @@ class Cas1ExternalApplicationTransformerTest {
         .withSubmittedBy(requestSubmittedBy)
         .withSubmittedAt(Instant.now().minusDays(110))
         .withIsWithdrawn(true)
+        .withWithdrawalDate(withdrawalDate.atStartOfDay().atOffset(ZoneOffset.UTC))
         .withWithdrawalReason(WithdrawPlacementRequestReason.noCapacityDueToLostBed)
         .withCanonicalPlacementPeriod(canonicalPlacementPeriod)
         .produce()
@@ -491,7 +484,7 @@ class Cas1ExternalApplicationTransformerTest {
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           status = requestForPlacement.status,
           decision = requestForPlacement.decision?.apiValue,
-          rejectionReason = rejectionReason,
+          rejectionReason = requestForPlacement.rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
           withdrawalReason = requestForPlacement.withdrawalReason,
@@ -514,7 +507,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
+      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, placement, premisesEntity)
 
       assertThat(result).isEqualTo(expected)
     }
@@ -531,7 +524,6 @@ class Cas1ExternalApplicationTransformerTest {
         arrivalFlexible = false,
         duration = duration,
       )
-      val rejectionReason = null
       val withdrawalDate = expectedArrivalDate.minusDays(1)
       val user = UserEntityFactory()
         .withDefaults()
@@ -548,6 +540,7 @@ class Cas1ExternalApplicationTransformerTest {
         .withSubmittedBy(requestSubmittedBy)
         .withSubmittedAt(Instant.now().minusDays(110))
         .withIsWithdrawn(true)
+        .withWithdrawalDate(withdrawalDate.atStartOfDay().atOffset(ZoneOffset.UTC))
         .withWithdrawalReason(WithdrawPlacementRequestReason.noCapacityDueToLostBed)
         .withCanonicalPlacementPeriod(canonicalPlacementPeriod)
         .produce()
@@ -592,7 +585,7 @@ class Cas1ExternalApplicationTransformerTest {
       val expected = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
-          rejectionReason = rejectionReason,
+          rejectionReason = requestForPlacement.rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
           withdrawalReason = requestForPlacement.withdrawalReason,
@@ -615,7 +608,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, placement, premisesEntity)
+      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, placement, premisesEntity)
 
       assertThat(result).isEqualTo(expected)
     }
@@ -629,8 +622,6 @@ class Cas1ExternalApplicationTransformerTest {
         arrivalFlexible = false,
         duration = duration,
       )
-      val rejectionReason = "Oh no"
-      val withdrawalDate = null
       val user = UserEntityFactory()
         .withDefaults()
         .withName("Bob")
@@ -642,6 +633,7 @@ class Cas1ExternalApplicationTransformerTest {
         .produce()
       val requestForPlacement = RequestForPlacementFactory()
         .withDecision(PlacementApplicationDecision.REJECTED)
+        .withRejectionReason("Oh no")
         .withStatus(RequestForPlacementStatus.requestRejected)
         .withSubmittedBy(requestSubmittedBy)
         .withSubmittedAt(Instant.now().minusDays(110))
@@ -651,11 +643,11 @@ class Cas1ExternalApplicationTransformerTest {
       val expected = Cas1RequestForPlacementOutcomeDto(
         requestForPlacement = Cas1ExternalRequestForPlacementDto(
           decision = requestForPlacement.decision?.apiValue,
-          rejectionReason = rejectionReason,
+          rejectionReason = requestForPlacement.rejectionReason,
           submittedBy = requestSubmittedBy,
           submittedAt = requestForPlacement.submittedAt?.toLocalDate(),
           withdrawalReason = requestForPlacement.withdrawalReason,
-          withdrawalDate = withdrawalDate,
+          withdrawalDate = null,
           expectedArrivalDate = expectedArrivalDate,
           durationDays = duration,
           status = requestForPlacement.status,
@@ -666,7 +658,7 @@ class Cas1ExternalApplicationTransformerTest {
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
-      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, rejectionReason, withdrawalDate, null, null)
+      val result = cas1ExternalApplicationTransformer.transformToCas1PlacementPair(requestForPlacement, null, null)
 
       assertThat(result).isEqualTo(expected)
     }

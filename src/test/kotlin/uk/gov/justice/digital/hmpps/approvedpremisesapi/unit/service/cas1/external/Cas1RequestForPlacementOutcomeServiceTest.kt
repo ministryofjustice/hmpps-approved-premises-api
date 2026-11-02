@@ -225,13 +225,15 @@ class Cas1RequestForPlacementOutcomeServiceTest {
       val requestForPlacement4 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(2),
       ).withStatus(RequestForPlacementStatus.requestRejected)
-        .withDecision(PlacementApplicationDecision.REJECTED).produce()
-        .copy(rejectionReason = rejectionReason)
+        .withDecision(PlacementApplicationDecision.REJECTED)
+        .withRejectionReason(rejectionReason)
+        .produce()
       val requestForPlacement5 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(50),
       ).withStatus(RequestForPlacementStatus.requestWithdrawn)
-        .withIsWithdrawn(true).produce()
-        .copy(withdrawalDate = withdrawalDate.atStartOfDay().atOffset(ZoneOffset.UTC))
+        .withIsWithdrawn(true)
+        .withWithdrawalDate(withdrawalDate.atStartOfDay().atOffset(ZoneOffset.UTC))
+        .produce()
 
       every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(awaitingPlacementApplication.id, null) } returns CasResult.Success(
         listOf(
@@ -252,62 +254,62 @@ class Cas1RequestForPlacementOutcomeServiceTest {
 
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement8)
+          .transformToCas1PlacementPair(requestForPlacement2, placement8)
       } returns
         toPlacementPair(requestForPlacement2, placement8)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement10)
+          .transformToCas1PlacementPair(requestForPlacement2, placement10)
       } returns
         toPlacementPair(requestForPlacement2, placement10)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement2, null, null, placement9)
+          .transformToCas1PlacementPair(requestForPlacement2, placement9)
       } returns
         toPlacementPair(requestForPlacement2, placement9)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement7, premisesEntity)
+          .transformToCas1PlacementPair(requestForPlacement3, placement7, premisesEntity)
       } returns
         toPlacementPair(requestForPlacement3, placement7, premisesEntity)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement1)
+          .transformToCas1PlacementPair(requestForPlacement1, placement1)
       } returns
         toPlacementPair(requestForPlacement1, placement1)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement4, rejectionReason, null)
+          .transformToCas1PlacementPair(requestForPlacement4)
       } returns
         toPlacementPair(requestForPlacement4, requestForPlacementRejectionReason = rejectionReason)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement5, null, withdrawalDate)
+          .transformToCas1PlacementPair(requestForPlacement5)
       } returns
         toPlacementPair(requestForPlacement5, requestForPlacementWithdrawalDate = withdrawalDate)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement2)
+          .transformToCas1PlacementPair(requestForPlacement1, placement2)
       } returns
         toPlacementPair(requestForPlacement1, placement2)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement1, null, null, placement3)
+          .transformToCas1PlacementPair(requestForPlacement1, placement3)
       } returns
         toPlacementPair(requestForPlacement1, placement3)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement4)
+          .transformToCas1PlacementPair(requestForPlacement3, placement4)
       } returns
         toPlacementPair(requestForPlacement3, placement4)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement6)
+          .transformToCas1PlacementPair(requestForPlacement3, placement6)
       } returns
         toPlacementPair(requestForPlacement3, placement6)
       every {
         cas1ExternalApplicationTransformer
-          .transformToCas1PlacementPair(requestForPlacement3, null, null, placement5)
+          .transformToCas1PlacementPair(requestForPlacement3, placement5)
       } returns
         toPlacementPair(requestForPlacement3, placement5)
 

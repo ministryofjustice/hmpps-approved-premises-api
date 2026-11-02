@@ -19,16 +19,10 @@ class Cas1RequestForPlacementOutcomeService(
     val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, requestingUser = null) as CasResult.Success).value
 
     return rfps.flatMap { rfp ->
-      val withdrawalDate = if (rfp.isWithdrawn) rfp.withdrawalDate?.toLocalDate() else null
-
       if (rfp.placements.isEmpty()) {
-        val rejectionReason = rfp.rejectionReason
-
         listOf(
           transformer.transformToCas1PlacementPair(
             rfp = rfp,
-            rejectionReason = rejectionReason,
-            withdrawalDate = withdrawalDate,
           ),
         )
       } else {
@@ -37,8 +31,6 @@ class Cas1RequestForPlacementOutcomeService(
 
           transformer.transformToCas1PlacementPair(
             rfp = rfp,
-            rejectionReason = null,
-            withdrawalDate = withdrawalDate,
             placement = placement,
             premises = premisesEntity,
           )

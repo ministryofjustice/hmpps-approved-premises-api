@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class RequestForPlacementFactory : Factory<RequestForPlacement> {
@@ -25,6 +26,8 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
   private var createdAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<Instant?> = { null }
   private var withdrawalReason: Yielded<WithdrawPlacementRequestReason?> = { null }
+  private var withdrawalDate: Yielded<OffsetDateTime?> = { null }
+  private var rejectionReason: Yielded<String?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var sentenceType: Yielded<SentenceTypeOption?> = { null }
   private var releaseType: Yielded<ReleaseTypeOption?> = { null }
@@ -99,6 +102,14 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     this.withdrawalReason = { withdrawalReason }
   }
 
+  fun withWithdrawalDate(withdrawalDate: OffsetDateTime?) = apply {
+    this.withdrawalDate = { withdrawalDate }
+  }
+
+  fun withRejectionReason(rejectionReason: String?) = apply {
+    this.rejectionReason = { rejectionReason }
+  }
+
   fun withIsWithdrawn(isWithdrawn: Boolean) = apply {
     this.isWithdrawn = { isWithdrawn }
   }
@@ -121,6 +132,8 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     withdrawalReason = this.withdrawalReason(),
+    withdrawalDate = this.withdrawalDate(),
+    rejectionReason = this.rejectionReason(),
     isWithdrawn = this.isWithdrawn(),
     sentenceType = this.sentenceType(),
     releaseType = this.releaseType(),

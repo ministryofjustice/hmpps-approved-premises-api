@@ -17,7 +17,7 @@ import java.util.UUID
 @Service
 class Cas1ExternalApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
-  private val cas1PlacementPairService: Cas1RequestForPlacementOutcomeService,
+  private val requestForPlacementOutcomeService: Cas1RequestForPlacementOutcomeService,
   private val transformer: Cas1ExternalApplicationTransformer,
 ) {
 
@@ -51,7 +51,7 @@ class Cas1ExternalApplicationService(
     ?.let { toSuitableApplication(it) }
 
   private fun toSuitableApplication(application: ApprovedPremisesApplicationEntity): Cas1SuitableApplication {
-    val allRequestsForPlacements = cas1PlacementPairService.getPlacementPairs(application.id)
+    val allRequestsForPlacements = requestForPlacementOutcomeService.getPlacementPairs(application.id)
 
     val today = LocalDate.now()
 
@@ -84,7 +84,7 @@ class Cas1ExternalApplicationService(
     null
   }
 
-  fun getPlacementPairsNewestFirst(applicationId: UUID): List<Cas1RequestForPlacementOutcomeDto> = cas1PlacementPairService
+  fun getPlacementPairsNewestFirst(applicationId: UUID): List<Cas1RequestForPlacementOutcomeDto> = requestForPlacementOutcomeService
     .getPlacementPairs(applicationId)
     .sortedByDescending { it.dateApplied }
 
@@ -92,7 +92,7 @@ class Cas1ExternalApplicationService(
     .findByCrn(crn)
     .sortedWith(applicationSuitabilityComparator)
     .firstNotNullOfOrNull { application ->
-      cas1PlacementPairService.getPlacementPairs(application.id)
+      requestForPlacementOutcomeService.getPlacementPairs(application.id)
         .sortedByDescending { it.dateApplied }
         .firstOrNull { it.placement?.status == Cas1SpaceBookingStatus.ARRIVED }?.placement?.premises
     }
