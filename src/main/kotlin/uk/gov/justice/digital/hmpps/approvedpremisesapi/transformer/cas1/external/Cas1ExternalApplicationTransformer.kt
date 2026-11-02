@@ -34,19 +34,19 @@ class Cas1ExternalApplicationTransformer(
     withdrawalDate: LocalDate? = null,
     placement: Cas1SpaceBookingShortSummary? = null,
     premises: ApprovedPremisesEntity? = null,
-  ) = Cas1RequestForPlacementOutcomeDto(
-    dateApplied = if (placement != null) {
-      if (placement.status == Cas1SpaceBookingStatus.UPCOMING) {
+  ): Cas1RequestForPlacementOutcomeDto {
+    val statusLastUpdated = placement?.statusSetDate ?: rfp.statusSetDate
+    return Cas1RequestForPlacementOutcomeDto(
+      dateApplied = if (placement?.status == Cas1SpaceBookingStatus.UPCOMING) {
         placement.expectedArrivalDate
       } else {
-        placement.statusSetDate
-      }
-    } else {
-      rfp.statusSetDate
-    },
-    requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, withdrawalDate, placement),
-    placement = placement?.let { transformToPlacement(it, premises) },
-  )
+        statusLastUpdated
+      },
+      requestForPlacement = transformToRequestForPlacement(rfp, rejectionReason, withdrawalDate, placement),
+      placement = placement?.let { transformToPlacement(it, premises) },
+      statusLastUpdated = placement?.statusSetDate ?: rfp.statusSetDate,
+    )
+  }
 
   private fun transformToRequestForPlacement(
     rfp: RequestForPlacement,
@@ -71,6 +71,7 @@ class Cas1ExternalApplicationTransformer(
   ) = Cas1ExternalPlacementDto(
     actualArrivalDate = placement.actualArrivalDate,
     actualDepartureDate = placement.actualDepartureDate,
+    expectedArrivalDate = placement.expectedArrivalDate,
     expectedDepartureDate = placement.expectedDepartureDate,
     cancellationReason = getCancellationReason(placement),
     premises = premises?.let { transformToPremises(placement, it) },
@@ -109,6 +110,7 @@ class Cas1ExternalApplicationTransformer(
       assessment = latestAssessment?.let { transformToAssessment(it) },
       requestForPlacement = suitablePlacementPair?.requestForPlacement,
       placement = suitablePlacementPair?.placement,
+      suitableRequestForPlacement = suitablePlacementPair,
       placementHistory = placementHistory,
     )
   }

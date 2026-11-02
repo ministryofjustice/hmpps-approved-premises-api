@@ -13,8 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Inmate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2LaoStrategy
 
 @Service
 @Suppress(
@@ -26,6 +28,8 @@ class Cas2OffenderService(
   private val cas2PersonTransformer: Cas2PersonTransformer,
   private val tierService: TierService,
   private val offenderService: OffenderService,
+  private val laoService: LaoService,
+  private val cas2UserService: Cas2UserService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -58,8 +62,10 @@ class Cas2OffenderService(
 
     val caseSummary = caseSummaryList[0]
 
-    return when (caseSummary.currentRestriction) {
-      false -> Cas2v2OffenderSearchResult.Success.Full(
+    val isVisible = laoService.isVisibleForCaseSummaries(listOf(caseSummary), cas2UserService.getUserForRequest().cas2LaoStrategy()).values.singleOrNull()
+
+    return when (isVisible) {
+      true -> Cas2v2OffenderSearchResult.Success.Full(
         nomisIdOrCrn = nomisIdOrCrn,
         person = cas2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary, tierService.getTier(caseSummary.crn)),
       )

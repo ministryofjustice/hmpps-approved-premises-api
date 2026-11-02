@@ -111,14 +111,16 @@ class Cas1ExternalApplicationTransformerTest {
           status = RequestForPlacementStatus.awaitingMatch,
         ),
         placement = Cas1ExternalPlacementDto(
+          expectedArrivalDate = LocalDate.now().plusDays(1),
+          expectedDepartureDate = LocalDate.now().plusDays(2),
           actualArrivalDate = LocalDate.now().minusDays(3),
           actualDepartureDate = LocalDate.now().plusDays(3),
           cancellationReason = "Other",
           premises = premises,
           status = Cas1SpaceBookingStatus.CANCELLED,
-          expectedDepartureDate = LocalDate.now().plusDays(2),
         ),
         dateApplied = LocalDate.now(),
+        statusLastUpdated = LocalDate.now(),
       )
       val expected = Cas1SuitableApplication(
         uiUrl = "http://localhost:3000/applications/${application.id}",
@@ -136,6 +138,7 @@ class Cas1ExternalApplicationTransformerTest {
         ),
         requestForPlacement = suitablePlacementPair.requestForPlacement,
         placement = suitablePlacementPair.placement,
+        suitableRequestForPlacement = suitablePlacementPair,
         placementHistory = emptyList(),
       )
 
@@ -194,6 +197,7 @@ class Cas1ExternalApplicationTransformerTest {
         ),
         requestForPlacement = null,
         placement = null,
+        suitableRequestForPlacement = null,
         placementHistory = emptyList(),
       )
 
@@ -310,9 +314,11 @@ class Cas1ExternalApplicationTransformerTest {
           cancellationReason = placement.cancellation?.reason?.name,
           status = placement.status,
           premises = premises,
+          expectedArrivalDate = expectedArrivalDate,
           expectedDepartureDate = placement.expectedDepartureDate,
         ),
-        dateApplied = placement.statusSetDate!!,
+        dateApplied = placement.statusSetDate,
+        statusLastUpdated = placement.statusSetDate,
       )
 
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
@@ -398,9 +404,11 @@ class Cas1ExternalApplicationTransformerTest {
           cancellationReason = placement.cancellation?.reason?.name,
           status = placement.status,
           premises = premises,
+          expectedArrivalDate = expectedArrivalDate,
           expectedDepartureDate = placement.expectedDepartureDate,
         ),
-        dateApplied = placement.statusSetDate!!,
+        dateApplied = placement.statusSetDate,
+        statusLastUpdated = placement.statusSetDate,
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
@@ -498,9 +506,11 @@ class Cas1ExternalApplicationTransformerTest {
           cancellationReason = placement.cancellation?.reason?.name,
           status = placement.status,
           premises = premises,
+          expectedArrivalDate = placement.expectedArrivalDate,
           expectedDepartureDate = placement.expectedDepartureDate,
         ),
-        dateApplied = placement.statusSetDate!!,
+        dateApplied = placement.statusSetDate,
+        statusLastUpdated = placement.statusSetDate,
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
@@ -598,8 +608,10 @@ class Cas1ExternalApplicationTransformerTest {
           cancellationReason = placement.cancellation?.reasonNotes,
           premises = premises,
           expectedDepartureDate = placement.expectedDepartureDate,
+          expectedArrivalDate = placement.expectedArrivalDate,
         ),
-        dateApplied = placement.statusSetDate!!,
+        dateApplied = placement.statusSetDate,
+        statusLastUpdated = placement.statusSetDate,
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 
@@ -650,6 +662,7 @@ class Cas1ExternalApplicationTransformerTest {
         ),
         placement = null,
         dateApplied = requestForPlacement.statusSetDate,
+        statusLastUpdated = requestForPlacement.statusSetDate,
       )
       every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns requestSubmittedBy
 

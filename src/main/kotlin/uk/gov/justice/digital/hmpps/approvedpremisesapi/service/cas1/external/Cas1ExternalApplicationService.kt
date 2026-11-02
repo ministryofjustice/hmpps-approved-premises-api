@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
@@ -50,25 +51,37 @@ class Cas1ExternalApplicationService(
     ?.let { toSuitableApplication(it) }
 
   private fun toSuitableApplication(application: ApprovedPremisesApplicationEntity): Cas1SuitableApplication {
-    val placementPairs = cas1PlacementPairService.getPlacementPairs(application.id).sortedByDescending { it.dateApplied }
+    val allRequestsForPlacements = cas1PlacementPairService.getPlacementPairs(application.id)
 
     val today = LocalDate.now()
 
-    val pastPairs = placementPairs
-      .filter { it.dateApplied < today }
+    val pendingArrivals = allRequestsForPlacements.filter { rfpOutcome ->
+      rfpOutcome.pendingArrivalDate()?.let {
+        it >= today
+      } ?: false
+    }
 
-    val suitablePlacementPair = placementPairs
-      .lastOrNull { it.dateApplied >= today }
-      ?: pastPairs.firstOrNull()
+    val nextPendingArrival = pendingArrivals.sortedBy { it.pendingArrivalDate() }.firstOrNull()
 
-    val placementHistory = pastPairs
-      .filterNot { it == suitablePlacementPair }
+    val pastOrRejectedRequestForPlacements = allRequestsForPlacements - pendingArrivals.toSet()
+
+    val suitablePlacementPair = nextPendingArrival ?: pastOrRejectedRequestForPlacements.maxByOrNull { it.statusLastUpdated }
+
+    val placementHistory = pastOrRejectedRequestForPlacements - listOfNotNull(suitablePlacementPair).toSet()
 
     return transformer.transformToCas1SuitableApplication(
       application = application,
       suitablePlacementPair = suitablePlacementPair,
-      placementHistory = placementHistory,
+      placementHistory = placementHistory.sortedByDescending { it.statusLastUpdated },
     )
+  }
+
+  private fun Cas1RequestForPlacementOutcomeDto.pendingArrivalDate() = placement?.pendingArrivalDate()
+
+  private fun Cas1ExternalPlacementDto.pendingArrivalDate() = if (status == Cas1SpaceBookingStatus.UPCOMING) {
+    expectedArrivalDate
+  } else {
+    null
   }
 
   fun getPlacementPairsNewestFirst(applicationId: UUID): List<Cas1RequestForPlacementOutcomeDto> = cas1PlacementPairService

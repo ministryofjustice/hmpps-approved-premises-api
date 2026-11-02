@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -79,55 +80,123 @@ class Cas1ExternalApplicationServiceTest {
 
     @Nested
     inner class SuitablePlacementPair {
+      private val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+
       @Test
-      fun `uses the future placement pair closest to today as suitable and returns past pairs as history`() {
-        val application = ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(user)
-          .withCrn(CRN)
-          .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-          .produce()
-
-        val future2 = placementPair(LocalDate.now().plusDays(3))
-        val future1 = placementPair(LocalDate.now().plusDays(1))
-        val today = placementPair(LocalDate.now())
-        val past1 = placementPair(LocalDate.now().minusDays(1))
-        val past2 = placementPair(LocalDate.now().minusDays(5))
-
-        val suitableApplication = transformToSuitableApplication(application)
-
-        every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
-        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(today, past1, past2, future2, future1)
-        every {
-          cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, today, listOf(past1, past2))
-        } returns suitableApplication
-
-        val result = service.getSuitableApplicationByCrn(application.crn)
-
-        assertThat(result).isEqualTo(suitableApplication)
+      fun `returns no suitable placement pair and no history when there are no placement pairs`() {
+        assertRequestForPlacementSelection(
+          placementPairs = emptyList(),
+          expectedSuitablePlacementPair = null,
+          expectedPlacementHistory = emptyList(),
+        )
       }
 
       @Test
-      fun `uses the most recent past placement pair as suitable when there are no future pairs`() {
-        val application = ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(user)
-          .withCrn(CRN)
-          .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-          .produce()
+      fun `selects the nearest upcoming arrival including one arriving today and excludes other upcoming arrivals from history`() {
+        val today = LocalDate.now()
+        val arrivingLater = requestForPlacementOutcome(
+          placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+          placementExpectedArrivalDate = today.plusDays(5),
+        )
+        val arrivingToday = requestForPlacementOutcome(
+          placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+          placementExpectedArrivalDate = today,
+        )
+        val arrivingNext = requestForPlacementOutcome(
+          dateApplied = today.minusDays(1),
+          placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+          placementExpectedArrivalDate = today.plusDays(2),
+        )
+        val arrived = requestForPlacementOutcome(
+          placementStatus = Cas1SpaceBookingStatus.ARRIVED,
+          statusLastUpdated = today.minusDays(1),
+        )
+        val pastUpcoming = requestForPlacementOutcome(
+          placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+          placementExpectedArrivalDate = today.minusDays(1),
+          statusLastUpdated = today,
+        )
 
-        val past1 = placementPair(LocalDate.now().minusDays(1))
-        val past2 = placementPair(LocalDate.now().minusDays(5))
+        assertRequestForPlacementSelection(
+          placementPairs = listOf(arrivingLater, arrived, arrivingToday, pastUpcoming, arrivingNext),
+          expectedSuitablePlacementPair = arrivingToday,
+          expectedPlacementHistory = listOf(pastUpcoming, arrived),
+        )
+      }
 
+      @Test
+      fun `uses the most recently updated past request for placement when there are no pending arrivals and sorts history by most recent status update`() {
+        val today = LocalDate.now()
+        val updatedMostRecently = requestForPlacementOutcome(
+          placementStatus = Cas1SpaceBookingStatus.ARRIVED,
+          statusLastUpdated = today.minusDays(1),
+        )
+        val oldestUpdate = requestForPlacementOutcome(
+          placementStatus = Cas1SpaceBookingStatus.DEPARTED,
+          statusLastUpdated = today.minusDays(8),
+        )
+        val updatedEarlier = requestForPlacementOutcome(
+          placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+          placementExpectedArrivalDate = today.minusDays(1),
+          statusLastUpdated = today.minusDays(3),
+        )
+
+        assertRequestForPlacementSelection(
+          placementPairs = listOf(updatedEarlier, updatedMostRecently, oldestUpdate),
+          expectedSuitablePlacementPair = updatedMostRecently,
+          expectedPlacementHistory = listOf(updatedEarlier, oldestUpdate),
+        )
+      }
+
+      @Test
+      fun `uses the most recently updated past request for placement when there are no placements defined`() {
+        val today = LocalDate.now()
+        val oldest = requestForPlacementOutcome(
+          hasPlacement = false,
+          statusLastUpdated = today.minusDays(8),
+        )
+        val updatedMostRecently = requestForPlacementOutcome(
+          hasPlacement = false,
+          statusLastUpdated = today.minusDays(1),
+        )
+        val updatedEarlier = requestForPlacementOutcome(
+          hasPlacement = false,
+          statusLastUpdated = today.minusDays(3),
+        )
+
+        assertRequestForPlacementSelection(
+          placementPairs = listOf(oldest, updatedEarlier, updatedMostRecently),
+          expectedSuitablePlacementPair = updatedMostRecently,
+          expectedPlacementHistory = listOf(updatedEarlier, oldest),
+        )
+      }
+
+      private fun assertRequestForPlacementSelection(
+        placementPairs: List<Cas1RequestForPlacementOutcomeDto>,
+        expectedSuitablePlacementPair: Cas1RequestForPlacementOutcomeDto?,
+        expectedPlacementHistory: List<Cas1RequestForPlacementOutcomeDto>,
+      ) {
         val suitableApplication = transformToSuitableApplication(application)
 
         every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
-        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(past1, past2)
+        every { cas1PlacementPairService.getPlacementPairs(application.id) } returns placementPairs
         every {
-          cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, past1, listOf(past2))
+          cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, any(), any())
         } returns suitableApplication
 
-        val result = service.getSuitableApplicationByCrn(application.crn)
+        service.getSuitableApplicationByCrn(application.crn)
 
-        assertThat(result).isEqualTo(suitableApplication)
+        verify(exactly = 1) {
+          cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(
+            application,
+            expectedSuitablePlacementPair,
+            expectedPlacementHistory,
+          )
+        }
       }
     }
 
@@ -253,7 +322,7 @@ class Cas1ExternalApplicationServiceTest {
 
     @Test
     fun `returns a single placement pair unchanged`() {
-      val pair = placementPair(LocalDate.of(2025, 1, 1))
+      val pair = requestForPlacementOutcome(LocalDate.of(2025, 1, 1))
       every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(pair)
 
       val result = service.getPlacementPairsNewestFirst(applicationId)
@@ -263,9 +332,9 @@ class Cas1ExternalApplicationServiceTest {
 
     @Test
     fun `sorts placement pairs by date applied descending`() {
-      val oldest = placementPair(LocalDate.of(2025, 1, 1))
-      val middle = placementPair(LocalDate.of(2025, 6, 1))
-      val newest = placementPair(LocalDate.of(2025, 12, 1))
+      val oldest = requestForPlacementOutcome(LocalDate.of(2025, 1, 1))
+      val middle = requestForPlacementOutcome(LocalDate.of(2025, 6, 1))
+      val newest = requestForPlacementOutcome(LocalDate.of(2025, 12, 1))
       every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(middle, newest, oldest)
 
       val result = service.getPlacementPairsNewestFirst(applicationId)
@@ -275,9 +344,9 @@ class Cas1ExternalApplicationServiceTest {
 
     @Test
     fun `sorts future and past placement pairs together newest first`() {
-      val past = placementPair(LocalDate.now().minusDays(5))
-      val future = placementPair(LocalDate.now().plusDays(5))
-      val today = placementPair(LocalDate.now())
+      val past = requestForPlacementOutcome(LocalDate.now().minusDays(5))
+      val future = requestForPlacementOutcome(LocalDate.now().plusDays(5))
+      val today = requestForPlacementOutcome(LocalDate.now())
       every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(past, future, today)
 
       val result = service.getPlacementPairsNewestFirst(applicationId)
@@ -288,8 +357,8 @@ class Cas1ExternalApplicationServiceTest {
     @Test
     fun `keeps original order for pairs with the same date applied`() {
       val date = LocalDate.of(2025, 3, 1)
-      val first = placementPair(date, Cas1SpaceBookingStatus.ARRIVED)
-      val second = placementPair(date, Cas1SpaceBookingStatus.UPCOMING)
+      val first = requestForPlacementOutcome(date, Cas1SpaceBookingStatus.ARRIVED)
+      val second = requestForPlacementOutcome(date, Cas1SpaceBookingStatus.UPCOMING)
       every { cas1PlacementPairService.getPlacementPairs(applicationId) } returns listOf(first, second)
 
       val result = service.getPlacementPairsNewestFirst(applicationId)
@@ -321,8 +390,8 @@ class Cas1ExternalApplicationServiceTest {
 
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
       every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(
-        placementPair(LocalDate.now().minusDays(1)),
-        placementPair(LocalDate.now().minusDays(2)),
+        requestForPlacementOutcome(LocalDate.now().minusDays(1)),
+        requestForPlacementOutcome(LocalDate.now().minusDays(2)),
       )
 
       val result = service.getCurrentPremisesByCrn(application.crn)
@@ -343,10 +412,10 @@ class Cas1ExternalApplicationServiceTest {
       val premises3Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
       val premises4Entity = ApprovedPremisesEntityFactory().withDefaults().produce()
 
-      val upcoming = placementPair(LocalDate.now().plusDays(1), Cas1SpaceBookingStatus.UPCOMING, premises1Entity)
-      val arrived1 = placementPair(LocalDate.now().minusDays(3), Cas1SpaceBookingStatus.ARRIVED, premises2Entity)
-      val arrived2 = placementPair(LocalDate.now().minusDays(1), Cas1SpaceBookingStatus.ARRIVED, premises3Entity)
-      val departed = placementPair(LocalDate.now().minusDays(10), Cas1SpaceBookingStatus.DEPARTED, premises4Entity)
+      val upcoming = requestForPlacementOutcome(LocalDate.now().plusDays(1), Cas1SpaceBookingStatus.UPCOMING, premises1Entity)
+      val arrived1 = requestForPlacementOutcome(LocalDate.now().minusDays(3), Cas1SpaceBookingStatus.ARRIVED, premises2Entity)
+      val arrived2 = requestForPlacementOutcome(LocalDate.now().minusDays(1), Cas1SpaceBookingStatus.ARRIVED, premises3Entity)
+      val departed = requestForPlacementOutcome(LocalDate.now().minusDays(10), Cas1SpaceBookingStatus.DEPARTED, premises4Entity)
 
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
       every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(arrived1, arrived2, departed, upcoming)
@@ -370,7 +439,7 @@ class Cas1ExternalApplicationServiceTest {
 
       every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
       every { cas1PlacementPairService.getPlacementPairs(application.id) } returns listOf(
-        placementPair(LocalDate.now().plusDays(1), Cas1SpaceBookingStatus.UPCOMING, premisesEntity),
+        requestForPlacementOutcome(LocalDate.now().plusDays(1), Cas1SpaceBookingStatus.UPCOMING, premisesEntity),
       )
 
       val result = service.getCurrentPremisesByCrn(application.crn)
@@ -379,22 +448,28 @@ class Cas1ExternalApplicationServiceTest {
     }
   }
 
-  private fun placementPair(
-    dateApplied: LocalDate,
-    status: Cas1SpaceBookingStatus? = null,
-    premises: ApprovedPremisesEntity? = null,
+  private fun requestForPlacementOutcome(
+    dateApplied: LocalDate = LocalDate.now(),
+    placementStatus: Cas1SpaceBookingStatus = Cas1SpaceBookingStatus.entries.random(),
+    placementPremises: ApprovedPremisesEntity? = null,
+    statusLastUpdated: LocalDate = LocalDate.now(),
+    placementExpectedArrivalDate: LocalDate = LocalDate.now(),
+    hasPlacement: Boolean = true,
   ): Cas1RequestForPlacementOutcomeDto {
     val requestForPlacement = RequestForPlacementFactory()
       .withStatusSetDate(dateApplied)
       .withStatus(RequestForPlacementStatus.placementBooked)
       .produce()
-    val placement = status?.let {
+    val placement = if (hasPlacement) {
       Cas1SpaceBookingShortSummaryFactory()
         .withStatusSetDate(dateApplied)
-        .withStatus(it)
+        .withExpectedArrivalDate(placementExpectedArrivalDate)
+        .withStatus(placementStatus)
         .produce()
+    } else {
+      null
     }
-    return transformToPlacementHistory(requestForPlacement, placement, premises)
+    return transformToPlacementHistory(requestForPlacement, placement, placementPremises, statusLastUpdated = statusLastUpdated)
   }
 
   private fun transformToPlacementHistory(
@@ -403,6 +478,7 @@ class Cas1ExternalApplicationServiceTest {
     premisesEntity: ApprovedPremisesEntity? = null,
     rejectionReason: String? = null,
     withdrawalDate: LocalDate? = null,
+    statusLastUpdated: LocalDate = LocalDate.now(),
   ) = Cas1RequestForPlacementOutcomeDto(
     dateApplied = placement?.statusSetDate ?: requestForPlacement.statusSetDate,
     requestForPlacement = Cas1ExternalRequestForPlacementDto(
@@ -433,8 +509,10 @@ class Cas1ExternalApplicationServiceTest {
         )
       },
       status = placement?.status,
+      expectedArrivalDate = placement?.expectedArrivalDate,
       expectedDepartureDate = placement?.expectedDepartureDate,
     ),
+    statusLastUpdated = statusLastUpdated,
   )
 
   private fun transformToSuitableApplication(
@@ -442,8 +520,8 @@ class Cas1ExternalApplicationServiceTest {
     requestForPlacement: RequestForPlacement? = null,
     placement: Cas1SpaceBookingShortSummary? = null,
     premisesEntity: ApprovedPremisesEntity? = null,
-  ) = Cas1SuitableApplication(
-    requestForPlacement = Cas1ExternalRequestForPlacementDto(
+  ): Cas1SuitableApplication {
+    val externalRequestForPlacement = Cas1ExternalRequestForPlacementDto(
       decision = requestForPlacement?.decision?.apiValue,
       rejectionReason = null,
       submittedBy = requestForPlacement?.submittedBy,
@@ -453,8 +531,8 @@ class Cas1ExternalApplicationServiceTest {
       expectedArrivalDate = placement?.expectedArrivalDate ?: requestForPlacement?.canonicalPlacementPeriod?.arrival,
       durationDays = requestForPlacement?.canonicalPlacementPeriod?.duration,
       status = requestForPlacement?.status,
-    ),
-    placement = Cas1ExternalPlacementDto(
+    )
+    val externalPlacement = Cas1ExternalPlacementDto(
       actualArrivalDate = placement?.actualArrivalDate,
       actualDepartureDate = placement?.actualDepartureDate,
       cancellationReason = placement?.cancellation?.reason?.name,
@@ -469,23 +547,34 @@ class Cas1ExternalApplicationServiceTest {
         )
       },
       status = placement?.status,
+      expectedArrivalDate = placement?.expectedArrivalDate,
       expectedDepartureDate = placement?.expectedDepartureDate,
-    ),
-    uiUrl = "http://localhost:3000/applications/${applicationEntity.id}",
-    application = Cas1ExternalApplicationDto(
-      createdAt = applicationEntity.createdAt,
-      createdBy = transformToStaffDto(applicationEntity.createdByUser),
-      submittedAt = applicationEntity.submittedAt,
-      expiresAt = if (applicationEntity.getLatestAssessment()?.decision == AssessmentDecision.ACCEPTED) applicationEntity.getLatestAssessment()?.submittedAt?.toLocalDate()?.plusDays(365) else null,
-      status = applicationEntity.status,
-      id = applicationEntity.id,
-    ),
-    assessment = Cas1ExternalAssessmentDto(
-      decision = applicationEntity.getLatestAssessment()?.decision?.apiValue,
-      rejectionRationale = applicationEntity.getLatestAssessment()?.rejectionRationale,
-    ),
-    placementHistory = emptyList(),
-  )
+    )
+    return Cas1SuitableApplication(
+      requestForPlacement = externalRequestForPlacement,
+      placement = externalPlacement,
+      suitableRequestForPlacement = Cas1RequestForPlacementOutcomeDto(
+        requestForPlacement = externalRequestForPlacement,
+        placement = externalPlacement,
+        dateApplied = LocalDate.now(),
+        statusLastUpdated = LocalDate.now(),
+      ),
+      uiUrl = "http://localhost:3000/applications/${applicationEntity.id}",
+      application = Cas1ExternalApplicationDto(
+        createdAt = applicationEntity.createdAt,
+        createdBy = transformToStaffDto(applicationEntity.createdByUser),
+        submittedAt = applicationEntity.submittedAt,
+        expiresAt = if (applicationEntity.getLatestAssessment()?.decision == AssessmentDecision.ACCEPTED) applicationEntity.getLatestAssessment()?.submittedAt?.toLocalDate()?.plusDays(365) else null,
+        status = applicationEntity.status,
+        id = applicationEntity.id,
+      ),
+      assessment = Cas1ExternalAssessmentDto(
+        decision = applicationEntity.getLatestAssessment()?.decision?.apiValue,
+        rejectionRationale = applicationEntity.getLatestAssessment()?.rejectionRationale,
+      ),
+      placementHistory = emptyList(),
+    )
+  }
 
   private companion object {
     const val CRN = "X99999"

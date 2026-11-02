@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -8,7 +11,9 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -35,6 +40,18 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var cas2OffenderService: Cas2OffenderService
+
+  /**
+   * [Cas2OffenderService.getPersonByNomisIdOrCrn] resolves the user from the HTTP request,
+   * which doesn't exist when calling the service directly
+   */
+  @MockkBean
+  lateinit var cas2UserService: Cas2UserService
+
+  @BeforeEach
+  fun setupUser() {
+    every { cas2UserService.getUserForRequest() } returns Cas2UserEntityFactory().produce()
+  }
 
   enum class ExpectedResult { FULL, FORBIDDEN }
 
