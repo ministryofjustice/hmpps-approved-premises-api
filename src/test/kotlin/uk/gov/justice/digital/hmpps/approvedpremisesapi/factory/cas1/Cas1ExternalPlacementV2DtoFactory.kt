@@ -9,6 +9,8 @@ import java.time.LocalDate
 
 class Cas1ExternalPlacementV2DtoFactory : Factory<Cas1ExternalPlacementV2Dto> {
   private var status: Yielded<Cas1SpaceBookingStatus> = { Cas1SpaceBookingStatus.UPCOMING }
+  private var canonicalArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var canonicalDepartureDate: Yielded<LocalDate> = { LocalDate.now().plusDays(1) }
   private var actualArrivalDate: Yielded<LocalDate?> = { null }
   private var actualDepartureDate: Yielded<LocalDate?> = { null }
   private var expectedArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
@@ -53,6 +55,8 @@ class Cas1ExternalPlacementV2DtoFactory : Factory<Cas1ExternalPlacementV2Dto> {
 
   override fun produce() = Cas1ExternalPlacementV2Dto(
     status = this.status(),
+    canonicalArrivalDate = this.canonicalArrivalDate(),
+    canonicalDepartureDate = this.canonicalDepartureDate(),
     actualArrivalDate = this.actualArrivalDate(),
     actualDepartureDate = this.actualDepartureDate(),
     expectedArrivalDate = this.expectedArrivalDate(),

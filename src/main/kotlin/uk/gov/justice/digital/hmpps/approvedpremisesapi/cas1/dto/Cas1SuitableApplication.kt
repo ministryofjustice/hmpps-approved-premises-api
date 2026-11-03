@@ -52,6 +52,8 @@ data class Cas1ExternalRequestForPlacementWithdrawalDto(
 
 data class Cas1ExternalPlacementV2Dto(
   val status: Cas1SpaceBookingStatus,
+  val canonicalArrivalDate: LocalDate,
+  val canonicalDepartureDate: LocalDate,
   val actualArrivalDate: LocalDate?,
   val actualDepartureDate: LocalDate?,
   val expectedArrivalDate: LocalDate,
