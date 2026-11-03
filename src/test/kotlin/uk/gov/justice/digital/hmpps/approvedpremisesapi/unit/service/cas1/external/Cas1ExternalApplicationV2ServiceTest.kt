@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.exter
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -115,9 +116,21 @@ class Cas1ExternalApplicationV2ServiceTest {
 
       every { repository.findByCrn(crn) } returns listOf(application)
       every { outcomeService.getOutcomes(application.id) } returns listOf(arrived, noPlacement)
-      every { transformer.transformToApplicationV2(application, null, listOf(noPlacement.toDto(), arrived.toDto())) } returns transformed
+
+      val upcomingRequestForPlacementSlot = slot<Cas1ExternalRequestForPlacementOutcomeDto?>()
+      val requestForPlacementHistorySlot = slot<List<Cas1ExternalRequestForPlacementOutcomeDto>>()
+      every {
+        transformer.transformToApplicationV2(
+          application = application,
+          upcomingRequestForPlacement = captureNullable(upcomingRequestForPlacementSlot),
+          requestForPlacementHistory = capture(requestForPlacementHistorySlot),
+        )
+      } returns transformed
 
       assertThat(service.getSuitableApplicationByCrn(crn)).isSameAs(transformed)
+
+      assertThat(upcomingRequestForPlacementSlot.captured).isNull()
+      assertThat(requestForPlacementHistorySlot.captured).isEqualTo(listOf(noPlacement.toDto(), arrived.toDto()))
     }
 
     @Test
@@ -158,15 +171,21 @@ class Cas1ExternalApplicationV2ServiceTest {
 
       every { repository.findByCrn(crn) } returns listOf(application)
       every { outcomeService.getOutcomes(application.id) } returns listOf(arrived, laterUpcoming, noPlacement, earliestUpcoming, pastUpcoming)
+
+      val upcomingRequestForPlacementSlot = slot<Cas1ExternalRequestForPlacementOutcomeDto?>()
+      val requestForPlacementHistorySlot = slot<List<Cas1ExternalRequestForPlacementOutcomeDto>>()
       every {
         transformer.transformToApplicationV2(
           application,
-          earliestUpcoming.toDto(),
-          listOf(pastUpcoming.toDto(), noPlacement.toDto(), arrived.toDto()),
+          captureNullable(upcomingRequestForPlacementSlot),
+          capture(requestForPlacementHistorySlot),
         )
       } returns transformed
 
       assertThat(service.getSuitableApplicationByCrn(crn)).isSameAs(transformed)
+
+      assertThat(upcomingRequestForPlacementSlot.captured).isEqualTo(earliestUpcoming.toDto())
+      assertThat(requestForPlacementHistorySlot.captured).isEqualTo(listOf(pastUpcoming.toDto(), noPlacement.toDto(), arrived.toDto()))
     }
   }
 
