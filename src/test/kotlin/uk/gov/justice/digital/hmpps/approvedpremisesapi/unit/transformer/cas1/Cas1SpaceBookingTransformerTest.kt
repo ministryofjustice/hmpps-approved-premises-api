@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
@@ -32,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
@@ -40,8 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -74,9 +70,6 @@ class Cas1SpaceBookingTransformerTest {
 
   @MockK
   private lateinit var userTransformer: UserTransformer
-
-  @MockK
-  private lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
 
   @MockK
   private lateinit var cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService
@@ -207,7 +200,7 @@ class Cas1SpaceBookingTransformerTest {
       } returns expectedUser
       every { cancellationReasonTransformer.transformJpaToApi(cancellationReason) } returns expectedCancellationReason
       every { cas1SpaceBookingActionsService.determineActions(spaceBooking) } returns ActionsResult.forAllowedAction(
-        SpaceBookingAction.APPEAL_CREATE,
+        SpaceBookingAction.SHORTEN,
       )
 
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings)
@@ -271,7 +264,7 @@ class Cas1SpaceBookingTransformerTest {
         Cas1SpaceCharacteristic.hasEnSuite,
       )
 
-      assertThat(result.allowedActions).containsExactly(Cas1SpaceBookingAction.APPEAL_CREATE)
+      assertThat(result.allowedActions).containsExactly(Cas1SpaceBookingAction.SHORTEN)
       assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.CANCELLED)
     }
 
@@ -341,7 +334,7 @@ class Cas1SpaceBookingTransformerTest {
         )
       } returns expectedUser
       every { cas1SpaceBookingActionsService.determineActions(spaceBooking) } returns ActionsResult.forAllowedAction(
-        SpaceBookingAction.APPEAL_CREATE,
+        SpaceBookingAction.SHORTEN,
       )
 
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, emptyList())
@@ -374,9 +367,7 @@ class Cas1SpaceBookingTransformerTest {
         tier = null,
       )
 
-      val cas1ChangeRequests = listOf(Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_APPEAL).produce())
       every { personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
-      every { cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns cas1ChangeRequests
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("The booking's premise").produce()
 
@@ -452,7 +443,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.isCancelled).isEqualTo(cancelled)
       assertThat(result.plannedTransferRequested).isFalse()
       assertThat(result.appealRequested).isFalse()
-      assertThat(result.openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
+      assertThat(result.openChangeRequestTypes).isEmpty()
       assertThat(result.createdAt).isEqualTo(createdAt.toInstant())
       assertThat(result.transferReason).isEqualTo(TransferReason.riskToResident)
       assertThat(result.additionalInformation).isEqualTo("some additional information")
@@ -501,7 +492,6 @@ class Cas1SpaceBookingTransformerTest {
           characteristicsPropertyNamesCsv = "hasTurningSpace,isCatered",
           deliusEventNumber = "event8",
           cancelled = true,
-          openChangeRequestTypeNamesCsv = "PLANNED_TRANSFER,PLACEMENT_EXTENSION",
         ),
         premises,
         personSummaryInfo,
@@ -531,10 +521,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.isCancelled).isTrue()
       assertThat(result.plannedTransferRequested).isFalse()
       assertThat(result.appealRequested).isFalse()
-      assertThat(result.openChangeRequestTypes).containsExactly(
-        Cas1ChangeRequestType.PLANNED_TRANSFER,
-        Cas1ChangeRequestType.PLACEMENT_EXTENSION,
-      )
+      assertThat(result.openChangeRequestTypes).isEmpty()
       assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.CANCELLED)
     }
 
@@ -573,7 +560,6 @@ class Cas1SpaceBookingTransformerTest {
           characteristicsPropertyNamesCsv = null,
           deliusEventNumber = "event8",
           cancelled = false,
-          openChangeRequestTypeNamesCsv = "",
         ),
         premises = ApprovedPremisesEntityFactory().withDefaults().produce(),
         personSummaryInfo,
@@ -610,7 +596,6 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val characteristicsPropertyNamesCsv: String?,
   override val deliusEventNumber: String?,
   override val cancelled: Boolean,
-  override val openChangeRequestTypeNamesCsv: String,
 ) : Cas1SpaceBookingSearchResult
 
 data class Cas1SpaceBookingAtPremisesImpl(

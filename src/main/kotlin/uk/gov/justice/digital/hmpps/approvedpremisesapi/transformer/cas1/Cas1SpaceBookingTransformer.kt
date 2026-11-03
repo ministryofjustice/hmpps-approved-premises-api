@@ -18,10 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getCharacteristicPropertyNames
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getOpenChangeRequestTypes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
@@ -36,7 +34,6 @@ class Cas1SpaceBookingTransformer(
   private val personTransformer: PersonTransformer,
   private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val userTransformer: UserTransformer,
-  private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
 ) {
   fun transformJpaToApi(
@@ -198,38 +195,35 @@ class Cas1SpaceBookingTransformer(
   fun transformToSummary(
     spaceBooking: Cas1SpaceBookingEntity,
     personSummaryInfo: PersonSummaryInfoResult,
-  ): Cas1SpaceBookingSummary {
-    val openChangeRequestsForBooking = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking)
-    return Cas1SpaceBookingSummary(
-      id = spaceBooking.id,
-      person = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
-      premises = NamedId(
-        spaceBooking.premises.id,
-        spaceBooking.premises.name,
-      ),
-      canonicalArrivalDate = spaceBooking.canonicalArrivalDate,
-      canonicalDepartureDate = spaceBooking.canonicalDepartureDate,
-      expectedArrivalDate = spaceBooking.expectedArrivalDate,
-      expectedDepartureDate = spaceBooking.expectedDepartureDate,
-      actualArrivalDate = spaceBooking.actualArrivalDate,
-      actualDepartureDate = spaceBooking.actualDepartureDate,
-      isNonArrival = spaceBooking.hasNonArrival(),
-      tier = spaceBooking.application?.riskRatings?.tier?.value?.level,
-      keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
-      characteristics = spaceBooking.criteria.mapNotNull { criteria ->
-        Cas1SpaceCharacteristic.entries.find { it.name == criteria.propertyName }
-      },
-      deliusEventNumber = spaceBooking.deliusEventNumber,
-      isCancelled = spaceBooking.isCancelled(),
-      plannedTransferRequested = false,
-      appealRequested = false,
-      openChangeRequestTypes = openChangeRequestsForBooking.map { it.type.toApiType() },
-      createdAt = spaceBooking.createdAt.toInstant(),
-      transferReason = spaceBooking.transferReason,
-      additionalInformation = spaceBooking.additionalInformation,
-      status = spaceBooking.getSpaceBookingStatus().status.toApiType(),
-    )
-  }
+  ): Cas1SpaceBookingSummary = Cas1SpaceBookingSummary(
+    id = spaceBooking.id,
+    person = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
+    premises = NamedId(
+      spaceBooking.premises.id,
+      spaceBooking.premises.name,
+    ),
+    canonicalArrivalDate = spaceBooking.canonicalArrivalDate,
+    canonicalDepartureDate = spaceBooking.canonicalDepartureDate,
+    expectedArrivalDate = spaceBooking.expectedArrivalDate,
+    expectedDepartureDate = spaceBooking.expectedDepartureDate,
+    actualArrivalDate = spaceBooking.actualArrivalDate,
+    actualDepartureDate = spaceBooking.actualDepartureDate,
+    isNonArrival = spaceBooking.hasNonArrival(),
+    tier = spaceBooking.application?.riskRatings?.tier?.value?.level,
+    keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
+    characteristics = spaceBooking.criteria.mapNotNull { criteria ->
+      Cas1SpaceCharacteristic.entries.find { it.name == criteria.propertyName }
+    },
+    deliusEventNumber = spaceBooking.deliusEventNumber,
+    isCancelled = spaceBooking.isCancelled(),
+    plannedTransferRequested = false,
+    appealRequested = false,
+    openChangeRequestTypes = emptyList(),
+    createdAt = spaceBooking.createdAt.toInstant(),
+    transferReason = spaceBooking.transferReason,
+    additionalInformation = spaceBooking.additionalInformation,
+    status = spaceBooking.getSpaceBookingStatus().status.toApiType(),
+  )
 
   fun transformSearchResultToSummary(
     searchResult: Cas1SpaceBookingSearchResult,
@@ -269,7 +263,7 @@ class Cas1SpaceBookingTransformer(
     isCancelled = searchResult.cancelled,
     plannedTransferRequested = false,
     appealRequested = false,
-    openChangeRequestTypes = searchResult.getOpenChangeRequestTypes().map { it.toApiType() },
+    openChangeRequestTypes = emptyList(),
     status = determineBookingStatus(
       isCancelled = searchResult.cancelled,
       hasNonArrival = searchResult.nonArrivalConfirmedAtDateTime != null,

@@ -28,6 +28,4 @@ data class Cas1BookingChangedContentPayload(
   @Schema(example = "null", description = "This is deprecated, use the schema version information on the enclosing Cas1TimelineEvent")
   @Deprecated(message = "")
   @get:JsonProperty("schemaVersion") val schemaVersion: Int? = null,
-
-  @get:JsonProperty("transferredTo") val transferredTo: Cas1TimelineEventTransferInfo? = null,
 ) : Cas1TimelineEventContentPayload

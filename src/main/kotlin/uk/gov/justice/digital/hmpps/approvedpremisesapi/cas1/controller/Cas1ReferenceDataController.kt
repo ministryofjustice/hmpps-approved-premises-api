@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -9,12 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
@@ -24,9 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
@@ -47,54 +40,8 @@ class Cas1ReferenceDataController(
   private val nonArrivalReasonTransformer: NonArrivalReasonTransformer,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
-  private val changeRequestReasonRepository: Cas1ChangeRequestReasonRepository,
-  private val changeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
   private val userService: UserService,
 ) {
-
-  @Operation(
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NamedId::class)))]),
-    ],
-  )
-  @GetMapping(
-    value = ["/reference-data/change-request-reasons/{changeRequestType}"],
-    produces = ["application/json"],
-  )
-  fun getChangeRequestReasons(
-    @Parameter(schema = Schema(allowableValues = ["placementAppeal", "placementExtension", "plannedTransfer"]))
-    @PathVariable changeRequestType: Cas1ChangeRequestType,
-  ): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
-    changeRequestReasonRepository.findByChangeRequestTypeAndArchivedIsFalse(
-      when (changeRequestType) {
-        Cas1ChangeRequestType.PLACEMENT_APPEAL -> ChangeRequestType.PLACEMENT_APPEAL
-        Cas1ChangeRequestType.PLACEMENT_EXTENSION -> ChangeRequestType.PLACEMENT_EXTENSION
-        Cas1ChangeRequestType.PLANNED_TRANSFER -> ChangeRequestType.PLANNED_TRANSFER
-      },
-    ).map { NamedId(it.id, it.code) },
-  )
-
-  @Operation(
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NamedId::class)))]),
-    ],
-  )
-  @GetMapping(
-    value = ["/reference-data/change-request-rejection-reasons/{changeRequestType}"],
-    produces = ["application/json"],
-  )
-  fun getChangeRequestRejectionReasons(
-    @Parameter(schema = Schema(allowableValues = ["placementAppeal", "placementExtension", "plannedTransfer"]))
-    @PathVariable changeRequestType: Cas1ChangeRequestType,
-  ): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
-    changeRequestRejectionReasonRepository.findByChangeRequestTypeAndArchivedIsFalse(
-      when (changeRequestType) {
-        Cas1ChangeRequestType.PLACEMENT_APPEAL -> ChangeRequestType.PLACEMENT_APPEAL
-        Cas1ChangeRequestType.PLACEMENT_EXTENSION -> ChangeRequestType.PLACEMENT_EXTENSION
-        Cas1ChangeRequestType.PLANNED_TRANSFER -> ChangeRequestType.PLANNED_TRANSFER
-      },
-    ).map { NamedId(it.id, it.code) },
-  )
 
   @Operation(
     summary = "Lists all reasons for beds going out of service",

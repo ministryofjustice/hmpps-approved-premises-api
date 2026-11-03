@@ -40,7 +40,6 @@ class Cas1SpaceBookingManagementService(
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val lockableCas1SpaceBookingEntityRepository: LockableCas1SpaceBookingEntityRepository,
   private val userService: UserService,
-  private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val springEventPublisher: SpringEventPublisher,
 ) {
 
@@ -162,8 +161,6 @@ class Cas1SpaceBookingManagementService(
     existingCas1SpaceBooking.nonArrivalNotes = cas1NonArrivalNotes
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
-
-    cas1ChangeRequestService.spaceBookingMarkedAsNonArrival(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.nonArrivalRecorded(
       recordedBy,
@@ -314,8 +311,6 @@ class Cas1SpaceBookingManagementService(
     existingSpaceBooking.departureNotes = departureInfo.notes
 
     val result = cas1SpaceBookingRepository.save(existingSpaceBooking)
-
-    cas1ChangeRequestService.spaceBookingMarkedAsDeparted(existingSpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.departureRecorded(
       Cas1SpaceBookingManagementDomainEventService.DepartureInfo(
