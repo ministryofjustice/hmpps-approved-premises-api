@@ -3633,7 +3633,7 @@ class Cas1SpaceBookingTest {
         .bodyAsListOfObjects<Cas1SpaceBookingShortSummary>()
 
       assertThat(response)
-        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt")
+        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt", "statusSetDateTime")
         .isEqualTo(expectedBookingsWithoutCancelled)
 
       assertThat(response).doesNotContain(cancelledBookingShortSummary)
@@ -3652,7 +3652,7 @@ class Cas1SpaceBookingTest {
         .bodyAsListOfObjects<Cas1SpaceBookingShortSummary>()
 
       assertThat(response)
-        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt")
+        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt", "statusSetDateTime")
         .isEqualTo(expectedBookingsWithCancelled)
     }
   }

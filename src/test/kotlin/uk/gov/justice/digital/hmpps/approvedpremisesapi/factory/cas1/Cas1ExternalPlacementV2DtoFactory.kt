@@ -6,9 +6,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesV2Dto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Cas1ExternalPlacementV2DtoFactory : Factory<Cas1ExternalPlacementV2Dto> {
   private var status: Yielded<Cas1SpaceBookingStatus> = { Cas1SpaceBookingStatus.UPCOMING }
+  private var statusLastUpdated: Yielded<LocalDateTime> = { LocalDateTime.now() }
   private var canonicalArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
   private var canonicalDepartureDate: Yielded<LocalDate> = { LocalDate.now().plusDays(1) }
   private var actualArrivalDate: Yielded<LocalDate?> = { null }
@@ -55,6 +57,7 @@ class Cas1ExternalPlacementV2DtoFactory : Factory<Cas1ExternalPlacementV2Dto> {
 
   override fun produce() = Cas1ExternalPlacementV2Dto(
     status = this.status(),
+    statusLastUpdated = this.statusLastUpdated(),
     canonicalArrivalDate = this.canonicalArrivalDate(),
     canonicalDepartureDate = this.canonicalDepartureDate(),
     actualArrivalDate = this.actualArrivalDate(),

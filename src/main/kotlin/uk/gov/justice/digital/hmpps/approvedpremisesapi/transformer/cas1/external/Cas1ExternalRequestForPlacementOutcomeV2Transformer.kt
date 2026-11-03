@@ -38,6 +38,7 @@ class Cas1ExternalRequestForPlacementOutcomeV2Transformer {
     premises: ApprovedPremisesEntity,
   ) = Cas1ExternalPlacementV2Dto(
     status = placement.status,
+    statusLastUpdated = placement.statusSetDateTime,
     canonicalArrivalDate = placement.actualArrivalDate ?: placement.expectedArrivalDate,
     canonicalDepartureDate = placement.actualDepartureDate ?: placement.expectedDepartureDate,
     actualArrivalDate = placement.actualArrivalDate,

@@ -49,6 +49,7 @@ class Cas1SpaceBookingShortSummaryFactory : Factory<Cas1SpaceBookingShortSummary
   private var nonArrival: Yielded<Cas1SpaceBookingNonArrival?> = { null }
   private var status: Yielded<Cas1SpaceBookingStatus> = { Cas1SpaceBookingStatus.UPCOMING }
   private var statusSetDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var statusSetDateTime: Yielded<LocalDateTime> = { LocalDateTime.now() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -86,6 +87,10 @@ class Cas1SpaceBookingShortSummaryFactory : Factory<Cas1SpaceBookingShortSummary
     this.statusSetDate = { statusSetDate }
   }
 
+  fun withStatusSetDateTime(statusSetDateTime: LocalDateTime) = apply {
+    this.statusSetDateTime = { statusSetDateTime }
+  }
+
   override fun produce() = Cas1SpaceBookingShortSummary(
     id = this.id(),
     premises = this.premises(),
@@ -107,5 +112,6 @@ class Cas1SpaceBookingShortSummaryFactory : Factory<Cas1SpaceBookingShortSummary
     transferReason = this.transferReason(),
     status = this.status(),
     statusSetDate = this.statusSetDate(),
+    statusSetDateTime = this.statusSetDateTime(),
   )
 }
