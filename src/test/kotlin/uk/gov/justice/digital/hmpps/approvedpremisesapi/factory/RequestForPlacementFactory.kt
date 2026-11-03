@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOptio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1StaffDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.Instant
@@ -25,7 +26,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var document: Yielded<String?> = { "{}" }
   private var createdAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(30) }
-  private var submittedAt: Yielded<Instant?> = { null }
+  private var submittedAt: Yielded<Instant> = { Instant.now() }
   private var withdrawalReason: Yielded<WithdrawPlacementRequestReason?> = { null }
   private var withdrawalDate: Yielded<OffsetDateTime?> = { null }
   private var rejectionReason: Yielded<String?> = { null }
@@ -54,7 +55,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
   private var status: Yielded<RequestForPlacementStatus> = { RequestForPlacementStatus.placementBooked }
   private var statusSetDate: Yielded<LocalDate> = { LocalDate.now() }
   private var statusSetDateTime: Yielded<LocalDateTime> = { LocalDateTime.now() }
-  private var submittedBy: Yielded<Cas1StaffDto?> = { null }
+  private var submittedBy: Yielded<Cas1StaffDto> = { Cas1StaffDtoFactory().produce() }
   private var decision: Yielded<PlacementApplicationDecision?> = { null }
   private var requestReviewedAt: Yielded<Instant?> = { null }
   private var placements: Yielded<List<Cas1SpaceBookingShortSummary>> = { emptyList() }
@@ -68,7 +69,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     this.status = { status }
   }
 
-  fun withSubmittedBy(submittedBy: Cas1StaffDto?) = apply {
+  fun withSubmittedBy(submittedBy: Cas1StaffDto) = apply {
     this.submittedBy = { submittedBy }
   }
 
@@ -100,7 +101,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     this.createdAt = { createdAt }
   }
 
-  fun withSubmittedAt(submittedAt: Instant?) = apply {
+  fun withSubmittedAt(submittedAt: Instant) = apply {
     this.submittedAt = { submittedAt }
   }
 

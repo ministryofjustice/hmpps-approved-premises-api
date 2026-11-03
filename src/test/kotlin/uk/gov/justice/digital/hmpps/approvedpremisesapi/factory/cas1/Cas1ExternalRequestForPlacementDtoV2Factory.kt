@@ -12,9 +12,9 @@ import java.time.LocalDateTime
 
 class Cas1ExternalRequestForPlacementDtoV2Factory : Factory<Cas1ExternalRequestForPlacementDtoV2> {
   private var status: Yielded<RequestForPlacementStatus> = { RequestForPlacementStatus.awaitingMatch }
+  private var submittedBy: Yielded<Cas1StaffDto> = { Cas1StaffDtoFactory().produce() }
+  private var submittedAt: Yielded<LocalDate> = { LocalDate.now() }
   private var statusLastUpdated: Yielded<LocalDateTime> = { LocalDateTime.now() }
-  private var submittedBy: Yielded<Cas1StaffDto?> = { null }
-  private var submittedAt: Yielded<LocalDate?> = { null }
   private var expectedArrivalDate: Yielded<LocalDate?> = { null }
   private var durationDays: Yielded<Int?> = { null }
   private var decision: Yielded<PlacementApplicationDecisionDto?> = { null }
@@ -25,11 +25,11 @@ class Cas1ExternalRequestForPlacementDtoV2Factory : Factory<Cas1ExternalRequestF
     this.status = { status }
   }
 
-  fun withSubmittedBy(submittedBy: Cas1StaffDto?) = apply {
+  fun withSubmittedBy(submittedBy: Cas1StaffDto) = apply {
     this.submittedBy = { submittedBy }
   }
 
-  fun withSubmittedAt(submittedAt: LocalDate?) = apply {
+  fun withSubmittedAt(submittedAt: LocalDate) = apply {
     this.submittedAt = { submittedAt }
   }
 

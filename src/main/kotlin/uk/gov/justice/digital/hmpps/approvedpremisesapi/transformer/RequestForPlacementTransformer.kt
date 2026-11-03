@@ -54,7 +54,7 @@ class RequestForPlacementTransformer(
       canonicalPlacementPeriod = canonicalPlacementPeriod,
       requestedPlacementPeriod = requestedPlacementPeriod,
       authorisedPlacementPeriod = authorisedPlacementPeriod,
-      submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
+      submittedAt = placementApplicationEntity.submittedAt!!.toInstant(),
       requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
       document = placementApplicationEntity.document?.let(jsonMapper::readTree),
       canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
@@ -132,7 +132,7 @@ class RequestForPlacementTransformer(
   }
 
   private fun PlacementApplicationEntity.Status.toApi() = when (this) {
-    PlacementApplicationEntity.Status.REQUEST_UNSUBMITTED -> RequestForPlacementStatus.requestUnsubmitted
+    PlacementApplicationEntity.Status.REQUEST_UNSUBMITTED -> error("Unsubmitted placement requests cannot be mapped")
     PlacementApplicationEntity.Status.REQUEST_REJECTED -> RequestForPlacementStatus.requestRejected
     PlacementApplicationEntity.Status.REQUEST_SUBMITTED -> RequestForPlacementStatus.requestSubmitted
     PlacementApplicationEntity.Status.AWAITING_MATCH -> RequestForPlacementStatus.awaitingMatch

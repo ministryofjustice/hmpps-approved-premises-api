@@ -5,15 +5,6 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RequestForPlacementStatus(@get:JsonValue val value: String) {
-
-  /**
-   * Only returned for placement applications because a placement request
-   * is only created once an application has been approved. In the future
-   * we can consider returning this status for unsubmitted applications
-   * that include an arrival date (i.e. a request for placement)
-   */
-  requestUnsubmitted("request_unsubmitted"),
-
   /**
    * Only returned for placement applications. This is because a placement request
    * would not exist if the application was rejected. In the future
