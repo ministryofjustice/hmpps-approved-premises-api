@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
@@ -197,8 +198,12 @@ fun UserEntity.cas1CreateApplicationLaoStrategy() = LaoStrategy.checkUserAccess(
 
 fun UserEntity.cas3LaoStrategy() = LaoStrategy.checkUserAccess(this.deliusUsername)
 
-fun Cas2UserEntity.cas2LaoStrategy() = LaoStrategy(
-  restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
-  exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
-  deliusUsername = null,
-)
+fun Cas2UserEntity.cas2LaoStrategy(): LaoStrategy = when (userType) {
+  Cas2UserType.DELIUS -> LaoStrategy.checkUserAccess(username)
+  Cas2UserType.NOMIS -> LaoStrategy(
+    restrictionHandling = LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER,
+    exclusionHandling = LaoStrategy.ExclusionHandling.IGNORE,
+    deliusUsername = null,
+  )
+  Cas2UserType.EXTERNAL -> LaoStrategy.NeverRestricted
+}
