@@ -426,6 +426,13 @@ class Cas1SpaceBookingTransformerTest {
               null
             },
           )
+          .withCancellationRecordedAt(
+            if (cancelled) {
+              Instant.now()
+            } else {
+              null
+            },
+          )
           .withCreatedAt(createdAt)
           .produce(),
         personSummaryInfo,

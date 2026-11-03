@@ -3571,6 +3571,7 @@ class Cas1SpaceBookingTest {
         withExpectedArrivalDate(LocalDate.parse("2031-05-29"))
         withExpectedDepartureDate(LocalDate.parse("2031-06-29"))
         withCancellationOccurredAt(LocalDate.parse("2020-01-01"))
+        withCancellationRecordedAt(Instant.now())
       }
 
       otherSpaceBookingAtPremises2032 = cas1SpaceBookingEntityFactory.produceAndPersist {
