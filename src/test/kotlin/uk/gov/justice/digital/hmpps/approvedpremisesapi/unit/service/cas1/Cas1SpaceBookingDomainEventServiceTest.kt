@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
@@ -32,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -43,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1Dom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -137,11 +134,6 @@ class Cas1SpaceBookingDomainEventServiceTest {
         Cas1BookingCreatedEvent(
           booking = spaceBooking,
           createdBy = user,
-          transferredFrom = TransferInfo(
-            type = TransferType.PLANNED,
-            changeRequestId = changeRequestId,
-            booking = transferredFromBooking,
-          ),
         ),
       )
 
@@ -182,9 +174,6 @@ class Cas1SpaceBookingDomainEventServiceTest {
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
       assertThat(data.characteristics).isEqualTo(listOf(SpaceCharacteristic.hasEnSuite))
-      assertThat(data.transferredFrom!!.booking.id).isEqualTo(transferredFromBooking.id)
-      assertThat(data.transferredFrom!!.changeRequestId).isEqualTo(changeRequestId)
-      assertThat(data.transferredFrom!!.type).isEqualTo(EventTransferType.PLANNED)
 
       assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }
@@ -314,7 +303,6 @@ class Cas1SpaceBookingDomainEventServiceTest {
           reason = CancellationReasonEntityFactory()
             .withName("the reason name")
             .produce(),
-          appealChangeRequestId = appealChangeRequestId,
         ),
       )
 
@@ -353,8 +341,6 @@ class Cas1SpaceBookingDomainEventServiceTest {
       assertThat(data.cancelledAtDate).isEqualTo(LocalDate.parse("2025-11-15"))
       assertThat(data.cancellationReason).isEqualTo("the reason name")
       assertThat(data.cancellationRecordedAt).isWithinTheLastMinute()
-
-      assertThat(data.appealChangeRequestId).isEqualTo(appealChangeRequestId)
     }
 
     @Test
@@ -499,11 +485,6 @@ class Cas1SpaceBookingDomainEventServiceTest {
           previousArrivalDateIfChanged = LocalDate.of(2025, 2, 12),
           previousDepartureDateIfChanged = null,
           previousCharacteristicsIfChanged = null,
-          transferredTo = TransferInfo(
-            type = TransferType.EMERGENCY,
-            changeRequestId = changeRequestId,
-            booking = transferredToBooking,
-          ),
         ),
       )
 
@@ -546,10 +527,6 @@ class Cas1SpaceBookingDomainEventServiceTest {
       assertThat(data.previousArrivalOn).isEqualTo(LocalDate.of(2025, 2, 12))
       assertThat(data.previousDepartureOn).isNull()
       assertThat(data.previousCharacteristics).isNull()
-
-      assertThat(data.transferredTo!!.booking.id).isEqualTo(transferredToBooking.id)
-      assertThat(data.transferredTo!!.changeRequestId).isEqualTo(changeRequestId)
-      assertThat(data.transferredTo!!.type).isEqualTo(EventTransferType.EMERGENCY)
     }
 
     @Test

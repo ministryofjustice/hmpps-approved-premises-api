@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
@@ -28,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -86,7 +84,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now().plusDays(1),
           createdBy = user,
           characteristics = emptyList(),
-          transferredFrom = null,
           additionalInformation = null,
           transferReason = null,
         ),
@@ -114,7 +111,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now().plusDays(1),
           createdBy = user,
           characteristics = emptyList(),
-          transferredFrom = null,
           additionalInformation = null,
           transferReason = null,
         ),
@@ -143,7 +139,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now().plusDays(1),
           createdBy = user,
           characteristics = emptyList(),
-          transferredFrom = null,
           additionalInformation = null,
           transferReason = null,
         ),
@@ -166,7 +161,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now().plusDays(1),
           createdBy = user,
           characteristics = emptyList(),
-          transferredFrom = null,
           additionalInformation = null,
           transferReason = null,
         ),
@@ -189,7 +183,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now(),
           createdBy = user,
           characteristics = emptyList(),
-          transferredFrom = null,
           additionalInformation = null,
           transferReason = null,
         ),
@@ -224,12 +217,6 @@ class Cas1SpaceBookingCreateServiceTest {
       val arrivalDate = LocalDate.now()
       val departureDate = arrivalDate.plusDays(1)
 
-      val transferInfo = TransferInfo(
-        type = TransferType.PLANNED,
-        booking = Cas1SpaceBookingEntityFactory().produce(),
-        changeRequestId = UUID.randomUUID(),
-      )
-
       every { cas1PremisesService.findPremisesById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
@@ -244,7 +231,6 @@ class Cas1SpaceBookingCreateServiceTest {
             Cas1CharacteristicEntityFactory().withName("c1").produce(),
             Cas1CharacteristicEntityFactory().withName("c2").produce(),
           ),
-          transferredFrom = transferInfo,
           additionalInformation = "Some reason",
           transferReason = TransferReason.riskToResident,
         ),
@@ -274,7 +260,6 @@ class Cas1SpaceBookingCreateServiceTest {
         assertThat(bookingToCreate.nonArrivalNotes).isNull()
         assertThat(bookingToCreate.nonArrivalReason).isNull()
         assertThat(bookingToCreate.deliusEventNumber).isEqualTo("42")
-        assertThat(bookingToCreate.transferType).isEqualTo(TransferType.PLANNED)
         assertThat(bookingToCreate.additionalInformation).isEqualTo("Some reason")
         assertThat(bookingToCreate.transferReason).isEqualTo(TransferReason.riskToResident)
       }
@@ -295,7 +280,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now().plusDays(1),
           createdBy = user,
           characteristics = emptyList(),
-          transferredFrom = null,
           additionalInformation = null,
           transferReason = null,
         ),
@@ -333,21 +317,14 @@ class Cas1SpaceBookingCreateServiceTest {
       val persistedBooking = Cas1SpaceBookingEntityFactory().produce()
       every { spaceBookingRepository.save(spaceBookingToCreate) } returns persistedBooking
 
-      val transferInfo = TransferInfo(
-        type = TransferType.PLANNED,
-        booking = Cas1SpaceBookingEntityFactory().produce(),
-        changeRequestId = UUID.randomUUID(),
-      )
-
       service.create(
         Cas1SpaceBookingCreateService.ValidatedCreateBooking(
           bookingToCreate = spaceBookingToCreate,
-          transferredFrom = transferInfo,
         ),
       )
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(persistedBooking, user, transferInfo)) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(persistedBooking, user)) }
       verify { cas1BookingEmailService.spaceBookingMade(persistedBooking, application) }
     }
   }

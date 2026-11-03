@@ -39,17 +39,7 @@ data class BookingMade(
 
   val transferReason: TransferReason? = null,
 
-  val transferredFrom: EventTransferInfo? = null,
-
   val additionalInformation: String? = null,
 
   val personTier: EventTier? = null,
 ) : Cas1DomainEventPayload
-
-data class EventTransferInfo(
-  val type: EventTransferType,
-  val changeRequestId: UUID? = null,
-  val booking: EventBookingSummary,
-)
-
-enum class EventTransferType { PLANNED, EMERGENCY }

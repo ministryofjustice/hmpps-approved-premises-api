@@ -41,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Char
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.atTimeOrStartOfDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.commaSeparatedToList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -122,12 +121,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           LEFT OUTER JOIN cas1_characteristics ON cas1_characteristics.id = sbc.characteristic_id
           WHERE sbc.space_booking_id = b.id 
           GROUP BY sbc.space_booking_id
-        ) AS characteristicsPropertyNamesCsv,
-        (
-          SELECT STRING_AGG(DISTINCT change_requests.type, ',')
-          FROM cas1_change_requests change_requests
-          WHERE change_requests.cas1_space_booking_id = b.id AND change_requests.resolved = false
-        ) AS openChangeRequestTypeNamesCsv
+        ) AS characteristicsPropertyNamesCsv
     """
 
     private const val SPACE_BOOKING_SUMMARY_WHERE_CLAUSE = """
@@ -243,12 +237,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         LEFT OUTER JOIN cas1_characteristics ON cas1_characteristics.id = sbc.characteristic_id
         WHERE sbc.space_booking_id = b.id 
         GROUP by sbc.space_booking_id
-      ) AS characteristicsPropertyNamesCsv,
-      (
-        SELECT STRING_AGG(DISTINCT change_requests.type, ',')
-          FROM cas1_change_requests change_requests
-          WHERE change_requests.cas1_space_booking_id = b.id AND change_requests.resolved = false
-      ) AS openChangeRequestTypeNamesCsv
+      ) AS characteristicsPropertyNamesCsv
       FROM cas1_space_bookings b
       LEFT JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
@@ -349,18 +338,6 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   )
   fun countActiveSpaceBookings(premisesId: UUID): Long
 
-  fun findByTransferredFrom(spaceBooking: Cas1SpaceBookingEntity): Cas1SpaceBookingEntity?
-
-  @Query(
-    value = """
-      SELECT count(*) > 0
-      FROM cas1_space_bookings b 
-      WHERE b.transferred_from = :spaceBookingId AND b.cancellation_occurred_at IS NULL
-      """,
-    nativeQuery = true,
-  )
-  fun hasNonCancelledTransfer(spaceBookingId: UUID): Boolean
-
   /*
   Checking cancellationRecordedAt shouldn't be required, because an arrived
   booking can't be cancelled. Unfortunately, there are some historical bookings
@@ -457,14 +434,9 @@ interface Cas1SpaceBookingSearchResult {
   val characteristicsPropertyNamesCsv: String?
   val deliusEventNumber: String?
   val cancelled: Boolean
-  val openChangeRequestTypeNamesCsv: String?
 }
 
 fun Cas1SpaceBookingSearchResult.getCharacteristicPropertyNames() = characteristicsPropertyNamesCsv.commaSeparatedToList()
-
-fun Cas1SpaceBookingSearchResult.getOpenChangeRequestTypes() = openChangeRequestTypeNamesCsv
-  .commaSeparatedToList()
-  .map { propertyName -> ChangeRequestType.entries.first { it.name == propertyName } }
 
 interface Cas1SpaceBookingAtPremises {
   val id: UUID
