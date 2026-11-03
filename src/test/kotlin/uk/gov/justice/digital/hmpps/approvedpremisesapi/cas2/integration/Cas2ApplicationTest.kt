@@ -597,7 +597,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications returns a personSummary reflecting the LAO status of each person`() {
-      givenACas2v2DeliusUser { userEntity, jwt ->
+      givenACas2v2NomisUser { userEntity, jwt ->
         val (fullOffender, _) = givenAnOffender()
         val (excludedOffender, _) = givenAnOffender(offenderDetailsConfigBlock = { withCurrentExclusion(true) })
         val (restrictedOffender, _) = givenAnOffender(offenderDetailsConfigBlock = { withCurrentRestriction(true) })
