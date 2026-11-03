@@ -120,7 +120,7 @@ class RequestForPlacementTransformer(
       withdrawalReason = placementRequestEntity.withdrawalReason?.apiValue,
       withdrawalDate = placementRequestEntity.withdrawalOccurredAt,
       status = statusAndWhen.status.toApi(),
-      statusSetDate = statusAndWhen.occurredAt,
+      statusSetDate = statusAndWhen.occurredAt.toLocalDate(),
       sentenceType = application.sentenceType?.let { SentenceTypeOption.valueOf(it) },
       releaseType = application.releaseType?.apiType,
       situation = application.situation?.let { SituationOption.valueOf(it) },
