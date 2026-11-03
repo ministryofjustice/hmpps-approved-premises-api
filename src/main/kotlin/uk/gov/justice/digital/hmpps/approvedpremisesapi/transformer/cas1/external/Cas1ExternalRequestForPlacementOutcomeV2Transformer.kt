@@ -16,6 +16,7 @@ class Cas1ExternalRequestForPlacementOutcomeV2Transformer {
 
   fun transformToRequestForPlacement(rfp: RequestForPlacement) = Cas1ExternalRequestForPlacementDtoV2(
     status = rfp.status,
+    statusLastUpdated = rfp.statusSetDateTime,
     submittedBy = rfp.submittedBy,
     submittedAt = rfp.submittedAt?.toLocalDate(),
     expectedArrivalDate = rfp.canonicalPlacementPeriod.arrival,

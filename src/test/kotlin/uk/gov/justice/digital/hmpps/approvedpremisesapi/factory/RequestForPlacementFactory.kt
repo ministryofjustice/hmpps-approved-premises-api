@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -52,6 +53,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
   private var authorisedPlacementPeriod: Yielded<Cas1AuthorisedPlacementPeriod?> = { null }
   private var status: Yielded<RequestForPlacementStatus> = { RequestForPlacementStatus.placementBooked }
   private var statusSetDate: Yielded<LocalDate> = { LocalDate.now() }
+  private var statusSetDateTime: Yielded<LocalDateTime> = { LocalDateTime.now() }
   private var submittedBy: Yielded<Cas1StaffDto?> = { null }
   private var decision: Yielded<PlacementApplicationDecision?> = { null }
   private var requestReviewedAt: Yielded<Instant?> = { null }
@@ -72,6 +74,10 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
 
   fun withStatusSetDate(statusSetDate: LocalDate) = apply {
     this.statusSetDate = { statusSetDate }
+  }
+
+  fun withStatusSetDateTime(statusSetDateTime: LocalDateTime) = apply {
+    this.statusSetDateTime = { statusSetDateTime }
   }
 
   fun withCanonicalPlacementPeriod(canonicalPlacementPeriod: Cas1RequestedPlacementPeriod) = apply {
@@ -144,6 +150,7 @@ class RequestForPlacementFactory : Factory<RequestForPlacement> {
     authorisedPlacementPeriod = this.authorisedPlacementPeriod(),
     status = this.status(),
     statusSetDate = this.statusSetDate(),
+    statusSetDateTime = this.statusSetDateTime(),
     requestReviewedAt = this.requestReviewedAt(),
     situation = this.situation(),
     placements = this.placements(),

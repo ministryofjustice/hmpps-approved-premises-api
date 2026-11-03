@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.io.InputStreamReader
 import java.time.Instant
 import java.time.LocalDate
@@ -96,6 +97,7 @@ class Cas1RequestForPlacementServiceTest {
       status = RequestForPlacementStatus.requestSubmitted,
       submittedAt = now,
       statusSetDate = now.toLocalDate(),
+      statusSetDateTime = now.toLocalDateTime(),
       submittedBy = Cas1StaffDto(
         name = user.name,
         staffCode = user.deliusStaffCode,

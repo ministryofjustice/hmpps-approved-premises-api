@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalRequestForPlacementOutcomeV2Transformer
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -36,6 +37,7 @@ class Cas1ExternalRequestForPlacementOutcomeV2TransformerTest {
       val submittedBy = Cas1StaffDtoFactory().produce()
       val rfp = RequestForPlacementFactory()
         .withStatus(RequestForPlacementStatus.requestWithdrawn)
+        .withStatusSetDateTime(LocalDateTime.parse("2024-12-03T10:15:30"))
         .withSubmittedBy(submittedBy)
         .withSubmittedAt(Instant.parse("2026-02-03T10:00:00Z"))
         .withCanonicalPlacementPeriod(Cas1RequestedPlacementPeriod(arrival = LocalDate.of(2026, 6, 1), arrivalFlexible = false, duration = 12))
@@ -49,6 +51,7 @@ class Cas1ExternalRequestForPlacementOutcomeV2TransformerTest {
       val result = transformer.transformToRequestForPlacement(rfp)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+      assertThat(result.statusLastUpdated).isEqualTo(LocalDateTime.parse("2024-12-03T10:15:30"))
       assertThat(result.submittedBy).isEqualTo(submittedBy)
       assertThat(result.submittedAt).isEqualTo(LocalDate.of(2026, 2, 3))
       assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.of(2026, 6, 1))
