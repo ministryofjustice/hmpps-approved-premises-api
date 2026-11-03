@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementApplicationDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -222,27 +223,27 @@ data class PlacementApplicationEntity(
   fun getStatus(): StatusAndWhen = when {
     isWithdrawn -> StatusAndWhen(
       Status.REQUEST_WITHDRAWN,
-      withdrawalOccurredAt?.toLocalDate() ?: submittedAt!!.toLocalDate(),
+      withdrawalOccurredAt?.toLocalDateTime() ?: submittedAt!!.toLocalDateTime(),
     )
     placementRequest?.hasActiveBooking() == true -> StatusAndWhen(
       Status.PLACEMENT_BOOKED,
-      placementRequest!!.activeSpaceBookings().minOf { it.createdAt.toLocalDate() },
+      placementRequest!!.activeSpaceBookings().minOf { it.createdAt.toLocalDateTime() },
     )
     decision == PlacementApplicationDecision.REJECTED -> StatusAndWhen(
       Status.REQUEST_REJECTED,
-      decisionMadeAt!!.toLocalDate(),
+      decisionMadeAt!!.toLocalDateTime(),
     )
     decision == PlacementApplicationDecision.ACCEPTED -> StatusAndWhen(
       Status.AWAITING_MATCH,
-      decisionMadeAt!!.toLocalDate(),
+      decisionMadeAt!!.toLocalDateTime(),
     )
     isSubmitted() -> StatusAndWhen(
       Status.REQUEST_SUBMITTED,
-      submittedAt!!.toLocalDate(),
+      submittedAt!!.toLocalDateTime(),
     )
     else -> StatusAndWhen(
       Status.REQUEST_UNSUBMITTED,
-      createdAt.toLocalDate(),
+      createdAt.toLocalDateTime(),
     )
   }
 
@@ -257,7 +258,7 @@ data class PlacementApplicationEntity(
 
   data class StatusAndWhen(
     val status: Status,
-    val occurredAt: LocalDate,
+    val occurredAt: LocalDateTime,
   )
 
   override fun toString() = "PlacementApplicationEntity: $id"

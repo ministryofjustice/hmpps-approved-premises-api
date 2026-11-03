@@ -96,7 +96,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_WITHDRAWN, now.minusDays(2).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_WITHDRAWN, now.minusDays(2).toLocalDateTime()),
       )
     }
 
@@ -110,7 +110,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_WITHDRAWN, now.minusDays(5).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_WITHDRAWN, now.minusDays(5).toLocalDateTime()),
       )
     }
 
@@ -138,7 +138,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.PLACEMENT_BOOKED, now.minusDays(3).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.PLACEMENT_BOOKED, now.minusDays(3).toLocalDateTime()),
       )
     }
 
@@ -175,7 +175,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_REJECTED, now.minusDays(1).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_REJECTED, now.minusDays(1).toLocalDateTime()),
       )
     }
 
@@ -188,7 +188,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.AWAITING_MATCH, now.minusDays(1).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.AWAITING_MATCH, now.minusDays(1).toLocalDateTime()),
       )
     }
 
@@ -200,7 +200,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_SUBMITTED, now.minusDays(4).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_SUBMITTED, now.minusDays(4).toLocalDateTime()),
       )
     }
 
@@ -213,7 +213,7 @@ class PlacementApplicationEntityTest {
         .produce()
 
       assertThat(placementApplication.getStatus()).isEqualTo(
-        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_UNSUBMITTED, now.minusDays(6).toLocalDate()),
+        PlacementApplicationEntity.StatusAndWhen(PlacementApplicationEntity.Status.REQUEST_UNSUBMITTED, now.minusDays(6).toLocalDateTime()),
       )
     }
 

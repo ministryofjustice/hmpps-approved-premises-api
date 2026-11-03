@@ -62,7 +62,7 @@ class RequestForPlacementTransformer(
       withdrawalDate = placementApplicationEntity.withdrawalOccurredAt,
       rejectionReason = placementApplicationEntity.decisionSummary.takeIf { placementApplicationEntity.decision == PlacementApplicationDecision.REJECTED },
       status = statusAndWhen.status.toApi(),
-      statusSetDate = statusAndWhen.occurredAt,
+      statusSetDate = statusAndWhen.occurredAt.toLocalDate(),
       sentenceType = placementApplicationEntity.sentenceType?.let { SentenceTypeOption.valueOf(it) },
       releaseType = placementApplicationEntity.releaseType?.apiType,
       situation = placementApplicationEntity.situation?.let { SituationOption.valueOf(it) },
