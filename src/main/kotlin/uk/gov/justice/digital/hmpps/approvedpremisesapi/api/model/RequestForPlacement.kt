@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 data class RequestForPlacement(
@@ -22,7 +23,10 @@ data class RequestForPlacement(
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod,
   val authorisedPlacementPeriod: Cas1AuthorisedPlacementPeriod?,
   val status: RequestForPlacementStatus,
+  @Schema(deprecated = true, description = "Use statusSetDateTime")
+  @Deprecated("Use [statusSetDateTime]")
   val statusSetDate: LocalDate,
+  val statusSetDateTime: LocalDateTime,
   val submittedAt: java.time.Instant? = null,
   val submittedBy: Cas1StaffDto? = null,
   @Schema(description = "If `type` is `\"manual\"`, provides the value of `PlacementApplication.decisionMadeAt`. If `type` is `\"automatic\"` this field provides the value of `PlacementRequest.assessmentCompletedAt`. ")

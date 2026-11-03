@@ -8,9 +8,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalReq
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Cas1ExternalRequestForPlacementDtoV2Factory : Factory<Cas1ExternalRequestForPlacementDtoV2> {
   private var status: Yielded<RequestForPlacementStatus> = { RequestForPlacementStatus.awaitingMatch }
+  private var statusLastUpdated: Yielded<LocalDateTime> = { LocalDateTime.now() }
   private var submittedBy: Yielded<Cas1StaffDto?> = { null }
   private var submittedAt: Yielded<LocalDate?> = { null }
   private var expectedArrivalDate: Yielded<LocalDate?> = { null }
@@ -53,6 +55,7 @@ class Cas1ExternalRequestForPlacementDtoV2Factory : Factory<Cas1ExternalRequestF
 
   override fun produce() = Cas1ExternalRequestForPlacementDtoV2(
     status = this.status(),
+    statusLastUpdated = this.statusLastUpdated(),
     submittedBy = this.submittedBy(),
     submittedAt = this.submittedAt(),
     expectedArrivalDate = this.expectedArrivalDate(),

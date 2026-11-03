@@ -487,8 +487,8 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             val suitableRequestForPlacement = Cas1RequestForPlacementOutcomeDto(
               requestForPlacement = requestForPlacement,
               placement = placement,
-              dateApplied = LocalDate.now().minusDays(10),
-              statusLastUpdated = LocalDate.now().minusDays(10),
+              dateApplied = LocalDate.now(),
+              statusLastUpdated = LocalDate.now(),
             )
 
             val suitableApplication = Cas1SuitableApplication(

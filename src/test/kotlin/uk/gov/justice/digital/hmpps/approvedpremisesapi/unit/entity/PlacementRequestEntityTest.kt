@@ -196,7 +196,7 @@ class PlacementRequestEntityTest {
         .produce()
 
       assertThat(placementRequest.getStatus()).isEqualTo(
-        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.REQUEST_WITHDRAWN, now.minusDays(2).toLocalDate()),
+        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.REQUEST_WITHDRAWN, now.minusDays(2).toLocalDateTime()),
       )
     }
 
@@ -210,7 +210,7 @@ class PlacementRequestEntityTest {
         .produce()
 
       assertThat(placementRequest.getStatus()).isEqualTo(
-        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.REQUEST_WITHDRAWN, now.minusDays(5).toLocalDate()),
+        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.REQUEST_WITHDRAWN, now.minusDays(5).toLocalDateTime()),
       )
     }
 
@@ -239,7 +239,7 @@ class PlacementRequestEntityTest {
         .produce()
 
       assertThat(placementRequest.getStatus()).isEqualTo(
-        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.PLACEMENT_BOOKED, now.minusDays(3).toLocalDate()),
+        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.PLACEMENT_BOOKED, now.minusDays(3).toLocalDateTime()),
       )
     }
 
@@ -259,7 +259,7 @@ class PlacementRequestEntityTest {
         .produce()
 
       assertThat(placementRequest.getStatus()).isEqualTo(
-        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.AWAITING_MATCH, now.minusDays(4).toLocalDate()),
+        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.AWAITING_MATCH, now.minusDays(4).toLocalDateTime()),
       )
     }
 
@@ -271,7 +271,7 @@ class PlacementRequestEntityTest {
         .produce()
 
       assertThat(placementRequest.getStatus()).isEqualTo(
-        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.AWAITING_MATCH, now.minusDays(6).toLocalDate()),
+        PlacementRequestEntity.StatusAndWhen(PlacementRequestEntity.Status.AWAITING_MATCH, now.minusDays(6).toLocalDateTime()),
       )
     }
   }

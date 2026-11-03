@@ -103,6 +103,7 @@ class RequestForPlacementTransformerTest {
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
       assertThat(result.statusSetDate).isEqualTo(placementApplication.decisionMadeAt!!.toLocalDate())
+      assertThat(result.statusSetDateTime).isEqualTo(placementApplication.decisionMadeAt!!.toLocalDateTime())
 
       verify(exactly = 1) { jsonMapper.readTree(placementApplication.document) }
     }
@@ -220,6 +221,7 @@ class RequestForPlacementTransformerTest {
       assertThat(result.submittedBy?.name).isEqualTo(application.createdByUser.name)
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
       assertThat(result.statusSetDate).isEqualTo(placementRequest.createdAt.toLocalDate())
+      assertThat(result.statusSetDateTime).isEqualTo(placementRequest.createdAt.toLocalDateTime())
     }
 
     @ParameterizedTest

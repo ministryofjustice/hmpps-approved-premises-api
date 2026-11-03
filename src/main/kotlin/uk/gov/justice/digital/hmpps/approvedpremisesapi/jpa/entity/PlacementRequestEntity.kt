@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -205,15 +206,15 @@ data class PlacementRequestEntity(
   fun getStatus(): StatusAndWhen = when {
     isWithdrawn -> StatusAndWhen(
       Status.REQUEST_WITHDRAWN,
-      withdrawalOccurredAt?.toLocalDate() ?: createdAt.toLocalDate(),
+      withdrawalOccurredAt?.toLocalDateTime() ?: createdAt.toLocalDateTime(),
     )
     hasActiveBooking() -> StatusAndWhen(
       Status.PLACEMENT_BOOKED,
-      activeSpaceBookings().minOf { it.createdAt.toLocalDate() },
+      activeSpaceBookings().minOf { it.createdAt.toLocalDateTime() },
     )
     else -> StatusAndWhen(
       Status.AWAITING_MATCH,
-      createdAt.toLocalDate(),
+      createdAt.toLocalDateTime(),
     )
   }
 
@@ -225,7 +226,7 @@ data class PlacementRequestEntity(
 
   data class StatusAndWhen(
     val status: Status,
-    val occurredAt: LocalDate,
+    val occurredAt: LocalDateTime,
   )
 
   /**
