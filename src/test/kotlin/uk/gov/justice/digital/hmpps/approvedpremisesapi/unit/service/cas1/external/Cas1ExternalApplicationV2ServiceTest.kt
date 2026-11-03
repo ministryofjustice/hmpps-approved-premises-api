@@ -99,8 +99,13 @@ class Cas1ExternalApplicationV2ServiceTest {
 
     @Test
     fun `has no upcoming request when no placement is pending`() {
-      val arrived = outcome(today.minusDays(20), Cas1SpaceBookingStatus.ARRIVED, today.minusDays(20), today.minusDays(10))
-      val noPlacement = outcome(today.minusDays(3), placementStatus = null)
+      val arrived = outcome(
+        statusLastUpdated = today.minusDays(20),
+        placementStatus = Cas1SpaceBookingStatus.ARRIVED,
+        placementExpectedArrival = today.minusDays(20),
+        placementExpectedDeparture = today.minusDays(10),
+      )
+      val noPlacement = outcome(statusLastUpdated = today.minusDays(3), placementStatus = null)
 
       every { repository.findByCrn(crn) } returns listOf(application)
       every { outcomeService.getOutcomes(application.id) } returns listOf(arrived, noPlacement)
@@ -111,11 +116,31 @@ class Cas1ExternalApplicationV2ServiceTest {
 
     @Test
     fun `uses earliest upcoming placement as upcoming and excludes all pending arrivals from history, newest first`() {
-      val laterUpcoming = outcome(today.minusDays(5), Cas1SpaceBookingStatus.UPCOMING, today.plusDays(30), today.plusDays(40))
-      val earliestUpcoming = outcome(today.minusDays(9), Cas1SpaceBookingStatus.UPCOMING, today, today.plusDays(1))
-      val pastUpcoming = outcome(today.minusDays(1), Cas1SpaceBookingStatus.UPCOMING, today.minusDays(1), today)
-      val arrived = outcome(today.minusDays(20), Cas1SpaceBookingStatus.ARRIVED, today.minusDays(20), today.minusDays(10))
-      val noPlacement = outcome(today.minusDays(3), placementStatus = null)
+      val laterUpcoming = outcome(
+        statusLastUpdated = today.minusDays(5),
+        placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+        placementExpectedArrival = today.plusDays(30),
+        placementExpectedDeparture = today.plusDays(40),
+      )
+      val earliestUpcoming = outcome(
+        statusLastUpdated = today.minusDays(9),
+        placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+        placementExpectedArrival = today,
+        placementExpectedDeparture = today.plusDays(1),
+      )
+      val pastUpcoming = outcome(
+        statusLastUpdated = today.minusDays(1),
+        placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+        placementExpectedArrival = today.minusDays(1),
+        placementExpectedDeparture = today,
+      )
+      val arrived = outcome(
+        statusLastUpdated = today.minusDays(20),
+        placementStatus = Cas1SpaceBookingStatus.ARRIVED,
+        placementExpectedArrival = today.minusDays(20),
+        placementExpectedDeparture = today.minusDays(10),
+      )
+      val noPlacement = outcome(statusLastUpdated = today.minusDays(3), placementStatus = null)
 
       every { repository.findByCrn(crn) } returns listOf(application)
       every { outcomeService.getOutcomes(application.id) } returns listOf(arrived, laterUpcoming, noPlacement, earliestUpcoming, pastUpcoming)
@@ -143,15 +168,15 @@ class Cas1ExternalApplicationV2ServiceTest {
   private fun outcome(
     statusLastUpdated: LocalDate,
     placementStatus: Cas1SpaceBookingStatus? = null,
-    expectedArrival: LocalDate? = null,
-    expectedDeparture: LocalDate? = null,
+    placementExpectedArrival: LocalDate? = null,
+    placementExpectedDeparture: LocalDate? = null,
   ) = RequestForPlacementOutcome(
     requestForPlacement = Cas1ExternalRequestForPlacementDtoV2Factory().produce(),
     placement = placementStatus?.let {
       Cas1ExternalPlacementV2DtoFactory()
         .withStatus(it)
-        .withExpectedArrivalDate(expectedArrival!!)
-        .withExpectedDepartureDate(expectedDeparture!!)
+        .withExpectedArrivalDate(placementExpectedArrival!!)
+        .withExpectedDepartureDate(placementExpectedDeparture!!)
         .produce()
     },
     statusLastUpdated = statusLastUpdated,
