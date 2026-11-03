@@ -33,6 +33,8 @@ fun LocalDate.getDaysUntilInclusive(end: LocalDate): List<LocalDate> {
   return result
 }
 
+fun LocalDate.atTimeOrStartOfDay(time: LocalTime?) = this.atTime(time ?: LocalTime.MIN)
+
 fun LocalDate.getDaysUntilExclusiveEnd(end: LocalDate): List<LocalDate> {
   val result = mutableListOf<LocalDate>()
 

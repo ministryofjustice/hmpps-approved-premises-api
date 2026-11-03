@@ -42,7 +42,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Char
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.atTimeOrStartOfDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.commaSeparatedToList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -680,16 +682,16 @@ data class Cas1SpaceBookingEntity(
     canonicalDepartureDate > day
 
   fun getSpaceBookingStatus(): StatusAndWhen = when {
-    isCancelled() -> StatusAndWhen(Status.CANCELLED, this.cancellationOccurredAt!!)
-    hasNonArrival() -> StatusAndWhen(Status.NOT_ARRIVED, this.expectedArrivalDate)
-    hasDeparted() -> StatusAndWhen(Status.DEPARTED, this.actualDepartureDate!!)
-    hasArrival() -> StatusAndWhen(Status.ARRIVED, this.actualArrivalDate!!)
-    else -> StatusAndWhen(Status.UPCOMING, this.createdAt.toLocalDate())
+    isCancelled() -> StatusAndWhen(Status.CANCELLED, this.cancellationRecordedAt!!.toLocalDateTime())
+    hasNonArrival() -> StatusAndWhen(Status.NOT_ARRIVED, this.nonArrivalConfirmedAt!!.toLocalDateTime())
+    hasDeparted() -> StatusAndWhen(Status.DEPARTED, this.actualDepartureDate!!.atTimeOrStartOfDay(this.actualDepartureTime))
+    hasArrival() -> StatusAndWhen(Status.ARRIVED, this.actualArrivalDate!!.atTimeOrStartOfDay(this.actualArrivalTime))
+    else -> StatusAndWhen(Status.UPCOMING, this.createdAt.toLocalDateTime())
   }
 
   data class StatusAndWhen(
     val status: Status,
-    val occurredAt: LocalDate,
+    val occurredAt: LocalDateTime,
   )
 
   enum class Status {
