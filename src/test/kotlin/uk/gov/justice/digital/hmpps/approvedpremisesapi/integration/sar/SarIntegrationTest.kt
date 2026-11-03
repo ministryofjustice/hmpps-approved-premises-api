@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarJpaEntitiesTest
 import javax.sql.DataSource
 
 /**
- * For information on SAR testing, see doc/how-to/sar-test-fixture-guide.md
+ * For information on SAR testing, see doc/how-to/subject-access-requests.md
  */
 class SarIntegrationTest : IntegrationTestBase() {
 
