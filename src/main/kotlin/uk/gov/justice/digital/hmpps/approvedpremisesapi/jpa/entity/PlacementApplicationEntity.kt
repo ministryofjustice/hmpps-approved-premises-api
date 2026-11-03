@@ -147,6 +147,9 @@ data class PlacementApplicationEntity(
   @OneToOne(mappedBy = "placementApplication", fetch = FetchType.LAZY)
   var placementRequest: PlacementRequestEntity?,
 
+  /**
+   * There is a small number of placement applications from 2024 that are withdrawn but don't have a reason
+   */
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementApplicationWithdrawalReason?,
 

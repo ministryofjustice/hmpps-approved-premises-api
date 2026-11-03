@@ -9,6 +9,64 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+data class Cas1ExternalApplicationV2Dto(
+  val uiUrl: String,
+  val id: UUID,
+  val status: ApprovedPremisesApplicationStatus,
+  val createdAt: OffsetDateTime,
+  val createdBy: Cas1StaffDto,
+  val expiresAt: LocalDate?,
+  @Schema(description = "Only populated once the application has been submitted")
+  val submittedApplication: Cas1ExternalSubmittedApplicationDto?,
+)
+
+data class Cas1ExternalSubmittedApplicationDto(
+  val submittedAt: OffsetDateTime,
+  val assessment: Cas1ExternalAssessmentDto?,
+  val upcomingRequestForPlacement: Cas1ExternalRequestForPlacementOutcomeDto?,
+  val requestForPlacementHistory: List<Cas1ExternalRequestForPlacementOutcomeDto>,
+)
+
+data class Cas1ExternalRequestForPlacementOutcomeDto(
+  val requestForPlacement: Cas1ExternalRequestForPlacementDtoV2,
+  val placement: Cas1ExternalPlacementV2Dto?,
+)
+
+data class Cas1ExternalRequestForPlacementDtoV2(
+  val status: RequestForPlacementStatus,
+  val submittedBy: Cas1StaffDto?,
+  val submittedAt: LocalDate?,
+  @Schema(description = "The requested arrival date. This may be different to the booked arrival date (check placements for this)")
+  val expectedArrivalDate: LocalDate?,
+  val durationDays: Int?,
+  val decision: PlacementApplicationDecisionDto?,
+  val rejectionReason: String?,
+  val withdrawal: Cas1ExternalRequestForPlacementWithdrawalDto?,
+)
+
+@Schema(description = "There is a small number of older withdrawn request for placements for which reason and/or date were not captured")
+data class Cas1ExternalRequestForPlacementWithdrawalDto(
+  val withdrawalReason: WithdrawPlacementRequestReason?,
+  val withdrawalDate: LocalDate?,
+)
+
+data class Cas1ExternalPlacementV2Dto(
+  val status: Cas1SpaceBookingStatus,
+  val actualArrivalDate: LocalDate?,
+  val actualDepartureDate: LocalDate?,
+  val expectedArrivalDate: LocalDate,
+  val expectedDepartureDate: LocalDate,
+  val cancellationReason: String?,
+  val premises: Cas1ExternalPremisesV2Dto,
+)
+
+data class Cas1ExternalPremisesV2Dto(
+  val addressLine1: String,
+  val addressLine2: String?,
+  val town: String?,
+  val postcode: String,
+)
+
 @Schema(description = "Details about the most current application, with associated assessment, request for placement and placement")
 data class Cas1SuitableApplication(
   val uiUrl: String,
