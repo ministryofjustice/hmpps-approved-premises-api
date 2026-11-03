@@ -161,7 +161,7 @@ class Cas1WithdrawableTreeOperationsTest {
     } returns CasResult.Success(mockk<PlacementRequestEntity>())
 
     every {
-      mockCas1SpaceBookingService.withdraw(any(), any(), any(), any(), any(), any())
+      mockCas1SpaceBookingService.withdraw(any(), any(), any(), any(), any())
     } returns mockk<CasResult.Success<Unit>>()
 
     every { mockCas1SpaceBookingRepository.findByIdOrNull(spaceBookingWithdrawable.id) } returns spaceBookingWithdrawable
@@ -188,7 +188,6 @@ class Cas1WithdrawableTreeOperationsTest {
       mockCas1SpaceBookingService.withdraw(
         spaceBookingWithdrawable,
         any(),
-        null,
         null,
         null,
         context,
@@ -418,7 +417,7 @@ class Cas1WithdrawableTreeOperationsTest {
     } returns CasResult.Unauthorised()
 
     every {
-      mockCas1SpaceBookingService.withdraw(any(), any(), any(), any(), any(), any())
+      mockCas1SpaceBookingService.withdraw(any(), any(), any(), any(), any())
     } returns CasResult.GeneralValidationError("oh dear")
 
     every { mockCas1SpaceBookingRepository.findByIdOrNull(spaceBookingWithdrawable.id) } returns spaceBookingWithdrawable

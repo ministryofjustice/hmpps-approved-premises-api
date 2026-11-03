@@ -43,7 +43,6 @@ class BookingCancelledTimelineFactory(
           departureDate = bookingDetail.departureDate,
         ),
         cancellationReason = bookingDetail.cancellationReason,
-        appealChangeRequestId = bookingDetail.appealChangeRequestId,
       ),
     )
   }
@@ -65,7 +64,6 @@ class BookingCancelledTimelineFactory(
       cancellationReason = "'${event.data.eventDetails.cancellationReason}'",
       arrivalDate = spaceBooking.canonicalArrivalDate,
       departureDate = spaceBooking.canonicalDepartureDate,
-      appealChangeRequestId = event.data.eventDetails.appealChangeRequestId,
     )
   }
 
@@ -75,7 +73,6 @@ class BookingCancelledTimelineFactory(
     val cancellationReason: String,
     val arrivalDate: LocalDate,
     val departureDate: LocalDate,
-    val appealChangeRequestId: UUID?,
   )
 
   override fun forType() = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED

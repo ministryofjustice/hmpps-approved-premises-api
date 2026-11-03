@@ -42,5 +42,4 @@ data class BookingChanged(
 
   @get:JsonProperty("previousCharacteristics") val previousCharacteristics: List<SpaceCharacteristic>? = null,
 
-  val transferredTo: EventTransferInfo? = null,
 ) : Cas1DomainEventPayload

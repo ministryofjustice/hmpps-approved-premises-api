@@ -8,8 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferInfo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
@@ -23,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
@@ -31,11 +28,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Char
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.toEventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.LocalDate
@@ -67,7 +62,6 @@ class Cas1SpaceBookingDomainEventService(
       sentenceType = placementRequest.resolveSentenceType(),
       situation = placementRequest.resolveSituation(),
       placementRequestId = placementRequest.id,
-      transferredFrom = cas1BookingCreatedEvent.transferredFrom,
     )
   }
 
@@ -133,7 +127,6 @@ class Cas1SpaceBookingDomainEventService(
       previousDepartureDateIfChanged = bookingChanged.previousDepartureDateIfChanged,
       characteristics = bookingChanged.booking.criteria.toSpaceCharacteristics(),
       previousCharacteristics = bookingChanged.previousCharacteristicsIfChanged?.toSpaceCharacteristics(),
-      transferredTo = bookingChanged.transferredTo,
     ),
   )
 
@@ -192,7 +185,6 @@ class Cas1SpaceBookingDomainEventService(
           previousArrivalOn = bookingChangedInfo.previousArrivalDateIfChanged,
           previousDepartureOn = bookingChangedInfo.previousDepartureDateIfChanged,
           previousCharacteristics = bookingChangedInfo.previousCharacteristics,
-          transferredTo = bookingChangedInfo.transferredTo?.toEventTransferInfo(),
         ),
       ),
     )
@@ -207,7 +199,6 @@ class Cas1SpaceBookingDomainEventService(
       reason = bookingCancelled.reason,
       cancelledBy = bookingCancelled.user,
       premises = bookingCancelled.booking.premises,
-      appealChangeRequestId = bookingCancelled.appealChangeRequestId,
       cancellationId = null,
     ),
   )
@@ -222,7 +213,6 @@ class Cas1SpaceBookingDomainEventService(
     releaseType: String?,
     situation: String?,
     placementRequestId: UUID?,
-    transferredFrom: TransferInfo?,
   ) {
     val domainEventId = UUID.randomUUID()
     val crn = bookingInfo.crn
@@ -274,7 +264,6 @@ class Cas1SpaceBookingDomainEventService(
           sentenceType = sentenceType,
           situation = situation,
           characteristics = bookingInfo.characteristics,
-          transferredFrom = transferredFrom?.toEventTransferInfo(),
           transferReason = bookingInfo.transferReason,
           additionalInformation = bookingInfo.additionalInformation,
           personTier = tierService.getTier(crn)?.toEventTier(),
@@ -285,15 +274,6 @@ class Cas1SpaceBookingDomainEventService(
       ),
     )
   }
-
-  private fun TransferInfo.toEventTransferInfo() = EventTransferInfo(
-    type = when (this.type) {
-      TransferType.PLANNED -> EventTransferType.PLANNED
-      TransferType.EMERGENCY -> EventTransferType.EMERGENCY
-    },
-    changeRequestId = this.changeRequestId,
-    booking = this.booking.toEventBookingSummary(),
-  )
 
   private fun bookingCancelled(
     cancellationInfo: CancellationInfo,
@@ -344,7 +324,6 @@ class Cas1SpaceBookingDomainEventService(
           cancelledAtDate = cancellationInfo.cancelledAt,
           cancellationReason = cancellationInfo.reason.name,
           cancellationRecordedAt = now.toInstant(),
-          appealChangeRequestId = cancellationInfo.appealChangeRequestId,
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_CANCELLATION_ID to cancellationInfo.cancellationId?.toString(),
@@ -396,7 +375,6 @@ class Cas1SpaceBookingDomainEventService(
     val cancelledBy: UserEntity,
     val cancelledAt: LocalDate,
     val reason: CancellationReasonEntity,
-    val appealChangeRequestId: UUID? = null,
   )
 
   private data class BookingChangedInfo(
@@ -412,7 +390,6 @@ class Cas1SpaceBookingDomainEventService(
     val previousDepartureDateIfChanged: LocalDate?,
     val characteristics: List<SpaceCharacteristic>? = null,
     val previousCharacteristics: List<SpaceCharacteristic>? = null,
-    val transferredTo: TransferInfo? = null,
   )
 
   private fun List<Cas1CharacteristicEntity>.toSpaceCharacteristics(): List<SpaceCharacteristic> = this.map { it.asSpaceCharacteristic() }

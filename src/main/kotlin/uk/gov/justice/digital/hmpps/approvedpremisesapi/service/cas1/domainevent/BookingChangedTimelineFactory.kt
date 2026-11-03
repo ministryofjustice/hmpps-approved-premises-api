@@ -91,7 +91,6 @@ class BookingChangedTimelineFactory(val domainEventService: Cas1DomainEventServi
       expectedDeparture = eventDetails.departureOn,
       characteristics = convertToCas1SpaceCharacteristics(eventDetails.characteristics),
       previousCharacteristics = convertToCas1SpaceCharacteristics(eventDetails.previousCharacteristics),
-      transferredTo = eventDetails.transferredTo?.toTimelineTransferInfo(),
     )
   }
 
