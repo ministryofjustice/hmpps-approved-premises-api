@@ -36,8 +36,8 @@ data class Cas1ExternalRequestForPlacementOutcomeDto(
 data class Cas1ExternalRequestForPlacementDtoV2(
   val status: RequestForPlacementStatus,
   val statusLastUpdated: LocalDateTime,
-  val submittedBy: Cas1StaffDto?,
-  val submittedAt: LocalDate?,
+  val submittedBy: Cas1StaffDto,
+  val submittedAt: LocalDate,
   @Schema(description = "The requested arrival date. This may be different to the booked arrival date (check placements for this)")
   val expectedArrivalDate: LocalDate?,
   val durationDays: Int?,

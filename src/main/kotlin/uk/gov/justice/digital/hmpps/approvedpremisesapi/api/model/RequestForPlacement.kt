@@ -27,8 +27,8 @@ data class RequestForPlacement(
   @Deprecated("Use [statusSetDateTime]")
   val statusSetDate: LocalDate,
   val statusSetDateTime: LocalDateTime,
-  val submittedAt: java.time.Instant? = null,
-  val submittedBy: Cas1StaffDto? = null,
+  val submittedAt: java.time.Instant,
+  val submittedBy: Cas1StaffDto,
   @Schema(description = "If `type` is `\"manual\"`, provides the value of `PlacementApplication.decisionMadeAt`. If `type` is `\"automatic\"` this field provides the value of `PlacementRequest.assessmentCompletedAt`. ")
   val requestReviewedAt: java.time.Instant? = null,
   val document: Any? = null,

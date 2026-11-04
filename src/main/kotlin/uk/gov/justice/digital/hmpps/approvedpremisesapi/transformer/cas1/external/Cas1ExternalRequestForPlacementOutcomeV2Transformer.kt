@@ -18,7 +18,7 @@ class Cas1ExternalRequestForPlacementOutcomeV2Transformer {
     status = rfp.status,
     statusLastUpdated = rfp.statusSetDateTime,
     submittedBy = rfp.submittedBy,
-    submittedAt = rfp.submittedAt?.toLocalDate(),
+    submittedAt = rfp.submittedAt.toLocalDate(),
     expectedArrivalDate = rfp.canonicalPlacementPeriod.arrival,
     durationDays = rfp.canonicalPlacementPeriod.duration,
     decision = rfp.decision?.apiValue,

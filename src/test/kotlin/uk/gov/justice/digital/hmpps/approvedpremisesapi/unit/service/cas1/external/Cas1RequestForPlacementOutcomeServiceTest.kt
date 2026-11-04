@@ -77,7 +77,7 @@ class Cas1RequestForPlacementOutcomeServiceTest {
         .produce()
       val requestForPlacement2 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(1),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted)
+      ).withStatus(RequestForPlacementStatus.requestSubmitted)
         .withCanonicalPlacementPeriod(
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.now().plusDays(1),
@@ -207,7 +207,7 @@ class Cas1RequestForPlacementOutcomeServiceTest {
           placement9,
           placement10,
         ),
-      ).withStatus(RequestForPlacementStatus.requestUnsubmitted).produce()
+      ).withStatus(RequestForPlacementStatus.requestSubmitted).produce()
       val requestForPlacement3 = RequestForPlacementFactory().withStatusSetDate(
         LocalDate.now().minusDays(5),
       ).withPlacements(
