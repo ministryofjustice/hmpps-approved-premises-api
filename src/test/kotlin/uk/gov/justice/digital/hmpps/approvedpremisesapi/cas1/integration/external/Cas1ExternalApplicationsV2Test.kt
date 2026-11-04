@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.extern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementV2Dto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.SAS_ROLE
@@ -22,6 +24,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 
 class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
   private val crn = "ABC1234"
+
+  private val clientCredentialsJwt: String
+    get() = jwtAuthHelper.createValidClientCredentialsJwt(role = SAS_ROLE)
 
   @Nested
   inner class GetCurrentApplication {
@@ -166,9 +171,6 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
       assertThat(arrived.requestForPlacement.expectedArrivalDate).isEqualTo(today.minusDays(70))
     }
 
-    private val clientCredentialsJwt: String
-      get() = jwtAuthHelper.createValidClientCredentialsJwt(role = SAS_ROLE)
-
     private fun getSuitableApplication(crn: String) = webTestClient.get()
       .uri("/cas1/external/cases/$crn/applications/current")
       .header("Authorization", "Bearer $clientCredentialsJwt")
@@ -178,5 +180,67 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
       .expectBody(Cas1ExternalApplicationV2Dto::class.java)
       .returnResult()
       .responseBody!!
+  }
+
+  @Nested
+  inner class GetCurrentResidence {
+
+    @Test
+    fun `Get current residence without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/external/cases/$crn/residence")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get current residence without correct JWT authority returns 403`() {
+      val (_, jwt) = givenAUser()
+
+      webTestClient.get()
+        .uri("/cas1/external/cases/$crn/residence")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Get current residence when no current space booking exists returns 204`() {
+      webTestClient.get()
+        .uri("/cas1/external/cases/$crn/residence")
+        .header("Authorization", "Bearer $clientCredentialsJwt")
+        .exchange()
+        .expectStatus()
+        .isNoContent
+    }
+
+    @Test
+    fun `Get current residence returns current arrived space booking`() {
+      givenACas1SpaceBooking(
+        crn = crn,
+        actualArrivalDate = LocalDate.of(2026, 6, 1),
+        actualDepartureDate = LocalDate.of(2026, 7, 1),
+      )
+
+      givenACas1SpaceBooking(
+        crn = crn,
+        actualArrivalDate = LocalDate.of(2027, 1, 1),
+        actualDepartureDate = null,
+      )
+
+      val result = webTestClient.get()
+        .uri("/cas1/external/cases/$crn/residence")
+        .header("Authorization", "Bearer $clientCredentialsJwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody<Cas1ExternalPlacementV2Dto>()
+        .returnResult()
+        .responseBody!!
+
+      assertThat(result.actualArrivalDate).isEqualTo(LocalDate.of(2027, 1, 1))
+    }
   }
 }

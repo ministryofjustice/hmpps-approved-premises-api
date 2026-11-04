@@ -86,7 +86,7 @@ class Cas1SpaceBookingManagementService(
     }
 
     val crn = existingCas1SpaceBooking.crn
-    cas1SpaceBookingRepository.findResidentSpaceBookingsForCrn(crn, UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE).firstOrNull()?.premises?.let { alreadyResidentAt ->
+    findCurrentResidency(crn)?.premises?.let { alreadyResidentAt ->
       return CasResult.GeneralValidationError(
         "Arrival cannot be recorded as $crn is recorded as resident at ${alreadyResidentAt.name} (${alreadyResidentAt.cruManagementArea.name})",
       )
@@ -111,6 +111,10 @@ class Cas1SpaceBookingManagementService(
 
     success(updatedSpaceBooking)
   }
+
+  fun findCurrentResidency(crn: String) = cas1SpaceBookingRepository
+    .findResidentSpaceBookingsForCrn(crn, UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE)
+    .firstOrNull()
 
   @Transactional
   fun recordNonArrivalForBooking(
