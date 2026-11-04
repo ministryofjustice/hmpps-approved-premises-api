@@ -565,7 +565,7 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Assessor cannot view single submitted application on a restricted offender`() {
+    fun `Assessor can view single submitted application on a restricted offender`() {
       val crn = "CRN321"
       val nomsNumber = "NOMS321"
       apDeliusContextCaseSummariesSingleCase(

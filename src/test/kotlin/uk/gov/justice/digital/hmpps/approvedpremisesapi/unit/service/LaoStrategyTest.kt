@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -25,12 +26,32 @@ class LaoStrategyTest {
     }
 
     @Test
-    fun `cas2LaoStrategy returns correct strategy`() {
-      val result = Cas2UserEntityFactory().produce().cas2LaoStrategy()
+    fun `cas2LaoStrategy returns correct strategy for nomis users`() {
+      val result = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce().cas2LaoStrategy()
 
       assertThat(result.deliusUsername).isNull()
       assertThat(result.restrictionHandling).isEqualTo(LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER)
       assertThat(result.exclusionHandling).isEqualTo(LaoStrategy.ExclusionHandling.IGNORE)
+    }
+
+    @Test
+    fun `cas2LaoStrategy returns correct strategy for delius users`() {
+      val result = Cas2UserEntityFactory()
+        .withUserType(Cas2UserType.DELIUS)
+        .withUsername("the delius username")
+        .produce()
+        .cas2LaoStrategy()
+
+      assertThat(result.deliusUsername).isEqualTo("the delius username")
+      assertThat(result.restrictionHandling).isEqualTo(LaoStrategy.RestrictionHandling.ALWAYS_CHECK)
+      assertThat(result.exclusionHandling).isEqualTo(LaoStrategy.ExclusionHandling.ALWAYS_CHECK)
+    }
+
+    @Test
+    fun `cas2LaoStrategy returns correct strategy for external users`() {
+      val result = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce().cas2LaoStrategy()
+
+      assertThat(result).isEqualTo(LaoStrategy.NeverRestricted)
     }
   }
 
