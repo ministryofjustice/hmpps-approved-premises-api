@@ -234,6 +234,7 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now().minusDays(1))
+        withCohort(Cas2Cohort.HDC)
       }
       application.createApplicationAssignment(
         prisonCode = userEntity.activeNomisCaseloadId!!,
@@ -420,63 +421,138 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource(AssignmentType::class)
-    fun `applications with conditional release date before today not returned`(assignmentType: AssignmentType) {
-      givenACas2Assessor { assessor, _ ->
-        givenACas2PomUser { userAPrisonA, jwt ->
-          givenAnOffender { offenderDetails, _ ->
+    fun `applications with conditional release date before today not returned for HDC and bail cohorts`(assignmentType: AssignmentType) {
+      listOf(Cas2Cohort.HDC, Cas2Cohort.PRISON_BAIL, Cas2Cohort.COURT_BAIL).forEach { cohort ->
+        assertPastReleaseDateApplicationsNotReturned(assignmentType, cohort)
+      }
+    }
 
-            val inProgressApplication = Cas2ApplicationEntityFactory()
-              .withCreatedByUser(userAPrisonA)
-              .withCrn(offenderDetails.otherIds.crn)
-              .withData("{}")
-              .withCreatedAt(OffsetDateTime.now().minusDays(14))
-              .withReferringPrisonCode(userAPrisonA.activeNomisCaseloadId!!)
-              .withConditionalReleaseDate(LocalDate.now().minusDays(1))
-              .produce()
-            cas2ApplicationRepository.saveAndFlush(inProgressApplication)
+    private fun assertPastReleaseDateApplicationsNotReturned(assignmentType: AssignmentType, cohort: Cas2Cohort) {
+      givenACas2PomUser { userAPrisonA, jwt ->
+        givenAnOffender { offenderDetails, _ ->
 
-            val allocatedApplication =
-              inProgressApplication.copy(id = UUID.randomUUID(), submittedAt = OffsetDateTime.now())
-            cas2ApplicationRepository.saveAndFlush(allocatedApplication)
-            allocatedApplication.createApplicationAssignment(userAPrisonA.activeNomisCaseloadId!!, userAPrisonA)
+          val inProgressApplication = Cas2ApplicationEntityFactory()
+            .withCreatedByUser(userAPrisonA)
+            .withCrn(offenderDetails.otherIds.crn)
+            .withData("{}")
+            .withCreatedAt(OffsetDateTime.now().minusDays(14))
+            .withReferringPrisonCode(userAPrisonA.activeNomisCaseloadId!!)
+            .withConditionalReleaseDate(LocalDate.now().minusDays(1))
+            .withCohort(cohort)
+            .produce()
+          cas2ApplicationRepository.saveAndFlush(inProgressApplication)
 
-            val deallocatedApplication = allocatedApplication.copy(id = UUID.randomUUID())
-            cas2ApplicationRepository.saveAndFlush(deallocatedApplication)
-            deallocatedApplication.createApplicationAssignment("OTHER", null)
+          val allocatedApplication =
+            inProgressApplication.copy(id = UUID.randomUUID(), submittedAt = OffsetDateTime.now())
+          cas2ApplicationRepository.saveAndFlush(allocatedApplication)
+          allocatedApplication.createApplicationAssignment(userAPrisonA.activeNomisCaseloadId!!, userAPrisonA)
 
-            val samePrisonApplication =
-              deallocatedApplication.copy(id = UUID.randomUUID(), applicationAssignments = mutableListOf())
-            val samePrisonCode = userAPrisonA.activeNomisCaseloadId!!
-            val userBPrisonA = cas2UserEntityFactory.produceAndPersist {
-              withActiveNomisCaseloadId(samePrisonCode)
-            }
-            samePrisonApplication.createApplicationAssignment(samePrisonCode, userBPrisonA)
-            cas2ApplicationRepository.saveAndFlush(samePrisonApplication)
+          val deallocatedApplication = allocatedApplication.copy(id = UUID.randomUUID())
+          cas2ApplicationRepository.saveAndFlush(deallocatedApplication)
+          deallocatedApplication.createApplicationAssignment("OTHER", null)
 
-            val unallocatedApplication =
-              allocatedApplication.copy(id = UUID.randomUUID(), applicationAssignments = mutableListOf())
-            val otherPrisonCode = "OTHERPRISON"
-            val userCPrisonB = cas2UserEntityFactory.produceAndPersist {
-              withActiveNomisCaseloadId(otherPrisonCode)
-            }
-            unallocatedApplication.createApplicationAssignment(otherPrisonCode, userCPrisonB)
-            unallocatedApplication.createApplicationAssignment(samePrisonCode, null)
-            cas2ApplicationRepository.saveAndFlush(unallocatedApplication)
-
-            val responseBody = webTestClient.get()
-              .uri("/cas2-hdc/applications?assignmentType=${assignmentType.value}")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .bodyAsListOfObjects<Cas2HdcApplicationSummary>()
-
-            assertThat(responseBody).hasSize(0)
+          val samePrisonApplication =
+            deallocatedApplication.copy(id = UUID.randomUUID(), applicationAssignments = mutableListOf())
+          val samePrisonCode = userAPrisonA.activeNomisCaseloadId!!
+          val userBPrisonA = cas2UserEntityFactory.produceAndPersist {
+            withActiveNomisCaseloadId(samePrisonCode)
           }
+          samePrisonApplication.createApplicationAssignment(samePrisonCode, userBPrisonA)
+          cas2ApplicationRepository.saveAndFlush(samePrisonApplication)
+
+          val unallocatedApplication =
+            allocatedApplication.copy(id = UUID.randomUUID(), applicationAssignments = mutableListOf())
+          val otherPrisonCode = "OTHERPRISON"
+          val userCPrisonB = cas2UserEntityFactory.produceAndPersist {
+            withActiveNomisCaseloadId(otherPrisonCode)
+          }
+          unallocatedApplication.createApplicationAssignment(otherPrisonCode, userCPrisonB)
+          unallocatedApplication.createApplicationAssignment(samePrisonCode, null)
+          cas2ApplicationRepository.saveAndFlush(unallocatedApplication)
+
+          val responseBody = webTestClient.get()
+            .uri("/cas2-hdc/applications?assignmentType=${assignmentType.value}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<Cas2HdcApplicationSummary>()
+
+          assertThat(responseBody).hasSize(0)
         }
       }
     }
+
+    @ParameterizedTest
+    @EnumSource(Cas2Cohort::class, names = ["HDC", "PRISON_BAIL", "COURT_BAIL"], mode = EnumSource.Mode.EXCLUDE)
+    fun `submitted applications with conditional release date in the past are returned for other cohorts`(cohort: Cas2Cohort) {
+      givenACas2PomUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val application = pastReleaseDateSubmittedApplication(user, offenderDetails.otherIds.crn, cohort)
+
+          val responseBody = getAllocatedApplications(jwt)
+
+          assertThat(responseBody.map { it.id }).containsExactly(application.id)
+        }
+      }
+    }
+
+    @Test
+    fun `submitted applications with conditional release date in the past are returned when cohort is null`() {
+      givenACas2PomUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val application = pastReleaseDateSubmittedApplication(user, offenderDetails.otherIds.crn, null)
+
+          assertThat(getAllocatedApplications(jwt).map { it.id }).containsExactly(application.id)
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(Cas2Cohort::class, names = ["HDC", "PRISON_BAIL", "COURT_BAIL"], mode = EnumSource.Mode.EXCLUDE)
+    fun `abandoned applications with conditional release date in the past are not returned for other cohorts`(cohort: Cas2Cohort) {
+      givenACas2PomUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          pastReleaseDateSubmittedApplication(user, offenderDetails.otherIds.crn, cohort, abandonedAt = OffsetDateTime.now())
+
+          assertThat(getAllocatedApplications(jwt)).isEmpty()
+        }
+      }
+    }
+
+    private fun pastReleaseDateSubmittedApplication(
+      user: Cas2UserEntity,
+      crn: String,
+      cohort: Cas2Cohort?,
+      abandonedAt: OffsetDateTime? = null,
+    ): Cas2ApplicationEntity {
+      val application = cas2ApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(user)
+        withCrn(crn)
+        withData("{}")
+        withCohort(cohort)
+        withAbandonedAt(abandonedAt)
+        withCreatedAt(OffsetDateTime.now().minusDays(14))
+        withSubmittedAt(OffsetDateTime.now())
+        withReferringPrisonCode(user.activeNomisCaseloadId!!)
+        withConditionalReleaseDate(LocalDate.now().minusDays(1))
+      }
+      application.createApplicationAssignment(
+        prisonCode = user.activeNomisCaseloadId!!,
+        allocatedPomUser = user,
+      )
+      return realApplicationRepository.save(application)
+    }
+
+    private fun getAllocatedApplications(jwt: String) = webTestClient.get()
+      .uri("/cas2-hdc/applications?assignmentType=${AssignmentType.ALLOCATED.value}")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.cas2.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsListOfObjects<Cas2HdcApplicationSummary>()
 
     private fun assertInProgressApplications(
       response: List<Cas2HdcApplicationSummary>,
@@ -814,6 +890,7 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
                 withReferringPrisonCode(userBPrisonA.activeNomisCaseloadId!!)
                 withSubmittedAt(OffsetDateTime.now())
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
+                withCohort(Cas2Cohort.HDC)
               }
               excludedApplication.createApplicationAssignment(userBPrisonA.activeNomisCaseloadId!!, userBPrisonA)
               cas2ApplicationRepository.save(excludedApplication)
@@ -922,6 +999,7 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
                 withReferringPrisonCode(userAPrisonA.activeNomisCaseloadId!!)
                 withSubmittedAt(OffsetDateTime.now())
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
+                withCohort(Cas2Cohort.HDC)
               }.id
 
               addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
@@ -1005,6 +1083,7 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
                 withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withReferringPrisonCode(caseAdminPrisonA.activeNomisCaseloadId!!)
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
+                withCohort(Cas2Cohort.HDC)
               }
 
               excludedApplication.createApplicationAssignment(caseAdminPrisonA.activeNomisCaseloadId!!, caseAdminPrisonA)
@@ -1119,6 +1198,7 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
+                withCohort(Cas2Cohort.HDC)
               }
               submittedApplicationWithCondionalReleaseDate.createApplicationAssignment(
                 userEntity.activeNomisCaseloadId!!,

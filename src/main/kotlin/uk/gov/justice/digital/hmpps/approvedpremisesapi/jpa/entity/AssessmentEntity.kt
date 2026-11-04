@@ -233,6 +233,9 @@ abstract class AssessmentEntity(
 
   val createdAt: OffsetDateTime,
 
+  /**
+   * When the decision was made
+   */
   var submittedAt: OffsetDateTime?,
   @Enumerated(value = EnumType.STRING)
   var decision: AssessmentDecision?,

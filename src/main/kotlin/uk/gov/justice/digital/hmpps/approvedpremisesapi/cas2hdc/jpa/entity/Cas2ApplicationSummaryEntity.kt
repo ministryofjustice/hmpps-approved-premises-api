@@ -46,6 +46,16 @@ interface Cas2ApplicationSummaryRepository :
   fun findByServiceOriginAndSubmittedAtIsNotNull(serviceOrigin: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 }
 
+/**
+ * Backed by a View
+ *
+ * The WHERE clause in the query excludes applications when one of the following is true
+ * 1. The application has been abandoned (i.e. before submission)
+ * 2. The application has no status, has a cohort 'HDC', 'PRISON_BAIL' or 'COURT_BAIL' and has a conditional release date < today
+ * 3. The application has a status that is 'withdrawn', 'awaiting arrival' or 'referral cancelled' set over 32 days ago
+ *
+ * Note that 'has no status' in point 2 is mostly likely a bug, because as soon as a status is set it'll become visible again
+ */
 @Entity
 @Table(name = "cas_2_application_live_summary")
 data class Cas2ApplicationSummaryEntity(
@@ -54,12 +64,6 @@ data class Cas2ApplicationSummaryEntity(
   val crn: String,
   @Column(name = "noms_number")
   var nomsNumber: String,
-  /*
-   * BAIL-WIP The userid  is retrieved from the sql view named cas_2_application_summary or
-   * cas_2_application_summary_live`. These will need work before we start to use the cas2
-   * user entity. I’m not how best to bridge the view into the cas2 user entity way of working
-   * see https://dsdmoj.atlassian.net/browse/CBA-693
-   */
   @Column(name = "created_by_cas2_user_id")
   val userId: String,
   @Column(name = "created_by_cas2_user_name")
