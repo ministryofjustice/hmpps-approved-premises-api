@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
@@ -29,6 +30,8 @@ data class Cas1SpaceBookingShortSummary(
   val additionalInformation: String? = null,
   val transferReason: TransferReason? = null,
   val status: Cas1SpaceBookingStatus,
+  @Schema(deprecated = true, description = "use statusSetDateTime")
   val statusSetDate: LocalDate,
+  val statusSetDateTime: LocalDateTime,
   val placementRequestApType: ApType? = null,
 )

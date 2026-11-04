@@ -81,6 +81,7 @@ class Cas1ExternalRequestForPlacementOutcomeV2TransformerTest {
 
     private val placement = Cas1SpaceBookingShortSummaryFactory()
       .withStatus(Cas1SpaceBookingStatus.UPCOMING)
+      .withStatusSetDateTime(LocalDateTime.parse("2008-12-03T10:15:30"))
       .withExpectedArrivalDate(LocalDate.of(2026, 7, 1))
       .withExpectedDepartureDate(LocalDate.of(2026, 7, 20))
       .withActualArrivalDate(LocalDate.of(2026, 7, 2))
@@ -93,6 +94,7 @@ class Cas1ExternalRequestForPlacementOutcomeV2TransformerTest {
       val result = transformer.transformToPlacement(placement, premises)
 
       assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.UPCOMING)
+      assertThat(result.statusLastUpdated).isEqualTo(LocalDateTime.parse("2008-12-03T10:15:30"))
       assertThat(result.canonicalArrivalDate).isEqualTo(LocalDate.of(2026, 7, 2))
       assertThat(result.canonicalDepartureDate).isEqualTo(LocalDate.of(2026, 7, 19))
       assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.of(2026, 7, 1))
