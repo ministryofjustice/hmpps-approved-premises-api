@@ -46,6 +46,23 @@ interface Cas2ApplicationSummaryRepository :
   fun findByServiceOriginAndSubmittedAtIsNotNull(serviceOrigin: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 }
 
+/**
+ * Backed by a View
+ *
+ * The WHERE clause in the query includes an application if:
+ *
+ * 1. it is not abandoned, it has no status and (conditional release date is null or >= today)
+ * 2. it has a status that isn't 'withdrawn', 'awaiting arrival' or 'referral cancelled'
+ * 3. it has a status that is 'withdrawn', 'awaiting arrival' or 'referral cancelled', but this status was set no more than 32 days ago
+ *
+ * Noting that an application can only be abandoned _before_ submission, the logic can be simplified as _not_ showing applications when:
+ *
+ * 1. The application is abandoned before submission
+ * 2. The application has no status and a conditional release date >= today
+ * 3. The application has a status that is 'withdrawn', 'awaiting arrival' or 'referral cancelled' set over 32 days ago
+ *
+ * Note that point 2 is mostly likely a bug, because as soon as a status is set it'll become visible again
+ */
 @Entity
 @Table(name = "cas_2_application_live_summary")
 data class Cas2ApplicationSummaryEntity(
@@ -54,12 +71,6 @@ data class Cas2ApplicationSummaryEntity(
   val crn: String,
   @Column(name = "noms_number")
   var nomsNumber: String,
-  /*
-   * BAIL-WIP The userid  is retrieved from the sql view named cas_2_application_summary or
-   * cas_2_application_summary_live`. These will need work before we start to use the cas2
-   * user entity. I’m not how best to bridge the view into the cas2 user entity way of working
-   * see https://dsdmoj.atlassian.net/browse/CBA-693
-   */
   @Column(name = "created_by_cas2_user_id")
   val userId: String,
   @Column(name = "created_by_cas2_user_name")
