@@ -4,23 +4,23 @@ import org.springframework.stereotype.Component
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewBookingNotMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.UpdatePlacementApplication
@@ -88,7 +88,7 @@ class Cas1SimpleApiClient {
     integrationTestBase: IntegrationTestBase,
     assessmentId: UUID,
     assessorJwt: String,
-    body: UpdateAssessment,
+    body: Cas1UpdateAssessment,
   ) {
     integrationTestBase.webTestClient.put()
       .uri("/cas1/assessments/$assessmentId")
@@ -154,7 +154,7 @@ class Cas1SimpleApiClient {
     integrationTestBase: IntegrationTestBase,
     assessmentId: UUID,
     assessorJwt: String,
-    body: NewClarificationNote,
+    body: Cas1NewClarificationNote,
   ): ClarificationNote = integrationTestBase.webTestClient.post()
     .uri("/cas1/assessments/$assessmentId/notes")
     .header("Authorization", "Bearer $assessorJwt")
@@ -171,7 +171,7 @@ class Cas1SimpleApiClient {
     assessmentId: UUID,
     noteId: UUID,
     assessorJwt: String,
-    body: UpdatedClarificationNote,
+    body: Cas1UpdatedClarificationNote,
   ) {
     integrationTestBase.webTestClient.put()
       .uri("/cas1/assessments/$assessmentId/notes/$noteId")
@@ -277,7 +277,7 @@ class Cas1SimpleApiClient {
   fun placementRequestWithdraw(
     integrationTestBase: IntegrationTestBase,
     placementRequestId: UUID,
-    body: WithdrawPlacementRequest,
+    body: Cas1WithdrawPlacementRequest,
   ) {
     val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 

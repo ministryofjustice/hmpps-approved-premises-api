@@ -6,12 +6,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawableDatePeriodDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
@@ -1061,7 +1061,7 @@ class Cas1WithdrawalTest : IntegrationTestBase() {
   ) {
     webTestClient.post()
       .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
-      .bodyValue(WithdrawPlacementRequest(reason))
+      .bodyValue(Cas1WithdrawPlacementRequest(reason))
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()

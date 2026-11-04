@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -18,16 +17,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejectionReasonDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
@@ -279,7 +279,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .uri("/cas1/assessments/${assessment.id}/notes")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
-        NewClarificationNote(
+        Cas1NewClarificationNote(
           query = "some text",
         ),
       )
@@ -298,7 +298,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .uri("/cas1/assessments/${assessment.id}/notes/${clarificationNote.id}")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
-        UpdatedClarificationNote(
+        Cas1UpdatedClarificationNote(
           response = "some text",
           responseReceivedOn = LocalDate.parse("2022-03-04"),
         ),
@@ -386,7 +386,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .uri("/cas1/assessments/${realApplicationRepository.findByIdOrNull(applicationId)!!.getLatestAssessment()!!.id}")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
-        UpdateAssessment(
+        Cas1UpdateAssessment(
           data = mapOf("some text" to 5),
         ),
       )
