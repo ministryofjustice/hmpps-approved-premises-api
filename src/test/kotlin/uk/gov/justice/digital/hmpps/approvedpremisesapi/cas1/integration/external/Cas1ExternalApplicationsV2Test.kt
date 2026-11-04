@@ -90,6 +90,7 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
     val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
     val today = LocalDate.now()
 
+    // past
     givenAPlacementRequest(
       createdByUser = user,
       application = application,
@@ -97,6 +98,7 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
       duration = 7,
     )
 
+    // past, arrived
     val placementApplicationWithBookings = givenAPlacementApplication(
       createdByUser = user,
       application = application,
@@ -121,6 +123,17 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
       expectedDepartureDate = today.minusDays(46),
       actualArrivalDate = today.minusDays(59),
     )
+
+    // future
+    givenAPlacementApplication(
+      createdByUser = user,
+      application = application,
+      submittedAt = OffsetDateTime.now(),
+      expectedArrival = today.plusDays(90),
+      requestedDuration = 10,
+    )
+
+    // upcoming
     val futureBooking = givenACas1SpaceBooking(
       crn = application.crn,
       premises = premises,
@@ -128,14 +141,6 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
       placementRequest = requestWithBookings,
       expectedArrivalDate = today.plusDays(30),
       expectedDepartureDate = today.plusDays(44),
-    )
-
-    givenAPlacementApplication(
-      createdByUser = user,
-      application = application,
-      submittedAt = OffsetDateTime.now(),
-      expectedArrival = today.plusDays(90),
-      requestedDuration = 10,
     )
 
     val response = getSuitableApplication(application.crn)
@@ -147,8 +152,8 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
     assertThat(upcoming.requestForPlacement.expectedArrivalDate).isEqualTo(today.minusDays(70))
     assertThat(upcoming.requestForPlacement.durationDays).isEqualTo(14)
 
-    assertThat(submitted.requestForPlacementHistory).hasSize(3)
-    assertThat(submitted.requestForPlacementHistory.filter { it.placement == null }).hasSize(2)
+    assertThat(submitted.requestForPlacementHistory).hasSize(2)
+    assertThat(submitted.requestForPlacementHistory.filter { it.placement == null }).hasSize(1)
 
     val arrived = submitted.requestForPlacementHistory.single { it.placement != null }
     assertThat(arrived.placement!!.expectedArrivalDate).isEqualTo(pastBooking.expectedArrivalDate)

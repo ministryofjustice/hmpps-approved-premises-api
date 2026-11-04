@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDtoV2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -71,7 +74,17 @@ class Cas1ExternalApplicationV2Service(
 
   private fun RequestForPlacementOutcome.toDto() = Cas1ExternalRequestForPlacementOutcomeDto(requestForPlacement, placement)
 
-  private fun RequestForPlacementOutcome.pendingArrivalDate() = placement
-    ?.takeIf { it.status == Cas1SpaceBookingStatus.UPCOMING }
-    ?.expectedArrivalDate
+  private fun RequestForPlacementOutcome.pendingArrivalDate() = placement?.pendingArrivalDate() ?: requestForPlacement.pendingArrivalDate()
+
+  private fun Cas1ExternalPlacementV2Dto.pendingArrivalDate() = if (status == Cas1SpaceBookingStatus.UPCOMING) expectedArrivalDate else null
+
+  private fun Cas1ExternalRequestForPlacementDtoV2.pendingArrivalDate() = if (listOf(
+      RequestForPlacementStatus.awaitingMatch,
+      RequestForPlacementStatus.requestSubmitted,
+    ).contains(this.status)
+  ) {
+    expectedArrivalDate
+  } else {
+    null
+  }
 }
