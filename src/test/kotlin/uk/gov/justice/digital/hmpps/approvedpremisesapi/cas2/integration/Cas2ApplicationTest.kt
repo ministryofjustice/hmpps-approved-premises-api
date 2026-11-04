@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
@@ -44,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesErrorResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextVerifyUserAccessCalls
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
@@ -521,12 +524,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     private fun getAllApplications(userEntity: Cas2UserEntity, jwt: String) {
       givenAnOffender { offenderDetails, _ ->
 
-        repeat(12) {
+        repeat(12) { index ->
           cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(userEntity)
             withCrn(offenderDetails.otherIds.crn)
             withData("{}")
-            withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
+            withCreatedAt(OffsetDateTime.now().minusDays(index + 1L).truncatedTo(ChronoUnit.SECONDS))
             withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
         }
@@ -602,7 +605,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all applications returns a personSummary reflecting the LAO status of each person`() {
+    fun `Get all applications returns a personSummary reflecting the LAO status of each person for a NOMIS user`() {
       givenACas2v2NomisUser { userEntity, jwt ->
         val (fullOffender, _) = givenAnOffender()
         val (excludedOffender, _) = givenAnOffender(offenderDetailsConfigBlock = { withCurrentExclusion(true) })
@@ -650,6 +653,77 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .isEqualTo(Cas2PersonSummaryDto.NotFound(notFoundCrn))
 
         apDeliusContextVerifyUserAccessCalls(times = 0)
+      }
+    }
+
+    @ParameterizedTest(
+      name = "currentExclusion={0}, currentRestriction={1}, userExcluded={2}, userRestricted={3} -> restricted={4}",
+    )
+    @CsvSource(
+      // currentExclusion, currentRestriction, userExcluded, userRestricted, restricted
+      value = [
+        "false, false, false, false, false",
+        "false, true,  false, false, false",
+        "false, true,  false, true,  true",
+        "true,  false, false, false, false",
+        "true,  false, true,  false, true",
+        "true,  true,  false, false, false",
+        "true,  true,  false, true,  true",
+        "true,  true,  true,  false, true",
+        "true,  true,  true,  true,  true",
+      ],
+    )
+    @SuppressWarnings("LongParameterList")
+    fun `Get all applications returns a personSummary reflecting the LAO status for a Delius user`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+      userExcluded: Boolean,
+      userRestricted: Boolean,
+      restricted: Boolean,
+    ) {
+      givenACas2v2DeliusUser { userEntity, jwt ->
+        val (offender, _) = givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentExclusion(currentExclusion)
+            withCurrentRestriction(currentRestriction)
+          },
+        )
+        apDeliusContextUserAccessSingleCase(
+          CaseAccessFactory()
+            .withCrn(offender.otherIds.crn)
+            .withUserExcluded(userExcluded)
+            .withUserRestricted(userRestricted)
+            .produce(),
+          username = userEntity.username,
+        )
+        val application = produceAndPersistBasicApplication(offender.otherIds.crn, userEntity)
+
+        val rawResponseBody = webTestClient.get()
+          .uri("/cas2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.cas2.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val summary = jsonMapper
+          .readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          .single { it.id == application.id }
+
+        if (restricted) {
+          assertThat(summary.personName).isEqualTo("Restricted Access")
+          assertThat(summary.personSummary).isEqualTo(Cas2PersonSummaryDto.LimitedAccess(offender.otherIds.crn))
+        } else {
+          val name = "${offender.firstName} ${offender.surname}"
+          assertThat(summary.personName).isEqualTo(name)
+          assertThat(summary.personSummary).isEqualTo(Cas2PersonSummaryDto.Found(offender.otherIds.crn, name))
+        }
+
+        val expectedAccessCalls = if (currentExclusion || currentRestriction) 1 else 0
+        apDeliusContextVerifyUserAccessCalls(times = expectedAccessCalls, username = userEntity.username)
       }
     }
 
