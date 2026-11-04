@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -11,14 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingShortSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacementFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ExternalPlacementV2DtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ExternalRequestForPlacementDtoV2Factory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1RequestForPlacementOutcomeV2Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1RequestForPlacementOutcomeV2Service.RequestForPlacementOutcome
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalRequestForPlacementOutcomeV2Transformer
 import java.time.LocalDate
 import java.util.UUID
@@ -34,6 +38,12 @@ class Cas1RequestForPlacementOutcomeV2ServiceTest {
   @MockK
   private lateinit var transformer: Cas1ExternalRequestForPlacementOutcomeV2Transformer
 
+  @MockK
+  private lateinit var spaceBookingManagementService: Cas1SpaceBookingManagementService
+
+  @MockK
+  private lateinit var spaceBookingTransformer: Cas1SpaceBookingTransformer
+
   @InjectMockKs
   private lateinit var service: Cas1RequestForPlacementOutcomeV2Service
 
@@ -48,7 +58,7 @@ class Cas1RequestForPlacementOutcomeV2ServiceTest {
       every {
         cas1RequestForPlacementService.getRequestsForPlacementByApplication(
           applicationId,
-          null
+          null,
         )
       } returns CasResult.Success(emptyList())
 
@@ -63,7 +73,7 @@ class Cas1RequestForPlacementOutcomeV2ServiceTest {
       every {
         cas1RequestForPlacementService.getRequestsForPlacementByApplication(
           applicationId,
-          null
+          null,
         )
       } returns CasResult.Success(listOf(rfp))
       every { transformer.transformToRequestForPlacement(rfp) } returns rfpDto
@@ -72,8 +82,8 @@ class Cas1RequestForPlacementOutcomeV2ServiceTest {
         RequestForPlacementOutcome(
           rfpDto,
           null,
-          LocalDate.of(2026, 1, 2)
-        )
+          LocalDate.of(2026, 1, 2),
+        ),
       )
     }
 
@@ -92,7 +102,7 @@ class Cas1RequestForPlacementOutcomeV2ServiceTest {
       every {
         cas1RequestForPlacementService.getRequestsForPlacementByApplication(
           applicationId,
-          null
+          null,
         )
       } returns CasResult.Success(listOf(rfp))
       every { cas1PremisesService.findPremisesById(premises.id) } returns premises
@@ -118,7 +128,7 @@ class Cas1RequestForPlacementOutcomeV2ServiceTest {
       every {
         cas1RequestForPlacementService.getRequestsForPlacementByApplication(
           applicationId,
-          null
+          null,
         )
       } returns CasResult.Success(listOf(rfpWithPlacement, rfpWithout))
       every { cas1PremisesService.findPremisesById(premises.id) } returns premises
@@ -140,6 +150,31 @@ class Cas1RequestForPlacementOutcomeV2ServiceTest {
       .withPremises(NamedId(premises.id, premises.name))
       .withStatusSetDate(statusSetDate)
       .produce()
+  }
 
+  @Nested
+  inner class GetCurrentResidentPlacement {
+
+    @Test
+    fun `returns null when the person has no current residency`() {
+      every { spaceBookingManagementService.findCurrentResidency("CRN123") } returns null
+
+      assertThat(service.getCurrentResidentPlacement("CRN123")).isNull()
+
+      verify(exactly = 0) { spaceBookingTransformer.transformToCas1SpaceBookingShortSummary(any()) }
+    }
+
+    @Test
+    fun `returns the transformed placement for the current residency`() {
+      val booking = Cas1SpaceBookingEntityFactory().withPremises(premises).produce()
+      val shortSummary = Cas1SpaceBookingShortSummaryFactory().produce()
+      val placementDto = Cas1ExternalPlacementV2DtoFactory().produce()
+
+      every { spaceBookingManagementService.findCurrentResidency("CRN123") } returns booking
+      every { spaceBookingTransformer.transformToCas1SpaceBookingShortSummary(booking) } returns shortSummary
+      every { transformer.transformToPlacement(shortSummary, premises) } returns placementDto
+
+      assertThat(service.getCurrentResidentPlacement("CRN123")).isEqualTo(placementDto)
+    }
   }
 }

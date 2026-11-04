@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalCaseSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementV2Dto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -241,6 +242,138 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
         .responseBody!!
 
       assertThat(result.actualArrivalDate).isEqualTo(LocalDate.of(2027, 1, 1))
+    }
+  }
+
+  @Nested
+  inner class GetCaseSummary {
+
+    @Test
+    fun `Get case summary without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/external/cases/$crn/summary")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get case summary without correct JWT authority returns 403`() {
+      val (_, jwt) = givenAUser()
+
+      webTestClient.get()
+        .uri("/cas1/external/cases/$crn/summary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Get case summary when no current application or current residence exists returns 204`() {
+      webTestClient.get()
+        .uri("/cas1/external/cases/$crn/summary")
+        .header("Authorization", "Bearer $clientCredentialsJwt")
+        .exchange()
+        .expectStatus()
+        .isNoContent
+    }
+
+    @Test
+    fun `Get case summary returns current application and current arrived space booking`() {
+      val (user, _) = givenAUser()
+      val (_, application) = givenAnAssessmentForApprovedPremises(
+        allocatedToUser = null,
+        createdByUser = user,
+        decision = AssessmentDecisionJpa.ACCEPTED,
+      )
+      application.status = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED
+      approvedPremisesApplicationRepository.save(application)
+
+      val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
+      val today = LocalDate.now()
+
+      // past
+      givenAPlacementRequest(
+        createdByUser = user,
+        application = application,
+        expectedArrival = today.minusDays(100),
+        duration = 7,
+      )
+
+      // past, arrived
+      val placementApplicationWithBookings = givenAPlacementApplication(
+        createdByUser = user,
+        application = application,
+        submittedAt = OffsetDateTime.now(),
+        decision = PlacementApplicationDecision.ACCEPTED,
+        expectedArrival = today.minusDays(70),
+        requestedDuration = 14,
+      )
+      val (requestWithBookings, _) = givenAPlacementRequest(
+        createdByUser = user,
+        application = application,
+        placementApplication = placementApplicationWithBookings,
+        expectedArrival = today.minusDays(65),
+        duration = 14,
+      )
+      val pastBooking = givenACas1SpaceBooking(
+        crn = application.crn,
+        premises = premises,
+        application = application,
+        placementRequest = requestWithBookings,
+        expectedArrivalDate = today.minusDays(60),
+        expectedDepartureDate = today.minusDays(46),
+        actualArrivalDate = today.minusDays(59),
+        actualDepartureDate = null,
+      )
+
+      // future
+      givenAPlacementApplication(
+        createdByUser = user,
+        application = application,
+        submittedAt = OffsetDateTime.now(),
+        expectedArrival = today.plusDays(90),
+        requestedDuration = 10,
+      )
+
+      // upcoming
+      val futureBooking = givenACas1SpaceBooking(
+        crn = application.crn,
+        premises = premises,
+        application = application,
+        placementRequest = requestWithBookings,
+        expectedArrivalDate = today.plusDays(30),
+        expectedDepartureDate = today.plusDays(44),
+      )
+
+      val result = webTestClient.get()
+        .uri("/cas1/external/cases/${application.crn}/summary")
+        .header("Authorization", "Bearer $clientCredentialsJwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody<Cas1ExternalCaseSummaryDto>()
+        .returnResult()
+        .responseBody!!
+
+      val submitted = result.currentApplication!!.submittedApplication!!
+      val upcoming = submitted.upcomingRequestForPlacement!!
+      assertThat(upcoming.placement!!.status).isEqualTo(Cas1SpaceBookingStatus.UPCOMING)
+      assertThat(upcoming.placement!!.expectedArrivalDate).isEqualTo(futureBooking.expectedArrivalDate)
+      assertThat(upcoming.requestForPlacement.expectedArrivalDate).isEqualTo(today.minusDays(70))
+      assertThat(upcoming.requestForPlacement.durationDays).isEqualTo(14)
+
+      assertThat(submitted.requestForPlacementHistory).hasSize(2)
+      assertThat(submitted.requestForPlacementHistory.filter { it.placement == null }).hasSize(1)
+
+      val arrived = submitted.requestForPlacementHistory.single { it.placement != null }
+      assertThat(arrived.placement!!.expectedArrivalDate).isEqualTo(pastBooking.expectedArrivalDate)
+      assertThat(arrived.placement!!.actualArrivalDate).isEqualTo(pastBooking.actualArrivalDate)
+      assertThat(arrived.placement!!.premises.addressLine1).isEqualTo(premises.addressLine1)
+      assertThat(arrived.requestForPlacement.expectedArrivalDate).isEqualTo(today.minusDays(70))
+
+      assertThat(result.residence!!.actualArrivalDate).isEqualTo(today.minusDays(59))
     }
   }
 }
