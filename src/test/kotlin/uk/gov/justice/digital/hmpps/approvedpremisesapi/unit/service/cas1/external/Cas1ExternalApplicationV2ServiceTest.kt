@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
@@ -99,11 +100,80 @@ class Cas1ExternalApplicationV2ServiceTest {
   inner class ReturningOutcomes {
     private val application = application(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
 
+    @EnumSource(
+      value = RequestForPlacementStatus::class,
+      names = ["awaitingMatch", "requestSubmitted"],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
+    @ParameterizedTest
+    fun `has no upcoming request for placement outcome when request for placement is not in a pending state, with no placement`(
+      rfpStatus: RequestForPlacementStatus,
+    ) {
+      val noPlacement = outcome(
+        statusLastUpdated = today.minusDays(3),
+        requestForPlacementStatus = rfpStatus,
+        placementStatus = null,
+      )
+
+      every { repository.findByCrn(crn) } returns listOf(application)
+      every { outcomeService.getOutcomes(application.id) } returns listOf(noPlacement)
+
+      val upcomingRequestForPlacementSlot = slot<Cas1ExternalRequestForPlacementOutcomeDto?>()
+      val requestForPlacementHistorySlot = slot<List<Cas1ExternalRequestForPlacementOutcomeDto>>()
+      every {
+        transformer.transformToApplicationV2(
+          application = application,
+          upcomingRequestForPlacement = captureNullable(upcomingRequestForPlacementSlot),
+          requestForPlacementHistory = capture(requestForPlacementHistorySlot),
+        )
+      } returns transformed
+
+      assertThat(service.getSuitableApplicationByCrn(crn)).isSameAs(transformed)
+
+      assertThat(upcomingRequestForPlacementSlot.captured).isNull()
+      assertThat(requestForPlacementHistorySlot.captured).isEqualTo(listOf(noPlacement.toDto()))
+    }
+
+    @EnumSource(
+      value = RequestForPlacementStatus::class,
+      names = ["awaitingMatch", "requestSubmitted"],
+      mode = EnumSource.Mode.INCLUDE,
+    )
+    @ParameterizedTest
+    fun `upcoming requests for placement outcome set to request for placement when pending outcome, with no placement`(
+      rfpStatus: RequestForPlacementStatus,
+    ) {
+      val pending = outcome(
+        statusLastUpdated = today.minusDays(3),
+        requestForPlacementStatus = rfpStatus,
+        requestForPlacementExpectedArrival = today.plusDays(25),
+        placementStatus = null,
+      )
+
+      every { repository.findByCrn(crn) } returns listOf(application)
+      every { outcomeService.getOutcomes(application.id) } returns listOf(pending)
+
+      val upcomingRequestForPlacementSlot = slot<Cas1ExternalRequestForPlacementOutcomeDto?>()
+      val requestForPlacementHistorySlot = slot<List<Cas1ExternalRequestForPlacementOutcomeDto>>()
+      every {
+        transformer.transformToApplicationV2(
+          application = application,
+          upcomingRequestForPlacement = captureNullable(upcomingRequestForPlacementSlot),
+          requestForPlacementHistory = capture(requestForPlacementHistorySlot),
+        )
+      } returns transformed
+
+      assertThat(service.getSuitableApplicationByCrn(crn)).isSameAs(transformed)
+
+      assertThat(upcomingRequestForPlacementSlot.captured).isEqualTo(pending.toDto())
+      assertThat(requestForPlacementHistorySlot.captured).isEmpty()
+    }
+
     @Test
-    fun `has no upcoming request when no placement is pending`() {
+    fun `has no upcoming request for placement outcome when request for placement is not pending`() {
       val arrived = outcome(
         statusLastUpdated = today.minusDays(20),
-        requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
+        requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
         placementStatus = Cas1SpaceBookingStatus.ARRIVED,
         placementExpectedArrival = today.minusDays(20),
         placementExpectedDeparture = today.minusDays(10),
@@ -135,21 +205,22 @@ class Cas1ExternalApplicationV2ServiceTest {
 
     @Test
     fun `uses earliest upcoming placement as upcoming and excludes all pending arrivals from history, newest first`() {
-      val laterUpcoming = outcome(
+      val laterUpcomingPlacement = outcome(
         statusLastUpdated = today.minusDays(5),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
+        requestForPlacementExpectedArrival = today.plusDays(25),
         placementStatus = Cas1SpaceBookingStatus.UPCOMING,
         placementExpectedArrival = today.plusDays(30),
         placementExpectedDeparture = today.plusDays(40),
       )
-      val earliestUpcoming = outcome(
+      val earliestUpcomingPlacement = outcome(
         statusLastUpdated = today.minusDays(9),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
         placementStatus = Cas1SpaceBookingStatus.UPCOMING,
         placementExpectedArrival = today,
         placementExpectedDeparture = today.plusDays(1),
       )
-      val pastUpcoming = outcome(
+      val pastUpcomingPlacement = outcome(
         statusLastUpdated = today.minusDays(1),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
         placementStatus = Cas1SpaceBookingStatus.UPCOMING,
@@ -166,11 +237,12 @@ class Cas1ExternalApplicationV2ServiceTest {
       val noPlacement = outcome(
         statusLastUpdated = today.minusDays(3),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
+        requestForPlacementExpectedArrival = today.plusDays(55),
         placementStatus = null,
       )
 
       every { repository.findByCrn(crn) } returns listOf(application)
-      every { outcomeService.getOutcomes(application.id) } returns listOf(arrived, laterUpcoming, noPlacement, earliestUpcoming, pastUpcoming)
+      every { outcomeService.getOutcomes(application.id) } returns listOf(arrived, laterUpcomingPlacement, noPlacement, earliestUpcomingPlacement, pastUpcomingPlacement)
 
       val upcomingRequestForPlacementSlot = slot<Cas1ExternalRequestForPlacementOutcomeDto?>()
       val requestForPlacementHistorySlot = slot<List<Cas1ExternalRequestForPlacementOutcomeDto>>()
@@ -184,8 +256,47 @@ class Cas1ExternalApplicationV2ServiceTest {
 
       assertThat(service.getSuitableApplicationByCrn(crn)).isSameAs(transformed)
 
-      assertThat(upcomingRequestForPlacementSlot.captured).isEqualTo(earliestUpcoming.toDto())
-      assertThat(requestForPlacementHistorySlot.captured).isEqualTo(listOf(pastUpcoming.toDto(), noPlacement.toDto(), arrived.toDto()))
+      assertThat(upcomingRequestForPlacementSlot.captured).isEqualTo(earliestUpcomingPlacement.toDto())
+      assertThat(requestForPlacementHistorySlot.captured).isEqualTo(listOf(pastUpcomingPlacement.toDto(), arrived.toDto()))
+    }
+
+    @Test
+    fun `upcoming arrival date is derived from the placement pending date, followed by request for placement date`() {
+      val rfpWithRequestedDateIn2DaysButPlacementIn10Days = outcome(
+        statusLastUpdated = today.minusDays(5),
+        requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+        requestForPlacementExpectedArrival = today.plusDays(2),
+        placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+        placementExpectedArrival = today.plusDays(10),
+        placementExpectedDeparture = today.plusDays(20),
+      )
+
+      val rfpWithPlacementIn5Days = outcome(
+        statusLastUpdated = today.minusDays(5),
+        requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+        requestForPlacementExpectedArrival = today.plusDays(5),
+        placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+        placementExpectedArrival = today.plusDays(5),
+        placementExpectedDeparture = today.plusDays(8),
+      )
+
+      every { repository.findByCrn(crn) } returns listOf(application)
+      every { outcomeService.getOutcomes(application.id) } returns listOf(rfpWithPlacementIn5Days, rfpWithRequestedDateIn2DaysButPlacementIn10Days)
+
+      val upcomingRequestForPlacementSlot = slot<Cas1ExternalRequestForPlacementOutcomeDto?>()
+      val requestForPlacementHistorySlot = slot<List<Cas1ExternalRequestForPlacementOutcomeDto>>()
+      every {
+        transformer.transformToApplicationV2(
+          application,
+          captureNullable(upcomingRequestForPlacementSlot),
+          capture(requestForPlacementHistorySlot),
+        )
+      } returns transformed
+
+      assertThat(service.getSuitableApplicationByCrn(crn)).isSameAs(transformed)
+
+      assertThat(upcomingRequestForPlacementSlot.captured).isEqualTo(rfpWithPlacementIn5Days.toDto())
+      assertThat(requestForPlacementHistorySlot.captured).isEmpty()
     }
   }
 
@@ -201,12 +312,14 @@ class Cas1ExternalApplicationV2ServiceTest {
   private fun outcome(
     statusLastUpdated: LocalDate,
     requestForPlacementStatus: RequestForPlacementStatus,
+    requestForPlacementExpectedArrival: LocalDate? = null,
     placementStatus: Cas1SpaceBookingStatus? = null,
     placementExpectedArrival: LocalDate? = null,
     placementExpectedDeparture: LocalDate? = null,
   ) = RequestForPlacementOutcome(
     requestForPlacement = Cas1ExternalRequestForPlacementDtoV2Factory()
       .withStatus(requestForPlacementStatus)
+      .withExpectedArrivalDate(requestForPlacementExpectedArrival)
       .produce(),
     placement = placementStatus?.let {
       Cas1ExternalPlacementV2DtoFactory()
