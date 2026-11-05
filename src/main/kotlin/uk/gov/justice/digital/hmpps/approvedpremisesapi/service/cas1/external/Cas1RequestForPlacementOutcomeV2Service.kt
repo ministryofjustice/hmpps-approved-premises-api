@@ -58,9 +58,6 @@ class Cas1RequestForPlacementOutcomeV2Service(
   }
 
   fun getCurrentResidentPlacement(crn: String) = spaceBookingManagementService.findCurrentResidency(crn)?.let { booking ->
-    transformer.transformToPlacement(
-      placement = spaceBookingTransformer.transformToCas1SpaceBookingShortSummary(booking),
-      premises = booking.premises,
-    )
+    transformer.transformToPlacement(booking)
   }
 }

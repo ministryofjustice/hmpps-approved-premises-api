@@ -4,7 +4,6 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -160,19 +159,15 @@ class Cas1RequestForPlacementOutcomeV2ServiceTest {
       every { spaceBookingManagementService.findCurrentResidency("CRN123") } returns null
 
       assertThat(service.getCurrentResidentPlacement("CRN123")).isNull()
-
-      verify(exactly = 0) { spaceBookingTransformer.transformToCas1SpaceBookingShortSummary(any()) }
     }
 
     @Test
     fun `returns the transformed placement for the current residency`() {
       val booking = Cas1SpaceBookingEntityFactory().withPremises(premises).produce()
-      val shortSummary = Cas1SpaceBookingShortSummaryFactory().produce()
       val placementDto = Cas1ExternalPlacementV2DtoFactory().produce()
 
       every { spaceBookingManagementService.findCurrentResidency("CRN123") } returns booking
-      every { spaceBookingTransformer.transformToCas1SpaceBookingShortSummary(booking) } returns shortSummary
-      every { transformer.transformToPlacement(shortSummary, premises) } returns placementDto
+      every { transformer.transformToPlacement(booking) } returns placementDto
 
       assertThat(service.getCurrentResidentPlacement("CRN123")).isEqualTo(placementDto)
     }
