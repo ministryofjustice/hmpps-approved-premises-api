@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ -z "$1" ] || ! [[ "$1" =~ ^(dev|test|preprod|prod)$ ]] || [ -z "$2" ]; then
   echo "Upload files or a directory of files to a pod in a target environment"
   echo "Usage:"
