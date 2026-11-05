@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
@@ -367,6 +368,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
           withSubmittedAt(OffsetDateTime.now())
           withConditionalReleaseDate(LocalDate.now().minusDays(1))
+          withCohort(Cas2Cohort.HDC)
           withServiceOrigin(Cas2ServiceOrigin.BAIL)
         }
 
@@ -790,6 +792,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
+                withCohort(Cas2Cohort.COURT_BAIL)
                 withApplicationOrigin(ApplicationOrigin.courtBail)
                 withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }.id
@@ -938,6 +941,93 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       val uuids = responseBody.map { it.id }.toSet()
       assertThat(uuids).isEqualTo(unSubmittedIds)
+    }
+  }
+
+  @Nested
+  inner class GetToIndexWithConditionalReleaseDateInThePast {
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `applications with conditional release date in the past are not returned for HDC and bail cohorts`(isSubmitted: Boolean) {
+      listOf(Cas2Cohort.HDC, Cas2Cohort.PRISON_BAIL, Cas2Cohort.COURT_BAIL).forEach { cohort ->
+        givenACas2v2DeliusUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            pastReleaseDateApplication(user, offenderDetails.otherIds.crn, cohort, isSubmitted = isSubmitted)
+
+            assertThat(getApplications(jwt, isSubmitted)).isEmpty()
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(Cas2Cohort::class, names = ["HDC", "PRISON_BAIL", "COURT_BAIL"], mode = EnumSource.Mode.EXCLUDE)
+    fun `submitted applications with conditional release date in the past are returned for other cohorts`(cohort: Cas2Cohort) {
+      givenACas2v2DeliusUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val application = pastReleaseDateApplication(user, offenderDetails.otherIds.crn, cohort)
+
+          assertThat(getApplications(jwt, true).map { it.id }).containsExactly(application.id)
+        }
+      }
+    }
+
+    @Test
+    fun `submitted applications with conditional release date in the past are returned when cohort is null`() {
+      givenACas2v2DeliusUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val application = pastReleaseDateApplication(user, offenderDetails.otherIds.crn, null)
+
+          assertThat(getApplications(jwt, true).map { it.id }).containsExactly(application.id)
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(Cas2Cohort::class, names = ["HDC", "PRISON_BAIL", "COURT_BAIL"], mode = EnumSource.Mode.EXCLUDE)
+    fun `abandoned applications with conditional release date in the past are not returned for other cohorts`(cohort: Cas2Cohort) {
+      givenACas2v2DeliusUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          pastReleaseDateApplication(user, offenderDetails.otherIds.crn, cohort, abandonedAt = OffsetDateTime.now())
+
+          assertThat(getApplications(jwt, true)).isEmpty()
+        }
+      }
+    }
+
+    private fun pastReleaseDateApplication(
+      user: Cas2UserEntity,
+      crn: String,
+      cohort: Cas2Cohort?,
+      abandonedAt: OffsetDateTime? = null,
+      isSubmitted: Boolean = true,
+    ) = cas2ApplicationEntityFactory.produceAndPersist {
+      withCreatedByUser(user)
+      withCrn(crn)
+      withData("{}")
+      withCohort(cohort)
+      withAbandonedAt(abandonedAt)
+      withApplicationOrigin(ApplicationOrigin.courtBail)
+      withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      withCreatedAt(OffsetDateTime.now().minusDays(14))
+      withSubmittedAt(if (isSubmitted) OffsetDateTime.now() else null)
+      withConditionalReleaseDate(LocalDate.now().minusDays(1))
+    }
+
+    private fun getApplications(jwt: String, isSubmitted: Boolean): List<Cas2ApplicationSummary> {
+      val rawResponseBody = webTestClient.get()
+        .uri("/cas2/applications?isSubmitted=$isSubmitted")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.cas2.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      return jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
     }
   }
 
