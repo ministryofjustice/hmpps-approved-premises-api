@@ -24,9 +24,25 @@ enum class RequestForPlacementStatus(@get:JsonValue val value: String) {
 
   /**
    * Request for placement is approved and a placement is pending
+   *
+   * A request for placement may be in this state if a placement
+   * was created and subsequently cancelled
    */
   awaitingMatch("awaiting_match"),
+
+  /**
+   * A withdrawn request for placement may have associated
+   * bookings (Which should also be cancelled)
+   *
+   * If a request for placement has at least one booking with
+   * an arrival, it cannot be withdrawn
+   */
   requestWithdrawn("request_withdrawn"),
+
+  /**
+   * At least one active placement (i.e. not cancelled) exists for
+   * this request for placement
+   */
   placementBooked("placement_booked"),
   ;
 
