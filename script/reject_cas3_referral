@@ -48,7 +48,7 @@ echo
 
 # Step 1: Upload CSV file and capture the pod name
 echo "Step 1: Uploading CSV file to pod..."
-UPLOAD_OUTPUT=$(script/pod_upload_seed_file "$ENVIRONMENT" "$LOCAL_CSV_FILE")
+UPLOAD_OUTPUT=$(bash -e script/pod_upload_seed_file "$ENVIRONMENT" "$LOCAL_CSV_FILE")
 echo "$UPLOAD_OUTPUT"
 
 # Extract pod name from the upload output (assuming it's the last word of the output)
