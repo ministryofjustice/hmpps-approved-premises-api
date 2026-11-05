@@ -5,6 +5,14 @@
 To process a seed file against a non-local environment:
 
 - Ensure nobody is deploying a change (or is going to deploy a change shortly.)
+- For CSV files, you can upload the file and run the job in one step, then check the logs as described below. e.g.
+
+  ```shell
+  script/run_remote_seed_job preprod temporary_accommodation_users /path/to/users.csv
+  script/run_remote_seed_job preprod temporary_accommodation_referral_rejection /path/to/referrals.csv
+  ```
+
+- Otherwise, follow the alternative steps
 - Change into the 'script' directory in this project
 - Upload the file (.csv or .xlsx) to the target environments
 

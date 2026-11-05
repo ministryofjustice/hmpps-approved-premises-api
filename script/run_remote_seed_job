@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# script/run_remote_seed_job: Upload a CSV file to a pod in a target environment and run a seed job against it.  e.g.
+#                             script/run_remote_seed_job preprod temporary_accommodation_users /path/to/users.csv
+#
+# The seed job name is a value from the SeedFileType enum
+
+set -e
+
+environment=$1
+job=$2
+file=$3
+
+usage() {
+  echo "Usage: $0 dev|test|preprod|prod seed_job_name local_csv_file"
+  exit 1
+}
+
+if ! [[ "$environment" =~ ^(dev|test|preprod|prod)$ ]]; then
+  echo "Error: Environment must be one of dev, test, preprod or prod"
+  usage
+fi
+
+if [ -z "$job" ]; then
+  echo "Error: You must specify a seed job name"
+  usage
+fi
+
+if [ ! -f "$file" ]; then
+  echo "Error: CSV file '$file' not found"
+  usage
+fi
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+filename=$(basename "$file")
+namespace="hmpps-community-accommodation-$environment"
+
+if [ "$environment" = "prod" ]; then
+  echo "WARNING: You are about to run a seed job on the PRODUCTION environment!"
+  echo "Seed job: $job"
+  echo "CSV file: $file"
+  read -p "Are you sure you want to proceed? [y/N]: " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Cancelled."
+    exit 0
+  fi
+fi
+
+echo "Uploading $file to a pod in $environment..."
+upload_output=$("$script_dir/pod_upload_seed_file" "$environment" "$file")
+echo "$upload_output"
+
+# The job must run on the pod holding the file, which is the last word of the upload output
+pod=$(echo "$upload_output" | tail -n 1 | awk '{print $NF}')
+
+if [ -z "$pod" ]; then
+  echo "Error: Could not determine pod name from upload output"
+  exit 1
+fi
+
+echo "Running seed job $job on pod $pod..."
+kubectl -n "$namespace" exec --stdin --tty "$pod" -- /app/run_seed_job "$job" "$filename"
+
+echo
+echo "Seed job $job requested for $filename on pod $pod in $environment. Check the application logs for the result."
