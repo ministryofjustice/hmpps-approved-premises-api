@@ -15,7 +15,7 @@ class Cas1ExternalRequestForPlacementDtoV2Factory : Factory<Cas1ExternalRequestF
   private var submittedBy: Yielded<Cas1StaffDto> = { Cas1StaffDtoFactory().produce() }
   private var submittedAt: Yielded<LocalDate> = { LocalDate.now() }
   private var statusLastUpdated: Yielded<LocalDateTime> = { LocalDateTime.now() }
-  private var expectedArrivalDate: Yielded<LocalDate?> = { null }
+  private var expectedArrivalDate: Yielded<LocalDate> = { LocalDate.now() }
   private var durationDays: Yielded<Int?> = { null }
   private var decision: Yielded<PlacementApplicationDecisionDto?> = { null }
   private var rejectionReason: Yielded<String?> = { null }
@@ -33,7 +33,7 @@ class Cas1ExternalRequestForPlacementDtoV2Factory : Factory<Cas1ExternalRequestF
     this.submittedAt = { submittedAt }
   }
 
-  fun withExpectedArrivalDate(expectedArrivalDate: LocalDate?) = apply {
+  fun withExpectedArrivalDate(expectedArrivalDate: LocalDate) = apply {
     this.expectedArrivalDate = { expectedArrivalDate }
   }
 

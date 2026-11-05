@@ -109,9 +109,10 @@ class Cas1ExternalApplicationV2ServiceTest {
     fun `has no upcoming request for placement outcome when request for placement is not in a pending state, with no placement`(
       rfpStatus: RequestForPlacementStatus,
     ) {
-      val noPlacement = outcome(
+      val noPlacement = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(3),
         requestForPlacementStatus = rfpStatus,
+        requestForPlacementExpectedArrival = today.minusDays(20),
         placementStatus = null,
       )
 
@@ -143,7 +144,7 @@ class Cas1ExternalApplicationV2ServiceTest {
     fun `upcoming requests for placement outcome set to request for placement when pending outcome, with no placement`(
       rfpStatus: RequestForPlacementStatus,
     ) {
-      val pending = outcome(
+      val pending = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(3),
         requestForPlacementStatus = rfpStatus,
         requestForPlacementExpectedArrival = today.plusDays(25),
@@ -171,15 +172,18 @@ class Cas1ExternalApplicationV2ServiceTest {
 
     @Test
     fun `has no upcoming request for placement outcome when request for placement is not pending`() {
-      val arrived = outcome(
+      val arrived = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(20),
         requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+        requestForPlacementExpectedArrival = today.minusDays(20),
         placementStatus = Cas1SpaceBookingStatus.ARRIVED,
         placementExpectedArrival = today.minusDays(20),
         placementExpectedDeparture = today.minusDays(10),
       )
-      val noPlacement = outcome(
+
+      val noPlacement = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(3),
+        requestForPlacementExpectedArrival = today.minusDays(1),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
         placementStatus = null,
       )
@@ -205,7 +209,7 @@ class Cas1ExternalApplicationV2ServiceTest {
 
     @Test
     fun `uses earliest upcoming placement as upcoming and excludes all pending arrivals from history, newest first`() {
-      val laterUpcomingPlacement = outcome(
+      val laterUpcomingPlacement = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(5),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
         requestForPlacementExpectedArrival = today.plusDays(25),
@@ -213,28 +217,31 @@ class Cas1ExternalApplicationV2ServiceTest {
         placementExpectedArrival = today.plusDays(30),
         placementExpectedDeparture = today.plusDays(40),
       )
-      val earliestUpcomingPlacement = outcome(
+      val earliestUpcomingPlacement = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(9),
+        requestForPlacementExpectedArrival = today.minusDays(10),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
         placementStatus = Cas1SpaceBookingStatus.UPCOMING,
         placementExpectedArrival = today,
         placementExpectedDeparture = today.plusDays(1),
       )
-      val pastUpcomingPlacement = outcome(
+      val pastUpcomingPlacement = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(1),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
+        requestForPlacementExpectedArrival = today.minusDays(1),
         placementStatus = Cas1SpaceBookingStatus.UPCOMING,
         placementExpectedArrival = today.minusDays(1),
         placementExpectedDeparture = today,
       )
-      val arrived = outcome(
+      val arrived = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(20),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
+        requestForPlacementExpectedArrival = today.minusDays(21),
         placementStatus = Cas1SpaceBookingStatus.ARRIVED,
         placementExpectedArrival = today.minusDays(20),
         placementExpectedDeparture = today.minusDays(10),
       )
-      val noPlacement = outcome(
+      val noPlacement = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(3),
         requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
         requestForPlacementExpectedArrival = today.plusDays(55),
@@ -262,7 +269,7 @@ class Cas1ExternalApplicationV2ServiceTest {
 
     @Test
     fun `upcoming arrival date is derived from the placement pending date, followed by request for placement date`() {
-      val rfpWithRequestedDateIn2DaysButPlacementIn10Days = outcome(
+      val rfpWithRequestedDateIn2DaysButPlacementIn10Days = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(5),
         requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
         requestForPlacementExpectedArrival = today.plusDays(2),
@@ -271,7 +278,7 @@ class Cas1ExternalApplicationV2ServiceTest {
         placementExpectedDeparture = today.plusDays(20),
       )
 
-      val rfpWithPlacementIn5Days = outcome(
+      val rfpWithPlacementIn5Days = requestForPlacementOutcome(
         statusLastUpdated = today.minusDays(5),
         requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
         requestForPlacementExpectedArrival = today.plusDays(5),
@@ -309,10 +316,10 @@ class Cas1ExternalApplicationV2ServiceTest {
 
   private fun RequestForPlacementOutcome.toDto() = Cas1ExternalRequestForPlacementOutcomeDto(requestForPlacement, placement)
 
-  private fun outcome(
+  private fun requestForPlacementOutcome(
     statusLastUpdated: LocalDate,
     requestForPlacementStatus: RequestForPlacementStatus,
-    requestForPlacementExpectedArrival: LocalDate? = null,
+    requestForPlacementExpectedArrival: LocalDate,
     placementStatus: Cas1SpaceBookingStatus? = null,
     placementExpectedArrival: LocalDate? = null,
     placementExpectedDeparture: LocalDate? = null,

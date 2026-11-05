@@ -44,7 +44,7 @@ data class Cas1ExternalRequestForPlacementDtoV2(
   val submittedBy: Cas1StaffDto,
   val submittedAt: LocalDate,
   @Schema(description = "The requested arrival date. This may be different to the booked arrival date (check placements for this)")
-  val expectedArrivalDate: LocalDate?,
+  val expectedArrivalDate: LocalDate,
   val durationDays: Int?,
   val decision: PlacementApplicationDecisionDto?,
   val rejectionReason: String?,
