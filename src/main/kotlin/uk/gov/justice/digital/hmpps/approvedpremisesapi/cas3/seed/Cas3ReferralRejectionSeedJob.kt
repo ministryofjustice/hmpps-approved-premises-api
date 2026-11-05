@@ -31,7 +31,6 @@ class Cas3ReferralRejectionSeedJob(
     "is_withdrawn",
     "delius_username",
   ),
-  runInTransaction = false,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -78,7 +77,7 @@ class Cas3ReferralRejectionSeedJob(
         error("Failed to update assessment with id ${row.assessmentId}")
       }
 
-      log.info("Assessment with id ${row.assessmentId} has been successfully rejected")
+      log.info("Assessment with id ${row.assessmentId} processed for rejection, this will only be saved if the seed job completes")
     } else {
       error("Assessment with id ${row.assessmentId} is not a temporary accommodation assessment")
     }
