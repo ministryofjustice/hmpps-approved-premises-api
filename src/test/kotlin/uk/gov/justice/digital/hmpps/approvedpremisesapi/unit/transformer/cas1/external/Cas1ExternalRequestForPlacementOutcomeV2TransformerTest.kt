@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingShortSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacementFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1StaffDtoFactory
@@ -22,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.externa
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -136,6 +139,96 @@ class Cas1ExternalRequestForPlacementOutcomeV2TransformerTest {
 
       assertThat(result.canonicalArrivalDate).isEqualTo(LocalDate.of(2026, 7, 1))
       assertThat(result.canonicalDepartureDate).isEqualTo(LocalDate.of(2026, 7, 20))
+    }
+
+    @Nested
+    inner class FromSpaceBookingEntity {
+
+      @Test
+      fun `maps all fields for an arrived booking`() {
+        val booking = Cas1SpaceBookingEntityFactory()
+          .withPremises(premises)
+          .withExpectedArrivalDate(LocalDate.of(2026, 7, 1))
+          .withExpectedDepartureDate(LocalDate.of(2026, 7, 20))
+          .withCanonicalArrivalDate(LocalDate.of(2026, 7, 2))
+          .withCanonicalDepartureDate(LocalDate.of(2026, 7, 19))
+          .withActualArrivalDate(LocalDate.of(2026, 7, 3))
+          .withActualArrivalTime(LocalTime.of(10, 30))
+          .withActualDepartureDate(null)
+          .produce()
+
+        val result = transformer.transformToPlacement(booking)
+
+        assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.ARRIVED)
+        assertThat(result.statusLastUpdated).isEqualTo(LocalDateTime.of(2026, 7, 3, 10, 30))
+        assertThat(result.canonicalArrivalDate).isEqualTo(LocalDate.of(2026, 7, 2))
+        assertThat(result.canonicalDepartureDate).isEqualTo(LocalDate.of(2026, 7, 19))
+        assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.of(2026, 7, 1))
+        assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.of(2026, 7, 20))
+        assertThat(result.actualArrivalDate).isEqualTo(LocalDate.of(2026, 7, 3))
+        assertThat(result.actualDepartureDate).isNull()
+        assertThat(result.cancellationReason).isNull()
+        assertThat(result.premises).isEqualTo(
+          Cas1ExternalPremisesV2Dto(premises.addressLine1, premises.addressLine2, premises.town, premises.postcode),
+        )
+      }
+
+      @Test
+      fun `maps status derived from the booking`() {
+        val departed = Cas1SpaceBookingEntityFactory()
+          .withPremises(premises)
+          .withActualArrivalDate(LocalDate.of(2026, 7, 3))
+          .withActualDepartureDate(LocalDate.of(2026, 7, 10))
+          .produce()
+        val upcoming = Cas1SpaceBookingEntityFactory()
+          .withPremises(premises)
+          .withActualArrivalDate(null)
+          .withActualDepartureDate(null)
+          .produce()
+
+        assertThat(transformer.transformToPlacement(departed).status).isEqualTo(Cas1SpaceBookingStatus.DEPARTED)
+        assertThat(transformer.transformToPlacement(upcoming).status).isEqualTo(Cas1SpaceBookingStatus.UPCOMING)
+      }
+
+      @Test
+      fun `no cancellation reason if no cancellation`() {
+        val booking = Cas1SpaceBookingEntityFactory()
+          .withPremises(premises)
+          .withCancellationOccurredAt(null)
+          .withCancellationRecordedAt(null)
+          .withCancellationReason(null)
+          .withCancellationReasonNotes(null)
+          .produce()
+
+        val result = transformer.transformToPlacement(booking)
+
+        assertThat(result.cancellationReason).isNull()
+      }
+
+      @Test
+      fun `uses cancellation reason name when reason is not other`() {
+        val booking = cancelledBookingWith(reasonName = "Oops", reasonNotes = "Because")
+
+        val result = transformer.transformToPlacement(booking)
+
+        assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.CANCELLED)
+        assertThat(result.cancellationReason).isEqualTo("Oops")
+      }
+
+      @Test
+      fun `uses cancellation reason notes when reason is other`() {
+        val booking = cancelledBookingWith(reasonName = CancellationReasonRepository.CAS1_OTHER_NAME, reasonNotes = "Because")
+
+        assertThat(transformer.transformToPlacement(booking).cancellationReason).isEqualTo("Because")
+      }
+
+      private fun cancelledBookingWith(reasonName: String, reasonNotes: String) = Cas1SpaceBookingEntityFactory()
+        .withPremises(premises)
+        .withCancellationOccurredAt(LocalDate.of(2026, 6, 1))
+        .withCancellationRecordedAt(Instant.parse("2026-06-01T10:00:00Z"))
+        .withCancellationReason(CancellationReasonEntityFactory().withName(reasonName).produce())
+        .withCancellationReasonNotes(reasonNotes)
+        .produce()
     }
 
     private fun placementCancelledWith(reasonName: String, reasonNotes: String) = Cas1SpaceBookingShortSummaryFactory()

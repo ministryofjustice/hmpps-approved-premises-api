@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalReq
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalRequestForPlacementOutcomeV2Transformer
 import java.time.LocalDate
 import java.util.UUID
@@ -15,6 +17,8 @@ class Cas1RequestForPlacementOutcomeV2Service(
   private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
   private val cas1PremisesService: Cas1PremisesService,
   private val transformer: Cas1ExternalRequestForPlacementOutcomeV2Transformer,
+  private val spaceBookingManagementService: Cas1SpaceBookingManagementService,
+  private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
 ) {
 
   /**
@@ -51,5 +55,9 @@ class Cas1RequestForPlacementOutcomeV2Service(
         }
       }
     }
+  }
+
+  fun getCurrentResidentPlacement(crn: String) = spaceBookingManagementService.findCurrentResidency(crn)?.let { booking ->
+    transformer.transformToPlacement(booking)
   }
 }

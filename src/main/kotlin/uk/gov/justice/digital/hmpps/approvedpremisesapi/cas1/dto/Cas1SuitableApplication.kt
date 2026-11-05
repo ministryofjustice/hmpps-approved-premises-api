@@ -10,6 +10,11 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
+data class Cas1ExternalCaseSummaryDto(
+  val currentApplication: Cas1ExternalApplicationV2Dto?,
+  val residence: Cas1ExternalPlacementV2Dto?,
+)
+
 data class Cas1ExternalApplicationV2Dto(
   val uiUrl: String,
   val id: UUID,

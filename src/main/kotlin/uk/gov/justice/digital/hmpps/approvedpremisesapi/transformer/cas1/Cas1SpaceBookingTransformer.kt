@@ -302,12 +302,12 @@ class Cas1SpaceBookingTransformer(
     hasArrival -> Cas1SpaceBookingStatus.ARRIVED
     else -> Cas1SpaceBookingStatus.UPCOMING
   }
+}
 
-  private fun Cas1SpaceBookingEntity.Status.toApiType() = when (this) {
-    Cas1SpaceBookingEntity.Status.CANCELLED -> Cas1SpaceBookingStatus.CANCELLED
-    Cas1SpaceBookingEntity.Status.NOT_ARRIVED -> Cas1SpaceBookingStatus.NOT_ARRIVED
-    Cas1SpaceBookingEntity.Status.DEPARTED -> Cas1SpaceBookingStatus.DEPARTED
-    Cas1SpaceBookingEntity.Status.ARRIVED -> Cas1SpaceBookingStatus.ARRIVED
-    Cas1SpaceBookingEntity.Status.UPCOMING -> Cas1SpaceBookingStatus.UPCOMING
-  }
+fun Cas1SpaceBookingEntity.Status.toApiType() = when (this) {
+  Cas1SpaceBookingEntity.Status.CANCELLED -> Cas1SpaceBookingStatus.CANCELLED
+  Cas1SpaceBookingEntity.Status.NOT_ARRIVED -> Cas1SpaceBookingStatus.NOT_ARRIVED
+  Cas1SpaceBookingEntity.Status.DEPARTED -> Cas1SpaceBookingStatus.DEPARTED
+  Cas1SpaceBookingEntity.Status.ARRIVED -> Cas1SpaceBookingStatus.ARRIVED
+  Cas1SpaceBookingEntity.Status.UPCOMING -> Cas1SpaceBookingStatus.UPCOMING
 }

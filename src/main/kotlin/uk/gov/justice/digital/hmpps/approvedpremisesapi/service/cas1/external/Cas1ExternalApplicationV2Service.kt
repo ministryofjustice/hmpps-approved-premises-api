@@ -72,6 +72,8 @@ class Cas1ExternalApplicationV2Service(
     )
   }
 
+  fun getCurrentResidentPlacement(crn: String) = requestForPlacementOutcomeV2Service.getCurrentResidentPlacement(crn)
+
   private fun RequestForPlacementOutcome.toDto() = Cas1ExternalRequestForPlacementOutcomeDto(requestForPlacement, placement)
 
   private fun RequestForPlacementOutcome.pendingArrivalDate() = placement?.pendingArrivalDate() ?: requestForPlacement.pendingArrivalDate()
