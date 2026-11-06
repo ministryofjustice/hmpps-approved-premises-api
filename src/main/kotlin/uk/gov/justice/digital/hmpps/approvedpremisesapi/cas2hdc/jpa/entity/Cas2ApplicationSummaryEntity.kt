@@ -21,29 +21,29 @@ interface Cas2ApplicationSummaryRepository :
   JpaRepository<Cas2ApplicationSummaryEntity, String>,
   JpaSpecificationExecutor<Cas2ApplicationSummaryEntity> {
   @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId and ase.serviceOrigin = :serviceOrigin")
-  fun findInProgressApplications(userId: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
+  fun findInProgressApplications(userId: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummary>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.allocatedPomUserId = :userId and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findApplicationsAssignedToUser(userId: UUID, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
+  fun findApplicationsAssignedToUser(userId: UUID, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummary>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is not null and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findAllocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
+  fun findAllocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummary>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is null and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findUnallocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
+  fun findUnallocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummary>
 
-  fun findAllByServiceOriginAndIdIn(serviceOrigin: String, id: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findAllByServiceOriginAndIdIn(serviceOrigin: String, id: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummary>
 
-  fun findByServiceOriginAndSubmittedAtIsNotNull(serviceOrigin: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findByServiceOriginAndSubmittedAtIsNotNull(serviceOrigin: String, pageable: Pageable): Page<Cas2ApplicationSummary>
 }
 
 /**
@@ -100,3 +100,49 @@ data class Cas2ApplicationSummaryEntity(
   @Enumerated(EnumType.STRING)
   var cohort: Cas2Cohort? = null,
 )
+
+fun Cas2ApplicationSummaryEntity.toCas2ApplicationSummary(): Cas2ApplicationSummary = Cas2ApplicationSummaryData(
+  id = id,
+  crn = crn,
+  nomsNumber = nomsNumber,
+  userId = userId,
+  userName = userName,
+  allocatedPomUserId = allocatedPomUserId,
+  allocatedPomName = allocatedPomName,
+  createdAt = createdAt,
+  submittedAt = submittedAt,
+  abandonedAt = abandonedAt,
+  hdcEligibilityDate = hdcEligibilityDate,
+  latestStatusUpdateLabel = latestStatusUpdateLabel,
+  latestStatusUpdateStatusId = latestStatusUpdateStatusId,
+  prisonCode = prisonCode,
+  currentPrisonCode = currentPrisonCode,
+  assignmentDate = assignmentDate,
+  bailHearingDate = bailHearingDate,
+  applicationOrigin = applicationOrigin,
+  serviceOrigin = serviceOrigin,
+  cohort = cohort,
+)
+
+private data class Cas2ApplicationSummaryData(
+  override val id: UUID,
+  override val crn: String,
+  override val nomsNumber: String,
+  override val userId: String,
+  override val userName: String,
+  override val allocatedPomUserId: UUID?,
+  override val allocatedPomName: String?,
+  override val createdAt: OffsetDateTime,
+  override val submittedAt: OffsetDateTime?,
+  override val abandonedAt: OffsetDateTime?,
+  override val hdcEligibilityDate: LocalDate?,
+  override val latestStatusUpdateLabel: String?,
+  override val latestStatusUpdateStatusId: String?,
+  override val prisonCode: String,
+  override val currentPrisonCode: String?,
+  override val assignmentDate: OffsetDateTime?,
+  override val bailHearingDate: LocalDate?,
+  override val applicationOrigin: String?,
+  override val serviceOrigin: String?,
+  override val cohort: Cas2Cohort?,
+) : Cas2ApplicationSummary
