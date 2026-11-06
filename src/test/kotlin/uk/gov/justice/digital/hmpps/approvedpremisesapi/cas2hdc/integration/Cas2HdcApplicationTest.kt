@@ -21,12 +21,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
@@ -52,7 +54,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.math.sign
 
@@ -598,6 +603,202 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
       assertThat(response.filter { it.submittedAt != null }.size).isEqualTo(1)
       val ids = response.map { it.id }
       assertThat(ids).containsExactlyInAnyOrderElementsOf(expectedApplications.map({ it.id }))
+    }
+  }
+
+  @Nested
+  inner class GetApplicationSummariesLatestStatusAndAssignment {
+
+    @Nested
+    inner class TerminalStatusCutOff {
+
+      @ParameterizedTest
+      @EnumSource(Cas2AssessmentStatus::class, names = ["WITHDRAWN", "CANCELLED", "AWAITING_ARRIVAL"])
+      fun `application is returned when its closed status was set 32 days ago`(status: Cas2AssessmentStatus) {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = allocatedApplication(user, offenderDetails.otherIds.crn)
+            givenAStatusUpdate(application, UUID.randomUUID(), status, middayDaysAgo(32))
+
+            assertThat(getAllocatedApplications(jwt).map { it.id }).containsExactly(application.id)
+          }
+        }
+      }
+
+      @ParameterizedTest
+      @EnumSource(Cas2AssessmentStatus::class, names = ["WITHDRAWN", "CANCELLED", "AWAITING_ARRIVAL"])
+      fun `application is not returned when its closed status was set 33 days ago`(status: Cas2AssessmentStatus) {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = allocatedApplication(user, offenderDetails.otherIds.crn)
+            givenAStatusUpdate(application, UUID.randomUUID(), status, middayDaysAgo(33))
+
+            assertThat(getAllocatedApplications(jwt)).isEmpty()
+          }
+        }
+      }
+
+      @ParameterizedTest
+      @EnumSource(Cas2AssessmentStatus::class, names = ["WITHDRAWN", "CANCELLED", "AWAITING_ARRIVAL"], mode = EnumSource.Mode.EXCLUDE)
+      fun `application is returned when a non-terminal status was set 33 days ago`(status: Cas2AssessmentStatus) {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = allocatedApplication(user, offenderDetails.otherIds.crn)
+            givenAStatusUpdate(application, UUID.randomUUID(), status, middayDaysAgo(33))
+
+            assertThat(getAllocatedApplications(jwt).map { it.id }).containsExactly(application.id)
+          }
+        }
+      }
+
+      private fun middayDaysAgo(days: Long): OffsetDateTime = LocalDate.now()
+        .minusDays(days)
+        .atTime(LocalTime.NOON)
+        .atZone(ZoneId.systemDefault())
+        .toOffsetDateTime()
+    }
+
+    @Nested
+    inner class LatestStatusUpdate {
+
+      @Test
+      fun `the most recent status update is returned`() {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = allocatedApplication(user, offenderDetails.otherIds.crn)
+            val (lowerId, higherId) = orderedIds()
+            val now = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
+            givenAStatusUpdate(application, lowerId, Cas2AssessmentStatus.AWAITING_DECISION, createdAt = now)
+            givenAStatusUpdate(application, higherId, Cas2AssessmentStatus.MORE_INFO_REQUESTED, createdAt = now.minusDays(1))
+
+            val summary = getAllocatedApplications(jwt).single()
+
+            assertThat(summary.id).isEqualTo(application.id)
+            assertThat(summary.latestStatusUpdate!!.statusId).isEqualTo(Cas2AssessmentStatus.AWAITING_DECISION.id)
+            assertThat(summary.latestStatusUpdate.label).isEqualTo(Cas2AssessmentStatus.AWAITING_DECISION.label)
+          }
+        }
+      }
+    }
+
+    @Nested
+    inner class LatestAssignment {
+
+      @Test
+      fun `the most recent assignment is used`() {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val otherPom = cas2UserEntityFactory.produceAndPersist()
+            val application = submittedApplication(user, offenderDetails.otherIds.crn)
+            val (lowerId, higherId) = orderedIds()
+            val now = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
+            givenAssignments(
+              application,
+              assignment(application, lowerId, user, createdAt = now),
+              assignment(application, higherId, otherPom, createdAt = now.minusDays(3)),
+            )
+
+            val summary = getAllocatedApplications(jwt).single()
+
+            assertThat(summary.id).isEqualTo(application.id)
+            assertThat(summary.allocatedPomUserId).isEqualTo(user.id)
+            assertThat(summary.assignmentDate).isEqualTo(now.toLocalDate())
+          }
+        }
+      }
+
+      @Test
+      fun `an application is not returned when it was previously, but is no longer, assigned to the user`() {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val otherPom = cas2UserEntityFactory.produceAndPersist()
+            val application = submittedApplication(user, offenderDetails.otherIds.crn)
+            val (lowerId, higherId) = orderedIds()
+            val now = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
+            givenAssignments(
+              application,
+              assignment(application, lowerId, otherPom, createdAt = now),
+              assignment(application, higherId, user, createdAt = now.minusDays(3)),
+            )
+
+            assertThat(getAllocatedApplications(jwt)).isEmpty()
+          }
+        }
+      }
+
+      private fun assignment(
+        application: Cas2ApplicationEntity,
+        id: UUID,
+        allocatedPomUser: Cas2UserEntity,
+        createdAt: OffsetDateTime,
+      ) = Cas2ApplicationAssignmentEntity(
+        id = id,
+        application = application,
+        prisonCode = allocatedPomUser.activeNomisCaseloadId ?: "PRI",
+        createdAt = createdAt,
+        allocatedPomUser = allocatedPomUser,
+      )
+
+      private fun givenAssignments(application: Cas2ApplicationEntity, vararg assignments: Cas2ApplicationAssignmentEntity) {
+        application.applicationAssignments.addAll(assignments)
+        realApplicationRepository.save(application)
+      }
+    }
+
+    private fun submittedApplication(user: Cas2UserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
+      withCreatedByUser(user)
+      withCrn(crn)
+      withData("{}")
+      withCreatedAt(OffsetDateTime.now().minusDays(40))
+      withSubmittedAt(OffsetDateTime.now().minusDays(40))
+      withReferringPrisonCode(user.activeNomisCaseloadId!!)
+      withConditionalReleaseDate(LocalDate.now().plusDays(1))
+    }
+
+    private fun allocatedApplication(user: Cas2UserEntity, crn: String): Cas2ApplicationEntity {
+      val application = submittedApplication(user, crn)
+      application.createApplicationAssignment(user.activeNomisCaseloadId!!, user)
+      return realApplicationRepository.save(application)
+    }
+
+    private fun givenAStatusUpdate(
+      application: Cas2ApplicationEntity,
+      id: UUID,
+      status: Cas2AssessmentStatus,
+      createdAt: OffsetDateTime,
+    ) = cas2StatusUpdateEntityFactory.produceAndPersist {
+      withId(id)
+      withApplication(application)
+      withStatusId(status.id)
+      withLabel(status.label)
+      withDescription(status.description)
+      withCreatedAt(createdAt)
+      withAssessor(
+        cas2UserEntityFactory.produceAndPersist {
+          withUserType(Cas2UserType.EXTERNAL)
+        },
+      )
+    }
+
+    private fun getAllocatedApplications(jwt: String) = webTestClient.get()
+      .uri("/cas2-hdc/applications?assignmentType=${AssignmentType.ALLOCATED.value}")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.cas2.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsListOfObjects<Cas2HdcApplicationSummary>()
+
+    /**
+     * Returns two random ids as (lower, higher) using Postgres' uuid ordering (unsigned byte-wise, i.e. the hex string),
+     * so tests can prove the latest record is chosen by created at rather than by id.
+     */
+    private fun orderedIds(): Pair<UUID, UUID> {
+      val ids = listOf(UUID.randomUUID(), UUID.randomUUID()).sortedBy { it.toString() }
+      return ids[0] to ids[1]
     }
   }
 
