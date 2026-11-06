@@ -69,15 +69,14 @@ class Cas2OffenderService(
 
     val caseSummary = caseSummaryList[0]
 
-    val isVisible = laoService.isVisibleForCaseSummaries(listOf(caseSummary), userProvider().cas2LaoStrategy()).values.singleOrNull()
+    val isVisible = laoService.isVisibleForCaseSummary(caseSummary, userProvider().cas2LaoStrategy())
 
     return when (isVisible) {
       true -> Cas2v2OffenderSearchResult.Success.Full(
         nomisIdOrCrn = nomisIdOrCrn,
         person = cas2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary, tierService.getTier(caseSummary.crn)),
       )
-
-      else -> Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn)
+      false -> Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn)
     }
   }
 
