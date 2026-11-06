@@ -258,7 +258,7 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetPersonByNomisIdOrCrn {
+  inner class NomisUser {
 
     @ParameterizedTest(name = "currentExclusion={0}, currentRestriction={1} -> {2}")
     @CsvSource(
@@ -344,10 +344,6 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
       assertThat(result.nomisIdOrCrn).isEqualTo(crn)
       apDeliusContextVerifyUserAccessCalls(times = 0)
     }
-  }
-
-  @Nested
-  inner class GetPersonSummaries {
 
     private fun givenACas2LaoStrategy(): LaoStrategy {
       val laoStrategy = givenACas2v2NomisUser().cas2LaoStrategy()
