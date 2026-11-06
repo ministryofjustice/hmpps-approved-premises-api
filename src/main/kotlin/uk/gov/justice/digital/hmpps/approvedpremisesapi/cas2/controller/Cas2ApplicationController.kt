@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -25,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
@@ -39,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary as Cas2ApplicationSummaryDto
 
 @Cas2Controller
 class Cas2ApplicationController(
@@ -64,7 +64,7 @@ class Cas2ApplicationController(
     )
     @RequestParam limitByUser: Boolean?,
     @RequestParam crnOrNomsNumber: String?,
-  ): ResponseEntity<List<Cas2ApplicationSummary>> {
+  ): ResponseEntity<List<Cas2ApplicationSummaryDto>> {
     val user = userService.getUserForRequest()
 
     val effectiveLimitByUser = limitByUser ?: true
@@ -186,8 +186,8 @@ class Cas2ApplicationController(
 
   private fun getPersonNamesAndTransformToSummaries(
     laoStrategy: LaoStrategy,
-    applicationSummaries: List<Cas2ApplicationSummaryEntity>,
-  ): List<Cas2ApplicationSummary> {
+    applicationSummaries: List<Cas2ApplicationSummary>,
+  ): List<Cas2ApplicationSummaryDto> {
     val crns = applicationSummaries.map { it.crn }
 
     val personSummaries = cas2OffenderService.getPersonSummaries(laoStrategy, crns)
