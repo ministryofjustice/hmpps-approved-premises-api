@@ -134,36 +134,34 @@ Table: `cas_2_users` | Entity: `Cas2UserEntity`
 
 These entities are backed by database views or native queries; they are read-only and not physical tables.
 
-### cas_2_application_live_summary
+### Cas2ApplicationSummary
 
-Table: `cas_2_application_live_summary` (view) | Entity: `Cas2ApplicationSummaryEntity` — [source](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2/jpa/entity/Cas2ApplicationSummaryEntity.kt)
+Native query projection | Interface: `Cas2ApplicationSummary` — [source](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2hdc/jpa/entity/Cas2ApplicationSummaryRepository.kt)
 
-View-backed entity created by `CREATE VIEW` migration. Read-only projection providing a summary of the current state of CAS2 applications (combining data from `cas_2_applications`, `cas_2_assessments`, `cas_2_status_updates`, and user data). Supports efficient querying of application lists with status and assignment details.
+Read-only summary of CAS2 applications returned by the native queries in `Cas2ApplicationSummaryRepository`. Each application in `cas_2_applications` is joined to its latest `cas_2_status_updates` row, its latest `cas_2_application_assignments` row and the relevant `cas_2_users`. Abandoned applications, applications without a status in the HDC/bail cohorts whose conditional release date has passed, and applications whose latest status (withdrawn, cancelled or awaiting arrival) was set 32 or more days ago are excluded.
 
-See [db/migration/all/](../../src/main/resources/db/migration/all) for the view creation migration (e.g. `20240515100000__create_cas_2_summary_views.sql`).
+This replaces the `cas_2_application_summary` and `cas_2_application_live_summary` views. The views are no longer used by the application but are retained so that the previous release keeps working during rollout and rollback; they will be dropped in a follow-up release.
 
-| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
-|--------|-----------|--------|----------|-----|-------------|--------------|-------|
-| `id` | uuid | UUID | no | PK |  |  | View-mapped entity (cas_2_application_summary / _live) |
-| `crn` | text | String | no |  |  |  |  |
-| `noms_number` | text | String | no |  |  |  |  |
-| `created_by_cas2_user_id` | text | String | no |  |  |  |  |
-| `created_by_cas2_user_name` | text | String | no |  |  |  |  |
-| `allocated_pom_cas_2_user_id` | uuid | UUID? | yes |  |  |  |  |
-| `allocated_pom_cas_2_name` | text | String? | yes |  |  |  |  |
-| `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
-| `submitted_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
-| `abandoned_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
-| `hdc_eligibility_date` | date | LocalDate? | yes |  |  |  |  |
-| `label` | text | String? | yes |  |  |  |  |
-| `status_id` | text | String? | yes |  |  |  |  |
-| `referring_prison_code` | text | String | no |  |  |  |  |
-| `current_prison_code` | text | String? | yes |  |  |  |  |
-| `assignment_date` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
-| `bail_hearing_date` | date | LocalDate? | yes |  |  |  |  |
-| `application_origin` | text | String? | yes |  |  |  |  |
-| `service_origin` | text | String? | yes |  |  |  |  |
-| `cohort` | text | Cas2Cohort? | yes |  | HDC / PRISON_BAIL / COURT_BAIL / ATCR / HCRD / HEFR / ISC / RARR / FROM_AP |  |  |
+| Property | Source | Kotlin | Nullable |
+|----------|--------|--------|----------|
+| `id` | `cas_2_applications.id` | UUID | no |
+| `crn` | `cas_2_applications.crn` | String | no |
+| `nomsNumber` | `cas_2_applications.noms_number` | String? | yes |
+| `userId` | `cas_2_applications.created_by_cas2_user_id` | UUID | no |
+| `userName` | `cas_2_users.name` (creator) | String | no |
+| `allocatedPomUserId` | latest `cas_2_application_assignments.allocated_pom_cas_2_user_id` | UUID? | yes |
+| `allocatedPomName` | `cas_2_users.name` (allocated POM) | String? | yes |
+| `createdAt` | `cas_2_applications.created_at` | Instant | no |
+| `submittedAt` | `cas_2_applications.submitted_at` | Instant? | yes |
+| `hdcEligibilityDate` | `cas_2_applications.hdc_eligibility_date` | LocalDate? | yes |
+| `latestStatusUpdateLabel` | latest `cas_2_status_updates.label` | String? | yes |
+| `latestStatusUpdateStatusId` | latest `cas_2_status_updates.status_id` | UUID? | yes |
+| `prisonCode` | `cas_2_applications.referring_prison_code` | String? | yes |
+| `currentPrisonCode` | latest `cas_2_application_assignments.prison_code` | String? | yes |
+| `assignmentDate` | latest `cas_2_application_assignments.created_at` | Instant? | yes |
+| `bailHearingDate` | `cas_2_applications.bail_hearing_date` | LocalDate? | yes |
+| `applicationOrigin` | `cas_2_applications.application_origin` | String? | yes |
+| `cohort` | `cas_2_applications.cohort` | Cas2Cohort? | yes |
 
 ## Sources
 
