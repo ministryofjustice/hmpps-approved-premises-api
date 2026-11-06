@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -34,7 +35,13 @@ class Cas2OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPersonByNomisIdOrCrn(nomisIdOrCrn: String): Cas2v2OffenderSearchResult {
+  fun getPersonByNomisIdOrCrn(
+    nomisIdOrCrn: String,
+  ): Cas2v2OffenderSearchResult = getPersonByNomisIdOrCrnForUser(nomisIdOrCrn) {
+    cas2UserService.getUserForRequest()
+  }
+
+  fun getPersonByNomisIdOrCrnForUser(nomisIdOrCrn: String, userProvider: () -> Cas2UserEntity): Cas2v2OffenderSearchResult {
     fun logFailedResponse(probationResponse: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomisIdOrCrn", probationResponse.toException())
 
     val caseSummaryList = when (val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))) {
@@ -62,7 +69,7 @@ class Cas2OffenderService(
 
     val caseSummary = caseSummaryList[0]
 
-    val isVisible = laoService.isVisibleForCaseSummaries(listOf(caseSummary), cas2UserService.getUserForRequest().cas2LaoStrategy()).values.singleOrNull()
+    val isVisible = laoService.isVisibleForCaseSummaries(listOf(caseSummary), userProvider().cas2LaoStrategy()).values.singleOrNull()
 
     return when (isVisible) {
       true -> Cas2v2OffenderSearchResult.Success.Full(
