@@ -12,9 +12,6 @@ import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelpe
 import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarJpaEntitiesTest
 import javax.sql.DataSource
 
-/**
- * For information on SAR testing, see doc/how-to/sar-test-fixture-guide.md
- */
 class SarIntegrationTest : IntegrationTestBase() {
 
   @Autowired
@@ -26,6 +23,16 @@ class SarIntegrationTest : IntegrationTestBase() {
   @Autowired
   lateinit var entityManager: EntityManager
 
+  /**
+   * High level basic tests of the SAR endpoints
+   *
+   * Substantial endpoints tests that verifying data and template responses are defined per CAS:
+   *
+   * * [uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar.Cas1SarComplianceTest]
+   * * [uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar.Cas2SarComplianceTest]
+   * * [uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2HdcSarComplianceTest]
+   * * [uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar.Cas3SarComplianceTest]
+   */
   @Nested
   inner class TemplateTest {
 
@@ -70,12 +77,33 @@ class SarIntegrationTest : IntegrationTestBase() {
     }
   }
 
+  /**
+   * Fails if the latest flyway schema version doesn't match the 'expected-flyway-schema-version'
+   * value in application-test-sar.yml
+   *
+   * The intention of this test is to make you think about whether an update to SAR template
+   * is required when the database schema changes
+   *
+   * Once that decision has been made, fix this test by running `./gradlew updateSarSchema`
+   *
+   * For more information see docs/how-to/subject-access-requests.md
+   */
   @Nested
   inner class FlywaySchemaTest : SarFlywaySchemaTest {
     override fun getDataSourceInstance() = dataSource
     override fun getSarHelper() = sarIntegrationTestHelper
   }
 
+  /**
+   * Fails if the persisted snapshot of the entity model match the value in sar/cas-entities-schema.json
+   *
+   * The intention of this test is to make you think about whether an update to SAR template
+   * is required when the database schema changes
+   *
+   * For more information see docs/how-to/subject-access-requests.md
+   *
+   * Once that decision has been made, fix this test by running `./gradlew updateSarSchema`
+   */
   @Nested
   inner class JpaEntitiesTest : SarJpaEntitiesTest {
     override fun getSarHelper() = sarIntegrationTestHelper

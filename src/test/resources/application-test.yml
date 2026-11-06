@@ -6,6 +6,9 @@ management.endpoint:
   info.cache.time-to-live: 0
 
 spring:
+  config:
+    import:
+      - classpath:application-test-sar.yml
   http:
     codecs:
       # this is required for open api tests due to the size of our open api doc

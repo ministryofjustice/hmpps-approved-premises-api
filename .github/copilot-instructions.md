@@ -378,7 +378,7 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
 
 * We implement endpoints to retrieve data and templates to generate a subject
   access request for a given CRN/NOMS number. 
-* General documentation on how this is tested is provided by `doc/how-to/sar-test-fixture-guide.md`
+* General documentation on how this is tested is provided by `../doc/how-to/subject_access_requests.md`
 * There are automatic checks in the build process to ensure the user is prompted 
   to review/revise the SAR template whenever a change to the database model is made
 * We should also consider if the SAR template needs updating when a new domain 

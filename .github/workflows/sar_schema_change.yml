@@ -1,0 +1,48 @@
+name: SAR Schema Change
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, reopened, synchronize]
+    paths:
+      - src/test/resources/application-test-sar.yml
+      - src/test/resources/sar/cas-entities-schema.json
+
+permissions:
+  pull-requests: write
+
+jobs:
+  comment:
+    name: Comment on database schema change
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      MARKER: "<!-- sar-database-schema-change -->"
+    steps:
+      - name: Post checklist comment (once per PR)
+        run: |
+          existing=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER/comments" --paginate \
+            --jq ".[] | select(.body | contains(\"$MARKER\")) | .id" | head -n 1)
+
+          # Don't update an existing comment, as that would reset any ticked checkboxes
+          if [ -n "$existing" ]; then
+            echo "SAR database schema comment already exists ($existing)"
+            exit 0
+          fi
+
+          cat > comment.md <<EOF
+          $MARKER
+          ## ⚠️ This PR changes the database schema and/or entity model
+
+          Whenever the database schema and/or entity model is changed we must consider if a SAR template change 
+          is required. 
+          
+          - [ ] Review the change control process defined in [./doc/how-to/subject_access_requests.md]($GITHUB_SERVER_URL/$GH_REPO/blob/main/doc/how-to/subject_access_requests.md)
+          - [ ] A SAR Template Change is not required (please explain why in the commit message or comments)
+          - [ ] A SAR Template Change has been made (please explain why in the commit message or comments)
+          EOF
+
+          gh pr comment "$PR_NUMBER" --body-file comment.md

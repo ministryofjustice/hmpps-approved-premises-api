@@ -8,15 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFi
 import java.time.LocalDate
 
 /**
- * Per-service SAR compliance test for CAS3.
- *
- * Cross-service SAR infrastructure (Flyway schema, JPA entity snapshot, template
- * endpoint smoke tests) lives in `SarIntegrationTest` — they only need to run
- * once for the whole app, since all four CAS services share one DB and one
- * template file.
- *
- * This class verifies CAS3's slice end-to-end against CAS3-specific fixtures
- * via [CasSarFixtureAsserter].
+ * For general information on SARs and testing, see docs/how-to/subject_access_requests.md
  */
 @SuppressWarnings("LongMethod")
 class Cas3SarComplianceTest : Cas3SarTestBase() {
@@ -104,6 +96,11 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     cancellationEntity(booking)
   }
 
+  /**
+   * These test will fail when the template or test data changes
+   *
+   * To regenerate the expected outputs run `./gradlew updateSarFixtures` and validate the updated files
+   */
   @Test
   fun `CAS3 SAR API should return expected data`() {
     setupTestData()
@@ -114,6 +111,11 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     )
   }
 
+  /**
+   * These test will fail when the template or test data changes
+   *
+   * To regenerate the expected outputs run `./gradlew updateSarFixtures` and validate the updated files
+   */
   @Test
   fun `CAS3 SAR report should render as expected`() {
     setupTestData()

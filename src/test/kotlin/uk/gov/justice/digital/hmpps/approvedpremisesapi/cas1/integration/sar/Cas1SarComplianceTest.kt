@@ -9,15 +9,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * Per-service SAR compliance test for CAS1.
- *
- * Cross-service SAR infrastructure (Flyway schema, JPA entity snapshot, template
- * endpoint smoke tests) lives in `SarIntegrationTest` — they only need to run
- * once for the whole app, since all four CAS services share one DB and one
- * template file.
- *
- * This class verifies CAS1's slice end-to-end against CAS1-specific fixtures
- * via [CasSarFixtureAsserter].
+ * For general information on SARs and testing, see docs/how-to/subject_access_requests.md
  */
 @SuppressWarnings("LongMethod")
 class Cas1SarComplianceTest : Cas1SarTestBase() {
@@ -186,6 +178,11 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     )
   }
 
+  /**
+   * These test will fail when the template or test data changes
+   *
+   * To regenerate the expected outputs run `./gradlew updateSarFixtures` and validate the updated files
+   */
   @Test
   fun `CAS1 SAR API should return expected data`() {
     setupTestData()
@@ -196,6 +193,11 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     )
   }
 
+  /**
+   * These test will fail when the template or test data changes
+   *
+   * To regenerate the expected outputs run `./gradlew updateSarFixtures` and validate the updated files
+   */
   @Test
   fun `CAS1 SAR report should render as expected`() {
     setupTestData()
