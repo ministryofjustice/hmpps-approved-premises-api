@@ -62,8 +62,8 @@ class Cas2OffenderServiceTest {
 
   private fun givenVisibility(caseSummary: CaseSummary, isVisible: Boolean) {
     every {
-      mockLaoService.isVisibleForCaseSummaries(listOf(caseSummary), laoStrategy)
-    } returns mapOf(caseSummary.crn to isVisible)
+      mockLaoService.isVisibleForCaseSummary(caseSummary, laoStrategy)
+    } returns isVisible
   }
 
   @Nested
@@ -210,19 +210,6 @@ class Cas2OffenderServiceTest {
       result as Cas2v2OffenderSearchResult.Success.Full
       assertThat(result.person.crn).isEqualTo(crn)
       assertThat(result.person.nomsNumber).isEqualTo(offenderDetails.nomsId)
-    }
-
-    @Test
-    fun `returns Forbidden when LaoService does not return a visibility result for the offender`() {
-      val offenderDetails = CaseSummaryFactory().withCrn("ABC123").withNomsId(nomsNumber).produce()
-
-      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
-        ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
-
-      every { mockLaoService.isVisibleForCaseSummaries(listOf(offenderDetails), laoStrategy) } returns emptyMap()
-
-      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.Forbidden).isTrue
-      verify(exactly = 0) { mockTierService.getTier(any()) }
     }
   }
 
