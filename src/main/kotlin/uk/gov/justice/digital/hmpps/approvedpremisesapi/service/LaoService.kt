@@ -14,6 +14,8 @@ class LaoService(
   val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
 
+  fun isVisibleForCaseSummary(caseSummary: CaseSummary, laoStrategy: LaoStrategy): Boolean = isVisibleForCaseSummaries(listOf(caseSummary), laoStrategy)[caseSummary.crn]!!
+
   /**
    * Determines visibility for a list of [CaseSummary]'s, given an [LaoStrategy].
    *
