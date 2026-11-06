@@ -29,15 +29,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2Sta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -239,18 +240,18 @@ class Cas2ApplicationTransformerTest {
 
     @Test
     fun `transforms an in progress CAS2v2 application correctly`() {
-      val application = Cas2ApplicationSummaryEntity(
+      val application = Cas2ApplicationSummaryFactory.produce(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",
         nomsNumber = "NOMNUM",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
         userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+        createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = null,
         hdcEligibilityDate = null,
         latestStatusUpdateLabel = null,
         latestStatusUpdateStatusId = null,
-        prisonCode = "BRI",
+        referringPrisonCode = "BRI",
         allocatedPomUserId = null,
         allocatedPomName = null,
         currentPrisonCode = null,
@@ -266,7 +267,7 @@ class Cas2ApplicationTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
+      assertThat(result.createdByUserId).isEqualTo(application.userId)
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.personSummary).isEqualTo(personSummaryDto)
       assertThat(result.crn).isEqualTo(application.crn)
@@ -278,18 +279,18 @@ class Cas2ApplicationTransformerTest {
 
     @Test
     fun `transforms a submitted CAS2v2 application correctly`() {
-      val application = Cas2ApplicationSummaryEntity(
+      val application = Cas2ApplicationSummaryFactory.produce(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",
         nomsNumber = "NOMNUM",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
         userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
         hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-        latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
+        latestStatusUpdateStatusId = UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"),
         latestStatusUpdateLabel = "my latest status update",
-        prisonCode = "BRI",
+        referringPrisonCode = "BRI",
         allocatedPomUserId = null,
         allocatedPomName = null,
         currentPrisonCode = null,
@@ -297,7 +298,7 @@ class Cas2ApplicationTransformerTest {
       )
 
       every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
-        statusId = UUID.fromString(application.latestStatusUpdateStatusId),
+        statusId = application.latestStatusUpdateStatusId!!,
         label = application.latestStatusUpdateLabel!!,
       )
 

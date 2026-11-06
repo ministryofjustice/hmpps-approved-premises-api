@@ -28,13 +28,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
@@ -191,10 +191,10 @@ class Cas2ApplicationServiceTest {
   inner class GetAllSubmittedApplicationsForAssessor {
     @Test
     fun `returns Success result with entity from db`() {
-      val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
+      val applicationSummary = Cas2ApplicationSummaryFactory.produce()
 
       PaginationConfig(defaultPageSize = 10).postInit()
-      val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
+      val page = mockk<Page<Cas2ApplicationSummary>>()
       val pageRequest = mockk<PageRequest>()
       val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
 
@@ -206,7 +206,7 @@ class Cas2ApplicationServiceTest {
       every { page.totalElements } returns 100
 
       every {
-        mockApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(
+        mockApplicationSummaryRepository.findSubmittedApplications(
           Cas2ServiceOrigin.HDC.toString(),
           PageRequest.of(
             2,
@@ -274,6 +274,15 @@ class Cas2ApplicationServiceTest {
 
     @Test
     fun getDeallocatedApplicationSummaries() {
+      val deallocatedApplicationIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+      every {
+        mockApplicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(
+          user.id,
+          prisonCode,
+          user.serviceOrigin.toString(),
+        )
+      } returns deallocatedApplicationIds
+
       applicationService.getApplicationSummaries(
         user = user,
         pageCriteria = pageCriteria,
@@ -286,6 +295,33 @@ class Cas2ApplicationServiceTest {
           prisonCode,
           user.serviceOrigin.toString(),
         )
+        mockApplicationSummaryRepository.findAllByServiceOriginAndIdIn(
+          Cas2ServiceOrigin.HDC.toString(),
+          deallocatedApplicationIds,
+          any(),
+        )
+      }
+    }
+
+    @Test
+    fun `getDeallocatedApplicationSummaries returns an empty page without querying summaries when there are no deallocated applications`() {
+      every {
+        mockApplicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(
+          user.id,
+          prisonCode,
+          user.serviceOrigin.toString(),
+        )
+      } returns emptyList()
+
+      val (applicationSummaries, metadata) = applicationService.getApplicationSummaries(
+        user = user,
+        pageCriteria = pageCriteria,
+        assignmentType = AssignmentType.DEALLOCATED,
+      )
+
+      assertThat(applicationSummaries).isEmpty()
+      assertThat(metadata?.totalResults).isEqualTo(0)
+      verify(exactly = 0) {
         mockApplicationSummaryRepository.findAllByServiceOriginAndIdIn(any(), any(), any())
       }
     }
@@ -300,7 +336,7 @@ class Cas2ApplicationServiceTest {
 
       verify {
         mockApplicationSummaryRepository.findInProgressApplications(
-          user.id.toString(),
+          user.id,
           any(),
           Cas2ServiceOrigin.HDC.toString(),
         )

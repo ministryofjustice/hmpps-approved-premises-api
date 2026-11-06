@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service
 
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
@@ -18,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
@@ -62,7 +63,7 @@ class Cas2HdcApplicationService(
     user: Cas2UserEntity,
     pageCriteria: PageCriteria<String>,
     assignmentType: AssignmentType,
-  ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+  ): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
     val response = when (assignmentType) {
       AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsInSamePrisonAsUser(
         user.activeNomisCaseloadId!!,
@@ -71,7 +72,7 @@ class Cas2HdcApplicationService(
       )
 
       AssignmentType.IN_PROGRESS -> applicationSummaryRepository.findInProgressApplications(
-        user.id.toString(),
+        user.id,
         getPageableOrAllPages(pageCriteria),
         Cas2ServiceOrigin.HDC.toString(),
       )
@@ -95,11 +96,16 @@ class Cas2HdcApplicationService(
       AssignmentType.DEALLOCATED -> {
         val deallocatedApplicationIds =
           applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(user.id, user.activeNomisCaseloadId!!, Cas2ServiceOrigin.HDC.toString())
-        applicationSummaryRepository.findAllByServiceOriginAndIdIn(
-          Cas2ServiceOrigin.HDC.toString(),
-          deallocatedApplicationIds,
-          getPageableOrAllPages(pageCriteria),
-        )
+        val pageable = getPageableOrAllPages(pageCriteria)
+        if (deallocatedApplicationIds.isEmpty()) {
+          Page.empty<Cas2ApplicationSummary>(pageable)
+        } else {
+          applicationSummaryRepository.findAllByServiceOriginAndIdIn(
+            Cas2ServiceOrigin.HDC.toString(),
+            deallocatedApplicationIds,
+            pageable,
+          )
+        }
       }
     }
 
@@ -113,10 +119,10 @@ class Cas2HdcApplicationService(
 
   fun findApplicationToAssign(nomsNumber: String): Cas2ApplicationEntity? = findMostRecentApplication(nomsNumber)?.takeIf { !it.isMostRecentStatusUpdateANonAssignableStatus() }
 
-  fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+  fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
-    val response = applicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(Cas2ServiceOrigin.HDC.toString(), pageable)
+    val response = applicationSummaryRepository.findSubmittedApplications(Cas2ServiceOrigin.HDC.toString(), pageable)
 
     val metadata = getMetadata(response, pageCriteria)
 

@@ -10,13 +10,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateNonAssignable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 
 @Component()
 class Cas2HdcApplicationsTransformer(
@@ -58,26 +58,26 @@ class Cas2HdcApplicationsTransformer(
   }
 
   fun transformJpaSummaryToSummary(
-    jpaSummary: Cas2ApplicationSummaryEntity,
+    jpaSummary: Cas2ApplicationSummary,
     personName: String,
   ): Cas2HdcApplicationSummary = Cas2HdcApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = UUID.fromString(jpaSummary.userId),
+    createdByUserId = jpaSummary.userId,
     createdByUserName = jpaSummary.userName,
     // BAIL-WIP The two allocated POM fields are left unchanged as it will currently ALWAYS be a nomis user.
-    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
+    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: jpaSummary.userId,
     allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,
     currentPrisonName = jpaSummary.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName }
       ?: jpaSummary.currentPrisonCode,
     assignmentDate = jpaSummary.assignmentDate?.toLocalDate() ?: jpaSummary.createdAt.toLocalDate(),
-    createdAt = jpaSummary.createdAt.toInstant(),
-    submittedAt = jpaSummary.submittedAt?.toInstant(),
+    createdAt = jpaSummary.createdAt,
+    submittedAt = jpaSummary.submittedAt,
     status = getStatusFromSummary(jpaSummary),
     latestStatusUpdate = cas2HdcStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
     type = "CAS2",
     hdcEligibilityDate = jpaSummary.hdcEligibilityDate,
     crn = jpaSummary.crn,
-    nomsNumber = jpaSummary.nomsNumber,
+    nomsNumber = jpaSummary.nomsNumber!!,
     personName = personName,
     applicationOrigin = jpaSummary.applicationOrigin?.let { ApplicationOrigin.forValue(it) },
     bailHearingDate = jpaSummary.bailHearingDate,
@@ -117,7 +117,7 @@ class Cas2HdcApplicationsTransformer(
     return ApplicationStatus.inProgress
   }
 
-  private fun getStatusFromSummary(summary: Cas2ApplicationSummaryEntity): ApplicationStatus = when {
+  private fun getStatusFromSummary(summary: Cas2ApplicationSummary): ApplicationStatus = when {
     summary.submittedAt != null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
   }

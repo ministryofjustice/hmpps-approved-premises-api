@@ -5,10 +5,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -19,9 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
-import org.springframework.data.jpa.domain.Specification
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -40,13 +36,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
@@ -170,18 +166,18 @@ class Cas2ApplicationServiceTest {
   inner class GetAllSubmittedCas2v2ApplicationsForAssessor {
     @Test
     fun `returns Success result with entity from db`() {
-      val cas2v2ApplicationSummary = Cas2ApplicationSummaryEntity(
+      val cas2v2ApplicationSummary = Cas2ApplicationSummaryFactory.produce(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = randomStringMultiCaseWithNumbers(6),
         nomsNumber = randomStringMultiCaseWithNumbers(6),
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
         userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
         hdcEligibilityDate = LocalDate.parse("2023-04-29"),
         latestStatusUpdateLabel = null,
         latestStatusUpdateStatusId = null,
-        prisonCode = "BRI",
+        referringPrisonCode = "BRI",
         allocatedPomUserId = null,
         allocatedPomName = null,
         assignmentDate = null,
@@ -189,7 +185,7 @@ class Cas2ApplicationServiceTest {
       )
 
       PaginationConfig(defaultPageSize = 10).postInit()
-      val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
+      val page = mockk<Page<Cas2ApplicationSummary>>()
       val pageRequest = mockk<PageRequest>()
       val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
 
@@ -201,7 +197,7 @@ class Cas2ApplicationServiceTest {
       every { page.totalElements } returns 100
 
       every {
-        mockCas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(
+        mockCas2ApplicationSummaryRepository.findSubmittedApplications(
           Cas2ServiceOrigin.BAIL.toString(),
           PageRequest.of(
             2,
@@ -223,34 +219,64 @@ class Cas2ApplicationServiceTest {
 
   @Nested
   inner class GetCas2v2ApplicationsWithPrisonCode {
-    private val cas2ApplicationSummary = Cas2ApplicationSummaryEntity(
+    private val cas2ApplicationSummary = Cas2ApplicationSummaryFactory.produce(
       id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
       crn = randomStringMultiCaseWithNumbers(6),
       nomsNumber = randomStringMultiCaseWithNumbers(6),
-      userId = "836a9460-b177-433a-a0d9-262509092c9f",
+      userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
       userName = "first last",
-      createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-      submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+      createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
+      submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
       hdcEligibilityDate = LocalDate.parse("2023-04-29"),
       latestStatusUpdateLabel = null,
       latestStatusUpdateStatusId = null,
-      prisonCode = "BRI",
+      referringPrisonCode = "BRI",
       allocatedPomName = null,
       allocatedPomUserId = null,
       assignmentDate = null,
       currentPrisonCode = null,
     )
-    private val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
+    private val page = mockk<Page<Cas2ApplicationSummary>>()
     private val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
     private val user = Cas2UserEntityFactory()
       .withServiceOrigin(Cas2ServiceOrigin.BAIL)
       .produce()
     private val prisonCode = "BRI"
 
-    private fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
+    @BeforeEach
+    fun setup() {
+      PaginationConfig(defaultPageSize = 10).postInit()
       every { page.content } returns listOf(cas2ApplicationSummary)
       every { page.totalPages } returns 10
       every { page.totalElements } returns 100
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      value = [
+        "null,false,false",
+        "true,true,true",
+        "false,true,false",
+      ],
+      nullValues = ["null"],
+    )
+    fun `return applications for the prison filtered by submission state`(
+      isSubmitted: Boolean?,
+      expectedIsSubmittedProvided: Boolean,
+      expectedIsSubmitted: Boolean,
+    ) {
+      every {
+        mockCas2ApplicationSummaryRepository.findCas2ApplicationSummaries(
+          serviceOrigin = Cas2ServiceOrigin.BAIL.toString(),
+          userId = null,
+          crnOrNomsNumber = null,
+          prisonCode = prisonCode,
+          applicationOrigin = null,
+          isSubmittedProvided = expectedIsSubmittedProvided,
+          isSubmitted = expectedIsSubmitted,
+          pageable = any(),
+        )
+      } returns page
 
       val (applicationSummaries, _) = cas2ApplicationService.getCas2Applications(
         prisonCode,
@@ -265,39 +291,34 @@ class Cas2ApplicationServiceTest {
       assertThat(applicationSummaries).isEqualTo(listOf(cas2ApplicationSummary))
     }
 
-    @AfterEach
-    fun tearDown() {
-      unmockkStatic(Cas2ApplicationSummarySpecifications::class)
-    }
-
     @Test
-    fun `return all applications when prisonCode is specified and isSubmitted is null`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
+    fun `passes user, crn or noms number and application origin filters to the repository`() {
       every {
-        mockCas2ApplicationSummaryRepository.findAll(any<Specification<Cas2ApplicationSummaryEntity>>(), any<Pageable>())
+        mockCas2ApplicationSummaryRepository.findCas2ApplicationSummaries(
+          serviceOrigin = Cas2ServiceOrigin.BAIL.toString(),
+          userId = user.id,
+          crnOrNomsNumber = "CRN123",
+          prisonCode = null,
+          applicationOrigin = ApplicationOrigin.courtBail.toString(),
+          isSubmittedProvided = false,
+          isSubmitted = false,
+          pageable = any(),
+        )
       } returns page
 
-      testPrisonCodeWithIsSubmitted(null)
-    }
+      val (applicationSummaries, metadata) = cas2ApplicationService.getCas2Applications(
+        null,
+        null,
+        ApplicationOrigin.courtBail,
+        true,
+        "CRN123",
+        user,
+        pageCriteria,
+      )
 
-    @Test
-    fun `return submitted prison applications when prisonCode is specified and isSubmitted is true`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
-      every {
-        mockCas2ApplicationSummaryRepository.findAll(any<Specification<Cas2ApplicationSummaryEntity>>(), any<Pageable>())
-      } returns page
-
-      testPrisonCodeWithIsSubmitted(true)
-    }
-
-    @Test
-    fun `return unsubmitted prison applications when prisonCode is specified and isSubmitted is false`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
-      every {
-        mockCas2ApplicationSummaryRepository.findAll(any<Specification<Cas2ApplicationSummaryEntity>>(), any<Pageable>())
-      } returns page
-
-      testPrisonCodeWithIsSubmitted(false)
+      assertThat(applicationSummaries).isEqualTo(listOf(cas2ApplicationSummary))
+      assertThat(metadata?.currentPage).isEqualTo(3)
+      assertThat(metadata?.totalResults).isEqualTo(100)
     }
   }
 
