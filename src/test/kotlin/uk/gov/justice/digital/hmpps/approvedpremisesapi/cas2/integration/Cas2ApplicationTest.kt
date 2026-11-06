@@ -46,12 +46,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextVerifyUserAccessCalls
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.math.sign
 
@@ -730,6 +734,129 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       withApplication(cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!)
       withAssessor(assessor)
       withCreatedAt(OffsetDateTime.now().minusDays(1))
+    }
+  }
+
+  @Nested
+  inner class GetApplicationSummariesLatestStatus {
+
+    @Nested
+    inner class TerminalStatusCutOff {
+
+      @ParameterizedTest
+      @EnumSource(Cas2AssessmentStatus::class, names = ["WITHDRAWN", "CANCELLED", "AWAITING_ARRIVAL"])
+      fun `application is returned when its closed status was set 32 days ago`(status: Cas2AssessmentStatus) {
+        givenACas2v2DeliusUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = submittedApplication(user, offenderDetails.otherIds.crn)
+            givenAStatusUpdate(application, UUID.randomUUID(), status, middayDaysAgo(32))
+
+            assertThat(getApplications(jwt).map { it.id }).containsExactly(application.id)
+          }
+        }
+      }
+
+      @ParameterizedTest
+      @EnumSource(Cas2AssessmentStatus::class, names = ["WITHDRAWN", "CANCELLED", "AWAITING_ARRIVAL"])
+      fun `application is not returned when its closed status was set 33 days ago`(status: Cas2AssessmentStatus) {
+        givenACas2v2DeliusUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = submittedApplication(user, offenderDetails.otherIds.crn)
+            givenAStatusUpdate(application, UUID.randomUUID(), status, middayDaysAgo(33))
+
+            assertThat(getApplications(jwt)).isEmpty()
+          }
+        }
+      }
+
+      @ParameterizedTest
+      @EnumSource(Cas2AssessmentStatus::class, names = ["WITHDRAWN", "CANCELLED", "AWAITING_ARRIVAL"], mode = EnumSource.Mode.EXCLUDE)
+      fun `application is returned when non-terminal status was set 33 days ago`(status: Cas2AssessmentStatus) {
+        givenACas2v2DeliusUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = submittedApplication(user, offenderDetails.otherIds.crn)
+            givenAStatusUpdate(application, UUID.randomUUID(), status, middayDaysAgo(33))
+
+            assertThat(getApplications(jwt).map { it.id }).containsExactly(application.id)
+          }
+        }
+      }
+
+      private fun middayDaysAgo(days: Long): OffsetDateTime = LocalDate.now()
+        .minusDays(days)
+        .atTime(LocalTime.NOON)
+        .atZone(ZoneId.systemDefault())
+        .toOffsetDateTime()
+    }
+
+    @Nested
+    inner class LatestStatusUpdate {
+
+      @Test
+      fun `the most recent status update is returned`() {
+        givenACas2v2DeliusUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = submittedApplication(user, offenderDetails.otherIds.crn)
+            val (lowerId, higherId) = orderedIds()
+            val now = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
+            givenAStatusUpdate(application, lowerId, Cas2AssessmentStatus.AWAITING_DECISION, createdAt = now)
+            givenAStatusUpdate(application, higherId, Cas2AssessmentStatus.MORE_INFO_REQUESTED, createdAt = now.minusDays(1))
+
+            val summary = getApplications(jwt).single()
+
+            assertThat(summary.id).isEqualTo(application.id)
+            assertThat(summary.latestStatusUpdate!!.statusId).isEqualTo(Cas2AssessmentStatus.AWAITING_DECISION.id)
+            assertThat(summary.latestStatusUpdate.label).isEqualTo(Cas2AssessmentStatus.AWAITING_DECISION.label)
+          }
+        }
+      }
+    }
+
+    private fun submittedApplication(user: Cas2UserEntity, crn: String) = givenASubmittedCas2Application(
+      createdBy = user,
+      crn = crn,
+      createdAt = OffsetDateTime.now().minusDays(40),
+      submittedAt = OffsetDateTime.now().minusDays(40),
+      conditionalReleaseDate = LocalDate.now().plusDays(1),
+    )
+
+    private fun givenAStatusUpdate(
+      application: Cas2ApplicationEntity,
+      id: UUID,
+      status: Cas2AssessmentStatus,
+      createdAt: OffsetDateTime,
+    ) = cas2StatusUpdateEntityFactory.produceAndPersist {
+      withId(id)
+      withApplication(application)
+      withStatusId(status.id)
+      withLabel(status.label)
+      withDescription(status.description)
+      withCreatedAt(createdAt)
+      withAssessor(
+        cas2UserEntityFactory.produceAndPersist {
+          withUserType(Cas2UserType.EXTERNAL)
+          withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        },
+      )
+    }
+
+    private fun getApplications(jwt: String) = webTestClient.get()
+      .uri("/cas2/applications")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.cas2v2.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsListOfObjects<Cas2ApplicationSummary>()
+
+    /**
+     * Returns two random ids as (lower, higher) using Postgres' uuid ordering (unsigned byte-wise, i.e. the hex string),
+     * so tests can prove the latest record is chosen by created at rather than by id.
+     */
+    private fun orderedIds(): Pair<UUID, UUID> {
+      val ids = listOf(UUID.randomUUID(), UUID.randomUUID()).sortedBy { it.toString() }
+      return ids[0] to ids[1]
     }
   }
 
