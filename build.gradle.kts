@@ -65,7 +65,7 @@ dependencies {
   implementation("io.arrow-kt:arrow-core:2.3.0")
 
   implementation("com.opencsv:opencsv:5.12.0")
-  implementation("software.amazon.awssdk:s3:2.57.2")
+  implementation("software.amazon.awssdk:s3:2.57.11")
 
   val shedLockVersion = "7.10.1"
   implementation("net.javacrumbs.shedlock:shedlock-spring:$shedLockVersion")
