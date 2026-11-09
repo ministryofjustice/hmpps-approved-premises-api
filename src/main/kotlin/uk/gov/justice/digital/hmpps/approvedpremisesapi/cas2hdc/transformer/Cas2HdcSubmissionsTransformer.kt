@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import java.util.UUID
 
 @Component("Cas2SubmittedApplicationTransformer")
 class Cas2HdcSubmissionsTransformer(
@@ -54,10 +53,10 @@ class Cas2HdcSubmissionsTransformer(
   ): Cas2HdcSubmittedApplicationSummary = Cas2HdcSubmittedApplicationSummary(
     id = jpaSummary.id,
     personName = personName,
-    createdByUserId = UUID.fromString(jpaSummary.userId),
-    createdAt = jpaSummary.createdAt.toInstant(),
-    submittedAt = jpaSummary.submittedAt?.toInstant(),
+    createdByUserId = jpaSummary.userId,
+    createdAt = jpaSummary.createdAt,
+    submittedAt = jpaSummary.submittedAt,
     crn = jpaSummary.crn,
-    nomsNumber = jpaSummary.nomsNumber,
+    nomsNumber = jpaSummary.nomsNumber!!,
   )
 }

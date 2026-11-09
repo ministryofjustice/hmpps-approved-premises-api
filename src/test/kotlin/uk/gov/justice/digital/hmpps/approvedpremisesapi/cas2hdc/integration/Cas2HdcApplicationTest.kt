@@ -680,6 +680,26 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
           }
         }
       }
+
+      @Test
+      fun `the status update with the highest id is returned when created at is the same`() {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = allocatedApplication(user, offenderDetails.otherIds.crn)
+            val (lowerId, higherId) = orderedIds()
+            val createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
+            givenAStatusUpdate(application, higherId, Cas2AssessmentStatus.ON_WAITING_LIST, createdAt)
+            givenAStatusUpdate(application, lowerId, Cas2AssessmentStatus.AWAITING_DECISION, createdAt)
+
+            val summary = getAllocatedApplications(jwt).single()
+
+            assertThat(summary.id).isEqualTo(application.id)
+            assertThat(summary.latestStatusUpdate!!.statusId).isEqualTo(Cas2AssessmentStatus.ON_WAITING_LIST.id)
+            assertThat(summary.latestStatusUpdate.label).isEqualTo(Cas2AssessmentStatus.ON_WAITING_LIST.label)
+          }
+        }
+      }
     }
 
     @Nested
@@ -729,6 +749,49 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
         }
       }
 
+      @Test
+      fun `the assignment with the highest id is used when created at is the same`() {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val otherPom = cas2UserEntityFactory.produceAndPersist()
+            val application = submittedApplication(user, offenderDetails.otherIds.crn)
+            val (lowerId, higherId) = orderedIds()
+            val createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
+            givenAssignments(
+              application,
+              assignment(application, higherId, user, createdAt),
+              assignment(application, lowerId, otherPom, createdAt),
+            )
+
+            val summary = getAllocatedApplications(jwt).single()
+
+            assertThat(summary.id).isEqualTo(application.id)
+            assertThat(summary.allocatedPomUserId).isEqualTo(user.id)
+          }
+        }
+      }
+
+      @Test
+      fun `an application is not returned when the assignment with the highest id is for another user and created at is the same`() {
+        givenACas2PomUser { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val otherPom = cas2UserEntityFactory.produceAndPersist()
+            val application = submittedApplication(user, offenderDetails.otherIds.crn)
+            val (lowerId, higherId) = orderedIds()
+            val createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
+
+            givenAssignments(
+              application,
+              assignment(application, higherId, otherPom, createdAt),
+              assignment(application, lowerId, user, createdAt),
+            )
+
+            assertThat(getAllocatedApplications(jwt)).isEmpty()
+          }
+        }
+      }
+
       private fun assignment(
         application: Cas2ApplicationEntity,
         id: UUID,
@@ -744,7 +807,7 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
 
       private fun givenAssignments(application: Cas2ApplicationEntity, vararg assignments: Cas2ApplicationAssignmentEntity) {
         application.applicationAssignments.addAll(assignments)
-        realApplicationRepository.save(application)
+        cas2ApplicationRepository.save(application)
       }
     }
 
@@ -761,7 +824,7 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
     private fun allocatedApplication(user: Cas2UserEntity, crn: String): Cas2ApplicationEntity {
       val application = submittedApplication(user, crn)
       application.createApplicationAssignment(user.activeNomisCaseloadId!!, user)
-      return realApplicationRepository.save(application)
+      return cas2ApplicationRepository.save(application)
     }
 
     private fun givenAStatusUpdate(
@@ -793,8 +856,7 @@ class Cas2HdcApplicationTest : IntegrationTestBase() {
       .bodyAsListOfObjects<Cas2HdcApplicationSummary>()
 
     /**
-     * Returns two random ids as (lower, higher) using Postgres' uuid ordering (unsigned byte-wise, i.e. the hex string),
-     * so tests can prove the latest record is chosen by created at rather than by id.
+     * Returns two random ids as (lower, higher) using Postgres' uuid ordering (unsigned byte-wise, i.e. the hex string).
      */
     private fun orderedIds(): Pair<UUID, UUID> {
       val ids = listOf(UUID.randomUUID(), UUID.randomUUID()).sortedBy { it.toString() }

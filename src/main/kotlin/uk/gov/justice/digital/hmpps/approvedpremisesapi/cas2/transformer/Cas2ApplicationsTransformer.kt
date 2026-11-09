@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import java.util.UUID
 
 @Component
 class Cas2ApplicationsTransformer(
@@ -70,10 +69,10 @@ class Cas2ApplicationsTransformer(
     personSummary: Cas2PersonSummary,
   ): Cas2ApplicationSummaryDto = Cas2ApplicationSummaryDto(
     id = jpaSummary.id,
-    createdByUserId = UUID.fromString(jpaSummary.userId),
+    createdByUserId = jpaSummary.userId,
     createdByUserName = jpaSummary.userName,
-    createdAt = jpaSummary.createdAt.toInstant(),
-    submittedAt = jpaSummary.submittedAt?.toInstant(),
+    createdAt = jpaSummary.createdAt,
+    submittedAt = jpaSummary.submittedAt,
     status = getStatusFromSummary(jpaSummary),
     latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
     type = "CAS2V2",

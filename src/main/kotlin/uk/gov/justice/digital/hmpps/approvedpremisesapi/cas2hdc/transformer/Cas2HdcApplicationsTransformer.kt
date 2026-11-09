@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 
 @Component()
 class Cas2HdcApplicationsTransformer(
@@ -62,22 +62,22 @@ class Cas2HdcApplicationsTransformer(
     personName: String,
   ): Cas2HdcApplicationSummary = Cas2HdcApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = UUID.fromString(jpaSummary.userId),
+    createdByUserId = jpaSummary.userId,
     createdByUserName = jpaSummary.userName,
     // BAIL-WIP The two allocated POM fields are left unchanged as it will currently ALWAYS be a nomis user.
-    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
+    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: jpaSummary.userId,
     allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,
     currentPrisonName = jpaSummary.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName }
       ?: jpaSummary.currentPrisonCode,
     assignmentDate = jpaSummary.assignmentDate?.toLocalDate() ?: jpaSummary.createdAt.toLocalDate(),
-    createdAt = jpaSummary.createdAt.toInstant(),
-    submittedAt = jpaSummary.submittedAt?.toInstant(),
+    createdAt = jpaSummary.createdAt,
+    submittedAt = jpaSummary.submittedAt,
     status = getStatusFromSummary(jpaSummary),
     latestStatusUpdate = cas2HdcStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
     type = "CAS2",
     hdcEligibilityDate = jpaSummary.hdcEligibilityDate,
     crn = jpaSummary.crn,
-    nomsNumber = jpaSummary.nomsNumber,
+    nomsNumber = jpaSummary.nomsNumber!!,
     personName = personName,
     applicationOrigin = jpaSummary.applicationOrigin?.let { ApplicationOrigin.forValue(it) },
     bailHearingDate = jpaSummary.bailHearingDate,

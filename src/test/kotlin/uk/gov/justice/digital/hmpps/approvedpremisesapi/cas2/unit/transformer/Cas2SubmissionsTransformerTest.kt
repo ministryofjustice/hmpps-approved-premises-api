@@ -21,11 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2Sub
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.toCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 import java.time.Instant
@@ -127,14 +126,14 @@ class Cas2SubmissionsTransformerTest {
   inner class TransformJpaSummaryToCas2v2SubmittedSummary {
     @Test
     fun `transforms submitted summary application to API summary representation `() {
-      val applicationSummary = Cas2ApplicationSummaryEntity(
+      val applicationSummary = Cas2ApplicationSummaryFactory.produce(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRN123",
         nomsNumber = "NOMS456",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
         userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
         hdcEligibilityDate = LocalDate.parse("2023-04-29"),
         latestStatusUpdateLabel = null,
         latestStatusUpdateStatusId = null,
@@ -164,7 +163,7 @@ class Cas2SubmissionsTransformerTest {
       )
 
       val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(
-        applicationSummary.toCas2ApplicationSummary(),
+        applicationSummary,
         "Example Offender",
         personSummary,
       )
