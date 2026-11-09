@@ -21,29 +21,29 @@ interface Cas2ApplicationSummaryRepository :
   JpaRepository<Cas2ApplicationSummaryEntity, String>,
   JpaSpecificationExecutor<Cas2ApplicationSummaryEntity> {
   @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId and ase.serviceOrigin = :serviceOrigin")
-  fun findInProgressApplications(userId: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
+  fun findInProgressApplications(userId: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummary>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.allocatedPomUserId = :userId and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findApplicationsAssignedToUser(userId: UUID, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
+  fun findApplicationsAssignedToUser(userId: UUID, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummary>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is not null and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findAllocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
+  fun findAllocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummary>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is null and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findUnallocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
+  fun findUnallocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummary>
 
-  fun findAllByServiceOriginAndIdIn(serviceOrigin: String, id: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findAllByServiceOriginAndIdIn(serviceOrigin: String, id: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummary>
 
-  fun findByServiceOriginAndSubmittedAtIsNotNull(serviceOrigin: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findByServiceOriginAndSubmittedAtIsNotNull(serviceOrigin: String, pageable: Pageable): Page<Cas2ApplicationSummary>
 }
 
 /**
@@ -100,3 +100,28 @@ data class Cas2ApplicationSummaryEntity(
   @Enumerated(EnumType.STRING)
   var cohort: Cas2Cohort? = null,
 )
+
+fun Cas2ApplicationSummaryEntity.toCas2ApplicationSummary(): Cas2ApplicationSummary = Cas2ApplicationSummaryImpl(this)
+
+private data class Cas2ApplicationSummaryImpl(private val entity: Cas2ApplicationSummaryEntity) : Cas2ApplicationSummary {
+  override val id get() = entity.id
+  override val crn get() = entity.crn
+  override val nomsNumber get() = entity.nomsNumber
+  override val userId get() = entity.userId
+  override val userName get() = entity.userName
+  override val allocatedPomUserId get() = entity.allocatedPomUserId
+  override val allocatedPomName get() = entity.allocatedPomName
+  override val createdAt get() = entity.createdAt
+  override val submittedAt get() = entity.submittedAt
+  override val abandonedAt get() = entity.abandonedAt
+  override val hdcEligibilityDate get() = entity.hdcEligibilityDate
+  override val latestStatusUpdateLabel get() = entity.latestStatusUpdateLabel
+  override val latestStatusUpdateStatusId get() = entity.latestStatusUpdateStatusId
+  override val prisonCode get() = entity.prisonCode
+  override val currentPrisonCode get() = entity.currentPrisonCode
+  override val assignmentDate get() = entity.assignmentDate
+  override val bailHearingDate get() = entity.bailHearingDate
+  override val applicationOrigin get() = entity.applicationOrigin
+  override val serviceOrigin get() = entity.serviceOrigin
+  override val cohort get() = entity.cohort
+}
