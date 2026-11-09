@@ -14,7 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2NomisUser
@@ -22,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesErrorResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextVerifyCaseSummariesCalls
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextVerifyUserAccessCalls
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -32,9 +36,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
  * These tests validate the LAO behaviour of [Cas2OffenderService.getPersonByNomisIdOrCrn]
  * and [Cas2OffenderService.getPersonSummaries] (using the [cas2LaoStrategy])
  *
- * Unlike CAS1 and CAS3, CAS2 never checks the user's case access. Any offender with a current
- * restriction is treated as forbidden/limited access for every user, and a current exclusion
- * has no effect
+ * The [cas2LaoStrategy] depends on the type of the calling user:
+ *
+ * - NOMIS users never have their case access checked. Any offender with a current restriction is
+ *   treated as forbidden/limited access, and a current exclusion has no effect
+ * - Delius users have their case access checked using their username, so both restrictions and
+ *   exclusions are applied
+ * - External users are never restricted, so LAO status has no effect
  */
 class Cas2LaoIntegrationTest : IntegrationTestBase() {
 
@@ -48,14 +56,206 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
   @MockkBean
   lateinit var cas2UserService: Cas2UserService
 
+  private var requestUser: Cas2UserEntity = Cas2UserEntityFactory().produce()
+
   @BeforeEach
   fun setupUser() {
-    every { cas2UserService.getUserForRequest() } returns Cas2UserEntityFactory().produce()
+    requestUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+    every { cas2UserService.getUserForRequest() } answers { requestUser }
   }
 
   enum class ExpectedResult { FULL, FORBIDDEN }
 
   enum class ExpectedSummaryResult { SUMMARY, LIMITED_ACCESS }
+
+  private fun givenADeliusUser() = Cas2UserEntityFactory().withUserType(Cas2UserType.DELIUS).produce()
+
+  private fun givenAnExternalUser() = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
+
+  private fun givenAnOffenderWithAccess(
+    user: Cas2UserEntity,
+    currentExclusion: Boolean,
+    currentRestriction: Boolean,
+    userExcluded: Boolean,
+    userRestricted: Boolean,
+  ): CaseSummary {
+    val caseSummary = CaseSummaryFactory()
+      .withCurrentExclusion(currentExclusion)
+      .withCurrentRestriction(currentRestriction)
+      .produce()
+
+    apDeliusContextCaseSummariesSingleCase(caseSummary)
+    apDeliusContextUserAccessSingleCase(
+      CaseAccessFactory()
+        .withCrn(caseSummary.crn)
+        .withUserExcluded(userExcluded)
+        .withUserRestricted(userRestricted)
+        .produce(),
+      username = user.username,
+    )
+    return caseSummary
+  }
+
+  private fun assertSummary(result: Cas2PersonSummary, caseSummary: CaseSummary) {
+    assertThat(result).isEqualTo(
+      Cas2PersonSummary.Summary(
+        crn = caseSummary.crn,
+        name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+      ),
+    )
+  }
+
+  @Nested
+  inner class DeliusUser {
+
+    @ParameterizedTest(
+      name = "currentExclusion={0}, currentRestriction={1}, userExcluded={2}, userRestricted={3} -> {4} (access checked={5})",
+    )
+    @CsvSource(
+      // currentExclusion, currentRestriction, userExcluded, userRestricted, expectedResult, userAccessChecked
+      value = [
+        "false,            false,              false,        false,          FULL,           false",
+        "false,            true,               false,        false,          FULL,           true",
+        "false,            true,               false,        true,           FORBIDDEN,      true",
+        "true,             false,              false,        false,          FULL,           true",
+        "true,             false,              true,         false,          FORBIDDEN,      true",
+        "true,             true,               false,        false,          FULL,           true",
+        "true,             true,               false,        true,           FORBIDDEN,      true",
+        "true,             true,               true,         false,          FORBIDDEN,      true",
+        "true,             true,               true,         true,           FORBIDDEN,      true",
+      ],
+    )
+    @SuppressWarnings("LongParameterList")
+    fun `getPersonByNomisIdOrCrn returns the expected result for each combination of offender LAO status and user access`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+      userExcluded: Boolean,
+      userRestricted: Boolean,
+      expectedResult: ExpectedResult,
+      userAccessChecked: Boolean,
+    ) {
+      requestUser = givenADeliusUser()
+      val caseSummary = givenAnOffenderWithAccess(requestUser, currentExclusion, currentRestriction, userExcluded, userRestricted)
+
+      val result = cas2OffenderService.getPersonByNomisIdOrCrn(caseSummary.crn)
+
+      when (expectedResult) {
+        ExpectedResult.FULL -> {
+          assertThat(result).isInstanceOf(Cas2v2OffenderSearchResult.Success.Full::class.java)
+          result as Cas2v2OffenderSearchResult.Success.Full
+          assertThat(result.person.crn).isEqualTo(caseSummary.crn)
+        }
+
+        ExpectedResult.FORBIDDEN ->
+          assertThat(result).isEqualTo(Cas2v2OffenderSearchResult.Forbidden(caseSummary.crn))
+      }
+
+      apDeliusContextVerifyUserAccessCalls(times = if (userAccessChecked) 1 else 0, username = requestUser.username)
+    }
+
+    @ParameterizedTest(
+      name = "currentExclusion={0}, currentRestriction={1}, userExcluded={2}, userRestricted={3} -> {4} (access checked={5})",
+    )
+    @CsvSource(
+      // currentExclusion, currentRestriction, userExcluded, userRestricted, expectedResult, userAccessChecked
+      value = [
+        "false,            false,              false,        false,          SUMMARY,        false",
+        "false,            true,               false,        false,          SUMMARY,        true",
+        "false,            true,               false,        true,           LIMITED_ACCESS, true",
+        "true,             false,              false,        false,          SUMMARY,        true",
+        "true,             false,              true,         false,          LIMITED_ACCESS, true",
+        "true,             true,               false,        false,          SUMMARY,        true",
+        "true,             true,               false,        true,           LIMITED_ACCESS, true",
+        "true,             true,               true,         false,          LIMITED_ACCESS, true",
+        "true,             true,               true,         true,           LIMITED_ACCESS, true",
+      ],
+    )
+    @SuppressWarnings("LongParameterList")
+    fun `getPersonSummaries returns the expected result for each combination of offender LAO status and user access`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+      userExcluded: Boolean,
+      userRestricted: Boolean,
+      expectedResult: ExpectedSummaryResult,
+      userAccessChecked: Boolean,
+    ) {
+      val user = givenADeliusUser()
+      val laoStrategy = user.cas2LaoStrategy()
+      assertThat(laoStrategy).isEqualTo(LaoStrategy.checkUserAccess(user.username))
+      val caseSummary = givenAnOffenderWithAccess(user, currentExclusion, currentRestriction, userExcluded, userRestricted)
+
+      val results = cas2OffenderService.getPersonSummaries(laoStrategy, listOf(caseSummary.crn))
+
+      assertThat(results).hasSize(1)
+      when (expectedResult) {
+        ExpectedSummaryResult.SUMMARY -> assertSummary(results.first(), caseSummary)
+        ExpectedSummaryResult.LIMITED_ACCESS ->
+          assertThat(results.first()).isEqualTo(Cas2PersonSummary.LimitedAccess(caseSummary.crn))
+      }
+
+      apDeliusContextVerifyUserAccessCalls(times = if (userAccessChecked) 1 else 0, username = user.username)
+    }
+  }
+
+  @Nested
+  inner class ExternalUser {
+
+    @ParameterizedTest(name = "currentExclusion={0}, currentRestriction={1}")
+    @CsvSource(
+      value = [
+        "false, false",
+        "false, true",
+        "true,  false",
+        "true,  true",
+      ],
+    )
+    fun `getPersonByNomisIdOrCrn always returns the full person and never checks user access`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+    ) {
+      requestUser = givenAnExternalUser()
+      val caseSummary = CaseSummaryFactory()
+        .withCurrentExclusion(currentExclusion)
+        .withCurrentRestriction(currentRestriction)
+        .produce()
+      apDeliusContextCaseSummariesSingleCase(caseSummary)
+
+      val result = cas2OffenderService.getPersonByNomisIdOrCrn(caseSummary.crn)
+
+      assertThat(result).isInstanceOf(Cas2v2OffenderSearchResult.Success.Full::class.java)
+      result as Cas2v2OffenderSearchResult.Success.Full
+      assertThat(result.person.crn).isEqualTo(caseSummary.crn)
+      apDeliusContextVerifyUserAccessCalls(times = 0)
+    }
+
+    @ParameterizedTest(name = "currentExclusion={0}, currentRestriction={1}")
+    @CsvSource(
+      value = [
+        "false, false",
+        "false, true",
+        "true,  false",
+        "true,  true",
+      ],
+    )
+    fun `getPersonSummaries always returns the summary and never checks user access`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+    ) {
+      val laoStrategy = givenAnExternalUser().cas2LaoStrategy()
+      assertThat(laoStrategy).isEqualTo(LaoStrategy.NeverRestricted)
+      val caseSummary = CaseSummaryFactory()
+        .withCurrentExclusion(currentExclusion)
+        .withCurrentRestriction(currentRestriction)
+        .produce()
+      apDeliusContextCaseSummariesSingleCase(caseSummary)
+
+      val results = cas2OffenderService.getPersonSummaries(laoStrategy, listOf(caseSummary.crn))
+
+      assertThat(results).hasSize(1)
+      assertSummary(results.first(), caseSummary)
+      apDeliusContextVerifyUserAccessCalls(times = 0)
+    }
+  }
 
   @Nested
   inner class GetPersonByNomisIdOrCrn {
@@ -247,14 +447,5 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
     }
 
     private fun List<Cas2PersonSummary>.forCrn(crn: String) = single { it.crn == crn }
-
-    private fun assertSummary(result: Cas2PersonSummary, caseSummary: CaseSummary) {
-      assertThat(result).isEqualTo(
-        Cas2PersonSummary.Summary(
-          crn = caseSummary.crn,
-          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
-        ),
-      )
-    }
   }
 }

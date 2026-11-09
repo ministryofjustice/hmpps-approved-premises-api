@@ -360,10 +360,11 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
           Assertions.assertThat(summariesById[excludedApplication.id]!!.personSummary)
             .isEqualTo(Cas2PersonSummaryDto.Found(excludedOffender.otherIds.crn, excludedName))
 
-          // CAS2 blocks restricted offenders regardless of user
-          Assertions.assertThat(summariesById[restrictedApplication.id]!!.personName).isEqualTo("Restricted Access")
+          // External users (assessors) are never restricted
+          val restrictedName = "${restrictedOffender.firstName} ${restrictedOffender.surname}"
+          Assertions.assertThat(summariesById[restrictedApplication.id]!!.personName).isEqualTo(restrictedName)
           Assertions.assertThat(summariesById[restrictedApplication.id]!!.personSummary)
-            .isEqualTo(Cas2PersonSummaryDto.LimitedAccess(restrictedOffender.otherIds.crn))
+            .isEqualTo(Cas2PersonSummaryDto.Found(restrictedOffender.otherIds.crn, restrictedName))
 
           Assertions.assertThat(summariesById[notFoundApplication.id]!!.personName).isEqualTo("Person Not Found")
           Assertions.assertThat(summariesById[notFoundApplication.id]!!.personSummary)
@@ -564,7 +565,7 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Assessor cannot view single submitted application on a restricted offender`() {
+    fun `Assessor can view single submitted application on a restricted offender`() {
       val crn = "CRN321"
       val nomsNumber = "NOMS321"
       apDeliusContextCaseSummariesSingleCase(
@@ -599,12 +600,17 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
               )
             }
 
+            cas2AssessmentEntityFactory.produceAndPersist {
+              withApplication(applicationEntity)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            }
+
             webTestClient.get()
               .uri("/cas2/submissions/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
-              .isForbidden
+              .isOk
           }
         }
       }
