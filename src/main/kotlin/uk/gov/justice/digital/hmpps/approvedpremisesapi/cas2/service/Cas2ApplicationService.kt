@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
@@ -20,13 +19,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.toCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -65,7 +61,7 @@ class Cas2ApplicationService(
 
   private companion object {
     // Applications with an AWAITING_ARRIVAL status older than this threshold are excluded from the suitable applications list,
-    // consistent with the cas_2_application_live_summary database view.
+    // consistent with the CAS2 application filter in Cas2ApplicationSummaryRepository.
     const val APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS = 32L
   }
 
@@ -76,7 +72,7 @@ class Cas2ApplicationService(
       return false
     }
 
-    // Complement the live view's status_created_at > CURRENT_DATE - '32 days'::interval.
+    // Complement the CAS2 application filter's status created_at > CURRENT_DATE - '32 days'::interval.
     val cutoff = LocalDate.now(clock).minusDays(APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS).atStartOfDay(clock.zone).toInstant()
     return !latestStatusUpdate.createdAt.toInstant().isAfter(cutoff)
   }
@@ -90,41 +86,25 @@ class Cas2ApplicationService(
     user: Cas2UserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
-    var spec: Specification<Cas2ApplicationSummaryEntity> =
-      Specification { _, _, cb -> cb.conjunction() } // Start with no-op
-
-    if (limitByUser) {
-      spec = spec.and(Cas2ApplicationSummarySpecifications.hasUserId(user.id.toString()))
-    }
-
-    if (crnOrNomsNumber != null) {
-      spec = spec.and(Cas2ApplicationSummarySpecifications.hasCrnOrNomsNumber(crnOrNomsNumber))
-    }
-
-    if (prisonCode != null) {
-      spec = spec.and(Cas2ApplicationSummarySpecifications.hasPrisonCode(prisonCode))
-    }
-
-    if (applicationOrigin != null) {
-      spec = spec.and(Cas2ApplicationSummarySpecifications.hasApplicationOrigin(applicationOrigin))
-    }
-
-    if (isSubmitted != null) {
-      spec = spec.and(Cas2ApplicationSummarySpecifications.isSubmitted(isSubmitted))
-    }
-
-    spec = spec.and(Cas2ApplicationSummarySpecifications.hasServiceOrigin(Cas2ServiceOrigin.BAIL.toString()))
-
-    val response = cas2ApplicationSummaryRepository.findAll(spec, getPageableOrAllPages(pageCriteria))
+    val response = cas2ApplicationSummaryRepository.findCas2ApplicationSummaries(
+      serviceOrigin = Cas2ServiceOrigin.BAIL.toString(),
+      userId = if (limitByUser) user.id else null,
+      crnOrNomsNumber = crnOrNomsNumber,
+      prisonCode = prisonCode,
+      applicationOrigin = applicationOrigin?.toString(),
+      isSubmittedProvided = isSubmitted != null,
+      isSubmitted = isSubmitted ?: false,
+      pageable = getPageableOrAllPages(pageCriteria),
+    )
 
     val metadata = getMetadata(response, pageCriteria)
-    return Pair(response.content.map { it.toCas2ApplicationSummary() }, metadata)
+    return Pair(response.content, metadata)
   }
 
   fun getAllSubmittedCas2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
-    val response = cas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(Cas2ServiceOrigin.BAIL.toString(), pageable)
+    val response = cas2ApplicationSummaryRepository.findSubmittedApplications(Cas2ServiceOrigin.BAIL.toString(), pageable)
 
     val metadata = getMetadata(response, pageCriteria)
 

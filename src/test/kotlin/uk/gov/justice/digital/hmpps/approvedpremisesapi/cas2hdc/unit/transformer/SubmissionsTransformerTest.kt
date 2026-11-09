@@ -14,11 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAsses
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.toCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcAssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcNomisUserTransformer
@@ -133,20 +132,20 @@ class SubmissionsTransformerTest {
   inner class TransformJpaSummaryToCas2SubmittedSummary {
     @Test
     fun `transforms submitted summary application to API summary representation `() {
-      val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
+      val applicationSummary = Cas2ApplicationSummaryFactory.produce()
 
       val expectedSubmittedApplicationSummary = Cas2HdcSubmittedApplicationSummary(
         id = applicationSummary.id,
         crn = applicationSummary.crn,
-        nomsNumber = applicationSummary.nomsNumber,
-        createdByUserId = UUID.fromString(applicationSummary.userId),
-        createdAt = applicationSummary.createdAt.toInstant(),
-        submittedAt = applicationSummary.submittedAt!!.toInstant(),
+        nomsNumber = applicationSummary.nomsNumber!!,
+        createdByUserId = applicationSummary.userId,
+        createdAt = applicationSummary.createdAt,
+        submittedAt = applicationSummary.submittedAt,
         personName = "Example Offender",
       )
 
       val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(
-        applicationSummary.toCas2ApplicationSummary(),
+        applicationSummary,
         "Example Offender",
       )
 

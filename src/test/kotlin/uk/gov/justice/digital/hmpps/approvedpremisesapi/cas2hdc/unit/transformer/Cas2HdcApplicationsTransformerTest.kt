@@ -16,13 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAsses
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcLatestStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.toCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcAssessmentsTransformer
@@ -34,6 +32,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -312,29 +312,28 @@ class Cas2HdcApplicationsTransformerTest {
   @Nested
   inner class TransformJpaSummaryToSummary {
 
-    fun createApplication(prisonCode: String) = Cas2ApplicationSummaryEntity(
+    fun createApplication(prisonCode: String) = Cas2ApplicationSummaryFactory.produce(
       id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
       crn = "CRNNUM",
       nomsNumber = "NOMNUM",
-      userId = "836a9460-b177-433a-a0d9-262509092c9f",
+      userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
       userName = "first last",
-      createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-      submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+      createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
+      submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
       hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-      latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
+      latestStatusUpdateStatusId = UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"),
       latestStatusUpdateLabel = "my latest status update",
       prisonCode = "BRI",
       allocatedPomUserId = UUID.randomUUID(),
       allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
       currentPrisonCode = prisonCode,
-      assignmentDate = OffsetDateTime.now(),
-      // BAIL-WIP - come back and check application summary view
-      applicationOrigin = ApplicationOrigin.prisonBail.toString(),
-    ).toCas2ApplicationSummary()
+      assignmentDate = Instant.now(),
+      applicationOrigin = ApplicationOrigin.prisonBail,
+    )
 
     @Test
     fun `transforms an in progress CAS2 application correctly`() {
-      val application = Cas2ApplicationSummaryEntityFactory.produce().toCas2ApplicationSummary()
+      val application = Cas2ApplicationSummaryFactory.produce()
 
       every { mockCas2HdcStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
 
@@ -347,7 +346,7 @@ class Cas2HdcApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
+      assertThat(result.createdByUserId).isEqualTo(application.userId)
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
@@ -365,7 +364,7 @@ class Cas2HdcApplicationsTransformerTest {
 
       val application = createApplication(prisonCode = "BRI")
       every { mockCas2HdcStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns Cas2HdcLatestStatusUpdate(
-        statusId = UUID.fromString(application.latestStatusUpdateStatusId),
+        statusId = application.latestStatusUpdateStatusId!!,
         label = application.latestStatusUpdateLabel!!,
       )
 
@@ -375,13 +374,13 @@ class Cas2HdcApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId).isEqualTo(UUID.fromString(application.userId))
+      assertThat(result.createdByUserId).isEqualTo(application.userId)
       assertThat(result.createdByUserName).isEqualTo(application.userName)
       assertThat(result.allocatedPomUserId).isEqualTo(application.allocatedPomUserId)
       assertThat(result.allocatedPomName).isEqualTo(application.allocatedPomName)
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
-      assertThat(result.createdAt).isEqualTo(application.createdAt.toInstant())
-      assertThat(result.submittedAt).isEqualTo(application.submittedAt!!.toInstant())
+      assertThat(result.createdAt).isEqualTo(application.createdAt)
+      assertThat(result.submittedAt).isEqualTo(application.submittedAt)
       assertThat(result.type).isEqualTo("CAS2")
       assertThat(result.hdcEligibilityDate).isEqualTo(application.hdcEligibilityDate)
       assertThat(result.crn).isEqualTo(application.crn)
@@ -389,7 +388,7 @@ class Cas2HdcApplicationsTransformerTest {
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.latestStatusUpdate?.label).isEqualTo(application.latestStatusUpdateLabel)
-      assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString(application.latestStatusUpdateStatusId))
+      assertThat(result.latestStatusUpdate?.statusId).isEqualTo(application.latestStatusUpdateStatusId!!)
       assertThat(result.assignmentDate).isEqualTo(application.assignmentDate!!.toLocalDate())
     }
 
@@ -400,7 +399,7 @@ class Cas2HdcApplicationsTransformerTest {
       val application = createApplication(prisonCode = "BRI")
 
       every { mockCas2HdcStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns Cas2HdcLatestStatusUpdate(
-        statusId = UUID.fromString(application.latestStatusUpdateStatusId),
+        statusId = application.latestStatusUpdateStatusId!!,
         label = application.latestStatusUpdateLabel!!,
       )
 
@@ -417,25 +416,25 @@ class Cas2HdcApplicationsTransformerTest {
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns null
 
       val now = OffsetDateTime.now().toLocalDate()
-      val applicationSummary = Cas2ApplicationSummaryEntity(
+      val applicationSummary = Cas2ApplicationSummaryFactory.produce(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",
         nomsNumber = "NOMNUM",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
         userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
         hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-        latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
+        latestStatusUpdateStatusId = UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"),
         latestStatusUpdateLabel = "my latest status update",
         prisonCode = "BRI",
         allocatedPomUserId = UUID.randomUUID(),
         allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
         currentPrisonCode = "BRI",
-        assignmentDate = OffsetDateTime.now(),
-        applicationOrigin = ApplicationOrigin.prisonBail.toString(),
+        assignmentDate = Instant.now(),
+        applicationOrigin = ApplicationOrigin.prisonBail,
         bailHearingDate = now,
-      ).toCas2ApplicationSummary()
+      )
 
       val result = cas2HdcApplicationsTransformer.transformJpaSummaryToSummary(
         applicationSummary,
