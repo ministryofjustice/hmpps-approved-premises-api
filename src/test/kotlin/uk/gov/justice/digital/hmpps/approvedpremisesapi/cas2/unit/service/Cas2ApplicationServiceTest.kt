@@ -44,7 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummarySpecifications
@@ -52,7 +51,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.toCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -188,10 +186,10 @@ class Cas2ApplicationServiceTest {
         allocatedPomName = null,
         assignmentDate = null,
         currentPrisonCode = null,
-      ).toCas2ApplicationSummary()
+      )
 
       PaginationConfig(defaultPageSize = 10).postInit()
-      val page = mockk<Page<Cas2ApplicationSummary>>()
+      val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
       val pageRequest = mockk<PageRequest>()
       val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
 
@@ -264,7 +262,7 @@ class Cas2ApplicationServiceTest {
         pageCriteria,
       )
 
-      assertThat(applicationSummaries).isEqualTo(listOf(cas2ApplicationSummary.toCas2ApplicationSummary()))
+      assertThat(applicationSummaries).isEqualTo(listOf(cas2ApplicationSummary))
     }
 
     @AfterEach

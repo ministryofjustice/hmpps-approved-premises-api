@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.LatestCas2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import java.util.UUID
@@ -33,7 +33,7 @@ class Cas2StatusUpdateTransformer(
     label = jpa.label,
   )
 
-  fun transformJpaSummaryToLatestStatusUpdateApi(jpa: Cas2ApplicationSummary): LatestCas2StatusUpdate? {
+  fun transformJpaSummaryToLatestStatusUpdateApi(jpa: Cas2ApplicationSummaryEntity): LatestCas2StatusUpdate? {
     if (jpa.latestStatusUpdateStatusId !== null) {
       return LatestCas2StatusUpdate(
         statusId = UUID.fromString(jpa.latestStatusUpdateStatusId!!),

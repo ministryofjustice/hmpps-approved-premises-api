@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Submitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
@@ -39,7 +39,7 @@ class Cas2SubmissionsTransformer(
   )
 
   fun transformJpaSummaryToApiRepresentation(
-    jpaSummary: Cas2ApplicationSummary,
+    jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
     personSummary: Cas2PersonSummary,
   ): Cas2SubmittedApplicationSummary = Cas2SubmittedApplicationSummary(

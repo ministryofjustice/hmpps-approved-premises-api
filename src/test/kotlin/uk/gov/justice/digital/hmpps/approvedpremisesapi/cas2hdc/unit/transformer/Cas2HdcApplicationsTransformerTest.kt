@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.toCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcAssessmentsTransformer
@@ -330,11 +329,11 @@ class Cas2HdcApplicationsTransformerTest {
       assignmentDate = OffsetDateTime.now(),
       // BAIL-WIP - come back and check application summary view
       applicationOrigin = ApplicationOrigin.prisonBail.toString(),
-    ).toCas2ApplicationSummary()
+    )
 
     @Test
     fun `transforms an in progress CAS2 application correctly`() {
-      val application = Cas2ApplicationSummaryEntityFactory.produce().toCas2ApplicationSummary()
+      val application = Cas2ApplicationSummaryEntityFactory.produce()
 
       every { mockCas2HdcStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
 
@@ -435,7 +434,7 @@ class Cas2HdcApplicationsTransformerTest {
         assignmentDate = OffsetDateTime.now(),
         applicationOrigin = ApplicationOrigin.prisonBail.toString(),
         bailHearingDate = now,
-      ).toCas2ApplicationSummary()
+      )
 
       val result = cas2HdcApplicationsTransformer.transformJpaSummaryToSummary(
         applicationSummary,
