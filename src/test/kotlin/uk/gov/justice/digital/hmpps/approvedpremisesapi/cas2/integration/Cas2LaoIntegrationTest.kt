@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -11,7 +8,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
@@ -33,7 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
 /**
- * These tests validate the LAO behaviour of [Cas2OffenderService.getPersonByNomisIdOrCrn]
+ * These tests validate the LAO behaviour of [Cas2OffenderService.getPersonByNomisIdOrCrnForUser]
  * and [Cas2OffenderService.getPersonSummaries] (using the [cas2LaoStrategy])
  *
  * The [cas2LaoStrategy] depends on the type of the calling user:
@@ -49,26 +45,13 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
   @Autowired
   lateinit var cas2OffenderService: Cas2OffenderService
 
-  /**
-   * [Cas2OffenderService.getPersonByNomisIdOrCrn] resolves the user from the HTTP request,
-   * which doesn't exist when calling the service directly
-   */
-  @MockkBean
-  lateinit var cas2UserService: Cas2UserService
-
-  private var requestUser: Cas2UserEntity = Cas2UserEntityFactory().produce()
-
-  @BeforeEach
-  fun setupUser() {
-    requestUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
-    every { cas2UserService.getUserForRequest() } answers { requestUser }
-  }
-
   enum class ExpectedResult { FULL, FORBIDDEN }
 
   enum class ExpectedSummaryResult { SUMMARY, LIMITED_ACCESS }
 
   private fun givenADeliusUser() = Cas2UserEntityFactory().withUserType(Cas2UserType.DELIUS).produce()
+
+  private fun givenANomisUser() = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
 
   private fun givenAnExternalUser() = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
 
@@ -134,10 +117,11 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
       expectedResult: ExpectedResult,
       userAccessChecked: Boolean,
     ) {
-      requestUser = givenADeliusUser()
-      val caseSummary = givenAnOffenderWithAccess(requestUser, currentExclusion, currentRestriction, userExcluded, userRestricted)
+      val requestUser = givenADeliusUser()
+      val caseSummary =
+        givenAnOffenderWithAccess(requestUser, currentExclusion, currentRestriction, userExcluded, userRestricted)
 
-      val result = cas2OffenderService.getPersonByNomisIdOrCrn(caseSummary.crn)
+      val result = cas2OffenderService.getPersonByNomisIdOrCrnForUser(caseSummary.crn) { requestUser }
 
       when (expectedResult) {
         ExpectedResult.FULL -> {
@@ -182,7 +166,8 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
       val user = givenADeliusUser()
       val laoStrategy = user.cas2LaoStrategy()
       assertThat(laoStrategy).isEqualTo(LaoStrategy.checkUserAccess(user.username))
-      val caseSummary = givenAnOffenderWithAccess(user, currentExclusion, currentRestriction, userExcluded, userRestricted)
+      val caseSummary =
+        givenAnOffenderWithAccess(user, currentExclusion, currentRestriction, userExcluded, userRestricted)
 
       val results = cas2OffenderService.getPersonSummaries(laoStrategy, listOf(caseSummary.crn))
 
@@ -213,14 +198,14 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
       currentExclusion: Boolean,
       currentRestriction: Boolean,
     ) {
-      requestUser = givenAnExternalUser()
+      val requestUser = givenAnExternalUser()
       val caseSummary = CaseSummaryFactory()
         .withCurrentExclusion(currentExclusion)
         .withCurrentRestriction(currentRestriction)
         .produce()
       apDeliusContextCaseSummariesSingleCase(caseSummary)
 
-      val result = cas2OffenderService.getPersonByNomisIdOrCrn(caseSummary.crn)
+      val result = cas2OffenderService.getPersonByNomisIdOrCrnForUser(caseSummary.crn) { requestUser }
 
       assertThat(result).isInstanceOf(Cas2v2OffenderSearchResult.Success.Full::class.java)
       result as Cas2v2OffenderSearchResult.Success.Full
@@ -258,7 +243,7 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetPersonByNomisIdOrCrn {
+  inner class NomisUser {
 
     @ParameterizedTest(name = "currentExclusion={0}, currentRestriction={1} -> {2}")
     @CsvSource(
@@ -281,7 +266,7 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
         .produce()
       apDeliusContextCaseSummariesSingleCase(caseSummary)
 
-      val result = cas2OffenderService.getPersonByNomisIdOrCrn(caseSummary.crn)
+      val result = cas2OffenderService.getPersonByNomisIdOrCrnForUser(caseSummary.crn) { givenANomisUser() }
 
       when (expectedResult) {
         ExpectedResult.FULL -> {
@@ -299,6 +284,76 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
       apDeliusContextVerifyUserAccessCalls(times = 0)
     }
 
+    @ParameterizedTest(name = "currentExclusion={0}, currentRestriction={1} -> {2}")
+    @CsvSource(
+      // currentExclusion, currentRestriction, expectedResult
+      value = [
+        "false,            false,              SUMMARY",
+        "false,            true,               LIMITED_ACCESS",
+        "true,             false,              SUMMARY",
+        "true,             true,               LIMITED_ACCESS",
+      ],
+    )
+    fun `returns the expected result for each combination of offender LAO status`(
+      currentExclusion: Boolean,
+      currentRestriction: Boolean,
+      expectedResult: ExpectedSummaryResult,
+    ) {
+      val laoStrategy = givenACas2LaoStrategy()
+      val caseSummary = CaseSummaryFactory()
+        .withCurrentExclusion(currentExclusion)
+        .withCurrentRestriction(currentRestriction)
+        .produce()
+      apDeliusContextCaseSummariesSingleCase(caseSummary)
+
+      val results = cas2OffenderService.getPersonSummaries(laoStrategy, listOf(caseSummary.crn))
+
+      assertThat(results).hasSize(1)
+      when (expectedResult) {
+        ExpectedSummaryResult.SUMMARY -> assertSummary(results.first(), caseSummary)
+        ExpectedSummaryResult.LIMITED_ACCESS ->
+          assertThat(results.first()).isEqualTo(Cas2PersonSummary.LimitedAccess(caseSummary.crn))
+      }
+
+      apDeliusContextVerifyCaseSummariesCalls(times = 1)
+      apDeliusContextVerifyUserAccessCalls(times = 0)
+    }
+
+    @Test
+    fun `returns the expected result for each CRN when requesting multiple CRNs with mixed LAO status`() {
+      val laoStrategy = givenACas2LaoStrategy()
+
+      val notLao = CaseSummaryFactory().withNoLimitedAccess().produce()
+      val excluded = CaseSummaryFactory().withCurrentExclusion(true).withCurrentRestriction(false).produce()
+      val restricted = CaseSummaryFactory().withCurrentExclusion(false).withCurrentRestriction(true).produce()
+      val excludedAndRestricted = CaseSummaryFactory()
+        .withCurrentExclusion(true)
+        .withCurrentRestriction(true)
+        .produce()
+      val notFoundCrn = randomStringUpperCase(8)
+
+      val caseSummaries = listOf(notLao, excluded, restricted, excludedAndRestricted)
+      val crns = caseSummaries.map { it.crn } + notFoundCrn
+
+      apDeliusContextCaseSummariesMultipleCases(casesSummary = caseSummaries, crns = crns)
+
+      val results = cas2OffenderService.getPersonSummaries(laoStrategy, crns)
+
+      assertThat(results).hasSize(crns.size)
+      assertSummary(results.forCrn(notLao.crn), notLao)
+      assertSummary(results.forCrn(excluded.crn), excluded)
+      assertThat(results.forCrn(restricted.crn)).isEqualTo(Cas2PersonSummary.LimitedAccess(restricted.crn))
+      assertThat(results.forCrn(excludedAndRestricted.crn))
+        .isEqualTo(Cas2PersonSummary.LimitedAccess(excludedAndRestricted.crn))
+      assertThat(results.forCrn(notFoundCrn)).isEqualTo(Cas2PersonSummary.NotFound(notFoundCrn))
+
+      apDeliusContextVerifyCaseSummariesCalls(times = 1)
+      apDeliusContextVerifyUserAccessCalls(times = 0)
+    }
+  }
+
+  @Nested
+  inner class Common {
     @Test
     fun `returns NotFound when the offender does not exist`() {
       val crn = randomStringUpperCase(8)
@@ -344,52 +399,6 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
       assertThat(result.nomisIdOrCrn).isEqualTo(crn)
       apDeliusContextVerifyUserAccessCalls(times = 0)
     }
-  }
-
-  @Nested
-  inner class GetPersonSummaries {
-
-    private fun givenACas2LaoStrategy(): LaoStrategy {
-      val laoStrategy = givenACas2v2NomisUser().cas2LaoStrategy()
-      assertThat(laoStrategy.restrictionHandling).isEqualTo(LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER)
-      assertThat(laoStrategy.exclusionHandling).isEqualTo(LaoStrategy.ExclusionHandling.IGNORE)
-      return laoStrategy
-    }
-
-    @ParameterizedTest(name = "currentExclusion={0}, currentRestriction={1} -> {2}")
-    @CsvSource(
-      // currentExclusion, currentRestriction, expectedResult
-      value = [
-        "false,            false,              SUMMARY",
-        "false,            true,               LIMITED_ACCESS",
-        "true,             false,              SUMMARY",
-        "true,             true,               LIMITED_ACCESS",
-      ],
-    )
-    fun `returns the expected result for each combination of offender LAO status`(
-      currentExclusion: Boolean,
-      currentRestriction: Boolean,
-      expectedResult: ExpectedSummaryResult,
-    ) {
-      val laoStrategy = givenACas2LaoStrategy()
-      val caseSummary = CaseSummaryFactory()
-        .withCurrentExclusion(currentExclusion)
-        .withCurrentRestriction(currentRestriction)
-        .produce()
-      apDeliusContextCaseSummariesSingleCase(caseSummary)
-
-      val results = cas2OffenderService.getPersonSummaries(laoStrategy, listOf(caseSummary.crn))
-
-      assertThat(results).hasSize(1)
-      when (expectedResult) {
-        ExpectedSummaryResult.SUMMARY -> assertSummary(results.first(), caseSummary)
-        ExpectedSummaryResult.LIMITED_ACCESS ->
-          assertThat(results.first()).isEqualTo(Cas2PersonSummary.LimitedAccess(caseSummary.crn))
-      }
-
-      apDeliusContextVerifyCaseSummariesCalls(times = 1)
-      apDeliusContextVerifyUserAccessCalls(times = 0)
-    }
 
     @Test
     fun `returns NotFound when the CRN does not exist`() {
@@ -413,39 +422,14 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
       apDeliusContextVerifyCaseSummariesCalls(times = 0)
       apDeliusContextVerifyUserAccessCalls(times = 0)
     }
+  }
 
-    @Test
-    fun `returns the expected result for each CRN when requesting multiple CRNs with mixed LAO status`() {
-      val laoStrategy = givenACas2LaoStrategy()
+  private fun List<Cas2PersonSummary>.forCrn(crn: String) = single { it.crn == crn }
 
-      val notLao = CaseSummaryFactory().withNoLimitedAccess().produce()
-      val excluded = CaseSummaryFactory().withCurrentExclusion(true).withCurrentRestriction(false).produce()
-      val restricted = CaseSummaryFactory().withCurrentExclusion(false).withCurrentRestriction(true).produce()
-      val excludedAndRestricted = CaseSummaryFactory()
-        .withCurrentExclusion(true)
-        .withCurrentRestriction(true)
-        .produce()
-      val notFoundCrn = randomStringUpperCase(8)
-
-      val caseSummaries = listOf(notLao, excluded, restricted, excludedAndRestricted)
-      val crns = caseSummaries.map { it.crn } + notFoundCrn
-
-      apDeliusContextCaseSummariesMultipleCases(casesSummary = caseSummaries, crns = crns)
-
-      val results = cas2OffenderService.getPersonSummaries(laoStrategy, crns)
-
-      assertThat(results).hasSize(crns.size)
-      assertSummary(results.forCrn(notLao.crn), notLao)
-      assertSummary(results.forCrn(excluded.crn), excluded)
-      assertThat(results.forCrn(restricted.crn)).isEqualTo(Cas2PersonSummary.LimitedAccess(restricted.crn))
-      assertThat(results.forCrn(excludedAndRestricted.crn))
-        .isEqualTo(Cas2PersonSummary.LimitedAccess(excludedAndRestricted.crn))
-      assertThat(results.forCrn(notFoundCrn)).isEqualTo(Cas2PersonSummary.NotFound(notFoundCrn))
-
-      apDeliusContextVerifyCaseSummariesCalls(times = 1)
-      apDeliusContextVerifyUserAccessCalls(times = 0)
-    }
-
-    private fun List<Cas2PersonSummary>.forCrn(crn: String) = single { it.crn == crn }
+  private fun givenACas2LaoStrategy(): LaoStrategy {
+    val laoStrategy = givenACas2v2NomisUser().cas2LaoStrategy()
+    assertThat(laoStrategy.restrictionHandling).isEqualTo(LaoStrategy.RestrictionHandling.BLOCK_REGARDLESS_OF_USER)
+    assertThat(laoStrategy.exclusionHandling).isEqualTo(LaoStrategy.ExclusionHandling.IGNORE)
+    return laoStrategy
   }
 }
