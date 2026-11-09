@@ -285,7 +285,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         val offenderDetailsResult =
           offenderService.getPersonSummaryInfoResults(
             setOf(offenderCrn),
-            LaoStrategy.NeverRestricted,
+            LaoStrategy.Ignore,
           )
             .firstOrNull()
       ) {

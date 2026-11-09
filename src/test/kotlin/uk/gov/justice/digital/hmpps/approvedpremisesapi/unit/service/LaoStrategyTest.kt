@@ -51,7 +51,7 @@ class LaoStrategyTest {
     fun `cas2LaoStrategy returns correct strategy for external users`() {
       val result = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce().cas2LaoStrategy()
 
-      assertThat(result).isEqualTo(LaoStrategy.NeverRestricted)
+      assertThat(result).isEqualTo(LaoStrategy.Ignore)
     }
   }
 

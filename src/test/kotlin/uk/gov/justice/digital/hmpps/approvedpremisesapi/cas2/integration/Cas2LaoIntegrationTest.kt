@@ -227,7 +227,7 @@ class Cas2LaoIntegrationTest : IntegrationTestBase() {
       currentRestriction: Boolean,
     ) {
       val laoStrategy = givenAnExternalUser().cas2LaoStrategy()
-      assertThat(laoStrategy).isEqualTo(LaoStrategy.NeverRestricted)
+      assertThat(laoStrategy).isEqualTo(LaoStrategy.Ignore)
       val caseSummary = CaseSummaryFactory()
         .withCurrentExclusion(currentExclusion)
         .withCurrentRestriction(currentRestriction)

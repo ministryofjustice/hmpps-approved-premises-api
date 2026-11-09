@@ -66,7 +66,7 @@ class Cas1DuplicateApplicationSeedJob(
       when (
         val personInfoResult = offenderDetailService.getPersonInfoResult(
           crn = sourceApplication.crn,
-          laoStrategy = LaoStrategy.NeverRestricted,
+          laoStrategy = LaoStrategy.Ignore,
         )
       ) {
         is PersonInfoResult.NotFound -> throw NotFoundProblem(

@@ -423,7 +423,7 @@ class Cas1ApplicationSeedServiceCaches(
       override fun load(crn: String): PersonInfoResult.Success.Full = when (
         val personInfoResult = offenderDetailService.getPersonInfoResult(
           crn = crn,
-          laoStrategy = LaoStrategy.NeverRestricted,
+          laoStrategy = LaoStrategy.Ignore,
         )
       ) {
         is PersonInfoResult.NotFound -> throw NotFoundProblem(

@@ -58,7 +58,7 @@ class Cas1ApplicationDomainEventService(
     val eventOccurredAt = OffsetDateTime.now()
 
     val personSummary =
-      when (val offenderDetailsResult = offenderService.getPersonSummaryInfoResult(application.crn, LaoStrategy.NeverRestricted)) {
+      when (val offenderDetailsResult = offenderService.getPersonSummaryInfoResult(application.crn, LaoStrategy.Ignore)) {
         is PersonSummaryInfoResult.Success.Full -> offenderDetailsResult.summary
         else ->
           throw RuntimeException(

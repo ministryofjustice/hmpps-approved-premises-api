@@ -382,7 +382,7 @@ class Cas1SpaceBookingDomainEventService(
     additionalInformation = additionalInformation,
   )
 
-  private fun getNomsNumber(crn: String) = when (val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)) {
+  private fun getNomsNumber(crn: String) = when (val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.Ignore)) {
     is PersonSummaryInfoResult.Success.Full -> personSummaryInfoResult.summary.nomsId
     else -> null
   }

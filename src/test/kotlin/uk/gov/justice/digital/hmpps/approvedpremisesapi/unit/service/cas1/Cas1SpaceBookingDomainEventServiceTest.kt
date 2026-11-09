@@ -632,7 +632,7 @@ class Cas1SpaceBookingDomainEventServiceTest {
 
   private fun setupOffenderServiceMockForNomsNumber(crn: String, nomsNumber: String) {
     every {
-      offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)
+      offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.Ignore)
     } returns PersonSummaryInfoResult.Success.Full(
       crn = crn,
       summary = CaseSummaryFactory().withNomsId(nomsNumber).produce(),

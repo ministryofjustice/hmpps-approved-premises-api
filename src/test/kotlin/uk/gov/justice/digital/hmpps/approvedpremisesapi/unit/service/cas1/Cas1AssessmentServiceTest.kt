@@ -1132,7 +1132,7 @@ class Cas1AssessmentServiceTest {
       every {
         offenderServiceMock.getPersonSummaryInfoResult(
           assessment.application.crn,
-          LaoStrategy.NeverRestricted,
+          LaoStrategy.Ignore,
         )
       } returns
         PersonSummaryInfoResult.Success.Full(
@@ -1267,7 +1267,7 @@ class Cas1AssessmentServiceTest {
       every {
         offenderServiceMock.getPersonSummaryInfoResult(
           assessment.application.crn,
-          LaoStrategy.NeverRestricted,
+          LaoStrategy.Ignore,
         )
       } returns
         PersonSummaryInfoResult.Success.Full(
@@ -1565,7 +1565,7 @@ class Cas1AssessmentServiceTest {
       every {
         offenderServiceMock.getPersonSummaryInfoResult(
           assessment.application.crn,
-          LaoStrategy.NeverRestricted,
+          LaoStrategy.Ignore,
         )
       } returns
         PersonSummaryInfoResult.Success.Full(
