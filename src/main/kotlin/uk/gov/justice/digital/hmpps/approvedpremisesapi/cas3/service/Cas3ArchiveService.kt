@@ -207,11 +207,11 @@ class Cas3ArchiveService(
     premises: Cas3PremisesEntity,
     archivePremisesEndDate: LocalDate,
   ): CasResult<Cas3PremisesEntity> = validatedCasResult {
-    if (archivePremisesEndDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_PREMISES_IN_PAST))) {
+    if (!premises.suppressArchiveLimits && archivePremisesEndDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_PREMISES_IN_PAST))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInThePast"
     }
 
-    if (archivePremisesEndDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE))) {
+    if (!premises.suppressArchiveLimits && archivePremisesEndDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
     }
 
@@ -306,11 +306,11 @@ class Cas3ArchiveService(
 
     val today = LocalDate.now()
 
-    if (restartDate.isBefore(today.minusDays(MAX_DAYS_UNARCHIVE_PREMISES))) {
+    if (!premises.suppressArchiveLimits && restartDate.isBefore(today.minusDays(MAX_DAYS_UNARCHIVE_PREMISES))) {
       "$.restartDate" hasValidationError "invalidRestartDateInThePast"
     }
 
-    if (restartDate.isAfter(today.plusDays(MAX_DAYS_UNARCHIVE_PREMISES))) {
+    if (!premises.suppressArchiveLimits && restartDate.isAfter(today.plusDays(MAX_DAYS_UNARCHIVE_PREMISES))) {
       "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
     }
 

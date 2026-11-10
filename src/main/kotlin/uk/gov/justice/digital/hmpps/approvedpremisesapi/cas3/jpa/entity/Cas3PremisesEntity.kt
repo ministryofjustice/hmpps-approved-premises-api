@@ -77,6 +77,7 @@ data class Cas3PremisesEntity(
   var createdAt: OffsetDateTime,
   var lastUpdatedAt: OffsetDateTime? = null,
 
+  var suppressArchiveLimits: Boolean = false,
 ) {
 
   fun isPremisesScheduledToArchive(): Boolean = status == Cas3PremisesStatus.archived && endDate != null && endDate!! > LocalDate.now()
