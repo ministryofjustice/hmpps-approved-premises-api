@@ -79,6 +79,16 @@ class Cas2ApplicationService(
     return !latestStatusUpdate.createdAt.toInstant().isAfter(cutoff)
   }
 
+  fun archivedDate(application: Cas2ApplicationEntity): LocalDate? {
+    val archived = isArchived(application)
+    if (!archived) {
+      return null
+    }
+
+    val lastStatusUpdate = application.getLatestStatusUpdate()
+    return lastStatusUpdate?.createdAt?.toLocalDate()?.plusDays(APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS)
+  }
+
   fun getCas2Applications(
     prisonCode: String?,
     isSubmitted: Boolean?,

@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.transformer
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2Tim
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
@@ -54,13 +57,13 @@ class Cas2ApplicationTransformerTest {
 
   private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
     objectMapper,
-    mockPersonTransformer,
     mockCas2UserTransformer,
     mockCas2StatusUpdateTransformer,
     mockCas2TimelineEventsTransformer,
     mockCas2AssessmentsTransformer,
     mockOffenderManagementUnitRepository,
     mockCas2ApplicationService,
+    mockPersonTransformer,
     "http://frontend/applications/#id/overview",
   )
 
@@ -352,6 +355,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.applicationSubmittedDate).isEqualTo(application.submittedAt!!.toLocalDate())
       assertThat(result.applicationLastUpdatedDate).isEqualTo(statusUpdate.createdAt.toLocalDate())
       assertThat(result.applicationStatus).isEqualTo(Cas2AssessmentStatus.CANCELLED.apiName)
+      assertThat(result.applicationSubStatus).isNull()
       assertThat(result.referralRejectionReason).isEqualTo("cancelled")
       assertThat(result.localAuthorityArea).isEqualTo("HMP Bristol")
       assertThat(result.pdu).isEqualTo("Area 1, Area 2")
@@ -388,6 +392,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.applicationSubmittedDate).isEqualTo(application.submittedAt!!.toLocalDate())
       assertThat(result.applicationLastUpdatedDate).isEqualTo(statusUpdate.createdAt.toLocalDate())
       assertThat(result.applicationStatus).isEqualTo(Cas2AssessmentStatus.WITHDRAWN.apiName)
+      assertThat(result.applicationSubStatus).isNull()
       assertThat(result.referralRejectionReason).isEqualTo("withdrawn")
       assertThat(result.localAuthorityArea).isEqualTo("BRI")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
@@ -433,12 +438,15 @@ class Cas2ApplicationTransformerTest {
 
     @ParameterizedTest
     @CsvSource(
-      "true, archived",
-      "false, awaitingArrival",
+      "true, archived, 2026-09-19T00:00:00Z, 2026-10-21",
+      "false, awaitingArrival, 2026-09-19T00:00:00Z, 2026-09-19",
+      "true, archived, 2026-12-15T23:30:00-02:00, 2027-01-16",
     )
-    fun `maps referral status according to whether the application is archived`(
+    fun `maps archived status suppresses substatus and uses the archive date`(
       archived: Boolean,
       expectedStatus: String,
+      statusCreatedAt: OffsetDateTime,
+      expectedLastUpdatedDate: LocalDate,
     ) {
       val application = submittedCas2ApplicationFactory
         .withAssessment(Cas2AssessmentEntityFactory().withServiceOrigin(Cas2ServiceOrigin.BAIL).produce())
@@ -447,19 +455,129 @@ class Cas2ApplicationTransformerTest {
       val statusUpdate = Cas2StatusUpdateEntityFactory()
         .withApplication(application)
         .withStatusId(Cas2AssessmentStatus.AWAITING_ARRIVAL.id)
-        .withCreatedAt(OffsetDateTime.parse("2026-09-19T00:00:00Z"))
+        .withCreatedAt(statusCreatedAt)
+        .withStatusUpdateDetails(mutableListOf())
         .withAssessor(Cas2UserEntityFactory().withServiceOrigin(Cas2ServiceOrigin.BAIL).produce())
         .produce()
+      statusUpdate.statusUpdateDetails!!.add(
+        Cas2StatusUpdateDetailEntityFactory()
+          .withStatusUpdate(statusUpdate)
+          .withLabel("Arrival arranged")
+          .produce(),
+      )
       application.statusUpdates = mutableListOf(statusUpdate)
       every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
       every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns archived
+      if (archived) {
+        every { mockCas2ApplicationService.archivedDate(match { it.id == application.id }) } returns expectedLastUpdatedDate
+      }
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
 
       assertThat(result.applicationStatus).isEqualTo(expectedStatus)
-      assertThat(result.applicationLastUpdatedDate).isEqualTo(statusUpdate.createdAt.toLocalDate())
+      assertThat(result.applicationSubStatus).isEqualTo(if (archived) null else "Arrival arranged")
+      assertThat(result.applicationLastUpdatedDate).isEqualTo(expectedLastUpdatedDate)
       assertThat(result.referralRejectionReason).isNull()
       assertThat(result.uiUrl).isEqualTo("http://frontend/applications/${application.id}/overview")
+      verify(exactly = 1) { mockCas2ApplicationService.isArchived(match { it.id == application.id }) }
+      verify(exactly = if (archived) 1 else 0) { mockCas2ApplicationService.archivedDate(match { it.id == application.id }) }
+    }
+
+    @ParameterizedTest
+    @EnumSource(Cas2AssessmentStatus::class)
+    fun `maps every non archived status and only cancelled or withdrawn rejection reasons`(status: Cas2AssessmentStatus) {
+      val application = submittedCas2ApplicationFactory
+        .withAssessment(Cas2AssessmentEntityFactory().withServiceOrigin(Cas2ServiceOrigin.BAIL).produce())
+        .withReferringPrisonCode("BRI")
+        .produce()
+      application.statusUpdates = mutableListOf(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(application)
+          .withStatusId(status.id)
+          .withAssessor(user)
+          .produce(),
+      )
+      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
+      every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns false
+
+      val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
+
+      assertThat(result.applicationStatus).isEqualTo(status.apiName)
+      assertThat(result.referralRejectionReason).isEqualTo(
+        when (status) {
+          Cas2AssessmentStatus.CANCELLED -> "cancelled"
+          Cas2AssessmentStatus.WITHDRAWN -> "withdrawn"
+          else -> null
+        },
+      )
+    }
+
+    @Test
+    fun `uses only the latest status update and its first detail`() {
+      val application = submittedCas2ApplicationFactory
+        .withAssessment(Cas2AssessmentEntityFactory().withServiceOrigin(Cas2ServiceOrigin.BAIL).produce())
+        .withReferringPrisonCode("BRI")
+        .produce()
+      val latest = Cas2StatusUpdateEntityFactory()
+        .withApplication(application)
+        .withStatusId(Cas2AssessmentStatus.OFFER_DECLINED.id)
+        .withAssessor(user)
+        .withCreatedAt(OffsetDateTime.parse("2026-10-31T23:30:00-02:00"))
+        .withStatusUpdateDetails(mutableListOf())
+        .produce()
+      latest.statusUpdateDetails!!.addAll(
+        listOf("First reason", "Second reason").map { label ->
+          Cas2StatusUpdateDetailEntityFactory().withStatusUpdate(latest).withLabel(label).produce()
+        },
+      )
+      val older = Cas2StatusUpdateEntityFactory()
+        .withApplication(application)
+        .withStatusId(Cas2AssessmentStatus.CANCELLED.id)
+        .withAssessor(user)
+        .withCreatedAt(OffsetDateTime.parse("2026-10-01T00:00:00Z"))
+        .produce()
+      application.statusUpdates = mutableListOf(latest, older)
+      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
+      every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns false
+
+      val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
+
+      assertThat(result.applicationStatus).isEqualTo("offerDeclined")
+      assertThat(result.applicationSubStatus).isEqualTo("First reason")
+      assertThat(result.applicationLastUpdatedDate).isEqualTo(LocalDate.parse("2026-10-31"))
+      assertThat(result.referralRejectionReason).isNull()
+    }
+
+    @ParameterizedTest
+    @CsvSource("true, true", "true, false", "false, true", "false, false")
+    fun `handles null or empty status details for archived and non archived applications`(
+      archived: Boolean,
+      nullDetails: Boolean,
+    ) {
+      val application = submittedCas2ApplicationFactory
+        .withAssessment(Cas2AssessmentEntityFactory().withServiceOrigin(Cas2ServiceOrigin.BAIL).produce())
+        .withReferringPrisonCode("BRI")
+        .produce()
+      val statusFactory = Cas2StatusUpdateEntityFactory()
+        .withApplication(application)
+        .withStatusId(Cas2AssessmentStatus.AWAITING_ARRIVAL.id)
+        .withCreatedAt(OffsetDateTime.parse("2026-09-19T00:00:00Z"))
+        .withAssessor(user)
+      if (!nullDetails) statusFactory.withStatusUpdateDetails(mutableListOf())
+      application.statusUpdates = mutableListOf(statusFactory.produce())
+      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
+      every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns archived
+      if (archived) {
+        every { mockCas2ApplicationService.archivedDate(match { it.id == application.id }) } returns LocalDate.parse("2026-10-21")
+      }
+
+      val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
+
+      assertThat(result.applicationSubStatus).isNull()
+      assertThat(result.applicationStatus).isEqualTo(if (archived) "archived" else "awaitingArrival")
+      assertThat(result.applicationLastUpdatedDate).isEqualTo(
+        LocalDate.parse(if (archived) "2026-10-21" else "2026-09-19"),
+      )
     }
   }
 }

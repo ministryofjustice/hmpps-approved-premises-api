@@ -102,26 +102,26 @@ class Cas2ApplicationServiceTest {
     "http://frontend/assess/applications/#applicationId/overview",
   )
 
+  private fun applicationWithStatus(
+    status: Cas2AssessmentStatus,
+    createdAt: OffsetDateTime,
+  ): Cas2ApplicationEntity {
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(Cas2UserEntityFactory().produce())
+      .produce()
+    application.statusUpdates = mutableListOf(
+      Cas2StatusUpdateEntityFactory()
+        .withApplication(application)
+        .withAssessor(application.createdByUser)
+        .withStatusId(status.id)
+        .withCreatedAt(createdAt)
+        .produce(),
+    )
+    return application
+  }
+
   @Nested
   inner class IsArchived {
-    private fun applicationWithStatus(
-      status: Cas2AssessmentStatus,
-      createdAt: OffsetDateTime,
-    ): Cas2ApplicationEntity {
-      val application = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(Cas2UserEntityFactory().produce())
-        .produce()
-      application.statusUpdates = mutableListOf(
-        Cas2StatusUpdateEntityFactory()
-          .withApplication(application)
-          .withAssessor(application.createdByUser)
-          .withStatusId(status.id)
-          .withCreatedAt(createdAt)
-          .produce(),
-      )
-      return application
-    }
-
     @ParameterizedTest
     @CsvSource(
       "2026-09-18T23:59:59.999999Z, true",
@@ -163,6 +163,74 @@ class Cas2ApplicationServiceTest {
         .produce()
 
       assertThat(cas2ApplicationService.isArchived(application)).isFalse()
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "AWAITING_DECISION, 2026-09-18T00:00:00Z, AWAITING_ARRIVAL, false",
+      "AWAITING_ARRIVAL, 2026-09-20T00:00:00Z, AWAITING_ARRIVAL, false",
+      "AWAITING_ARRIVAL, 2026-09-18T00:00:00Z, AWAITING_DECISION, true",
+    )
+    fun `only the latest status determines whether an application is archived`(
+      latestStatus: Cas2AssessmentStatus,
+      latestCreatedAt: OffsetDateTime,
+      olderStatus: Cas2AssessmentStatus,
+      expected: Boolean,
+    ) {
+      val application = applicationWithStatus(latestStatus, latestCreatedAt)
+      application.statusUpdates!!.add(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(application)
+          .withAssessor(application.createdByUser)
+          .withStatusId(olderStatus.id)
+          .withCreatedAt(OffsetDateTime.parse("2026-09-01T00:00:00Z"))
+          .produce(),
+      )
+
+      assertThat(cas2ApplicationService.isArchived(application)).isEqualTo(expected)
+    }
+  }
+
+  @Nested
+  inner class ArchivedDate {
+    @ParameterizedTest
+    @CsvSource(
+      "2026-09-18T23:59:59.999999Z, 2026-10-20",
+      "2026-09-19T00:00:00Z, 2026-10-21",
+      "2026-09-19T00:00:00.000001Z,",
+    )
+    fun `returns the archive date only at or before the cutoff`(
+      createdAt: OffsetDateTime,
+      expectedDate: LocalDate?,
+    ) {
+      val application = applicationWithStatus(Cas2AssessmentStatus.AWAITING_ARRIVAL, createdAt)
+      application.statusUpdates!!.add(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(application)
+          .withAssessor(application.createdByUser)
+          .withStatusId(Cas2AssessmentStatus.AWAITING_ARRIVAL.id)
+          .withCreatedAt(createdAt.minusDays(1))
+          .produce(),
+      )
+
+      assertThat(cas2ApplicationService.archivedDate(application)).isEqualTo(expectedDate)
+    }
+
+    @ParameterizedTest
+    @EnumSource(Cas2AssessmentStatus::class, names = ["AWAITING_ARRIVAL"], mode = EnumSource.Mode.EXCLUDE)
+    fun `returns null for every other status even when old`(status: Cas2AssessmentStatus) {
+      val application = applicationWithStatus(status, OffsetDateTime.parse("2026-09-01T00:00:00Z"))
+
+      assertThat(cas2ApplicationService.archivedDate(application)).isNull()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `returns null for null or empty status history`(nullHistory: Boolean) {
+      val application = applicationWithStatus(Cas2AssessmentStatus.AWAITING_ARRIVAL, OffsetDateTime.parse("2026-09-01T00:00:00Z"))
+      application.statusUpdates = if (nullHistory) null else mutableListOf()
+
+      assertThat(cas2ApplicationService.archivedDate(application)).isNull()
     }
   }
 
