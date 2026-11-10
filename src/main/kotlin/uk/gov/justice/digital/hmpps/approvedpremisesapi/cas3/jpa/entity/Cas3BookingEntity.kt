@@ -281,6 +281,9 @@ interface Cas3BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
   @Query("SELECT b FROM Cas3BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bedspace.id IN :bedspaceIds ORDER BY b.createdAt")
   fun findAllByOverlappingDateForBedspaceIds(startDate: LocalDate, endDate: LocalDate, bedspaceIds: List<UUID>): List<Cas3BookingEntity>
 
+  /**
+   * Active bookings where departure date is after the given date, and no non-arrival has been recorded
+   */
   @Query(
     """
       SELECT b FROM Cas3BookingEntity b

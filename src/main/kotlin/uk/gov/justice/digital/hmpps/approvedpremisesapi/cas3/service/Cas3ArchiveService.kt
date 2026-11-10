@@ -57,7 +57,6 @@ class Cas3ArchiveService(
   private val jsonMapper: JsonMapper,
   private val clock: Clock,
 ) {
-
   @Transactional
   fun archiveBedspace(
     bedspaceId: UUID,
@@ -607,40 +606,52 @@ class Cas3ArchiveService(
     return updatedBedspace
   }
 
-  private fun canArchiveBedspace(bedspaceId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = null, filterByBedspaceId = bedspaceId, endDate = endDate)
+  private fun canArchiveBedspace(bedspaceId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = null, filterByBedspaceId = bedspaceId, archiveDate = endDate)
 
-  private fun canArchivePremisesBedspaces(premisesId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = premisesId, filterByBedspaceId = null, endDate = endDate)
+  private fun canArchivePremisesBedspaces(premisesId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = premisesId, filterByBedspaceId = null, archiveDate = endDate)
 
-  @SuppressWarnings("CyclomaticComplexMethod")
-  private fun canArchiveBedspace(filterByPremisesId: UUID?, filterByBedspaceId: UUID?, endDate: LocalDate): Cas3FieldValidationError<Cas3BedspacesEntity>? {
-    val allBookings = when {
-      filterByPremisesId != null -> cas3BookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
-      filterByBedspaceId != null -> cas3BookingRepository.findActiveOverlappingBookingByBedspace(filterByBedspaceId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
+  @SuppressWarnings("CyclomaticComplexMethod", "MagicNumber")
+  private fun canArchiveBedspace(
+    filterByPremisesId: UUID?,
+    filterByBedspaceId: UUID?,
+    archiveDate: LocalDate,
+  ): Cas3FieldValidationError<Cas3BedspacesEntity>? {
+    // A buffer is added to account for turnarounds. The vast majority of
+    // all turnarounds are less than 3 months
+    val turnaroundBufferMonths = 3L
+    val minimumBookingEndDate = archiveDate.minusMonths(turnaroundBufferMonths)
+
+    val allBookingsToConsider = when {
+      filterByPremisesId != null -> cas3BookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, minimumBookingEndDate).sortedByDescending { it.departureDate }
+      filterByBedspaceId != null -> cas3BookingRepository.findActiveOverlappingBookingByBedspace(filterByBedspaceId, minimumBookingEndDate).sortedByDescending { it.departureDate }
       else -> emptyList()
     }
-    val overlapBookings = allBookings.filter { it.departureDate > endDate }
+
+    val bookingsOverlappingBeforeTurnaround = allBookingsToConsider.filter { it.departureDate > archiveDate }
+
     val lastOverlapVoid = when {
-      filterByPremisesId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesId(filterByPremisesId, endDate).maxByOrNull { it.endDate }
-      filterByBedspaceId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(filterByBedspaceId, endDate).maxByOrNull { it.endDate }
+      filterByPremisesId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesId(filterByPremisesId, archiveDate).maxByOrNull { it.endDate }
+      filterByBedspaceId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(filterByBedspaceId, archiveDate).maxByOrNull { it.endDate }
       else -> null
     }
 
-    val lastBookingsTurnaroundDate = allBookings
+    val bookingsOverlappingDuringTurnaround = allBookingsToConsider
       .asSequence()
       .mapNotNull { booking ->
-        val turnaroundDate = workingDayService.addWorkingDays(booking.departureDate, booking.turnaround?.workingDayCount ?: 0)
-        if (turnaroundDate > endDate) {
-          booking.id to turnaroundDate
+        val turnaroundEndDate = workingDayService.addWorkingDays(booking.departureDate, booking.turnaround?.workingDayCount ?: 0)
+        if (turnaroundEndDate > archiveDate) {
+          booking.id to turnaroundEndDate
         } else {
           null
         }
       }
       .toMap()
 
-    val (lastTurnaroundBookingId, lastTurnaroundDate) = lastBookingsTurnaroundDate.entries.maxByOrNull { it.value }?.let { it.key to it.value } ?: Pair(null, null)
+    val (lastTurnaroundBookingId, lastTurnaroundEndDatePastTheArchiveDate) = bookingsOverlappingDuringTurnaround.entries.maxByOrNull { it.value }?.let { it.key to it.value } ?: Pair(null, null)
 
     return when {
-      isVoidLastOverlapBedspaceArchiveDate(lastOverlapVoid, lastTurnaroundDate) -> {
+      // of there's a void overlap that's after the last turnaround end date, error on it
+      isVoidLastOverlapBedspaceArchiveDate(lastOverlapVoid, lastTurnaroundEndDatePastTheArchiveDate) -> {
         Cas3FieldValidationError(
           mapOf(
             "$.endDate" to Cas3ValidationMessage(
@@ -651,9 +662,9 @@ class Cas3ArchiveService(
           ),
         )
       }
-      lastTurnaroundDate != null -> {
-        val lastOverlapBooking = getLastBookingOverlapBedspaceArchiveDate(overlapBookings, lastBookingsTurnaroundDate, lastTurnaroundDate)
-        if (lastOverlapBooking != null && lastOverlapBooking.departureDate == lastTurnaroundDate) {
+      lastTurnaroundEndDatePastTheArchiveDate != null -> {
+        val lastOverlapBooking = getLastBookingOverlapBedspaceArchiveDate(bookingsOverlappingBeforeTurnaround, bookingsOverlappingDuringTurnaround, lastTurnaroundEndDatePastTheArchiveDate)
+        if (lastOverlapBooking != null && lastOverlapBooking.departureDate == lastTurnaroundEndDatePastTheArchiveDate) {
           Cas3FieldValidationError(
             mapOf(
               "$.endDate" to Cas3ValidationMessage(
@@ -667,9 +678,9 @@ class Cas3ArchiveService(
           Cas3FieldValidationError(
             mapOf(
               "$.endDate" to Cas3ValidationMessage(
-                entityId = allBookings.firstOrNull { it.id == lastTurnaroundBookingId }?.bedspace?.id.toString(),
+                entityId = allBookingsToConsider.firstOrNull { it.id == lastTurnaroundBookingId }?.bedspace?.id.toString(),
                 message = "existingTurnaround",
-                value = lastTurnaroundDate.plusDays(1).toString(),
+                value = lastTurnaroundEndDatePastTheArchiveDate.plusDays(1).toString(),
               ),
             ),
           )
