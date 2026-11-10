@@ -91,6 +91,7 @@ class Cas2HdcOffenderService(
       return if (isOffenderSameAsUser) {
         ProbationOffenderSearchResult.Success.Full(nomsNumber, caseSummary, inmateDetails)
       } else {
+        log.info("Offender is not in the same prison as the user with active case load $activeCaseLoadId")
         ProbationOffenderSearchResult.Forbidden(nomsNumber)
       }
     }
