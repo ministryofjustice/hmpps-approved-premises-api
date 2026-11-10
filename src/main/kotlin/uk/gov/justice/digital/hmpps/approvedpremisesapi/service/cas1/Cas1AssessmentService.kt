@@ -316,7 +316,7 @@ class Cas1AssessmentService(
 
     val application = savedAssessment.application as ApprovedPremisesApplicationEntity
 
-    val caseSummary = getOffenderDetails(application.crn, LaoStrategy.NeverRestricted)
+    val caseSummary = getOffenderDetails(application.crn, LaoStrategy.Ignore)
       ?: throw RuntimeException("Offender details not found for CRN: ${application.crn} when creating Application Assessed Domain Event")
 
     cas1AssessmentDomainEventService.assessmentAccepted(
@@ -410,7 +410,7 @@ class Cas1AssessmentService(
 
     val application = savedAssessment.application as ApprovedPremisesApplicationEntity
 
-    val caseSummary = getOffenderDetails(application.crn, LaoStrategy.NeverRestricted)
+    val caseSummary = getOffenderDetails(application.crn, LaoStrategy.Ignore)
       ?: throw RuntimeException("Offender details not found for CRN: ${application.crn} when creating Application Assessed Domain Event")
 
     cas1AssessmentDomainEventService.assessmentRejected(

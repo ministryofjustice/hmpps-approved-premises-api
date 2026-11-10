@@ -71,7 +71,7 @@ class Cas3UpdateBookingOffenderNameJob(
 
   private fun splitAndRetrievePersonInfo(pageSize: Int, crns: Set<String>): Map<String, PersonSummaryInfoResult> = offenderService.getPersonSummaryInfoResultsInBatches(
     crns = crns,
-    laoStrategy = LaoStrategy.NeverRestricted,
+    laoStrategy = LaoStrategy.Ignore,
     batchSize = pageSize,
   ).associateBy { it.crn }
 }

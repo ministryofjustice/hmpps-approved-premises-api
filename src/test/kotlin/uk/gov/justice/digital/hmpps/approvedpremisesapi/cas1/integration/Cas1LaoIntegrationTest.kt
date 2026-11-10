@@ -56,7 +56,7 @@ class Cas1LaoIntegrationTest : IntegrationTestBase() {
 
     private fun givenAUserWithNeverRestrictedStrategy(): UserEntity {
       val (user, _) = givenAUser(qualifications = listOf(UserQualification.LAO))
-      assertThat(user.cas1LaoStrategy()).isEqualTo(LaoStrategy.NeverRestricted)
+      assertThat(user.cas1LaoStrategy()).isEqualTo(LaoStrategy.Ignore)
       return user
     }
 

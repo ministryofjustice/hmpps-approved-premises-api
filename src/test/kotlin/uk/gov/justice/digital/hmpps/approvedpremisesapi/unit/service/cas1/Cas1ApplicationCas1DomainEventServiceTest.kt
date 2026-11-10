@@ -122,7 +122,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResult(
           application.crn,
-          LaoStrategy.NeverRestricted,
+          LaoStrategy.Ignore,
         )
       } returns PersonSummaryInfoResult.Success.Full(
         crn = "THECRN",

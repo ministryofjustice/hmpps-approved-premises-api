@@ -242,7 +242,7 @@ class Cas3BookingServiceTest {
     @BeforeEach
     fun setup() {
       every { mockBedspaceRepository.findArchivedBedspaceByBedspaceIdAndDate(any(), any()) } returns null
-      every { mockOffenderService.getPersonSummaryInfoResult(eq("CRN123"), eq(LaoStrategy.NeverRestricted)) } returns PersonSummaryInfoResult.Success.Full(
+      every { mockOffenderService.getPersonSummaryInfoResult(eq("CRN123"), eq(LaoStrategy.Ignore)) } returns PersonSummaryInfoResult.Success.Full(
         "CRN123",
         CaseSummaryFactory().withCrn("CRN123").withName(Name("John", "Smith", emptyList())).produce(),
         tier = null,

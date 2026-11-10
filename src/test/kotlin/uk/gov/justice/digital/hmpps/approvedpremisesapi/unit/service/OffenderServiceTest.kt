@@ -78,7 +78,7 @@ class OffenderServiceTest {
     fun `return true and dont make any external calls if IgnoreLimitedAccess strategy`() {
       val crn = randomNumberChars(8)
 
-      val result = offenderService.canAccessOffender(crn, LaoStrategy.NeverRestricted)
+      val result = offenderService.canAccessOffender(crn, LaoStrategy.Ignore)
       assertThat(result).isTrue()
 
       verify { mockApDeliusContextApiClient wasNot Called }
@@ -770,7 +770,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        laoStrategy = LaoStrategy.NeverRestricted,
+        laoStrategy = LaoStrategy.Ignore,
         includeTier = true,
       )
 
@@ -954,7 +954,7 @@ class OffenderServiceTest {
         offenderService.getPersonSummaryInfoResultsInBatches(
           crns = emptySet(),
           batchSize = 501,
-          laoStrategy = LaoStrategy.NeverRestricted,
+          laoStrategy = LaoStrategy.Ignore,
         )
       }.isInstanceOf(InternalServerErrorProblem::class.java)
         .hasMessage("Cannot request more than 500 CRNs. A batch size of 501 has been requested.")

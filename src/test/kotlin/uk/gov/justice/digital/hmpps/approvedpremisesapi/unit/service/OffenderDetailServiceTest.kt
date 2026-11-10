@@ -121,7 +121,7 @@ class OffenderDetailServiceTest {
     fun `If no CRNs, immediately return empty results`() {
       val results = service.getPersonInfoResults(
         crns = emptySet(),
-        laoStrategy = LaoStrategy.NeverRestricted,
+        laoStrategy = LaoStrategy.Ignore,
         includeTier = true,
       )
 
@@ -142,7 +142,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = LaoStrategy.NeverRestricted,
+          laoStrategy = LaoStrategy.Ignore,
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
@@ -163,7 +163,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResults(
         crns = setOf(CRN1),
-        laoStrategy = LaoStrategy.NeverRestricted,
+        laoStrategy = LaoStrategy.Ignore,
         includeTier = true,
       )
 
@@ -410,7 +410,7 @@ class OffenderDetailServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          laoStrategy = LaoStrategy.NeverRestricted,
+          laoStrategy = LaoStrategy.Ignore,
           includeTier = true,
         )
       } returns listOf(personSummaryInfoResult)
@@ -431,7 +431,7 @@ class OffenderDetailServiceTest {
 
       val result = service.getPersonInfoResult(
         crn = CRN1,
-        laoStrategy = LaoStrategy.NeverRestricted,
+        laoStrategy = LaoStrategy.Ignore,
         includeTier = true,
       )
 

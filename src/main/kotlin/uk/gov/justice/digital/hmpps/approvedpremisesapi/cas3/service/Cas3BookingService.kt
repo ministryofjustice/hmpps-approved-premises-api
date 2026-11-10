@@ -145,7 +145,7 @@ class Cas3BookingService(
 
     caseService.ensureCaseExists(crn)
 
-    val personResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)
+    val personResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.Ignore)
     val offenderName = personResult.getPersonName()
 
     if (offenderName == null) {

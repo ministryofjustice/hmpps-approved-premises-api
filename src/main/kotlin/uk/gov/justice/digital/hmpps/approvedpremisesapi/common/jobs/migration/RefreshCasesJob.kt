@@ -77,7 +77,7 @@ class RefreshCasesJob(
     return try {
       offenderService.getPersonSummaryInfoResultsInBatches(
         crns,
-        LaoStrategy.NeverRestricted,
+        LaoStrategy.Ignore,
       ).associateBy { it.crn.uppercase() }
     } catch (exception: Exception) {
       migrationLogger.error("Unable to retrieve person summaries for batch, continuing with DTO values", exception)
