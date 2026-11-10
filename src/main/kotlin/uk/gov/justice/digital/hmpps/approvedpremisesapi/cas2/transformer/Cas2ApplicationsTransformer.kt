@@ -24,13 +24,13 @@ import java.util.UUID
 @Component
 class Cas2ApplicationsTransformer(
   private val jsonMapper: JsonMapper,
-  private val personTransformer: PersonTransformer,
   private val cas2UserTransformer: Cas2UserTransformer,
   private val statusUpdateTransformer: Cas2StatusUpdateTransformer,
   private val timelineEventsTransformer: Cas2TimelineEventsTransformer,
   private val cas2AssessmentsTransformer: Cas2AssessmentsTransformer,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
   private val cas2ApplicationService: Cas2ApplicationService,
+  private val personTransformer: PersonTransformer,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
 ) {
   fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person) = Cas2Application(
@@ -97,7 +97,10 @@ class Cas2ApplicationsTransformer(
   fun transformJpaToCas2ReferralHistory(
     jpa: Cas2ApplicationEntity,
   ): Cas2ReferralHistory {
+    val archived = cas2ApplicationService.isArchived(jpa)
+
     val latestStatusUpdate = jpa.getLatestStatusUpdate()
+    val latestStatusDetail = latestStatusUpdate?.statusUpdateDetails?.firstOrNull()
 
     val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode ?: throw IllegalStateException("Missing placement address for CAS2v2 application ${jpa.id}")
@@ -106,9 +109,14 @@ class Cas2ApplicationsTransformer(
       id = jpa.assessment!!.id,
       applicationId = jpa.id,
       type = ServiceType.CAS2v2,
-      applicationStatus = getReferralStatus(jpa),
+      applicationStatus = if (archived) "archived" else jpa.getLatestStatusUpdate()?.status?.apiName,
+      applicationSubStatus = if (archived) null else latestStatusDetail?.label,
       applicationSubmittedDate = jpa.submittedAt!!.toLocalDate(),
-      applicationLastUpdatedDate = latestStatusUpdate?.createdAt?.toLocalDate(),
+      applicationLastUpdatedDate = if (archived) {
+        cas2ApplicationService.archivedDate(jpa)
+      } else {
+        latestStatusUpdate?.createdAt?.toLocalDate()
+      },
       referralRejectionReason = getRejectionReason(latestStatusUpdate),
       localAuthorityArea = placementAddress,
       pdu = jpa.preferredAreas,
@@ -116,14 +124,6 @@ class Cas2ApplicationsTransformer(
       placementAddress = placementAddress,
       uiUrl = applicationUrlTemplate.replace("#id", jpa.id.toString()),
     )
-  }
-
-  private fun getReferralStatus(jpa: Cas2ApplicationEntity) = cas2ApplicationService.isArchived(jpa).let { isArchived ->
-    if (isArchived) {
-      "archived"
-    } else {
-      jpa.getLatestStatusUpdate()?.status?.apiName
-    }
   }
 
   private fun getRejectionReason(latestStatusUpdate: Cas2StatusUpdateEntity?) = latestStatusUpdate
