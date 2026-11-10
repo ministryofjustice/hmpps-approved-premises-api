@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
 
@@ -28,7 +27,6 @@ class Cas2ApplicationsTransformer(
   private val statusUpdateTransformer: Cas2StatusUpdateTransformer,
   private val timelineEventsTransformer: Cas2TimelineEventsTransformer,
   private val cas2AssessmentsTransformer: Cas2AssessmentsTransformer,
-  private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
   private val cas2ApplicationService: Cas2ApplicationService,
   private val personTransformer: PersonTransformer,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
@@ -102,9 +100,6 @@ class Cas2ApplicationsTransformer(
     val latestStatusUpdate = jpa.getLatestStatusUpdate()
     val latestStatusDetail = latestStatusUpdate?.statusUpdateDetails?.firstOrNull()
 
-    val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
-    val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode ?: throw IllegalStateException("Missing placement address for CAS2v2 application ${jpa.id}")
-
     return Cas2ReferralHistory(
       id = jpa.assessment!!.id,
       applicationId = jpa.id,
@@ -118,10 +113,7 @@ class Cas2ApplicationsTransformer(
         latestStatusUpdate?.createdAt?.toLocalDate()
       },
       referralRejectionReason = getRejectionReason(latestStatusUpdate),
-      localAuthorityArea = placementAddress,
-      pdu = jpa.preferredAreas,
       referredBy = jpa.createdByUser.name,
-      placementAddress = placementAddress,
       uiUrl = applicationUrlTemplate.replace("#id", jpa.id.toString()),
     )
   }

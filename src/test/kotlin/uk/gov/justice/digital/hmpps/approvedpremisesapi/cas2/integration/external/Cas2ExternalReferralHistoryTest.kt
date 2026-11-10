@@ -100,10 +100,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               applicationSubmittedDate = application1.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application1.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = null,
-              localAuthorityArea = omu.prisonName,
-              pdu = application1.preferredAreas,
               referredBy = application1.createdByUser.name,
-              placementAddress = omu.prisonName,
               uiUrl = "http://localhost:3000/applications/${application1.id}/overview",
               applicationSubStatus = "Area unsuitable",
             ),
@@ -115,10 +112,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               applicationSubmittedDate = application2.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application2.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "cancelled",
-              localAuthorityArea = omu.prisonName,
-              pdu = application2.preferredAreas,
               referredBy = application2.createdByUser.name,
-              placementAddress = omu.prisonName,
               uiUrl = "http://localhost:3000/applications/${application2.id}/overview",
               applicationSubStatus = "NACRO assessed as high risk",
             ),
@@ -130,10 +124,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               applicationSubmittedDate = application3.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application3.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "cancelled",
-              localAuthorityArea = omu.prisonName,
-              pdu = application3.preferredAreas,
               referredBy = application3.createdByUser.name,
-              placementAddress = omu.prisonName,
               uiUrl = "http://localhost:3000/applications/${application3.id}/overview",
               applicationSubStatus = "Incomplete referral",
             ),
@@ -145,10 +136,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               applicationSubmittedDate = application4.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application4.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "withdrawn",
-              localAuthorityArea = omu.prisonName,
-              pdu = application4.preferredAreas,
               referredBy = application4.createdByUser.name,
-              placementAddress = omu.prisonName,
               uiUrl = "http://localhost:3000/applications/${application4.id}/overview",
               applicationSubStatus = "Withdrew or declined offer",
             ),
@@ -160,10 +148,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
               applicationSubmittedDate = application5.submittedAt!!.toLocalDate(),
               applicationLastUpdatedDate = application5.statusUpdates!!.first().createdAt.toLocalDate(),
               referralRejectionReason = "withdrawn",
-              localAuthorityArea = omu.prisonName,
-              pdu = application4.preferredAreas,
               referredBy = application5.createdByUser.name,
-              placementAddress = omu.prisonName,
               uiUrl = "http://localhost:3000/applications/${application5.id}/overview",
               applicationSubStatus = "Change of circumstances",
             ),
@@ -209,36 +194,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
           val matched = response!!.first { it.id == withdrawnApplication.assessment!!.id }
           assertThat(matched.referralRejectionReason).isEqualTo("withdrawn")
           assertThat(matched.applicationStatus).isEqualTo(Cas2AssessmentStatus.WITHDRAWN.apiName)
-          assertThat(matched.pdu).isEqualTo("South East")
           assertThat(matched.referredBy).isEqualTo(user.name)
-          assertThat(matched.localAuthorityArea).isEqualTo(omu.prisonName)
-          assertThat(matched.placementAddress).isEqualTo(omu.prisonName)
-        }
-      }
-    }
-
-    @Test
-    fun `Get referral returns placement address from OMU prison name`() {
-      givenACas2v2PomUser { user, _ ->
-        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-          val omu = offenderManagementUnitEntityFactory.produceAndPersist {
-            withPrisonCode("TST")
-            withPrisonName("HMP Test Prison")
-          }
-          val applicationWithPrison = createApplication(user, "Referral withdrawn", referringPrisonCode = omu.prisonCode)
-
-          val response = webTestClient.get()
-            .uri("/cas2/external/referrals/$crn")
-            .header("Authorization", "Bearer $clientCredentialsJwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBodyList(Cas2ReferralHistory::class.java)
-            .returnResult()
-            .responseBody
-
-          val matched = response!!.first { it.id == applicationWithPrison.assessment!!.id }
-          assertThat(matched.placementAddress).isEqualTo(omu.prisonName)
         }
       }
     }

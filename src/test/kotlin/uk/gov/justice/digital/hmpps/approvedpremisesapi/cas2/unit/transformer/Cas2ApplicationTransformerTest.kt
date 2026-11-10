@@ -37,8 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 import java.time.LocalDate
@@ -52,7 +50,6 @@ class Cas2ApplicationTransformerTest {
   private val mockCas2StatusUpdateTransformer = mockk<Cas2StatusUpdateTransformer>()
   private val mockCas2TimelineEventsTransformer = mockk<Cas2TimelineEventsTransformer>()
   private val mockCas2AssessmentsTransformer = mockk<Cas2AssessmentsTransformer>()
-  private val mockOffenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
   private val objectMapper = JsonMapperFactory.createJackson3JsonMapper()
 
   private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
@@ -61,7 +58,6 @@ class Cas2ApplicationTransformerTest {
     mockCas2StatusUpdateTransformer,
     mockCas2TimelineEventsTransformer,
     mockCas2AssessmentsTransformer,
-    mockOffenderManagementUnitRepository,
     mockCas2ApplicationService,
     mockPersonTransformer,
     "http://frontend/applications/#id/overview",
@@ -343,8 +339,6 @@ class Cas2ApplicationTransformerTest {
 
       application.statusUpdates = mutableListOf(statusUpdate)
 
-      val omu = OffenderManagementUnitEntityFactory().withPrisonName("HMP Bristol").produce()
-      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns omu
       every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns false
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
@@ -357,10 +351,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.applicationStatus).isEqualTo(Cas2AssessmentStatus.CANCELLED.apiName)
       assertThat(result.applicationSubStatus).isNull()
       assertThat(result.referralRejectionReason).isEqualTo("cancelled")
-      assertThat(result.localAuthorityArea).isEqualTo("HMP Bristol")
-      assertThat(result.pdu).isEqualTo("Area 1, Area 2")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
-      assertThat(result.placementAddress).isEqualTo("HMP Bristol")
       assertThat(result.uiUrl).isEqualTo("http://frontend/applications/${application.id}/overview")
     }
 
@@ -381,7 +372,6 @@ class Cas2ApplicationTransformerTest {
 
       application.statusUpdates = mutableListOf(statusUpdate)
 
-      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
       every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns false
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
@@ -394,9 +384,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.applicationStatus).isEqualTo(Cas2AssessmentStatus.WITHDRAWN.apiName)
       assertThat(result.applicationSubStatus).isNull()
       assertThat(result.referralRejectionReason).isEqualTo("withdrawn")
-      assertThat(result.localAuthorityArea).isEqualTo("BRI")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
-      assertThat(result.placementAddress).isEqualTo("BRI")
       assertThat(result.uiUrl).isEqualTo("http://frontend/applications/${application.id}/overview")
     }
 
@@ -418,7 +406,6 @@ class Cas2ApplicationTransformerTest {
 
       application.statusUpdates = mutableListOf(statusUpdate)
 
-      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
       every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns false
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
@@ -430,9 +417,7 @@ class Cas2ApplicationTransformerTest {
       assertThat(result.applicationLastUpdatedDate).isEqualTo(statusUpdate.createdAt.toLocalDate())
       assertThat(result.applicationStatus).isEqualTo(Cas2AssessmentStatus.AWAITING_DECISION.apiName)
       assertThat(result.referralRejectionReason).isNull()
-      assertThat(result.localAuthorityArea).isEqualTo("BRI")
       assertThat(result.referredBy).isEqualTo(application.createdByUser.name)
-      assertThat(result.placementAddress).isEqualTo("BRI")
       assertThat(result.uiUrl).isEqualTo("http://frontend/applications/${application.id}/overview")
     }
 
@@ -466,7 +451,6 @@ class Cas2ApplicationTransformerTest {
           .produce(),
       )
       application.statusUpdates = mutableListOf(statusUpdate)
-      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
       every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns archived
       if (archived) {
         every { mockCas2ApplicationService.archivedDate(match { it.id == application.id }) } returns expectedLastUpdatedDate
@@ -497,7 +481,6 @@ class Cas2ApplicationTransformerTest {
           .withAssessor(user)
           .produce(),
       )
-      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
       every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns false
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
@@ -537,7 +520,6 @@ class Cas2ApplicationTransformerTest {
         .withCreatedAt(OffsetDateTime.parse("2026-10-01T00:00:00Z"))
         .produce()
       application.statusUpdates = mutableListOf(latest, older)
-      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
       every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns false
 
       val result = cas2ApplicationsTransformer.transformJpaToCas2ReferralHistory(application)
@@ -565,7 +547,6 @@ class Cas2ApplicationTransformerTest {
         .withAssessor(user)
       if (!nullDetails) statusFactory.withStatusUpdateDetails(mutableListOf())
       application.statusUpdates = mutableListOf(statusFactory.produce())
-      every { mockOffenderManagementUnitRepository.findByPrisonCode("BRI") } returns null
       every { mockCas2ApplicationService.isArchived(match { it.id == application.id }) } returns archived
       if (archived) {
         every { mockCas2ApplicationService.archivedDate(match { it.id == application.id }) } returns LocalDate.parse("2026-10-21")

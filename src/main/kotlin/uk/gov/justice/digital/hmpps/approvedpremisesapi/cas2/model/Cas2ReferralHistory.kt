@@ -13,9 +13,6 @@ data class Cas2ReferralHistory(
   val applicationSubmittedDate: LocalDate,
   val applicationLastUpdatedDate: LocalDate?,
   val referralRejectionReason: String?,
-  val localAuthorityArea: String?,
-  val pdu: String?,
   val referredBy: String,
-  val placementAddress: String?,
   val uiUrl: String,
 )
