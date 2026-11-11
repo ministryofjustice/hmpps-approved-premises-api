@@ -77,19 +77,6 @@ data class Cas1ExternalPremisesV2Dto(
   val postcode: String,
 )
 
-@Schema(description = "Details about the most current application, with associated assessment, request for placement and placement")
-data class Cas1SuitableApplication(
-  val uiUrl: String,
-  val application: Cas1ExternalApplicationDto,
-  val assessment: Cas1ExternalAssessmentDto?,
-  @Deprecated("Use suitableRequestForPlacement.requestForPlacement")
-  val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
-  @Deprecated("Use suitableRequestForPlacement.placement")
-  val placement: Cas1ExternalPlacementDto?,
-  val suitableRequestForPlacement: Cas1RequestForPlacementOutcomeDto?,
-  val placementHistory: List<Cas1RequestForPlacementOutcomeDto>,
-)
-
 @Schema(
   description = """Details about a request for placement and, if defined, one of its placements. 
   |If an RfP has many placements, many of these instances will exists""",
@@ -100,15 +87,6 @@ data class Cas1RequestForPlacementOutcomeDto(
   @Schema(description = "The most recent status change date, or expected arrival date if placement exists in the future")
   val dateApplied: LocalDate,
   val statusLastUpdated: LocalDate,
-)
-
-data class Cas1ExternalApplicationDto(
-  val id: UUID,
-  val status: ApprovedPremisesApplicationStatus,
-  val createdAt: OffsetDateTime,
-  val createdBy: Cas1StaffDto,
-  val submittedAt: OffsetDateTime?,
-  val expiresAt: LocalDate?,
 )
 
 data class Cas1ExternalAssessmentDto(

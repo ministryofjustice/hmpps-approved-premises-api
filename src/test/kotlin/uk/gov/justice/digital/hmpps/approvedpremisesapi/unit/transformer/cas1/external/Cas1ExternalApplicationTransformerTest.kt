@@ -9,25 +9,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAssessmentDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingShortSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RequestForPlacementFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1StaffDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.external.Cas1ExternalApplicationTransformer
@@ -35,11 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.Instant
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as AssessmentDecisionJpa
 
 class Cas1ExternalApplicationTransformerTest {
   private val cas1ApplicationUrlTemplate: String = "http://localhost:3000/applications/#id"
@@ -50,167 +40,6 @@ class Cas1ExternalApplicationTransformerTest {
     mockCas1ApplicationTransformer,
     cas1ApplicationUrlTemplate,
   )
-
-  @Nested
-  inner class TransformToCas1SuitableApplication {
-    @Test
-    fun `Transforms to suitable application`() {
-      val premises = Cas1ExternalPremisesDto(
-        startDate = LocalDate.now().minusDays(1),
-        endDate = LocalDate.now().plusDays(12),
-        addressLine1 = "Test House",
-        addressLine2 = "Test Lane",
-        town = "Test Town",
-        postcode = "TE57 8PP",
-      )
-      val user = UserEntityFactory()
-        .withDefaults()
-        .withName("Tom")
-        .produce()
-
-      val requestSubmittedBy = Cas1StaffDtoFactory()
-        .withName("Bob")
-        .withUsername("bob1")
-        .withStaffCode("bob123")
-        .produce()
-
-      val userStaff = Cas1StaffDtoFactory()
-        .withName(user.name)
-        .withUsername(user.deliusUsername)
-        .withStaffCode(user.deliusStaffCode)
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withDefaults()
-        .withStatus(ApprovedPremisesApplicationStatus.EXPIRED)
-        .withCreatedAt(OffsetDateTime.now().minusDays(100))
-        .withSubmittedAt(OffsetDateTime.now().minusDays(50))
-        .withCreatedByUser(user)
-        .withArrivalDate(OffsetDateTime.now().plusDays(20))
-        .withRequestedPlacementDuration(20)
-        .produce()
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withDefaults()
-        .withDecision(AssessmentDecisionJpa.ACCEPTED)
-        .withApplication(application)
-        .withRejectionRationale("Great")
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      application.assessments.add(assessment)
-
-      val suitablePlacementPair = Cas1RequestForPlacementOutcomeDto(
-        requestForPlacement = Cas1ExternalRequestForPlacementDto(
-          decision = PlacementApplicationDecisionDto.rejected,
-          rejectionReason = "No space",
-          submittedBy = requestSubmittedBy,
-          submittedAt = LocalDate.now(),
-          withdrawalReason = WithdrawPlacementRequestReason.noCapacityDueToLostBed,
-          withdrawalDate = LocalDate.now().minusDays(1),
-          expectedArrivalDate = LocalDate.now().minusDays(2),
-          durationDays = 12,
-          status = RequestForPlacementStatus.awaitingMatch,
-        ),
-        placement = Cas1ExternalPlacementDto(
-          expectedArrivalDate = LocalDate.now().plusDays(1),
-          expectedDepartureDate = LocalDate.now().plusDays(2),
-          actualArrivalDate = LocalDate.now().minusDays(3),
-          actualDepartureDate = LocalDate.now().plusDays(3),
-          cancellationReason = "Other",
-          premises = premises,
-          status = Cas1SpaceBookingStatus.CANCELLED,
-        ),
-        dateApplied = LocalDate.now(),
-        statusLastUpdated = LocalDate.now(),
-      )
-      val expected = Cas1SuitableApplication(
-        uiUrl = "http://localhost:3000/applications/${application.id}",
-        application = Cas1ExternalApplicationDto(
-          createdAt = application.createdAt,
-          createdBy = userStaff,
-          submittedAt = application.submittedAt,
-          expiresAt = assessment.submittedAt?.toLocalDate()?.plusDays(365),
-          status = application.status,
-          id = application.id,
-        ),
-        assessment = Cas1ExternalAssessmentDto(
-          decision = AssessmentDecisionApi.accepted,
-          rejectionRationale = assessment.rejectionRationale,
-        ),
-        requestForPlacement = suitablePlacementPair.requestForPlacement,
-        placement = suitablePlacementPair.placement,
-        suitableRequestForPlacement = suitablePlacementPair,
-        placementHistory = emptyList(),
-      )
-
-      every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns userStaff
-      every { mockCas1AssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecisionApi.accepted
-      every { mockCas1ApplicationTransformer.getApplicationExpiresAt(application) } returns assessment.submittedAt?.toLocalDate()?.plusDays(365)
-
-      val result = cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, suitablePlacementPair, emptyList())
-
-      assertThat(result).isEqualTo(expected)
-    }
-
-    @Test
-    fun `Transforms to suitable application with no placements`() {
-      val user = UserEntityFactory()
-        .withDefaults()
-        .withName("Tom")
-        .produce()
-      val userStaff = Cas1StaffDtoFactory()
-        .withName(user.name)
-        .withUsername(user.deliusUsername)
-        .withStaffCode(user.deliusStaffCode)
-        .produce()
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withDefaults()
-        .withStatus(ApprovedPremisesApplicationStatus.EXPIRED)
-        .withCreatedAt(OffsetDateTime.now().minusDays(100))
-        .withSubmittedAt(OffsetDateTime.now().minusDays(50))
-        .withCreatedByUser(user)
-        .withArrivalDate(OffsetDateTime.now().plusDays(20))
-        .withRequestedPlacementDuration(20)
-        .produce()
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withDefaults()
-        .withDecision(AssessmentDecisionJpa.ACCEPTED)
-        .withApplication(application)
-        .withRejectionRationale("Great")
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      application.assessments.add(assessment)
-
-      val expected = Cas1SuitableApplication(
-        uiUrl = "http://localhost:3000/applications/${application.id}",
-        application = Cas1ExternalApplicationDto(
-          createdAt = application.createdAt,
-          createdBy = userStaff,
-          submittedAt = application.submittedAt,
-          expiresAt = assessment.submittedAt?.toLocalDate()?.plusDays(365),
-          status = application.status,
-          id = application.id,
-        ),
-        assessment = Cas1ExternalAssessmentDto(
-          decision = AssessmentDecisionApi.accepted,
-          rejectionRationale = assessment.rejectionRationale,
-        ),
-        requestForPlacement = null,
-        placement = null,
-        suitableRequestForPlacement = null,
-        placementHistory = emptyList(),
-      )
-
-      every { mockCas1AssessmentTransformer.transformToStaffDto(user) } returns userStaff
-      every { mockCas1AssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecisionApi.accepted
-      every { mockCas1ApplicationTransformer.getApplicationExpiresAt(application) } returns assessment.submittedAt?.toLocalDate()?.plusDays(365)
-
-      val result = cas1ExternalApplicationTransformer.transformToCas1SuitableApplication(application, null, emptyList())
-
-      assertThat(result).isEqualTo(expected)
-    }
-  }
 
   @Nested
   inner class TransformToCas1RequestForPlacementOutcomeDto {
