@@ -10,9 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CurrentApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalApplicationService
@@ -66,7 +66,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
         latestAssessmentStatus = null,
@@ -95,7 +95,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
         latestAssessmentStatus = Cas2AssessmentStatus.WITHDRAWN.apiName,
@@ -131,7 +131,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
         latestAssessmentStatus = Cas2AssessmentStatus.AWAITING_DECISION.apiName,
@@ -160,7 +160,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
         latestAssessmentStatus = Cas2AssessmentStatus.CANCELLED.apiName,
@@ -189,7 +189,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val submittedApplication = Cas2ExternalSubmittedApplicationDto(
         latestAssessmentStatus = Cas2AssessmentStatus.OFFER_DECLINED.apiName,
@@ -221,7 +221,7 @@ class Cas2ExternalApplicationServiceTest {
       every { mockCas2ApplicationService.isArchived(match { it.id == cas2applicationEntity.id }) } returns false
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2applicationEntity)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val expected = setUpExpectedApplication(
         cas2applicationEntity = cas2applicationEntity,
@@ -234,7 +234,7 @@ class Cas2ExternalApplicationServiceTest {
     @Test
     fun `returns no application when none exists for crn`() {
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns emptyList()
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
       assertThat(result).isEqualTo(null)
     }
 
@@ -264,7 +264,7 @@ class Cas2ExternalApplicationServiceTest {
       } returns emptyList()
       every { mockCas2ExternalDomainEventService.getArrivalEventFromApplicationId(cas2ApplicationEntity.id) } returns null
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isNull()
     }
@@ -296,7 +296,7 @@ class Cas2ExternalApplicationServiceTest {
         mockDomainEventRepository.findByApplicationIdAndType(cas2ApplicationEntity.id, DomainEventType.CAS2_PERSON_ARRIVED)
       } returns listOf(arrivalEvent)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isNull()
     }
@@ -355,7 +355,7 @@ class Cas2ExternalApplicationServiceTest {
         data = cas2ArrivalEvent,
       )
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isEqualTo(expectedArrivedDateTime)
     }
@@ -381,7 +381,7 @@ class Cas2ExternalApplicationServiceTest {
       } returns emptyList()
       every { mockCas2ExternalDomainEventService.getArrivalEventFromApplicationId(cas2ApplicationEntity.id) } returns null
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val expected = setUpExpectedApplication(
         cas2applicationEntity = cas2ApplicationEntity,
@@ -415,7 +415,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2ApplicationEntity)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       assertThat(result).isNull()
     }
@@ -448,7 +448,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(newestApplication, oldestApplication)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       assertThat(result).isNull()
     }
@@ -472,7 +472,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(excludedApplication, fallbackApplication)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val expected = setUpExpectedApplication(
         cas2applicationEntity = fallbackApplication,
@@ -506,7 +506,7 @@ class Cas2ExternalApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr()) } returns listOf(cas2ApplicationEntity)
 
-      val result = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+      val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
       val expected = setUpExpectedApplication(
         cas2applicationEntity = cas2ApplicationEntity,
@@ -640,7 +640,7 @@ class Cas2ExternalApplicationServiceTest {
     cas2applicationEntity: Cas2ApplicationEntity,
     submittedApplication: Cas2ExternalSubmittedApplicationDto? = null,
     uiUrl: String,
-  ) = Cas2SuitableApplication(
+  ) = Cas2CurrentApplication(
     uiUrl = uiUrl,
     id = cas2applicationEntity.id,
     submittedApplication = submittedApplication,

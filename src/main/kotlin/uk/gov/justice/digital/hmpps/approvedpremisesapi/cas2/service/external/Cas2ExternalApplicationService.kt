@@ -7,9 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.external.Cas2ArrivalEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CurrentApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -30,16 +30,16 @@ class Cas2ExternalApplicationService(
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
-  fun getSuitableApplicationByCrn(crn: String): Cas2SuitableApplication? {
+  fun getCurrentApplication(crn: String): Cas2CurrentApplication? {
     val allApplicationsForCrn = cas2ApplicationRepository.findByCrnAndCohortsNewestFirst(crn, Cas2Cohort.isr())
 
-    val applicationsExcludingOldAwaitingArrival = allApplicationsForCrn.filter { application ->
+    val applicationsExcludingArchived = allApplicationsForCrn.filter { application ->
       !cas2ApplicationService.isArchived(application)
     }
 
-    return applicationsExcludingOldAwaitingArrival.firstOrNull()?.let { mostRecent ->
+    return applicationsExcludingArchived.firstOrNull()?.let { mostRecent ->
 
-      Cas2SuitableApplication(
+      Cas2CurrentApplication(
         uiUrl = getUiUrl(mostRecent),
         id = mostRecent.id,
         submittedApplication = getSubmittedApplication(mostRecent),

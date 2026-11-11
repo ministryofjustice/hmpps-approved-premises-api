@@ -70,14 +70,14 @@ class Cas3ApplicationService(
         ?.let { transformer.transformToCas3PremisesSummary(it) }
     }
 
-  fun getSuitableApplicationByCrn(crn: String): Cas3ExternalCurrentApplicationDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
+  fun getCurrentApplication(crn: String): Cas3ExternalCurrentApplicationDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
     .firstOrNull {
       val now = OffsetDateTime.now(clock)
-      val draftExpiryLimit = 2L
+      val draftExpiryLimitMonths = 2L
       when {
         it.arrivalDate != null -> it.arrivalDate!! >= now
         it.personReleaseDate != null -> it.personReleaseDate!! >= now.toLocalDate()
-        else -> it.createdAt >= now.minusMonths(draftExpiryLimit)
+        else -> it.createdAt >= now.minusMonths(draftExpiryLimitMonths)
       }
     }
     ?.let {

@@ -26,21 +26,21 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
 
   @Nested
-  inner class GetSuitableApplicationsByCrn {
+  inner class GetCurrentApplicationsByCrn {
     @Test
-    fun `Get suitable application without JWT returns 401`() {
+    fun `Get current application without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas3/external/cases/$crn/applications/suitable")
+        .uri("/cas3/external/cases/$crn/applications/current")
         .exchange()
         .expectStatus()
         .isUnauthorized
     }
 
     @Test
-    fun `Get suitable application without correct JWT authority returns 403`() {
+    fun `Get current application without correct JWT authority returns 403`() {
       givenAUser { _, jwt ->
         webTestClient.get()
-          .uri("/cas3/external/cases/$crn/applications/suitable")
+          .uri("/cas3/external/cases/$crn/applications/current")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -49,7 +49,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get suitable application returns ok`() {
+    fun `Get current application returns ok`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -95,7 +95,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withDate(LocalDate.now().minusDays(3))
           }
 
-          val suitableApplication = Cas3ExternalCurrentApplicationDto(
+          val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
@@ -150,7 +150,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .uri("/cas3/external/cases/$crn/applications/current")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -159,13 +159,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .returnResult()
             .responseBody
 
-          Assertions.assertThat(response).isEqualTo(suitableApplication)
+          Assertions.assertThat(response).isEqualTo(currentApplication)
         }
       }
     }
 
     @Test
-    fun `Get suitable application with historic rejection reason returns ok`() {
+    fun `Get current application with historic rejection reason returns ok`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -212,7 +212,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withDate(LocalDate.now().minusDays(3))
           }
 
-          val suitableApplication = Cas3ExternalCurrentApplicationDto(
+          val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
@@ -267,7 +267,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .uri("/cas3/external/cases/$crn/applications/current")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -276,13 +276,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .returnResult()
             .responseBody
 
-          Assertions.assertThat(response).isEqualTo(suitableApplication)
+          Assertions.assertThat(response).isEqualTo(currentApplication)
         }
       }
     }
 
     @Test
-    fun `Get suitable application returns inProgress application when only inProgress exists`() {
+    fun `Get current application returns inProgress application when only inProgress exists`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -292,7 +292,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withSubmittedAt(null)
           }
 
-          val suitableApplication = Cas3ExternalCurrentApplicationDto(
+          val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
             applicationStatus = ApplicationStatus.inProgress,
             applicationSubmittedDate = null,
@@ -312,7 +312,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .uri("/cas3/external/cases/$crn/applications/current")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -321,13 +321,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .returnResult()
             .responseBody
 
-          Assertions.assertThat(response).isEqualTo(suitableApplication)
+          Assertions.assertThat(response).isEqualTo(currentApplication)
         }
       }
     }
 
     @Test
-    fun `Get suitable application returns rejected assessment status`() {
+    fun `Get current application returns rejected assessment status`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           val premises = cas3PremisesEntityFactory.produceAndPersist {
@@ -354,7 +354,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withReferralRejectionReason(rejectionReason)
           }
 
-          val suitableApplication = Cas3ExternalCurrentApplicationDto(
+          val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt?.toLocalDate(),
@@ -385,7 +385,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .uri("/cas3/external/cases/$crn/applications/current")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -394,13 +394,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .returnResult()
             .responseBody
 
-          Assertions.assertThat(response).isEqualTo(suitableApplication)
+          Assertions.assertThat(response).isEqualTo(currentApplication)
         }
       }
     }
 
     @Test
-    fun `Get suitable application returns booking status when booking exists`() {
+    fun `Get current application returns booking status when booking exists`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           val premises = cas3PremisesEntityFactory.produceAndPersist {
@@ -429,7 +429,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withStatus(Cas3BookingStatus.confirmed)
           }
 
-          val suitableApplication = Cas3ExternalCurrentApplicationDto(
+          val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt?.toLocalDate(),
@@ -481,7 +481,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .uri("/cas3/external/cases/$crn/applications/current")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -490,13 +490,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .returnResult()
             .responseBody
 
-          Assertions.assertThat(response).isEqualTo(suitableApplication)
+          Assertions.assertThat(response).isEqualTo(currentApplication)
         }
       }
     }
 
     @Test
-    fun `Get suitable application returns provisional booking status`() {
+    fun `Get current application returns provisional booking status`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           val premises = cas3PremisesEntityFactory.produceAndPersist {
@@ -525,7 +525,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withStatus(Cas3BookingStatus.provisional)
           }
 
-          val suitableApplication = Cas3ExternalCurrentApplicationDto(
+          val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt?.toLocalDate(),
@@ -577,7 +577,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .uri("/cas3/external/cases/$crn/applications/current")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -586,13 +586,13 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .returnResult()
             .responseBody
 
-          Assertions.assertThat(response).isEqualTo(suitableApplication)
+          Assertions.assertThat(response).isEqualTo(currentApplication)
         }
       }
     }
 
     @Test
-    fun `Get suitable application returns previous bookings`() {
+    fun `Get current application returns previous bookings`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
           val premises = cas3PremisesEntityFactory.produceAndPersist {
@@ -665,7 +665,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             )
             .produce()
 
-          val suitableApplication = Cas3ExternalCurrentApplicationDto(
+          val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt?.toLocalDate(),
@@ -717,7 +717,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas3/external/cases/$crn/applications/suitable")
+            .uri("/cas3/external/cases/$crn/applications/current")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -726,28 +726,16 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .returnResult()
             .responseBody
 
-          Assertions.assertThat(response).isEqualTo(suitableApplication)
+          Assertions.assertThat(response).isEqualTo(currentApplication)
         }
       }
     }
 
     @Test
-    fun `Get application with unsupported type returns bad request`() {
+    fun `Get current application returns not found`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         webTestClient.get()
-          .uri("/cas3/external/cases/$crn/applications/unsupported")
-          .header("Authorization", "Bearer $clientCredentialsJwt")
-          .exchange()
-          .expectStatus()
-          .isBadRequest
-      }
-    }
-
-    @Test
-    fun `Get suitable application returns not found`() {
-      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-        webTestClient.get()
-          .uri("/cas3/external/cases/$crn/applications/suitable")
+          .uri("/cas3/external/cases/$crn/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()

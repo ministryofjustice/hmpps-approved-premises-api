@@ -5,7 +5,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
-data class Cas2SuitableApplication(
+data class Cas2CurrentApplication(
   val uiUrl: String,
   val id: UUID,
   val createdAt: OffsetDateTime,

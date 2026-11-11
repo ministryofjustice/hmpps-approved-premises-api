@@ -14,9 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ArrivalDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CurrentApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -36,21 +36,21 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
 
   @Nested
-  inner class GetSuitableApplicationsByCrn {
+  inner class GetCurrentApplication {
     @Test
-    fun `Get suitable application without JWT returns 401`() {
+    fun `Get current application without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2/external/cases/$crn/applications/suitable")
+        .uri("/cas2/external/cases/$crn/applications/current")
         .exchange()
         .expectStatus()
         .isUnauthorized
     }
 
     @Test
-    fun `Get suitable application without correct JWT authority returns 403`() {
+    fun `Get current application without correct JWT authority returns 403`() {
       givenACas2v2PomUser { _, jwt ->
         webTestClient.get()
-          .uri("/cas2/external/cases/$crn/applications/suitable")
+          .uri("/cas2/external/cases/$crn/applications/current")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -60,7 +60,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.external.Cas2ExternalApplicationsTest#isrCohorts")
-    fun `Get suitable application returns ok when status is AWAITING_ARRIVAL but not marked as arrived`(cohort: Cas2Cohort) {
+    fun `Get current application returns ok when status is AWAITING_ARRIVAL but not marked as arrived`(cohort: Cas2Cohort) {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         val today = LocalDate.now()
         val createAt = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
@@ -73,7 +73,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           latestStatus = Cas2AssessmentStatus.AWAITING_ARRIVAL,
         )
 
-        val suitableApplication = Cas2SuitableApplication(
+        val currentApplication = Cas2CurrentApplication(
           uiUrl = "http://localhost:3000/applications/${application.id}/overview",
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
@@ -95,19 +95,19 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val response = webTestClient.get()
-          .uri("/cas2/external/cases/${application.crn}/applications/suitable")
+          .uri("/cas2/external/cases/${application.crn}/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
           .isOk
-          .bodyAsObject<Cas2SuitableApplication>()
+          .bodyAsObject<Cas2CurrentApplication>()
 
-        assertThat(response).isEqualTo(suitableApplication)
+        assertThat(response).isEqualTo(currentApplication)
       }
     }
 
     @Test
-    fun `Get suitable application returns ok when status is AWAITING_ARRIVAL and is marked as arrived`() {
+    fun `Get current application returns ok when status is AWAITING_ARRIVAL and is marked as arrived`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         val today = LocalDate.now()
         val createAt = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
@@ -137,7 +137,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           withData(jsonMapper.writeValueAsString(cas2ArrivalEvent))
         }
 
-        val suitableApplication = Cas2SuitableApplication(
+        val currentApplication = Cas2CurrentApplication(
           uiUrl = "http://localhost:3000/applications/${application.id}/overview",
           id = application.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
@@ -159,19 +159,19 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val response = webTestClient.get()
-          .uri("/cas2/external/cases/${application.crn}/applications/suitable")
+          .uri("/cas2/external/cases/${application.crn}/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
           .isOk
-          .bodyAsObject<Cas2SuitableApplication>()
+          .bodyAsObject<Cas2CurrentApplication>()
 
-        assertThat(response).isEqualTo(suitableApplication)
+        assertThat(response).isEqualTo(currentApplication)
       }
     }
 
     @Test
-    fun `Get suitable application returns latest application`() {
+    fun `Get current application returns latest application`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         val today = LocalDate.now()
         val latestTime = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
@@ -193,7 +193,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           createdAt = oldestTime,
         )
 
-        val suitableApplication = Cas2SuitableApplication(
+        val currentApplication = Cas2CurrentApplication(
           uiUrl = "http://localhost:3000/applications/${latestApplication.id}/overview",
           id = latestApplication.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
@@ -215,18 +215,18 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val response = webTestClient.get()
-          .uri("/cas2/external/cases/${latestApplication.crn}/applications/suitable")
+          .uri("/cas2/external/cases/${latestApplication.crn}/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
           .isOk
-          .bodyAsObject<Cas2SuitableApplication>()
-        assertThat(response).isEqualTo(suitableApplication)
+          .bodyAsObject<Cas2CurrentApplication>()
+        assertThat(response).isEqualTo(currentApplication)
       }
     }
 
     @Test
-    fun `Get suitable application excludes applications that have had a status of AWAITING_ARRIVAL for more than 32 days`() {
+    fun `Get current application excludes applications that have had a status of AWAITING_ARRIVAL for more than 32 days`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         val today = LocalDate.now()
         val latestTime = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
@@ -251,7 +251,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           latestStatusSet = OffsetDateTime.now().minusDays(33),
         )
 
-        val suitableApplication = Cas2SuitableApplication(
+        val currentApplication = Cas2CurrentApplication(
           uiUrl = "http://localhost:3000/applications/${olderApplicationLaterStatusUpdate.id}/overview",
           id = olderApplicationLaterStatusUpdate.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
@@ -273,18 +273,18 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val response = webTestClient.get()
-          .uri("/cas2/external/cases/$crn/applications/suitable")
+          .uri("/cas2/external/cases/$crn/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
           .isOk
-          .bodyAsObject<Cas2SuitableApplication>()
-        assertThat(response).isEqualTo(suitableApplication)
+          .bodyAsObject<Cas2CurrentApplication>()
+        assertThat(response).isEqualTo(currentApplication)
       }
     }
 
     @Test
-    fun `Get suitable application returns next valid application when most recent application has had a status of AWAITING_ARRIVAL for more than 32 days`() {
+    fun `Get current application returns next valid application when most recent application has had a status of AWAITING_ARRIVAL for more than 32 days`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         val today = LocalDate.now()
         val latestTime = today.atStartOfDay(ZoneOffset.UTC).toOffsetDateTime().truncatedTo(ChronoUnit.MICROS)
@@ -308,7 +308,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
           latestStatus = Cas2AssessmentStatus.MORE_INFO_REQUESTED,
         )
 
-        val suitableApplication = Cas2SuitableApplication(
+        val currentApplication = Cas2CurrentApplication(
           uiUrl = "http://localhost:3000/applications/${fallbackApplication.id}/overview",
           id = fallbackApplication.id,
           submittedApplication = Cas2ExternalSubmittedApplicationDto(
@@ -330,19 +330,19 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         )
 
         val response = webTestClient.get()
-          .uri("/cas2/external/cases/$crn/applications/suitable")
+          .uri("/cas2/external/cases/$crn/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
           .isOk
-          .bodyAsObject<Cas2SuitableApplication>()
+          .bodyAsObject<Cas2CurrentApplication>()
 
-        assertThat(response).isEqualTo(suitableApplication)
+        assertThat(response).isEqualTo(currentApplication)
       }
     }
 
     @Test
-    fun `Get suitable application returns no content if all applications are abandoned`() {
+    fun `Get current application returns no content if all applications are abandoned`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
 
         for (cohort in Cas2Cohort.entries) {
@@ -354,7 +354,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         }
 
         webTestClient.get()
-          .uri("/cas2/external/cases/$crn/applications/suitable")
+          .uri("/cas2/external/cases/$crn/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
@@ -363,7 +363,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get suitable application returns no content if all applications are wrong cohort`() {
+    fun `Get current application returns no content if all applications are wrong cohort`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
 
         val wrongCohorts = Cas2Cohort.entries - Cas2Cohort.isr().toSet()
@@ -376,7 +376,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
         }
 
         webTestClient.get()
-          .uri("/cas2/external/cases/$crn/applications/suitable")
+          .uri("/cas2/external/cases/$crn/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
@@ -385,10 +385,10 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get suitable application returns not found if no cas2 applications exist`() {
+    fun `Get current application returns not found if no cas2 applications exist`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         webTestClient.get()
-          .uri("/cas2/external/cases/$crn/applications/suitable")
+          .uri("/cas2/external/cases/$crn/applications/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
