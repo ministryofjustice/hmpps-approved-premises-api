@@ -85,7 +85,7 @@ dependencies {
   implementation("uk.gov.service.notify:notifications-java-client:6.2.0-RELEASE")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
-  testImplementation("io.mockk:mockk:1.14.11")
+  testImplementation("io.mockk:mockk:1.14.12")
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.4.3")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
