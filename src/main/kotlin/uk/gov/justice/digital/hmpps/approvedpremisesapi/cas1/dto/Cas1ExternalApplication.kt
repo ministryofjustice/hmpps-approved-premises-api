@@ -11,11 +11,11 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 data class Cas1ExternalCaseSummaryDto(
-  val currentApplication: Cas1ExternalApplicationV2Dto?,
+  val currentApplication: Cas1ExternalApplicationDto?,
   val residence: Cas1ExternalPlacementV2Dto?,
 )
 
-data class Cas1ExternalApplicationV2Dto(
+data class Cas1ExternalApplicationDto(
   val uiUrl: String,
   val id: UUID,
   val status: ApprovedPremisesApplicationStatus,
@@ -81,6 +81,7 @@ data class Cas1ExternalPremisesV2Dto(
   description = """Details about a request for placement and, if defined, one of its placements. 
   |If an RfP has many placements, many of these instances will exists""",
 )
+@Deprecated("Use [Cas1ExternalRequestForPlacementOutcomeDto]")
 data class Cas1RequestForPlacementOutcomeDto(
   val requestForPlacement: Cas1ExternalRequestForPlacementDto,
   val placement: Cas1ExternalPlacementDto?,
@@ -106,6 +107,7 @@ data class Cas1ExternalRequestForPlacementDto(
   val durationDays: Int?,
 )
 
+@Deprecated("Use [Cas1ExternalPlacementV2Dto]")
 data class Cas1ExternalPlacementDto(
   val status: Cas1SpaceBookingStatus?,
   val actualArrivalDate: LocalDate?,
@@ -116,6 +118,7 @@ data class Cas1ExternalPlacementDto(
   val premises: Cas1ExternalPremisesDto?,
 )
 
+@Deprecated("Use [Cas1ExternalPremisesV2Dto]")
 data class Cas1ExternalPremisesDto(
   val startDate: LocalDate?,
   val endDate: LocalDate?,

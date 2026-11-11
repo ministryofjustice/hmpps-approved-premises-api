@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementV2Dto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDtoV2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementOutcomeDto
@@ -47,12 +47,12 @@ class Cas1ExternalApplicationV2Service(
   private val applicationSuitabilityComparator = compareBy<ApprovedPremisesApplicationEntity> { APPLICATION_STATUS_TO_SUITABILITY[it.status] }
     .thenBy { it.submittedAt ?: it.createdAt }
 
-  fun getSuitableApplicationByCrn(crn: String): Cas1ExternalApplicationV2Dto? = approvedPremisesApplicationRepository
+  fun getSuitableApplicationByCrn(crn: String): Cas1ExternalApplicationDto? = approvedPremisesApplicationRepository
     .findByCrn(crn)
     .maxWithOrNull(applicationSuitabilityComparator)
     ?.let { toExternalApplicationV2(it) }
 
-  private fun toExternalApplicationV2(application: ApprovedPremisesApplicationEntity): Cas1ExternalApplicationV2Dto {
+  private fun toExternalApplicationV2(application: ApprovedPremisesApplicationEntity): Cas1ExternalApplicationDto {
     val outcomes = requestForPlacementOutcomeV2Service.getOutcomes(application.id)
 
     val today = LocalDate.now(clock)

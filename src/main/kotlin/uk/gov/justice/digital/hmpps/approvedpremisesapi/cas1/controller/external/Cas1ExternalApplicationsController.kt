@@ -4,14 +4,14 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalCaseSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementV2Dto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationV2Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalCaseService
 
 @Cas1ExternalController
-class Cas1ExternalApplicationsV2Controller(
+class Cas1ExternalApplicationsController(
   private val cas1ExternalCaseService: Cas1ExternalCaseService,
   private val cas1ExternalApplicationV2Service: Cas1ExternalApplicationV2Service,
 ) {
@@ -27,7 +27,7 @@ class Cas1ExternalApplicationsV2Controller(
   @GetMapping("/cases/{crn}/applications/current")
   fun getCurrentApplicationByCrn(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas1ExternalApplicationV2Dto> = cas1ExternalApplicationV2Service.getSuitableApplicationByCrn(crn)
+  ): ResponseEntity<Cas1ExternalApplicationDto> = cas1ExternalApplicationV2Service.getSuitableApplicationByCrn(crn)
     ?.let { ResponseEntity.ok(it) }
     ?: ResponseEntity.noContent().build()
 

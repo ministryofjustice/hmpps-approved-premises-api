@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementV2Dto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationV2Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalCaseService
@@ -19,7 +19,7 @@ class Cas1ExternalCaseServiceTest {
   private lateinit var cas1ExternalApplicationV2Service: Cas1ExternalApplicationV2Service
 
   @MockK
-  private lateinit var application: Cas1ExternalApplicationV2Dto
+  private lateinit var application: Cas1ExternalApplicationDto
 
   @MockK
   private lateinit var residence: Cas1ExternalPlacementV2Dto

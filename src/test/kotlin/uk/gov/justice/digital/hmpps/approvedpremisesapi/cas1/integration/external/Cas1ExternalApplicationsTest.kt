@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalCaseSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementV2Dto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
@@ -23,7 +23,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as AssessmentDecisionJpa
 
-class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
+class Cas1ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
 
   private val clientCredentialsJwt: String
@@ -178,7 +178,7 @@ class Cas1ExternalApplicationsV2Test : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody(Cas1ExternalApplicationV2Dto::class.java)
+      .expectBody(Cas1ExternalApplicationDto::class.java)
       .returnResult()
       .responseBody!!
   }
