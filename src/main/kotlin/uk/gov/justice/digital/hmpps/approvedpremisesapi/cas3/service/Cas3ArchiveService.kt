@@ -550,6 +550,8 @@ class Cas3ArchiveService(
     success(updatedPremises)
   }
 
+  // if any changes are made to this in the future it should first be pulled out into a standalone
+  // service so it can be tested directly
   fun canArchiveBedspaceInFuture(premisesId: UUID, bedspaceId: UUID): CasResult<Cas3ValidationResult?> {
     val bedspacesEntity = cas3BedspacesRepository.findCas3Bedspace(premisesId, bedspaceId) ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
 
@@ -613,10 +615,15 @@ class Cas3ArchiveService(
 
   @SuppressWarnings("CyclomaticComplexMethod")
   private fun canArchiveBedspace(filterByPremisesId: UUID?, filterByBedspaceId: UUID?, proposedArchiveDate: LocalDate): Cas3FieldValidationError<Cas3BedspacesEntity>? {
+    // A buffer is added to account for turnarounds. The vast majority of
+    // all turnarounds are less than 3 months
+    val turnaroundBufferMonths = 3L
+    val minimumBookingEndDate = proposedArchiveDate.minusMonths(turnaroundBufferMonths)
+
     // we retrieve a set of bookings they _may_ overlap with the archive end date
     val allBookingsToConsider = when {
-      filterByPremisesId != null -> cas3BookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
-      filterByBedspaceId != null -> cas3BookingRepository.findActiveOverlappingBookingByBedspace(filterByBedspaceId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
+      filterByPremisesId != null -> cas3BookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, minimumBookingEndDate).sortedByDescending { it.departureDate }
+      filterByBedspaceId != null -> cas3BookingRepository.findActiveOverlappingBookingByBedspace(filterByBedspaceId, minimumBookingEndDate).sortedByDescending { it.departureDate }
       else -> emptyList()
     }
     val bookingsOverlappingRegardlessOfTurnaround = allBookingsToConsider.filter { it.departureDate > proposedArchiveDate }
