@@ -158,6 +158,8 @@ spring:
 
 springdoc:
   swagger-ui:
+    # Must match the swagger-ui version constrained in build.gradle.kts
+    version: 5.34.1
     urls-primary-name: "All CAS"
   remove-broken-reference-definitions: false
   writer-with-order-by-keys: true
