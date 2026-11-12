@@ -153,7 +153,7 @@ class Cas3ApplicationServiceTest {
       every { mockTemporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn) } returns emptyList()
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(
+        cas3ApplicationService.getCurrentApplication(
           crn,
         ),
       ).isNull()
@@ -205,7 +205,7 @@ class Cas3ApplicationServiceTest {
       every { mockCas3BookingRepository.findAllBookingEntityCreatedAtDesc(inProgressApplicationNewer.id) } returns emptyList()
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+        cas3ApplicationService.getCurrentApplication(crn),
       ).isEqualTo(suitableApplication)
     }
 
@@ -227,7 +227,7 @@ class Cas3ApplicationServiceTest {
       )
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+        cas3ApplicationService.getCurrentApplication(crn),
       ).isNull()
     }
 
@@ -299,7 +299,7 @@ class Cas3ApplicationServiceTest {
       every { mockCas3ApplicationTransformer.transformToExternalCurrentApplicationDto(submittedApplication2, emptyList()) } returns suitableApplication
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+        cas3ApplicationService.getCurrentApplication(crn),
       ).isEqualTo(suitableApplication)
     }
 
@@ -371,7 +371,7 @@ class Cas3ApplicationServiceTest {
       every { mockCas3ApplicationTransformer.transformToExternalCurrentApplicationDto(submittedApplication2, emptyList()) } returns suitableApplication
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+        cas3ApplicationService.getCurrentApplication(crn),
       ).isEqualTo(suitableApplication)
     }
 
@@ -433,7 +433,7 @@ class Cas3ApplicationServiceTest {
       every { mockCas3ApplicationTransformer.transformToExternalCurrentApplicationDto(submittedApplication, emptyList()) } returns suitableApplication
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+        cas3ApplicationService.getCurrentApplication(crn),
       ).isEqualTo(suitableApplication)
     }
 
@@ -500,7 +500,7 @@ class Cas3ApplicationServiceTest {
       every { mockCas3ApplicationTransformer.transformToExternalCurrentApplicationDto(submittedApplication, emptyList()) } returns suitableApplication
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+        cas3ApplicationService.getCurrentApplication(crn),
       ).isEqualTo(suitableApplication)
     }
 
@@ -595,7 +595,7 @@ class Cas3ApplicationServiceTest {
       every { mockCas3BookingRepository.findAllBookingEntityCreatedAtDesc(submittedApplication.id) } returns listOf(booking)
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+        cas3ApplicationService.getCurrentApplication(crn),
       ).isEqualTo(suitableApplication)
     }
 
@@ -737,7 +737,7 @@ class Cas3ApplicationServiceTest {
       every { mockCas3BookingRepository.findAllBookingEntityCreatedAtDesc(submittedApplication.id) } returns listOf(previousBooking, cancelledPreviousBooking)
 
       assertThat(
-        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+        cas3ApplicationService.getCurrentApplication(crn),
       ).isEqualTo(suitableApplication)
     }
   }

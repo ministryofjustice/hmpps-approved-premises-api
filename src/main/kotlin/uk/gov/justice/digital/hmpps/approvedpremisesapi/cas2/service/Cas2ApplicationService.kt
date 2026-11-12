@@ -62,7 +62,7 @@ class Cas2ApplicationService(
 ) {
 
   private companion object {
-    // Applications with an AWAITING_ARRIVAL status older than this threshold are excluded from the suitable applications list,
+    // Applications with an AWAITING_ARRIVAL status older than this threshold are excluded from the current applications list,
     // consistent with the cas_2_application_live_summary database view.
     const val APPLICATION_LIST_STATUS_EXPIRY_THRESHOLD_DAYS = 32L
   }

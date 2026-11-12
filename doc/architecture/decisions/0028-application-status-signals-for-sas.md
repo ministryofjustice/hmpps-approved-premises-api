@@ -8,7 +8,7 @@ Proposed
 
 ## Context
 
-The Single Accommodation Service (SAS) needs CAS **application**, **placement**, and **request-for-placement** statuses to drive its rules engine without calling `GET /CAS/external/cases/{crn}/applications/suitable` for every row on the case list. The intended direction is an event-driven flow where SAS persists derived fields (for example on a `sas_case` table) and refreshes them when CAS data changes.
+The Single Accommodation Service (SAS) needs CAS **application**, **placement**, and **request-for-placement** statuses to drive its rules engine without calling `GET /CAS/external/cases/{crn}/applications/current` for every row on the case list. The intended direction is an event-driven flow where SAS persists derived fields (for example on a `sas_case` table) and refreshes them when CAS data changes.
 
 A spike (SAS-328) mapped how those statuses change in CAS and which existing **approved-premises** domain events fire at each point. That analysis showed:
 

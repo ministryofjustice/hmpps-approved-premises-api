@@ -9,22 +9,29 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ArrivalDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CurrentApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.external.Cas2ExternalDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import java.util.UUID
 
 @Cas2ExternalController
 class Cas2ExternalApplicationsController(
   private val cas2ExternalApplicationService: Cas2ExternalApplicationService,
-  private val cas2ExternalDomainEventService: Cas2ExternalDomainEventService,
 ) {
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/cases/{crn}/applications/suitable")
-  fun getSuitableApplicationsByCrn(
+  @Deprecated("use [getCurrentApplication]")
+  fun getSuitableApplication(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas2SuitableApplication> = cas2ExternalApplicationService.getSuitableApplicationByCrn(crn)
+  ): ResponseEntity<Cas2CurrentApplication> = cas2ExternalApplicationService.getCurrentApplication(crn)
+    ?.let { ResponseEntity.ok(it) }
+    ?: ResponseEntity.noContent().build()
+
+  @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
+  @GetMapping("/cases/{crn}/applications/current")
+  fun getCurrentApplication(
+    @PathVariable crn: String,
+  ): ResponseEntity<Cas2CurrentApplication> = cas2ExternalApplicationService.getCurrentApplication(crn)
     ?.let { ResponseEntity.ok(it) }
     ?: ResponseEntity.noContent().build()
 
