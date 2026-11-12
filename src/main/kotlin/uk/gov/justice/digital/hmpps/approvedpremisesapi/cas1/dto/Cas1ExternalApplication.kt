@@ -11,11 +11,11 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 data class Cas1ExternalCaseSummaryDto(
-  val currentApplication: Cas1ExternalApplicationV2Dto?,
+  val currentApplication: Cas1ExternalApplicationDto?,
   val residence: Cas1ExternalPlacementV2Dto?,
 )
 
-data class Cas1ExternalApplicationV2Dto(
+data class Cas1ExternalApplicationDto(
   val uiUrl: String,
   val id: UUID,
   val status: ApprovedPremisesApplicationStatus,
@@ -77,38 +77,17 @@ data class Cas1ExternalPremisesV2Dto(
   val postcode: String,
 )
 
-@Schema(description = "Details about the most current application, with associated assessment, request for placement and placement")
-data class Cas1SuitableApplication(
-  val uiUrl: String,
-  val application: Cas1ExternalApplicationDto,
-  val assessment: Cas1ExternalAssessmentDto?,
-  @Deprecated("Use suitableRequestForPlacement.requestForPlacement")
-  val requestForPlacement: Cas1ExternalRequestForPlacementDto?,
-  @Deprecated("Use suitableRequestForPlacement.placement")
-  val placement: Cas1ExternalPlacementDto?,
-  val suitableRequestForPlacement: Cas1RequestForPlacementOutcomeDto?,
-  val placementHistory: List<Cas1RequestForPlacementOutcomeDto>,
-)
-
 @Schema(
   description = """Details about a request for placement and, if defined, one of its placements. 
   |If an RfP has many placements, many of these instances will exists""",
 )
+@Deprecated("Use [Cas1ExternalRequestForPlacementOutcomeDto]")
 data class Cas1RequestForPlacementOutcomeDto(
   val requestForPlacement: Cas1ExternalRequestForPlacementDto,
   val placement: Cas1ExternalPlacementDto?,
   @Schema(description = "The most recent status change date, or expected arrival date if placement exists in the future")
   val dateApplied: LocalDate,
   val statusLastUpdated: LocalDate,
-)
-
-data class Cas1ExternalApplicationDto(
-  val id: UUID,
-  val status: ApprovedPremisesApplicationStatus,
-  val createdAt: OffsetDateTime,
-  val createdBy: Cas1StaffDto,
-  val submittedAt: OffsetDateTime?,
-  val expiresAt: LocalDate?,
 )
 
 data class Cas1ExternalAssessmentDto(
@@ -128,6 +107,7 @@ data class Cas1ExternalRequestForPlacementDto(
   val durationDays: Int?,
 )
 
+@Deprecated("Use [Cas1ExternalPlacementV2Dto]")
 data class Cas1ExternalPlacementDto(
   val status: Cas1SpaceBookingStatus?,
   val actualArrivalDate: LocalDate?,
@@ -138,6 +118,7 @@ data class Cas1ExternalPlacementDto(
   val premises: Cas1ExternalPremisesDto?,
 )
 
+@Deprecated("Use [Cas1ExternalPremisesV2Dto]")
 data class Cas1ExternalPremisesDto(
   val startDate: LocalDate?,
   val endDate: LocalDate?,

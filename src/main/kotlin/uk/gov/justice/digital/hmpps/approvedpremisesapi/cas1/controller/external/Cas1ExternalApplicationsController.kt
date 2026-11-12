@@ -4,27 +4,38 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalCaseSummaryDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationV2Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalCaseService
 
 @Cas1ExternalController
 class Cas1ExternalApplicationsController(
-  private val cas1ExternalApplicationService: Cas1ExternalApplicationService,
+  private val cas1ExternalCaseService: Cas1ExternalCaseService,
+  private val cas1ExternalApplicationV2Service: Cas1ExternalApplicationV2Service,
 ) {
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
-  @GetMapping("/cases/{crn}/applications/suitable")
-  fun getSuitableApplicationByCrn(
+  @GetMapping("/cases/{crn}/summary")
+  fun getCaseSummary(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas1SuitableApplication> = cas1ExternalApplicationService.getSuitableApplicationByCrn(crn)
+  ): ResponseEntity<Cas1ExternalCaseSummaryDto> = cas1ExternalCaseService.getCaseSummary(crn)
     ?.let { ResponseEntity.ok(it) }
     ?: ResponseEntity.noContent().build()
 
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
-  @GetMapping("/cases/{crn}/premises/current")
-  fun getCurrentPremisesByCrn(
+  @GetMapping("/cases/{crn}/applications/current")
+  fun getCurrentApplicationByCrn(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas1ExternalPremisesDto> = cas1ExternalApplicationService.getCurrentPremisesByCrn(crn)
+  ): ResponseEntity<Cas1ExternalApplicationDto> = cas1ExternalApplicationV2Service.getSuitableApplicationByCrn(crn)
+    ?.let { ResponseEntity.ok(it) }
+    ?: ResponseEntity.noContent().build()
+
+  @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
+  @GetMapping("/cases/{crn}/residence")
+  fun getResidentPlacement(
+    @PathVariable crn: String,
+  ): ResponseEntity<Cas1ExternalPlacementV2Dto> = cas1ExternalApplicationV2Service.getCurrentResidentPlacement(crn)
     ?.let { ResponseEntity.ok(it) }
     ?: ResponseEntity.noContent().build()
 }

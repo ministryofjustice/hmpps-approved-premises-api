@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.extern
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationV2Dto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAssessmentDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalSubmittedApplicationDto
@@ -21,7 +21,7 @@ class Cas1ExternalApplicationV2Transformer(
     application: ApprovedPremisesApplicationEntity,
     upcomingRequestForPlacement: Cas1ExternalRequestForPlacementOutcomeDto?,
     requestForPlacementHistory: List<Cas1ExternalRequestForPlacementOutcomeDto>,
-  ) = Cas1ExternalApplicationV2Dto(
+  ) = Cas1ExternalApplicationDto(
     uiUrl = cas1ApplicationUrlTemplate.replace("#id", application.id.toString()),
     id = application.id,
     status = application.status,

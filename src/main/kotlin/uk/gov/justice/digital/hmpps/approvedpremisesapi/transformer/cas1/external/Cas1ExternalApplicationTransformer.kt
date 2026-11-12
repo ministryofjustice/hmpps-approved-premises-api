@@ -3,17 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.extern
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalApplicationDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalAssessmentDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalRequestForPlacementDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestForPlacementOutcomeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
@@ -92,39 +87,4 @@ class Cas1ExternalApplicationTransformer(
   } else {
     placement?.cancellation?.reason?.name
   }
-
-  fun transformToCas1SuitableApplication(
-    application: ApprovedPremisesApplicationEntity,
-    suitablePlacementPair: Cas1RequestForPlacementOutcomeDto?,
-    placementHistory: List<Cas1RequestForPlacementOutcomeDto>,
-  ): Cas1SuitableApplication {
-    val latestAssessment = application.getLatestAssessment()
-    return Cas1SuitableApplication(
-      uiUrl = cas1ApplicationUrlTemplate.replace("#id", application.id.toString()),
-      application = transformToApplication(application),
-      assessment = latestAssessment?.let { transformToAssessment(it) },
-      requestForPlacement = suitablePlacementPair?.requestForPlacement,
-      placement = suitablePlacementPair?.placement,
-      suitableRequestForPlacement = suitablePlacementPair,
-      placementHistory = placementHistory,
-    )
-  }
-
-  private fun transformToApplication(
-    application: ApprovedPremisesApplicationEntity,
-  ) = Cas1ExternalApplicationDto(
-    createdAt = application.createdAt,
-    createdBy = cas1AssessmentTransformer.transformToStaffDto(application.createdByUser),
-    submittedAt = application.submittedAt,
-    expiresAt = cas1ApplicationService.getApplicationExpiresAt(application),
-    status = application.status,
-    id = application.id,
-  )
-
-  private fun transformToAssessment(
-    latestAssessment: AssessmentEntity,
-  ) = Cas1ExternalAssessmentDto(
-    decision = cas1AssessmentTransformer.transformJpaDecisionToApi(latestAssessment.decision),
-    rejectionRationale = latestAssessment.rejectionRationale,
-  )
 }
