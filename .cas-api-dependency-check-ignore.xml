@@ -18,6 +18,18 @@
         <packageUrl regex="true">^pkg:maven/org\.jetbrains\.intellij\.deps\.kotlinx/kotlinx-coroutines-core-jvm@.*$</packageUrl>
         <vulnerabilityName>CVE-2026-53914</vulnerabilityName>
     </suppress>
+    <suppress until="2027-01-01Z">
+        <notes><![CDATA[
+    CVE-2026-53914 is in the Kotlin Gradle plugin's build cache metadata handling (fixed in 2.4.20).
+    Kotlin 2.4.10 jars are only resolved by the detekt and ktlint* configurations (detekt pins them via
+    getSupportedKotlinVersion()), where they are used as static analysis libraries, not to compile the app.
+    Verified 2026-11-12: kotlin-gradle-plugin and kotlin-compiler-embeddable resolve to 2.4.21, the bootJar
+    only contains Kotlin 2.4.21 jars, and no remote Gradle build cache is configured.
+    detekt 2.0.0-alpha.6 is the latest release; remove this once detekt/ktlint support Kotlin >= 2.4.20.
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.jetbrains\.kotlin/kotlin-[a-z0-9-]+@2\.4\.10$</packageUrl>
+        <vulnerabilityName>CVE-2026-53914</vulnerabilityName>
+    </suppress>
     <suppress>
         <notes><![CDATA[
     this appears to be a false positive due to broad matching rules in the CVE which matches _all_ kotlin libraries.
