@@ -124,7 +124,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     }
   }
 
-  fun withReferringPrisonCode(referringPrisonCode: String) = apply {
+  fun withReferringPrisonCode(referringPrisonCode: String?) = apply {
     this.referringPrisonCode = { referringPrisonCode }
   }
 

@@ -13,7 +13,7 @@ object Cas2ApplicationSummaryEntityFactory {
   fun produce(
     id: UUID = UUID.randomUUID(),
     crn: String = randomStringMultiCaseWithNumbers(8),
-    nomsNumber: String = randomStringMultiCaseWithNumbers(8),
+    nomsNumber: String? = randomStringMultiCaseWithNumbers(8),
     userId: UUID = UUID.randomUUID(),
     userName: String = "${randomStringUpperCase(6)} ${randomStringUpperCase(6)}",
     allocatedPomUserId: UUID = userId,
@@ -24,8 +24,8 @@ object Cas2ApplicationSummaryEntityFactory {
     hdcEligibilityDate: LocalDate? = null,
     latestStatusUpdateLabel: String? = null,
     latestStatusUpdateStatusId: String? = null,
-    referringPrisonCode: String = "LON",
-    currentPrisonCode: String = referringPrisonCode,
+    referringPrisonCode: String? = "LON",
+    currentPrisonCode: String? = referringPrisonCode,
     assignmentDate: OffsetDateTime = OffsetDateTime.now(),
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
   ) = Cas2ApplicationSummaryEntity(

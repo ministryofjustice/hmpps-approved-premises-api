@@ -24,7 +24,7 @@ data class Cas2HdcApplicationSummary(
 
   @get:JsonProperty("crn", required = true) val crn: String,
 
-  @get:JsonProperty("nomsNumber", required = true) val nomsNumber: String,
+  @get:JsonProperty("nomsNumber") val nomsNumber: String?,
 
   @get:JsonProperty("allocatedPomUserId", required = true) val allocatedPomUserId: UUID,
 

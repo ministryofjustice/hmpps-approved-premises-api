@@ -19,12 +19,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.toCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -97,7 +99,7 @@ class Cas2ApplicationService(
     crnOrNomsNumber: String?,
     user: Cas2UserEntity,
     pageCriteria: PageCriteria<String>,
-  ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+  ): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
     var spec: Specification<Cas2ApplicationSummaryEntity> =
       Specification { _, _, cb -> cb.conjunction() } // Start with no-op
 
@@ -126,10 +128,10 @@ class Cas2ApplicationService(
     val response = cas2ApplicationSummaryRepository.findAll(spec, getPageableOrAllPages(pageCriteria))
 
     val metadata = getMetadata(response, pageCriteria)
-    return Pair(response.content, metadata)
+    return Pair(response.content.map { it.toCas2ApplicationSummary() }, metadata)
   }
 
-  fun getAllSubmittedCas2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+  fun getAllSubmittedCas2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
     val response = cas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(Cas2ServiceOrigin.BAIL.toString(), pageable)
