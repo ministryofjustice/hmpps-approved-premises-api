@@ -8,7 +8,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-data class Cas2ApplicationSummary(
+data class Cas2ApplicationSummaryDto(
 
   @get:JsonProperty("type", required = true) val type: String,
 

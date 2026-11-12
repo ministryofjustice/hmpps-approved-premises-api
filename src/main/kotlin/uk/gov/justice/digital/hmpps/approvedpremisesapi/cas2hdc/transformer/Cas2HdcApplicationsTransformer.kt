@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateNonAssignable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
@@ -58,7 +58,7 @@ class Cas2HdcApplicationsTransformer(
   }
 
   fun transformJpaSummaryToSummary(
-    jpaSummary: Cas2ApplicationSummaryEntity,
+    jpaSummary: Cas2ApplicationSummary,
     personName: String,
   ): Cas2HdcApplicationSummary = Cas2HdcApplicationSummary(
     id = jpaSummary.id,
@@ -117,7 +117,7 @@ class Cas2HdcApplicationsTransformer(
     return ApplicationStatus.inProgress
   }
 
-  private fun getStatusFromSummary(summary: Cas2ApplicationSummaryEntity): ApplicationStatus = when {
+  private fun getStatusFromSummary(summary: Cas2ApplicationSummary): ApplicationStatus = when {
     summary.submittedAt != null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
   }
