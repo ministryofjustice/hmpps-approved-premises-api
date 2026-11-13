@@ -172,6 +172,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
       ),
     )
 
+    val application5PrwithdrawalOccurredAt = now().minusDays(5).roundNanosToMillisToAccountForLossOfPrecisionInPostgres()
     val (application5AssessmentAllocatedTo, _) = givenAUser()
     val (application5Pr1, _) = givenAPlacementRequest(
       placementRequestCreatedAt = now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
@@ -181,6 +182,8 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
       assessmentAllocatedTo = application5AssessmentAllocatedTo,
       isWithdrawn = true,
       withdrawalReason = PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION,
+      withdrawalOccurredAt = application5PrwithdrawalOccurredAt,
+
     )
 
     val (withdrawingUser, _) = givenAUser()
@@ -230,6 +233,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application1Pa1.decisionMadeAt).isEqualTo(application1Pr1.createdAt)
     assertThat(application1Pa1.withdrawalReason).isNull()
     assertThat(application1Pa1.isWithdrawn).isEqualTo(false)
+    assertThat(application1Pa1.withdrawalOccurredAt).isNull()
     assertThat(application1Pa1.submittedAt).isNotNull
     assertThat(application1Pa1.dueAt).isNull()
     assertThat(application1Pa1.allocatedToUser!!.id).isEqualTo(application1AssessmentAllocatedTo.id)
@@ -266,6 +270,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application3Pa1.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
     assertThat(application3Pa1.decisionMadeAt).isEqualTo(application3Pr1.createdAt)
     assertThat(application3Pa1.withdrawalReason).isNull()
+    assertThat(application3Pa1.withdrawalOccurredAt).isNull()
     assertThat(application3Pa1.isWithdrawn).isEqualTo(false)
     assertThat(application3Pa1.submittedAt).isNotNull
     assertThat(application3Pa1.dueAt).isNull()
@@ -295,6 +300,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application3Pa2.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
     assertThat(application3Pa2.decisionMadeAt).isEqualTo(application3Pr2.createdAt)
     assertThat(application3Pa2.withdrawalReason).isNull()
+    assertThat(application3Pa2.withdrawalOccurredAt).isNull()
     assertThat(application3Pa2.isWithdrawn).isEqualTo(false)
     assertThat(application3Pa2.submittedAt).isNotNull
     assertThat(application3Pa2.dueAt).isNull()
@@ -326,6 +332,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application4Pa1.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
     assertThat(application4Pa1.decisionMadeAt).isEqualTo(application4Pr1.createdAt)
     assertThat(application4Pa1.withdrawalReason).isNull()
+    assertThat(application4Pa1.withdrawalOccurredAt).isNull()
     assertThat(application4Pa1.isWithdrawn).isEqualTo(false)
     assertThat(application4Pa1.submittedAt).isNotNull
     assertThat(application4Pa1.dueAt).isNull()
@@ -355,6 +362,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application4Pa2.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
     assertThat(application4Pa2.decisionMadeAt).isEqualTo(application4Pr2.createdAt)
     assertThat(application4Pa2.withdrawalReason).isNull()
+    assertThat(application4Pa2.withdrawalOccurredAt).isNull()
     assertThat(application4Pa2.isWithdrawn).isEqualTo(false)
     assertThat(application4Pa2.submittedAt).isNotNull
     assertThat(application4Pa2.dueAt).isNull()
@@ -387,6 +395,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application5Pa1.decisionMadeAt).isEqualTo(application5Pr1.createdAt)
     assertThat(application5Pa1.withdrawalReason).isEqualTo(PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION)
     assertThat(application5Pa1.isWithdrawn).isEqualTo(true)
+    assertThat(application5Pa1.withdrawalOccurredAt).isEqualTo(application5PrwithdrawalOccurredAt)
     assertThat(application5Pa1.submittedAt).isNotNull
     assertThat(application5Pa1.dueAt).isNull()
     assertThat(application5Pa1.allocatedToUser!!.id).isEqualTo(application5AssessmentAllocatedTo.id)

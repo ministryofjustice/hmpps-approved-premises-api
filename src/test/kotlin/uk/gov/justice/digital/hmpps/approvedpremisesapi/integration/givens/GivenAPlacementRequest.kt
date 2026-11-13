@@ -38,6 +38,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   name: String? = null,
   isWithdrawn: Boolean = false,
   withdrawalReason: PlacementRequestWithdrawalReason? = null,
+  withdrawalOccurredAt: OffsetDateTime? = null,
   isParole: Boolean = false,
   expectedArrival: LocalDate? = null,
   tier: String? = null,
@@ -126,6 +127,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
     withAssessment(assessment)
     withIsWithdrawn(isWithdrawn)
     withWithdrawalReason(withdrawalReason)
+    withWithdrawalOccurredAt(withdrawalOccurredAt)
     withIsParole(isParole)
     withPlacementRequirements(placementRequirements)
     if (expectedArrival != null) {

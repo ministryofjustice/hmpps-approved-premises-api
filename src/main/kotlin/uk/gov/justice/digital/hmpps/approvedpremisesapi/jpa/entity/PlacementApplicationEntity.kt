@@ -194,7 +194,8 @@ data class PlacementApplicationEntity(
 
   /**
    * Indicates that this placement application was created as part of the 'one-off' backfill job to
-   * ensure a placement application exists for every
+   * ensure a placement application exists for every placement request
+   * (See [uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob])
    */
   val backfilledAutomatic: Boolean = false,
 

@@ -71,6 +71,8 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
     if (placeholder != null) {
       placeholder.archived = true
       placementApplicationPlaceholderRepository.save(placeholder)
+    } else {
+      log.warn("Could not find placeholder for application $applicationId")
     }
 
     val applicablePlacementRequests = application.placementRequests.filter { it.placementApplication == null }
@@ -81,7 +83,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
 
     applicablePlacementRequests.sortedBy { it.expectedArrival }.forEachIndexed { i, placementRequest ->
       /**
-       * For almost all cases there should be one placement request and a non-archived
+       * In almost all cases there should be one placement request and a non-archived
        * placeholder available. There are some cases where:
        *
        * 1. There are multiple 'initial' placement requests linked to an application
@@ -89,9 +91,9 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
        *
        * Both of these are due to bugs or original application logic that hasn't been
        * in place since late 2023. In these cases we have no choice but to generate
-       * a new ID for these placement applications. This only affects the
+       * a new ID for the 'surplus' placement applications. This only affects the
        * request for placement reports as these entries will now appear with new IDs,
-       * instead of using duplicate IDs
+       * instead of using duplicate IDs. Given the age of these, this is acceptable
        */
       val newPlacementApplicationId = if (i == 0 && placeholder != null) {
         placeholder.id
@@ -125,7 +127,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
       placementRequest.duration
     }
 
-    val placementApplication = placementApplicationRepository.save(
+    val newPlacementApplication = placementApplicationRepository.save(
       PlacementApplicationEntity(
         id = newPlacementApplicationId,
         backfilledAutomatic = true,
@@ -134,16 +136,19 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
         createdAt = application.createdAt,
         expectedArrival = placementRequest.expectedArrival,
         expectedArrivalFlexible = null,
+        calculatedPlacementDuration = null,
         requestedDuration = requestedDuration,
         authorisedDuration = placementRequest.duration,
         submittedAt = application.submittedAt!!,
         decision = PlacementApplicationDecision.ACCEPTED,
         decisionMadeAt = placementRequest.createdAt,
+        decisionSummary = null,
         placementType = PlacementType.AUTOMATIC,
         automatic = true,
         placementRequest = null,
         submissionGroupId = UUID.randomUUID(),
         withdrawalReason = determineWithdrawalReason(placementRequest),
+        withdrawalOccurredAt = placementRequest.withdrawalOccurredAt,
         isWithdrawn = placementRequest.isWithdrawn,
         data = null,
         document = null,
@@ -157,9 +162,9 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
       ),
     )
 
-    placementRequest.placementApplication = placementApplication
+    placementRequest.placementApplication = newPlacementApplication
 
-    if (placementApplication.isWithdrawn) {
+    if (newPlacementApplication.isWithdrawn) {
       val withdrawnDomainEventId = cas1BackfillAutomaticPlacementApplicationsRepository.findMatchRequestWithdrawnEventId(
         applicationId = application.id,
         placementRequestId = placementRequest.id,
@@ -168,7 +173,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
       if (withdrawnDomainEventId != null) {
         val matchRequestWithdrawnDomainEvent = cas1DomainEventService.getMatchRequestWithdrawnEvent(withdrawnDomainEventId)!!
         cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(
-          placementApplication = placementApplication,
+          placementApplication = newPlacementApplication,
           withdrawnBy = matchRequestWithdrawnDomainEvent.data.eventDetails.withdrawnBy,
           eventOccurredAt = matchRequestWithdrawnDomainEvent.data.timestamp,
         )
