@@ -123,13 +123,6 @@ generic-service:
       HTTPS_PROXY: "HTTPS_PROXY"
       NO_PROXY: "NO_PROXY"
       JAVA_PROXY_TOOL_OPTIONS: "JAVA_PROXY_TOOL_OPTIONS"
-    rds-new-postgresql-instance-output:
-      # username/db is set back to snapshot, but password is new.
-      SPRING_DATASOURCE_USERNAME: "pg_18_database_username"
-      SPRING_DATASOURCE_PASSWORD: "pg_14_database_password"
-      DB_HOST: "pg_14_rds_instance_endpoint"
-      DB_NAME: "pg_18_database_name"
-    rds-postgresql-instance-output: null
 
 # These alerts are provided by https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/README.md
 generic-prometheus-alerts:
