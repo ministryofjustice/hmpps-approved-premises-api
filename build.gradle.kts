@@ -39,7 +39,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.7.2-jre")
-  implementation("org.javers:javers-core:7.11.9")
+  implementation("org.javers:javers-core:7.11.10")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
   constraints {
     implementation("org.webjars:swagger-ui:5.34.1") {
