@@ -354,6 +354,21 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   on any corresponding JPA property when the column was added and that a backfill
   wasn't performed. This is helpful when determining if the column can be used
   for historic data
+* `./script/generate_migration all "<description>"` creates an **empty** file, so
+  the `create` tool will fail on that path — use `edit` to fill it in.
+* Adding a column to an entity: also add a defaulted constructor param (so
+  existing direct constructor calls still compile) and update the entity's test
+  factory (backing field, `with*`, `produce()`).
+
+---
+
+## Seed jobs
+
+* One-off data fixes are seed jobs: a `@Component` extending `SeedJob<Row>` in
+  `casx/seed` , plus three wiring
+  points: an entry in `api/model/SeedFileType.kt`, a branch in
+  `common/jobs/seed/SeedService.kt`, and an integration test extending
+  `SeedTestBase`.
 
 ---
 
@@ -458,6 +473,12 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
 * Name tests by behaviour with backtick names describing outcome and
   condition. Do not start with "test", and do not add Arrange/Act/Assert comments.
 * One concern per test, but not one assertion per field.
+* CAS3 services return `Cas3FieldValidationError` (not `FieldValidationError`) for
+  some checks, e.g. `endDateBeforePremisesStartDate`. Assert these with
+  `assertThatCasResult(r).isCas3FieldValidationError().hasMessage(field, entityId, message, value)`;
+  check which type the code returns before choosing the assertion.
+* Integration/seed tests need the test DB: run `./script/test_database` first,
+  otherwise they fail at context start-up.
 * Cover the happy path plus every branch, boundary, and error condition.
 * Use parameterised tests for role/enum/date matrices: a companion-object
   `@MethodSource` (e.g. status-priority selection, see the v1 service tests), or

@@ -38,6 +38,11 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
   private var endDate: Yielded<LocalDate?> = { null }
   private var createdAt: OffsetDateTime = OffsetDateTime.now()
   private var lastUpdatedAt: OffsetDateTime? = null
+  private var suppressArchiveLimits: Yielded<Boolean> = { false }
+
+  fun withSuppressArchiveLimits(suppressArchiveLimits: Boolean) = apply {
+    this.suppressArchiveLimits = { suppressArchiveLimits }
+  }
 
   fun withDefaults() = apply {
     withDefaultProbationDeliveryUnit()
@@ -143,5 +148,6 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     endDate = this.endDate(),
     createdAt = this.createdAt,
     lastUpdatedAt = this.lastUpdatedAt,
+    suppressArchiveLimits = this.suppressArchiveLimits(),
   )
 }

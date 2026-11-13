@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
@@ -1082,6 +1083,41 @@ class Cas3ArchiveServiceTest {
     }
 
     @Test
+    fun `When archive a premises with suppressArchiveLimits an end date more than seven days in the past returns Success`() {
+      val premises = createPremisesEntity(suppressArchiveLimits = true)
+      val archiveDate = LocalDate.now().minusDays(30)
+
+      stubArchiveOfPremisesWithoutBedspaces(premises)
+
+      val result = cas3v2ArchiveService.archivePremises(premises, archiveDate)
+
+      assertThatCasResult(result).isSuccess().with { assertThat(it.endDate).isEqualTo(archiveDate) }
+    }
+
+    @Test
+    fun `When archive a premises with suppressArchiveLimits an end date more than three months in the future returns Success`() {
+      val premises = createPremisesEntity(suppressArchiveLimits = true)
+      val archiveDate = LocalDate.now().plusMonths(6)
+
+      stubArchiveOfPremisesWithoutBedspaces(premises)
+
+      val result = cas3v2ArchiveService.archivePremises(premises, archiveDate)
+
+      assertThatCasResult(result).isSuccess().with { assertThat(it.endDate).isEqualTo(archiveDate) }
+    }
+
+    @Test
+    fun `When archive a premises with suppressArchiveLimits an end date before premises start date still returns FieldValidationError`() {
+      val premises = createPremisesEntity(startDate = LocalDate.now().minusDays(50), suppressArchiveLimits = true)
+
+      every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+
+      val result = cas3v2ArchiveService.archivePremises(premises, premises.startDate.minusDays(1))
+
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", premises.id.toString(), "endDateBeforePremisesStartDate", premises.startDate.toString())
+    }
+
+    @Test
     fun `When archive a premises with an end date before premises start date returns FieldValidationError with the correct message`() {
       val premises = createPremisesEntity(startDate = LocalDate.now().minusDays(5))
 
@@ -1412,6 +1448,40 @@ class Cas3ArchiveServiceTest {
       val result = cas3v2ArchiveService.unarchivePremises(archivedPremises, restartDate)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.restartDate", "invalidRestartDateInTheFuture")
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = [-30, 30])
+    fun `unarchivePremises with suppressArchiveLimits returns Success when restart date is more than 14 days from today`(daysFromToday: Long) {
+      val archivedPremises = createPremisesEntity(
+        startDate = LocalDate.now().minusDays(90),
+        endDate = LocalDate.now().minusDays(60),
+        status = Cas3PremisesStatus.archived,
+        suppressArchiveLimits = true,
+      )
+      val restartDate = LocalDate.now().plusDays(daysFromToday)
+
+      every { cas3BedspaceRepositoryMock.findByPremisesId(archivedPremises.id) } returns emptyList()
+      every { cas3PremisesRepositoryMock.save(match { it.id == archivedPremises.id }) } returns archivedPremises
+      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(any(), any(), any(), any(), any()) } returns Unit
+
+      val result = cas3v2ArchiveService.unarchivePremises(archivedPremises, restartDate)
+
+      assertThatCasResult(result).isSuccess().with { assertThat(it.startDate).isEqualTo(restartDate) }
+    }
+
+    @Test
+    fun `unarchivePremises with suppressArchiveLimits still returns FieldValidationError when restart date is before last archive end date`() {
+      val archivedPremises = createPremisesEntity(
+        startDate = LocalDate.now().minusDays(90),
+        endDate = LocalDate.now().minusDays(1),
+        status = Cas3PremisesStatus.archived,
+        suppressArchiveLimits = true,
+      )
+
+      val result = cas3v2ArchiveService.unarchivePremises(archivedPremises, LocalDate.now().minusDays(5))
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.restartDate", "beforeLastPremisesArchivedDate")
     }
 
     @Test
@@ -1977,11 +2047,19 @@ class Cas3ArchiveServiceTest {
     return Pair(premises, bedspace)
   }
 
+  private fun stubArchiveOfPremisesWithoutBedspaces(premises: Cas3PremisesEntity) {
+    every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+    every { cas3BedspaceRepositoryMock.findByPremisesId(premises.id) } returns emptyList()
+    every { cas3PremisesRepositoryMock.save(match { it.id == premises.id }) } returns premises
+    every { cas3DomainEventServiceMock.savePremisesArchiveEvent(premises, any(), any()) } returns Unit
+  }
+
   private fun createPremisesEntity(
     id: UUID = UUID.randomUUID(),
     startDate: LocalDate = LocalDate.now().minusDays(180),
     endDate: LocalDate? = null,
     status: Cas3PremisesStatus = Cas3PremisesStatus.online,
+    suppressArchiveLimits: Boolean = false,
   ): Cas3PremisesEntity {
     val probationRegion = ProbationRegionEntityFactory()
       .withApArea(ApAreaEntityFactory().produce())
@@ -1996,6 +2074,7 @@ class Cas3ArchiveServiceTest {
 
     return Cas3PremisesEntityFactory()
       .withId(id)
+      .withSuppressArchiveLimits(suppressArchiveLimits)
       .withService(ServiceName.temporaryAccommodation.value)
       .withProbationDeliveryUnit(probationDeliveryUnit)
       .withLocalAuthorityArea(localAuthority)
