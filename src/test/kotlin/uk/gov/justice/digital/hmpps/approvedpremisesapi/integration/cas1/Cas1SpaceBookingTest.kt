@@ -5,7 +5,6 @@ import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -22,13 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApprovedPlacementAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssignKeyWorker
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewDeparture
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewEmergencyTransfer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewPlannedTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NonArrival
@@ -49,13 +44,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedCas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
@@ -66,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository.Companion.UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE
@@ -74,19 +65,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_NOT_APPLICABLE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -475,7 +460,10 @@ class Cas1SpaceBookingTest {
             withBed(bed1)
           }.apply {
             this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-              withCreatedAt(OffsetDateTime.parse("2020-01-03T10:15:30+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedAt(
+                OffsetDateTime.parse("2020-01-03T10:15:30+01:00")
+                  .roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+              )
               withCreatedBy(applicant)
               withReferenceNumber("CRN1234")
               withOutOfServiceBed(this@apply)
@@ -486,7 +474,10 @@ class Cas1SpaceBookingTest {
               )
             }
             this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-              withCreatedAt(OffsetDateTime.parse("2020-01-04T10:15:30+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedAt(
+                OffsetDateTime.parse("2020-01-04T10:15:30+01:00")
+                  .roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+              )
               withCreatedBy(applicant)
               withReferenceNumber("CRN1234")
               withOutOfServiceBed(this@apply)
@@ -600,7 +591,10 @@ class Cas1SpaceBookingTest {
             withBed(bed1)
           }.apply {
             this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-              withCreatedAt(OffsetDateTime.parse("2020-01-03T10:15:30+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedAt(
+                OffsetDateTime.parse("2020-01-03T10:15:30+01:00")
+                  .roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+              )
               withCreatedBy(applicant)
               withReferenceNumber("CRN1234")
               withOutOfServiceBed(this@apply)
@@ -680,7 +674,14 @@ class Cas1SpaceBookingTest {
       )
 
       currentSpaceBooking1 =
-        createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tierOnApplicationCreation = "A", caseTierV2 = "Z", caseTierV3 = "F") {
+        createSpaceBooking(
+          crn = "CRN_CURRENT1",
+          firstName = "curt",
+          lastName = "rent 1",
+          tierOnApplicationCreation = "A",
+          caseTierV2 = "Z",
+          caseTierV3 = "F",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2026-01-02"))
           withExpectedDepartureDate(LocalDate.parse("2026-02-02"))
@@ -693,22 +694,6 @@ class Cas1SpaceBookingTest {
           withKeyworkerAssignedAt(Instant.now())
           withCriteria(criteria)
         }
-
-      givenACas1ChangeRequest(
-        type = ChangeRequestType.PLACEMENT_APPEAL,
-        decision = null,
-        decisionJson = null,
-        spaceBooking = currentSpaceBooking1,
-        resolved = false,
-      )
-
-      givenACas1ChangeRequest(
-        type = ChangeRequestType.PLACEMENT_APPEAL,
-        decision = ChangeRequestDecision.APPROVED,
-        decisionJson = "{\"test\": 1}",
-        spaceBooking = currentSpaceBooking1,
-        resolved = true,
-      )
 
       currentSpaceBooking2OfflineApplicationKeyWorker = givenAUser().first
       currentSpaceBooking2OfflineApplication = createSpaceBookingWithOfflineApplication(
@@ -730,7 +715,14 @@ class Cas1SpaceBookingTest {
       }
 
       currentSpaceBooking3 =
-        createSpaceBooking(crn = "CRN_CURRENT3", firstName = "curt", lastName = "rent 3", tierOnApplicationCreation = "B", caseTierV2 = "Y", caseTierV3 = "A") {
+        createSpaceBooking(
+          crn = "CRN_CURRENT3",
+          firstName = "curt",
+          lastName = "rent 3",
+          tierOnApplicationCreation = "B",
+          caseTierV2 = "Y",
+          caseTierV3 = "A",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2026-03-02"))
           withExpectedDepartureDate(LocalDate.parse("2026-04-02"))
@@ -742,22 +734,6 @@ class Cas1SpaceBookingTest {
           withKeyworkerStaffCode("clivek")
           withKeyworkerAssignedAt(Instant.now())
         }
-
-      givenACas1ChangeRequest(
-        type = ChangeRequestType.PLANNED_TRANSFER,
-        decision = null,
-        decisionJson = null,
-        spaceBooking = currentSpaceBooking3,
-        resolved = false,
-      )
-
-      givenACas1ChangeRequest(
-        type = ChangeRequestType.PLANNED_TRANSFER,
-        decision = ChangeRequestDecision.APPROVED,
-        decisionJson = "{\"test\": 1}",
-        spaceBooking = currentSpaceBooking3,
-        resolved = true,
-      )
 
       currentSpaceBooking4Restricted = createSpaceBooking(
         crn = "CRN_CURRENT4",
@@ -781,7 +757,14 @@ class Cas1SpaceBookingTest {
       }
 
       departedSpaceBooking =
-        createSpaceBooking(crn = "CRN_DEPARTED", firstName = "de", lastName = "parted", tierOnApplicationCreation = "D", caseTierV2 = "W", caseTierV3 = "H") {
+        createSpaceBooking(
+          crn = "CRN_DEPARTED",
+          firstName = "de",
+          lastName = "parted",
+          tierOnApplicationCreation = "D",
+          caseTierV2 = "W",
+          caseTierV3 = "H",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2025-01-03"))
           withExpectedDepartureDate(LocalDate.parse("2025-02-03"))
@@ -795,7 +778,14 @@ class Cas1SpaceBookingTest {
         }
 
       upcomingSpaceBookingWithKeyWorker =
-        createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming senior", tierOnApplicationCreation = "U", caseTierV2 = "E", caseTierV3 = "D") {
+        createSpaceBooking(
+          crn = "CRN_UPCOMING",
+          firstName = "up",
+          lastName = "coming senior",
+          tierOnApplicationCreation = "U",
+          caseTierV2 = "E",
+          caseTierV3 = "D",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
           withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
@@ -810,7 +800,14 @@ class Cas1SpaceBookingTest {
         }
 
       upcomingCancelledSpaceBooking =
-        createSpaceBooking(crn = "CRN_UPCOMING_CANCELLED", firstName = "up", lastName = "coming", tierOnApplicationCreation = "U", caseTierV2 = "E", caseTierV3 = "B") {
+        createSpaceBooking(
+          crn = "CRN_UPCOMING_CANCELLED",
+          firstName = "up",
+          lastName = "coming",
+          tierOnApplicationCreation = "U",
+          caseTierV2 = "E",
+          caseTierV3 = "B",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
           withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
@@ -825,7 +822,14 @@ class Cas1SpaceBookingTest {
         }
 
       nonArrivedSpaceBooking =
-        createSpaceBooking(crn = "CRN_NONARRIVAL", firstName = "None", lastName = "Arrived", tierOnApplicationCreation = "A", caseTierV2 = "Z", caseTierV3 = "E") {
+        createSpaceBooking(
+          crn = "CRN_NONARRIVAL",
+          firstName = "None",
+          lastName = "Arrived",
+          tierOnApplicationCreation = "A",
+          caseTierV2 = "Z",
+          caseTierV3 = "E",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2028-01-02"))
           withExpectedDepartureDate(LocalDate.parse("2028-02-02"))
@@ -842,7 +846,14 @@ class Cas1SpaceBookingTest {
         }
 
       legacySpaceBookingNoArrival =
-        createSpaceBooking(crn = "CRN_LEGACY_NO_ARRIVAL", firstName = "None", lastName = "Historic", tierOnApplicationCreation = "A", caseTierV2 = "Z", caseTierV3 = "L") {
+        createSpaceBooking(
+          crn = "CRN_LEGACY_NO_ARRIVAL",
+          firstName = "None",
+          lastName = "Historic",
+          tierOnApplicationCreation = "A",
+          caseTierV2 = "Z",
+          caseTierV3 = "L",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2024-05-02"))
           withExpectedDepartureDate(LocalDate.parse("2024-05-31"))
@@ -857,7 +868,14 @@ class Cas1SpaceBookingTest {
         }
 
       legacySpaceBookingNoDeparture =
-        createSpaceBooking(crn = "CRN_LEGACY_NO_DEPARTURE", firstName = "None", lastName = "Historic", tierOnApplicationCreation = "Z", caseTierV2 = "A", caseTierV3 = "C") {
+        createSpaceBooking(
+          crn = "CRN_LEGACY_NO_DEPARTURE",
+          firstName = "None",
+          lastName = "Historic",
+          tierOnApplicationCreation = "Z",
+          caseTierV2 = "A",
+          caseTierV3 = "C",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2024-05-01"))
           withExpectedDepartureDate(LocalDate.parse("2024-05-30"))
@@ -871,7 +889,14 @@ class Cas1SpaceBookingTest {
         }
 
       upcomingSpaceBookingBeforeThreshold =
-        createSpaceBooking(crn = "CRN_UPCOMING_BEFORE_THRESHOLD", firstName = "up", lastName = "coming before threshold esquire", tierOnApplicationCreation = "S", caseTierV2 = "G", caseTierV3 = "Z") {
+        createSpaceBooking(
+          crn = "CRN_UPCOMING_BEFORE_THRESHOLD",
+          firstName = "up",
+          lastName = "coming before threshold esquire",
+          tierOnApplicationCreation = "S",
+          caseTierV2 = "G",
+          caseTierV3 = "Z",
+        ) {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2024-12-31"))
           withExpectedDepartureDate(LocalDate.parse("2024-12-31"))
@@ -929,12 +954,12 @@ class Cas1SpaceBookingTest {
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[4].appealRequested).isFalse
       assertThat(response[4].plannedTransferRequested).isFalse
-      assertThat(response[4].openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
+      assertThat(response[4].openChangeRequestTypes).isEmpty()
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[6].appealRequested).isFalse
       assertThat(response[6].plannedTransferRequested).isFalse
-      assertThat(response[6].openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLANNED_TRANSFER)
+      assertThat(response[6].openChangeRequestTypes).isEmpty()
       assertThat(response[7].person.crn).isEqualTo("CRN_CURRENT4")
       assertThat(response[7].appealRequested).isFalse
       assertThat(response[7].plannedTransferRequested).isFalse
@@ -1339,7 +1364,6 @@ class Cas1SpaceBookingTest {
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises2021: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises2020: Cas1SpaceBookingEntity
-    lateinit var appealRejectionReason: Cas1ChangeRequestRejectionReasonEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -1427,11 +1451,6 @@ class Cas1SpaceBookingTest {
         withCanonicalArrivalDate(LocalDate.parse("2032-05-29"))
         withCanonicalDepartureDate(LocalDate.parse("2032-06-29"))
       }
-
-      appealRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
-        .produceAndPersist {
-          withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
-        }
     }
 
     @Test
@@ -1777,7 +1796,10 @@ class Cas1SpaceBookingTest {
         actualArrivalDate = LocalDate.parse("2020-01-01"),
         expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.plusDays(1),
         actualDepartureDate = null,
-        premises = givenAnApprovedPremises(name = "Other Premises Name", cruManagementArea = givenACas1CruManagementArea(name = "NE")),
+        premises = givenAnApprovedPremises(
+          name = "Other Premises Name",
+          cruManagementArea = givenACas1CruManagementArea(name = "NE"),
+        ),
       )
 
       val spaceBooking = givenACas1SpaceBooking(
@@ -1801,75 +1823,6 @@ class Cas1SpaceBookingTest {
         .bodyAsObject<ValidationError>()
 
       assertThat(response.detail).isEqualTo("Arrival cannot be recorded as CRN123 is recorded as resident at Other Premises Name (NE)")
-    }
-
-    @Test
-    fun `Recording arrival for emergency transfer returns OK, creates and emits a domain event and emails`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
-
-      val (user) = givenAUser()
-      val (offender) = givenAnOffender()
-      val cruManagementArea = givenACas1CruManagementArea(emailAddress = "theCru@test.com")
-
-      val application = givenASubmittedCas1Application(
-        offender = offender.asCaseSummary(),
-        caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
-          withEmailAddress("caseManager@test.com")
-        },
-        cruManagementArea = cruManagementArea,
-      )
-      val placementApplication = givenAPlacementApplication(application = application)
-      val (placementRequest) = givenAPlacementRequest(
-        assessmentAllocatedTo = user,
-        application = application,
-        placementApplication = placementApplication,
-      )
-
-      val transferredBooking = givenACas1SpaceBooking(
-        application = application,
-        placementRequest = placementRequest,
-      )
-
-      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
-        withCrn(offender.otherIds.crn)
-        withPremises(premises)
-        withPlacementRequest(placementRequest)
-        withApplication(application)
-        withCreatedBy(user)
-        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
-        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
-        withKeyworkerName(user.name)
-        withKeyworkerStaffCode(user.deliusStaffCode)
-        withKeyworkerAssignedAt(Instant.now())
-        withDeliusEventNumber("25")
-        withTransferType(TransferType.EMERGENCY)
-        withTransferredFrom(transferredBooking)
-      }
-
-      webTestClient.post()
-        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          Cas1NewArrival(
-            arrivalDate = LocalDate.now().minusDays(1),
-            arrivalTime = "12:00:00",
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-
-      domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
-      domainEventAsserter.assertDomainEventOfTypeStored(
-        spaceBooking.application!!.id,
-        DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
-      )
-
-      emailAsserter.assertEmailsRequestedCount(4)
-      emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.TRANSFER_COMPLETE)
-      emailAsserter.assertEmailRequested("caseManager@test.com", Cas1NotifyTemplates.TRANSFER_COMPLETE)
-      emailAsserter.assertEmailRequested(placementApplication.createdByUser.email!!, Cas1NotifyTemplates.TRANSFER_COMPLETE)
-      emailAsserter.assertEmailRequested("theCru@test.com", Cas1NotifyTemplates.TRANSFER_COMPLETE_EMERGENCY_FOR_CRU)
     }
 
     @Test
@@ -2617,7 +2570,6 @@ class Cas1SpaceBookingTest {
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var cancellationReason: CancellationReasonEntity
-    lateinit var changeRequests: List<Cas1ChangeRequestEntity>
 
     @BeforeAll
     fun setupTestData() {
@@ -2666,15 +2618,6 @@ class Cas1SpaceBookingTest {
 
       cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
         withServiceScope("*")
-      }
-
-      changeRequests = (0..3).map {
-        givenACas1ChangeRequest(
-          type = ChangeRequestType.PLACEMENT_APPEAL,
-          spaceBooking = spaceBooking,
-          resolved = false,
-          decisionJson = "{\"test\": 1}",
-        )
       }
     }
 
@@ -2748,120 +2691,13 @@ class Cas1SpaceBookingTest {
       )
       emailAsserter.assertEmailsRequestedCount(4)
 
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
+      )
 
       assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status)
         .isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-
-      changeRequests.forEach {
-        assertThat(cas1ChangeRequestRepository.findByIdOrNull(it.id)!!.resolved).isTrue()
-      }
-    }
-
-    @Test
-    fun `Cancellation (due to appeal) without JWT returns 401`() {
-      webTestClient.post()
-        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/appeal")
-        .bodyValue(
-          Cas1ApprovedPlacementAppeal(
-            occurredAt = LocalDate.parse("2022-08-17"),
-            reasonNotes = null,
-            placementAppealChangeRequestId = UUID.randomUUID(),
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @ParameterizedTest
-    @EnumSource(
-      value = UserRole::class,
-      names = ["CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV", "CAS1_EXPERIMENTAL"],
-      mode = EnumSource.Mode.EXCLUDE,
-    )
-    fun `Cancellation (due to appeal) with invalid role returns 401`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        webTestClient.post()
-          .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/appeal")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            Cas1ApprovedPlacementAppeal(
-              occurredAt = LocalDate.parse("2022-08-17"),
-              reasonNotes = null,
-              placementAppealChangeRequestId = UUID.randomUUID(),
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
-    @Test
-    fun `Create Cancellation (due to appeal) on CAS1 Booking returns OK with correct body and updates status when user has role CAS1_CHANGE_REQUEST_DEV`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
-
-        val (placementRequest) = givenAPlacementRequest(
-          assessmentAllocatedTo = user,
-          createdByUser = applicant,
-        )
-
-        val (offenderDetails, _) = givenAnOffender()
-
-        val reason = cas1ChangeRequestReasonEntityFactory.produceAndPersist()
-
-        val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withPremises(premises)
-          withPlacementRequest(placementRequest)
-          withCreatedBy(applicant)
-          withApplication(placementRequest.application)
-        }
-
-        val changeRequestId = cas1ChangeRequestEntityFactory
-          .produceAndPersist {
-            withSpaceBooking(spaceBooking)
-            withUser(user)
-            withChangeRequestReason(reason)
-            withPlacementRequest(placementRequest)
-          }.id
-
-        webTestClient.post()
-          .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/appeal")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            Cas1ApprovedPlacementAppeal(
-              occurredAt = LocalDate.parse("2022-08-17"),
-              reasonNotes = null,
-              placementAppealChangeRequestId = changeRequestId,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-
-        assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status).isEqualTo(
-          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
-        )
-
-        val cas1PersistedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
-        assertThat(cas1PersistedSpaceBooking.cancellationReason!!.name).isEqualTo("Booking successfully appealed")
-        assertThat(cas1PersistedSpaceBooking.cancellationReason!!.id).isEqualTo(CancellationReasonRepository.CAS1_BOOKING_SUCCESSFULLY_APPEALED_ID)
-
-        assertThat(cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)!!.decision).isEqualTo(
-          ChangeRequestDecision.APPROVED,
-        )
-
-        emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2)
-        emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2)
-        emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.PLACEMENT_APPEAL_ACCEPTED_FOR_APPLICANT)
-        emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.PLACEMENT_APPEAL_ACCEPTED_FOR_PREMISES)
-
-        emailAsserter.assertEmailsRequestedCount(4)
-
-        domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
-      }
     }
   }
 
@@ -3209,278 +3045,6 @@ class Cas1SpaceBookingTest {
         spaceBooking.application!!.id,
         DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
       )
-    }
-  }
-
-  @Nested
-  inner class EmergencyTransfer : InitialiseDatabasePerClassTestBase() {
-    lateinit var region: ProbationRegionEntity
-    lateinit var premises: ApprovedPremisesEntity
-    lateinit var existingSpaceBooking: Cas1SpaceBookingEntity
-    lateinit var applicant: UserEntity
-    lateinit var application: ApprovedPremisesApplicationEntity
-    lateinit var destinationPremises: ApprovedPremisesEntity
-
-    @BeforeAll
-    fun setupTestData() {
-      cas1CharacteristicRepository.deleteAll()
-
-      region = givenAProbationRegion()
-
-      val (user) = givenAUser()
-      val (offender) = givenAnOffender()
-
-      premises = givenAnApprovedPremises(
-        region = region,
-        supportsSpaceBookings = true,
-        emailAddress = "premises@test.com",
-      )
-
-      destinationPremises = givenAnApprovedPremises(
-        region = region,
-        supportsSpaceBookings = true,
-        emailAddress = "destPremises@test.com",
-      )
-
-      applicant = givenAUser(
-        staffDetail =
-        StaffDetailFactory.staffDetail(email = "applicant@test.com"),
-      ).first
-
-      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withCrn(offender.otherIds.crn)
-        withCreatedByUser(applicant)
-        withApArea(givenAnApArea())
-        withSubmittedAt(OffsetDateTime.now())
-      }
-
-      val (placementRequest) = givenAPlacementRequest(
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-        application = application,
-      )
-
-      existingSpaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
-        withCrn(offender.otherIds.crn)
-        withPremises(premises)
-        withPlacementRequest(placementRequest)
-        withApplication(placementRequest.application)
-        withCreatedBy(user)
-        withExpectedArrivalDate(LocalDate.parse("2025-02-05"))
-        withActualArrivalDate(LocalDate.parse("2025-02-05"))
-        withExpectedDepartureDate(LocalDate.parse("2025-06-29"))
-      }
-    }
-
-    @Test
-    fun `Returns 403 Forbidden if user does not have correct permission`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
-
-      webTestClient.post()
-        .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/emergency-transfer")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          Cas1NewEmergencyTransfer(
-            arrivalDate = LocalDate.now(),
-            departureDate = LocalDate.now().plusMonths(1),
-            destinationPremisesId = UUID.randomUUID(),
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    @Disabled
-    fun `Successfully creates an emergency booking and updates the existing booking`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
-
-      webTestClient.post()
-        .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/emergency-transfer")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          Cas1NewEmergencyTransfer(
-            arrivalDate = LocalDate.now(),
-            departureDate = LocalDate.now().plusMonths(1),
-            destinationPremisesId = destinationPremises.id,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-
-      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(existingSpaceBooking.id)!!
-
-      val emergencyTransferredBooking = cas1SpaceBookingRepository.findByTransferredFrom(updatedSpaceBooking)!!
-
-      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
-      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
-
-      assertThat(emergencyTransferredBooking.premises.id).isEqualTo(destinationPremises.id)
-      assertThat(emergencyTransferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
-      assertThat(emergencyTransferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
-
-      domainEventAsserter.assertDomainEventsStoredInSpecificOrder(
-        application.id,
-        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
-        DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-      )
-
-      emailAsserter.assertEmailsRequestedCount(4)
-      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
-      emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
-      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_AMENDED)
-      emailAsserter.assertEmailRequested(existingSpaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_AMENDED)
-    }
-  }
-
-  @Nested
-  inner class PlannedTransfer : InitialiseDatabasePerClassTestBase() {
-    lateinit var region: ProbationRegionEntity
-    lateinit var premises: ApprovedPremisesEntity
-    lateinit var existingSpaceBooking: Cas1SpaceBookingEntity
-    lateinit var applicant: UserEntity
-    lateinit var application: ApprovedPremisesApplicationEntity
-    lateinit var destinationPremises: ApprovedPremisesEntity
-    lateinit var existingChangeRequest: Cas1ChangeRequestEntity
-
-    @BeforeAll
-    fun setupTestData() {
-      cas1CharacteristicRepository.deleteAll()
-
-      region = givenAProbationRegion()
-
-      val (user) = givenAUser()
-      val (offender) = givenAnOffender()
-
-      premises = givenAnApprovedPremises(
-        region = region,
-        supportsSpaceBookings = true,
-        emailAddress = "premises@test.com",
-      )
-
-      destinationPremises = givenAnApprovedPremises(
-        region = region,
-        supportsSpaceBookings = true,
-        emailAddress = "destPremises@test.com",
-      )
-
-      applicant = givenAUser(
-        staffDetail =
-        StaffDetailFactory.staffDetail(email = "applicant@test.com"),
-      ).first
-
-      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withCrn(offender.otherIds.crn)
-        withCreatedByUser(applicant)
-        withApArea(givenAnApArea())
-        withSubmittedAt(OffsetDateTime.now())
-      }
-
-      val (placementRequest) = givenAPlacementRequest(
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-        application = application,
-      )
-
-      existingSpaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
-        withCrn(offender.otherIds.crn)
-        withPremises(premises)
-        withPlacementRequest(placementRequest)
-        withApplication(placementRequest.application)
-        withCreatedBy(user)
-        withActualArrivalDate(LocalDate.parse("2025-02-05"))
-        withExpectedArrivalDate(LocalDate.parse("2025-02-05"))
-        withExpectedDepartureDate(LocalDate.parse("2025-06-29"))
-      }
-
-      val changeRequestReason = cas1ChangeRequestReasonEntityFactory.produceAndPersist {
-        withCode("TRANSFERRED")
-        withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
-      }
-
-      existingChangeRequest = cas1ChangeRequestEntityFactory.produceAndPersist {
-        withSpaceBooking(existingSpaceBooking)
-        withPlacementRequest(existingSpaceBooking.placementRequest!!)
-        withType(ChangeRequestType.PLANNED_TRANSFER)
-        withChangeRequestReason(changeRequestReason)
-        withResolved(false)
-      }
-    }
-
-    @Test
-    fun `Returns 403 Forbidden if user does not have correct permission`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
-
-      webTestClient.post()
-        .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/planned-transfer")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          Cas1NewPlannedTransfer(
-            arrivalDate = LocalDate.now(),
-            departureDate = LocalDate.now().plusMonths(1),
-            destinationPremisesId = UUID.randomUUID(),
-            changeRequestId = UUID.randomUUID(),
-            characteristics = emptyList(),
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    @Disabled
-    fun `Should create a planned booking, update the existing booking, and approve the change request`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
-
-      webTestClient.post()
-        .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/planned-transfer")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          Cas1NewPlannedTransfer(
-            arrivalDate = LocalDate.now().plusDays(1),
-            departureDate = LocalDate.now().plusMonths(1),
-            destinationPremisesId = destinationPremises.id,
-            changeRequestId = existingChangeRequest.id,
-            characteristics = emptyList(),
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-
-      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(existingSpaceBooking.id)!!
-
-      val updatedChangedRequest = cas1ChangeRequestRepository.findByIdOrNull(existingChangeRequest.id)!!
-
-      val plannedTransferredBooking = cas1SpaceBookingRepository.findByTransferredFrom(updatedSpaceBooking)!!
-
-      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(plannedTransferredBooking.expectedArrivalDate)
-      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(plannedTransferredBooking.expectedArrivalDate)
-
-      assertThat(plannedTransferredBooking.premises.id).isEqualTo(destinationPremises.id)
-      assertThat(plannedTransferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
-      assertThat(plannedTransferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
-
-      assertThat(updatedChangedRequest.resolved).isTrue
-      assertThat(updatedChangedRequest.decision).isEqualTo(ChangeRequestDecision.APPROVED)
-
-      domainEventAsserter.assertDomainEventsStoredInSpecificOrder(
-        application.id,
-        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
-        DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-      )
-
-      emailAsserter.assertEmailsRequestedCount(6)
-      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
-      emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
-      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_AMENDED)
-      emailAsserter.assertEmailRequested(existingSpaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_AMENDED)
-
-      emailAsserter.assertEmailRequested(existingSpaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_REQUESTING_AP)
-      emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_TARGET_AP)
     }
   }
 

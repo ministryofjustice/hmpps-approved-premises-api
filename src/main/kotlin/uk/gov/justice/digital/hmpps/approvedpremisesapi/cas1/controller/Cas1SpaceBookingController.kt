@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,12 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApprovedPlacementAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewDeparture
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewEmergencyTransfer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewPlannedTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NonArrival
@@ -38,20 +34,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ParamDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_TRANSFER_CREATE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
@@ -84,8 +76,6 @@ class Cas1SpaceBookingController(
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val characteristicService: CharacteristicService,
   private val cas1TimelineService: Cas1TimelineService,
-  private val cas1ChangeRequestService: Cas1ChangeRequestService,
-  private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val cas1BookingManagementService: Cas1SpaceBookingManagementService,
   private val offenderDetailService: OffenderDetailService,
 ) {
@@ -375,42 +365,6 @@ class Cas1SpaceBookingController(
             cancelledAt = body.occurredAt,
             body.reasonId,
             body.reasonNotes,
-            appealChangeRequestId = null,
-          ),
-        ),
-      )
-  }
-
-  @Transactional
-  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/appeal")
-  fun appeal(
-    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
-    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
-    @RequestBody body: Cas1ApprovedPlacementAppeal,
-  ): ResponseEntity<Unit> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS)
-    val spaceBooking = extractEntityFromCasResult(
-      cas1SpaceBookingService.getBookingForPremisesAndId(premisesId, bookingId),
-    )
-
-    ensureEntityFromCasResultIsSuccess(
-      cas1ChangeRequestService.approvePlacementAppeal(
-        changeRequestId = body.placementAppealChangeRequestId,
-        user = userService.getUserForRequest(),
-      ),
-    )
-
-    return ResponseEntity
-      .ok()
-      .body(
-        extractEntityFromCasResult(
-          cas1WithdrawableService.withdrawSpaceBooking(
-            spaceBooking = spaceBooking,
-            user = userService.getUserForRequest(),
-            cancelledAt = body.occurredAt,
-            userProvidedReason = CancellationReasonRepository.CAS1_BOOKING_SUCCESSFULLY_APPEALED_ID,
-            otherReason = body.reasonNotes,
-            appealChangeRequestId = body.placementAppealChangeRequestId,
           ),
         ),
       )
@@ -434,43 +388,6 @@ class Cas1SpaceBookingController(
         user,
       ),
     )
-    return ResponseEntity(HttpStatus.OK)
-  }
-
-  @Operation(summary = "Creates a space booking without a change request and truncates the departure date of the existing space booking")
-  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/emergency-transfer")
-  fun emergencyTransfer(
-    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
-    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
-    @RequestBody cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer,
-  ): ResponseEntity<Unit> {
-    userAccessService.ensureCurrentUserHasPermission(CAS1_TRANSFER_CREATE)
-
-    val user = userService.getUserForRequest()
-
-    ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.createEmergencyTransfer(premisesId, bookingId, user, cas1NewEmergencyTransfer),
-    )
-
-    return ResponseEntity(HttpStatus.OK)
-  }
-
-  @SuppressWarnings("UnusedParameter")
-  @Operation(summary = "Creates a space booking for a planned transfer change request and truncates the departure date of the existing space booking. Will close the planned transfer change request.")
-  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/planned-transfer")
-  fun plannedTransfer(
-    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
-    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
-    @RequestBody cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
-  ): ResponseEntity<Unit> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_TRANSFER_ASSESS)
-
-    val user = userService.getUserForRequest()
-
-    ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.createPlannedTransfer(bookingId, user, cas1NewPlannedTransfer),
-    )
-
     return ResponseEntity(HttpStatus.OK)
   }
 
