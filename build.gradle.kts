@@ -40,7 +40,7 @@ dependencies {
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.7.2-jre")
   implementation("org.javers:javers-core:7.11.9")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
   constraints {
     implementation("org.webjars:swagger-ui:5.34.1") {
       because("swagger-ui 5.34.0 bundles DOMPurify 3.4.16 (CVE-2026-116802/3/4), fixed in 5.34.1")
