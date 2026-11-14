@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -24,15 +23,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejectionReasonDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.MappaDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
@@ -972,7 +972,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       this,
       assessmentId,
       assessorJwt,
-      NewClarificationNote(query = "This is the initial query"),
+      Cas1NewClarificationNote(query = "This is the initial query"),
     )
 
     cas1SimpleApiClient.assessmentUpdateClarificationNote(
@@ -980,7 +980,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assessmentId,
       initialNote.id,
       assessorJwt,
-      UpdatedClarificationNote(
+      Cas1UpdatedClarificationNote(
         response = "This is the initial response",
         responseReceivedOn = initialClarificationResponseReceivedAt!!,
       ),
@@ -992,7 +992,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       this,
       assessmentId,
       assessorJwt,
-      NewClarificationNote(query = "This is an additional query that should be ignored in the report"),
+      Cas1NewClarificationNote(query = "This is an additional query that should be ignored in the report"),
     )
 
     cas1SimpleApiClient.assessmentUpdateClarificationNote(
@@ -1000,7 +1000,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assessmentId,
       subsequentNote.id,
       assessorJwt,
-      UpdatedClarificationNote(
+      Cas1UpdatedClarificationNote(
         response = "This is the subsequent response",
         responseReceivedOn = LocalDate.now(),
       ),
@@ -1031,7 +1031,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       this,
       assessmentId,
       assessorJwt,
-      UpdateAssessment(
+      Cas1UpdateAssessment(
         data = emptyMap(),
       ),
     )

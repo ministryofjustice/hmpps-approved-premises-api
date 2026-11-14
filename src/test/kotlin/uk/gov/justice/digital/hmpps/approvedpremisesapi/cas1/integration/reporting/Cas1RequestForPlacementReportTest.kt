@@ -24,8 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
@@ -34,6 +32,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejectionReasonDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.SubmitPlacementApplication
@@ -700,7 +700,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       this,
       assessmentId,
       assessorJwt,
-      UpdateAssessment(data = mapOf("key" to "value")),
+      Cas1UpdateAssessment(data = mapOf("key" to "value")),
     )
   }
 
@@ -888,7 +888,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       cas1SimpleApiClient.placementRequestWithdraw(
         this,
         legacyPlacementRequest.id,
-        WithdrawPlacementRequest(
+        Cas1WithdrawPlacementRequest(
           reason,
         ),
       )
