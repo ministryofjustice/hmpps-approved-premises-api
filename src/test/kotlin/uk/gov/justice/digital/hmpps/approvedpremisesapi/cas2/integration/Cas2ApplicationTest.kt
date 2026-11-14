@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenASubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersonSummaryDto
@@ -289,7 +289,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
         val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
@@ -409,7 +409,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
         // check transformers were able to return all fields
         assertThat(responseBody).anyMatch {
@@ -492,7 +492,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBody =
-              jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
             assertThat(responseBody.count()).isEqualTo(2)
             assertThat(responseBody).anyMatch {
@@ -550,7 +550,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBodyPage1 =
-          jsonMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
         assertThat(responseBodyPage1).size().isEqualTo(10)
 
@@ -572,7 +572,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBodyPage2 =
-          jsonMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
         assertThat(responseBodyPage2).size().isEqualTo(2)
       }
@@ -629,7 +629,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val summariesById = jsonMapper
-          .readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          .readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
           .associateBy { it.id }
 
         val fullName = "${fullOffender.firstName} ${fullOffender.surname}"
@@ -710,7 +710,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val summary = jsonMapper
-          .readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          .readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
           .single { it.id == application.id }
 
         if (restricted) {
@@ -765,6 +765,45 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       }
     }
 
+    @Test
+    fun `Get all applications returns 200 when an in progress application has no noms number or referring prison code`() {
+      givenACas2v2DeliusUser { userEntity, jwt ->
+        val crn = "X5678"
+
+        apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
+
+        val application = cas2ApplicationEntityFactory.produceAndPersist {
+          withCrn(crn)
+          withCreatedByUser(userEntity)
+          withData(data)
+          withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          withNomsNumber(null)
+          withReferringPrisonCode(null)
+        }
+
+        val rawResponseBody = webTestClient
+          .get()
+          .uri("/cas2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody =
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
+
+        assertThat(responseBody).hasSize(1)
+        val summary = responseBody[0]
+        assertThat(summary.id).isEqualTo(application.id)
+        assertThat(summary.status).isEqualTo(ApplicationStatus.inProgress)
+        assertThat(summary.nomsNumber).isNull()
+        assertThat(summary.prisonCode).isNull()
+      }
+    }
+
     /**
      * Returns true if the list of application summaries is sorted by descending created_at
      * or false if not.
@@ -780,7 +819,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
      *
      * If all dates are ascending the multiple will also be 0 ( = 1 x 0 x 0 etc.).
      */
-    private fun isOrderedByCreatedAtDescending(responseBody: List<Cas2ApplicationSummary>): Boolean {
+    private fun isOrderedByCreatedAtDescending(responseBody: List<Cas2ApplicationSummaryDto>): Boolean {
       var allDescending = 1
       for (i in 1..<responseBody.size) {
         val isDescending = (responseBody[i - 1].createdAt.epochSecond - responseBody[i].createdAt.epochSecond).sign
@@ -922,7 +961,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .bodyAsListOfObjects<Cas2ApplicationSummary>()
+      .bodyAsListOfObjects<Cas2ApplicationSummaryDto>()
 
     /**
      * Returns two random ids as (lower, higher) using Postgres' uuid ordering (unsigned byte-wise, i.e. the hex string),
@@ -1054,7 +1093,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
       assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
@@ -1088,7 +1127,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
       assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
@@ -1115,7 +1154,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
       assertThat(uuids).isEqualTo(submittedIds)
@@ -1138,7 +1177,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
       assertThat(uuids).isEqualTo(unSubmittedIds)
@@ -1216,7 +1255,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       withConditionalReleaseDate(LocalDate.now().minusDays(1))
     }
 
-    private fun getApplications(jwt: String, isSubmitted: Boolean): List<Cas2ApplicationSummary> {
+    private fun getApplications(jwt: String, isSubmitted: Boolean): List<Cas2ApplicationSummaryDto> {
       val rawResponseBody = webTestClient.get()
         .uri("/cas2/applications?isSubmitted=$isSubmitted")
         .header("Authorization", "Bearer $jwt")
@@ -1228,7 +1267,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .responseBody
         .blockFirst()
 
-      return jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+      return jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
     }
   }
 
@@ -1418,7 +1457,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
       val uuids = responseBody.map { it.id }.toSet()
       return uuids
     }
@@ -2026,7 +2065,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummaryDto>>() {})
 
         assertThat(responseBody.size).isEqualTo(6)
         assertThat(

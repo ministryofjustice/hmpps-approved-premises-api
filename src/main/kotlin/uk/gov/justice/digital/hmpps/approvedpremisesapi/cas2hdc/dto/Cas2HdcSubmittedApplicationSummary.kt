@@ -22,7 +22,7 @@ data class Cas2HdcSubmittedApplicationSummary(
 
   @get:JsonProperty("crn", required = true) val crn: String,
 
-  @get:JsonProperty("nomsNumber", required = true) val nomsNumber: String,
+  @get:JsonProperty("nomsNumber") val nomsNumber: String?,
 
   @get:JsonProperty("personName", required = true) val personName: String,
 
