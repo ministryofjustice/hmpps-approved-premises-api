@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises_applications ADD COLUMN expected_arrival_date date;

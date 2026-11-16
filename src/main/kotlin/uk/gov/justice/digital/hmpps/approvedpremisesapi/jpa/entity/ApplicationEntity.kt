@@ -386,8 +386,9 @@ class ApprovedPremisesApplicationEntity(
    * will provide the requested arrival date at midnight in UTC
    * (See [Cas1ApplicationCreationService.getArrivalDate])
    *
-   * Ideally we'd persist this as a date only (as is provided by the UI)
+   * Retained for existing consumers while expectedArrivalDate is backfilled.
    */
+  @Deprecated("Use expectedArrivalDate instead")
   var arrivalDate: OffsetDateTime?,
   /**
    * The duration agreed by the applicant. This is typically the default duration
@@ -449,6 +450,10 @@ class ApprovedPremisesApplicationEntity(
    * added in 2026-08 and has not been backfilled
    */
   var isExceptional: Boolean?,
+  /**
+   * The requested arrival date if a placement was requested in the original application.
+   */
+  var expectedArrivalDate: LocalDate? = null,
 ) : ApplicationEntity(
   id,
   crn,

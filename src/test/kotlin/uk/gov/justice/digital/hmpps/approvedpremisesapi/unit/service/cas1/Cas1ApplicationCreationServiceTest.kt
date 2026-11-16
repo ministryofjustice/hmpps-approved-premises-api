@@ -542,6 +542,7 @@ class Cas1ApplicationCreationServiceTest {
         assertThat(it.releaseType).isEqualTo(Cas1ReleaseType.rotl)
         assertThat(it.isInapplicable).isEqualTo(false)
         assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+        assertThat(it.expectedArrivalDate).isEqualTo(LocalDate.parse("2023-04-17"))
         assertThat(it.applicantUserDetails).isNull()
         assertThat(it.caseManagerIsNotApplicant).isNull()
         assertThat(it.caseManagerUserDetails).isNull()
@@ -594,6 +595,34 @@ class Cas1ApplicationCreationServiceTest {
         assertThat(it.noticeType).isEqualTo(noticeType)
 
         verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(it) }
+      }
+    }
+
+    @Test
+    fun `clears both arrival dates when the arrival date is removed`() {
+      setupMocksForSuccess()
+      application.arrivalDate = OffsetDateTime.parse("2023-04-17T00:00:00Z")
+      application.expectedArrivalDate = LocalDate.parse("2023-04-17")
+
+      val result = applicationService.updateApplication(
+        applicationId = applicationId,
+        updateFields = Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isEmergencyApplication = false,
+          apType = ApType.normal,
+          releaseType = ReleaseTypeOption.rotl,
+          arrivalDate = null,
+          data = updatedData,
+          isInapplicable = false,
+          noticeType = Cas1ApplicationTimelinessCategory.standard,
+          document = null,
+        ),
+        userForRequest = user,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.arrivalDate).isNull()
+        assertThat(it.expectedArrivalDate).isNull()
       }
     }
 
@@ -1082,6 +1111,31 @@ class Cas1ApplicationCreationServiceTest {
       verify { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) }
     }
 
+    @Test
+    fun `clears both arrival dates when submitted without a requested placement period`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withArrivalDate(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+        .withExpectedArrivalDate(LocalDate.parse("2023-04-17"))
+        .produce()
+      setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
+      every { mockCas1ApplicationUserDetailsRepository.save(any()) } returnsArgument 0
+
+      val result = applicationService.submitApplication(
+        applicationId,
+        defaultSubmitApprovedPremisesApplication,
+        user,
+        apAreaId = apArea.id,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.arrivalDate).isNull()
+        assertThat(it.expectedArrivalDate).isNull()
+      }
+      verify(exactly = 0) { mockPlacementApplicationPlaceholderRepository.save(any()) }
+    }
+
     private fun setupMocksForSuccess(
       application: ApprovedPremisesApplicationEntity,
       submission: SubmitApprovedPremisesApplication,
@@ -1167,6 +1221,7 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
+        assertThat(it.expectedArrivalDate).isEqualTo(LocalDate.parse("2023-02-01"))
         assertThat(it.requestedPlacementDuration).isEqualTo(25)
 
         val placementAppPlaceholderCaptor = slot<PlacementApplicationPlaceholderEntity>()
