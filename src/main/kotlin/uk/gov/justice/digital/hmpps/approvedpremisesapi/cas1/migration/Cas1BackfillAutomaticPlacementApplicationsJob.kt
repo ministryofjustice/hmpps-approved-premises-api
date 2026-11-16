@@ -203,7 +203,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
 @Repository
 interface Cas1BackfillAutomaticPlacementApplicationsRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query(
-    value = """SELECT a.id FROM approved_premises_applications a 
+    value = """SELECT DISTINCT a.id FROM approved_premises_applications a 
       INNER JOIN placement_requests pr on pr.application_Id = a.id
       WHERE pr.placement_application_id IS NULL""",
     nativeQuery = true,
