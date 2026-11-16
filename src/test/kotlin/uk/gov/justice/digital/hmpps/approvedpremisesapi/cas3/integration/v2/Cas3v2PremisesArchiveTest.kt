@@ -968,6 +968,8 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
           previousEndDate.minusDays(180),
           previousEndDate.plusDays(15),
           previousStartDate.minusDays(30),
+          occurredAt = OffsetDateTime.now().minusDays(2),
+          createdAt = OffsetDateTime.now(),
         )
 
         val lastPremisesUnarchiveDomainEvent = createCas3PremisesUnarchiveDomainEvent(
@@ -976,6 +978,8 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
           previousStartDate,
           newStartDate,
           previousEndDate,
+          occurredAt = OffsetDateTime.now().minusDays(1),
+          createdAt = OffsetDateTime.now().minusDays(1),
         )
 
         createBedspaceUnarchiveDomainEvent(

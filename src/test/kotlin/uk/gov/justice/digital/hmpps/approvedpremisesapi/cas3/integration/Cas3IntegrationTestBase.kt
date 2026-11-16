@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
 import java.time.LocalDate
@@ -80,12 +81,16 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     currentEndDate: LocalDate,
     cancelledAt: OffsetDateTime? = null,
     transactionId: UUID = UUID.randomUUID(),
+    occurredAt: OffsetDateTime = OffsetDateTime.now().minusDays(7),
+    createdAt: OffsetDateTime = OffsetDateTime.now().randomDateTimeAfter(1),
   ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3PremisesId(premises.id)
     withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
+    withOccurredAt(occurredAt)
+    withCreatedAt(createdAt)
     withData(
       jsonMapper.writeValueAsString(
         CAS3PremisesUnarchiveEvent(
@@ -202,6 +207,8 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     newStartDate: LocalDate,
     cancelledAt: OffsetDateTime? = null,
     transactionId: UUID = UUID.randomUUID(),
+    occurredAt: OffsetDateTime = OffsetDateTime.now().minusDays(7),
+    createdAt: OffsetDateTime = OffsetDateTime.now().randomDateTimeAfter(1),
   ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3BedspaceId(bedspace.id)
@@ -209,6 +216,8 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
+    withOccurredAt(occurredAt)
+    withCreatedAt(createdAt)
     withData(
       jsonMapper.writeValueAsString(
         CAS3BedspaceUnarchiveEvent(

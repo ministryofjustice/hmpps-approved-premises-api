@@ -105,7 +105,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     SELECT d
     FROM DomainEventEntity d
     WHERE d.cas3BedspaceId in :cas3BedspaceId and d.type = :type and d.cas3CancelledAt is null
-    ORDER BY d.createdAt desc
+    ORDER BY d.occurredAt desc
     Limit 1
     """,
   )
@@ -119,7 +119,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     SELECT d
     FROM DomainEventEntity d
     WHERE d.cas3PremisesId in :cas3PremisesId and d.type = :type and d.cas3CancelledAt is null
-    ORDER BY d.createdAt desc
+    ORDER BY d.occurredAt desc
     Limit 1
     """,
   )
