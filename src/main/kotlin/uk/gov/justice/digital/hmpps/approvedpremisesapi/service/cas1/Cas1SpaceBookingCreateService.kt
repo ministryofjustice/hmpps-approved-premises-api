@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -58,7 +57,6 @@ class Cas1SpaceBookingCreateService(
       Cas1BookingCreatedEvent(
         booking = spaceBooking,
         createdBy = createdBy,
-        transferredFrom = validatedDetails.transferredFrom,
       ),
     )
 
@@ -104,7 +102,6 @@ class Cas1SpaceBookingCreateService(
       return success(
         ValidatedCreateBooking(
           bookingToCreate = toSpaceBooking(details),
-          transferredFrom = details.transferredFrom,
         ),
       )
     }
@@ -149,8 +146,6 @@ class Cas1SpaceBookingCreateService(
       nonArrivalReason = null,
       deliusEventNumber = application.eventNumber,
       migratedManagementInfoFrom = null,
-      transferredFrom = details.transferredFrom?.booking,
-      transferType = details.transferredFrom?.type,
       deliusId = null,
       additionalInformation = details.additionalInformation,
       transferReason = details.transferReason,
@@ -159,7 +154,6 @@ class Cas1SpaceBookingCreateService(
 
   data class ValidatedCreateBooking(
     val bookingToCreate: Cas1SpaceBookingEntity,
-    val transferredFrom: TransferInfo?,
   )
 
   data class CreateBookingDetails(
@@ -169,8 +163,6 @@ class Cas1SpaceBookingCreateService(
     val expectedDepartureDate: LocalDate,
     val createdBy: UserEntity,
     val characteristics: List<Cas1CharacteristicEntity>,
-    @Deprecated("will be removed in future)")
-    val transferredFrom: TransferInfo?,
     val transferReason: TransferReason?,
     val additionalInformation: String?,
     val isTransfer: Boolean = transferReason != null,

@@ -1610,7 +1610,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               assertThat(response.spaceBookings[1].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 8))
               assertThat(response.spaceBookings[2].createdAt).isNotNull()
               assertThat(response.spaceBookings[2].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
-              assertThat(response.openChangeRequests).isEqualTo(cas1PlacementRequestDetail.openChangeRequests)
               assertThat(response.notes).isEqualTo(cas1PlacementRequestDetail.notes)
               assertThat(response.requestType).isEqualTo(cas1PlacementRequestDetail.requestType)
               assertThat(response.withdrawalReason).isEqualTo(cas1PlacementRequestDetail.withdrawalReason)
