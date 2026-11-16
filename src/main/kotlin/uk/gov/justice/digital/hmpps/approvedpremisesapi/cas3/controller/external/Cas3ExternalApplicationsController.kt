@@ -13,15 +13,6 @@ class Cas3ExternalApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
 ) {
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
-  @GetMapping("/cases/{crn}/applications/suitable")
-  @Deprecated("Use [getCurrentApplication]")
-  fun getSuitableApplication(
-    @PathVariable crn: String,
-  ): ResponseEntity<Cas3ExternalCurrentApplicationDto> = cas3ApplicationService.getCurrentApplication(crn)
-    ?.let { ResponseEntity.ok(it) }
-    ?: ResponseEntity.noContent().build()
-
-  @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/cases/{crn}/applications/current")
   fun getCurrentApplication(
     @PathVariable crn: String,
