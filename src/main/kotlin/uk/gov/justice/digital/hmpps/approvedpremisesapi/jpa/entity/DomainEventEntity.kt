@@ -211,7 +211,14 @@ data class DomainEventEntity(
   val crn: String?,
   @Enumerated(value = EnumType.STRING)
   val type: DomainEventType,
+  /**
+   * When the event occurred (not necessarily when the record was created)
+   */
   val occurredAt: OffsetDateTime,
+  /**
+   * When the domain event record was created. Use [occurredAt] if you need
+   * to know when the event occurred
+   */
   val createdAt: OffsetDateTime,
   @Column(name = "cas3_cancelled_at")
   val cas3CancelledAt: OffsetDateTime?,
