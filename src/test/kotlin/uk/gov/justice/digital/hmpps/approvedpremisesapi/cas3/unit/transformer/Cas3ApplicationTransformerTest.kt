@@ -109,6 +109,7 @@ class Cas3ApplicationTransformerTest {
     val result = cas3ApplicationsTransformer.transformToExternalCurrentApplicationDto(application, null)
 
     assertThat(result.id).isEqualTo(application.id)
+    assertThat(result.createdAt).isEqualTo(application.createdAt)
     assertThat(result.applicationStatus).isEqualTo(ApplicationStatus.inProgress)
     assertThat(result.submittedApplication).isNull()
     assertThat(result.applicationSubmittedDate).isNull()
@@ -138,6 +139,7 @@ class Cas3ApplicationTransformerTest {
 
     val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
+      createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
       applicationSubmittedBy = Cas3StaffDto(
@@ -200,6 +202,7 @@ class Cas3ApplicationTransformerTest {
 
     val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
+      createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
       applicationSubmittedBy = Cas3StaffDto(
@@ -263,6 +266,7 @@ class Cas3ApplicationTransformerTest {
 
     val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
+      createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
       applicationSubmittedBy = Cas3StaffDto(
@@ -359,6 +363,7 @@ class Cas3ApplicationTransformerTest {
 
     val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
+      createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
       applicationSubmittedBy = Cas3StaffDto(
@@ -446,6 +451,7 @@ class Cas3ApplicationTransformerTest {
 
     val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
+      createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
       applicationSubmittedBy = Cas3StaffDto(
@@ -539,6 +545,7 @@ class Cas3ApplicationTransformerTest {
 
     val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
+      createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
       applicationSubmittedBy = Cas3StaffDto(
@@ -648,6 +655,7 @@ class Cas3ApplicationTransformerTest {
 
     val expected = Cas3ExternalCurrentApplicationDto(
       id = application.id,
+      createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
       applicationSubmittedBy = Cas3StaffDto(

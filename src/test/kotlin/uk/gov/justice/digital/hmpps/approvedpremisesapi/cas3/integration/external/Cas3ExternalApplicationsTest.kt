@@ -97,6 +97,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
 
           val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
+            createdAt = application.createdAt,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
             applicationSubmittedBy = Cas3StaffDto(
@@ -214,6 +215,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
 
           val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
+            createdAt = application.createdAt,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
             applicationSubmittedBy = Cas3StaffDto(
@@ -294,6 +296,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
 
           val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
+            createdAt = application.createdAt,
             applicationStatus = ApplicationStatus.inProgress,
             applicationSubmittedDate = null,
             applicationSubmittedBy = Cas3StaffDto(
@@ -356,6 +359,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
 
           val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
+            createdAt = application.createdAt,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt?.toLocalDate(),
             applicationSubmittedBy = Cas3StaffDto(
@@ -431,6 +435,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
 
           val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
+            createdAt = application.createdAt,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt?.toLocalDate(),
             applicationSubmittedBy = Cas3StaffDto(
@@ -527,6 +532,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
 
           val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
+            createdAt = application.createdAt,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt?.toLocalDate(),
             applicationSubmittedBy = Cas3StaffDto(
@@ -667,6 +673,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
 
           val currentApplication = Cas3ExternalCurrentApplicationDto(
             id = application.id,
+            createdAt = application.createdAt,
             applicationStatus = ApplicationStatus.submitted,
             applicationSubmittedDate = application.submittedAt?.toLocalDate(),
             applicationSubmittedBy = Cas3StaffDto(
