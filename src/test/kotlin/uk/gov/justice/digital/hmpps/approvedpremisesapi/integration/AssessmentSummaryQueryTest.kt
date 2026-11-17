@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class AssessmentSummaryQueryTest : IntegrationTestBase() {
@@ -38,7 +39,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
               val u2Assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
                 val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
                   withCreatedByUser(user2)
-                  withArrivalDate(OffsetDateTime.now().minusDays(1))
+                  withExpectedArrivalDate(LocalDate.now().minusDays(1))
                 }
                 withAllocatedToUser(user2)
                 withApplication(application)
@@ -211,7 +212,8 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
       is ApprovedPremisesApplicationEntity -> {
         assertThat(summary.type).isEqualTo("approved-premises")
         assertThat(summary.completed).isEqualTo(assessment.decision != null)
-        assertThat(summary.arrivalDate).isEqualTo(application.arrivalDate?.toInstant())
+        // TODO: see if we can remove DomainAssessmentSummary type entirely, for CAS1 at least
+        assertThat(summary.arrivalDate).isEqualTo(application.expectedArrivalDateAsDateTime()?.toInstant())
         assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")
       }
 

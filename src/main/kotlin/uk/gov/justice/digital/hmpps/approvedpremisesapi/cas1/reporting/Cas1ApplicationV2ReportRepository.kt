@@ -47,7 +47,7 @@ SELECT $selectAdditions
     submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'staffMember' ->> 'surname'
   ) AS referrer_name,
   submission_event.data -> 'eventDetails' ->> 'targetLocation' AS target_location,
-  to_char(apa.arrival_date, 'YYYY-MM-DD') AS standard_rfp_arrival_date,
+  to_char(apa.expected_arrival_date, 'YYYY-MM-DD') AS standard_rfp_arrival_date,
   to_char(cast(submission_event.data -> 'eventDetails' ->> 'submittedAt' AS timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS application_submission_date,
   submission_event.data -> 'eventDetails' -> 'personTier' ->> 'tierScore' AS application_tier_on_submission,
   apa.notice_type AS application_timeliness_status,

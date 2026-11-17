@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 @ExtendWith(MockKExtension::class)
 class Cas1ApplicationStatusServiceTest {
@@ -192,7 +191,7 @@ class Cas1ApplicationStatusServiceTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withDefaults()
         .withStatus(ApprovedPremisesApplicationStatus.STARTED)
-        .withArrivalDate(OffsetDateTime.now())
+        .withExpectedArrivalDate(LocalDate.now())
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -211,7 +210,7 @@ class Cas1ApplicationStatusServiceTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withDefaults()
         .withStatus(ApprovedPremisesApplicationStatus.STARTED)
-        .withArrivalDate(null)
+        .withExpectedArrivalDate(null)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()

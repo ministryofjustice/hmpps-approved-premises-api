@@ -94,7 +94,7 @@ class Cas1TaskTransformerTest {
         .produce(),
     )
 
-  private val application = applicationFactory.withArrivalDate(OffsetDateTime.now()).produce()
+  private val application = applicationFactory.withExpectedArrivalDate(LocalDate.now()).produce()
 
   private val assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
     .withApplication(application)
@@ -156,7 +156,7 @@ class Cas1TaskTransformerTest {
       assertThat((result.personSummary as FullPersonSummary).name).isEqualTo("First Last")
       assertThat((result.personSummary as FullPersonSummary).dateOfBirth).isEqualTo(LocalDate.of(1985, 6, 15))
       assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
-      assertThat(result.expectedArrivalDate).isEqualTo(application.arrivalDate!!.toLocalDate())
+      assertThat(result.expectedArrivalDate).isEqualTo(application.expectedArrivalDate)
       assertThat(result.apType).isEqualTo((assessment.application as ApprovedPremisesApplicationEntity).apType.asApiType())
     }
 

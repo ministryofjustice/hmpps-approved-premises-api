@@ -25,7 +25,7 @@ class Cas1DataScienceReportRepository(
                 a.submitted_at :: date as app_submitted_at,
                 a.service as app_service,
                 a.deleted_at :: date as app_deleted_at,
-                apa.arrival_date :: date as apa_arrival_date,
+                apa.expected_arrival_date :: date as apa_arrival_date,
                 apa.status as apa_status,
                 apa.is_withdrawn as apa_is_withdrawn,
                 apa.probation_region_id as apa_probation_region_id,

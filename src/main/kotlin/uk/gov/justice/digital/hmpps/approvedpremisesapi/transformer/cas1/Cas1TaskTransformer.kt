@@ -62,7 +62,7 @@ class Cas1TaskTransformer(
       probationDeliveryUnitTransformer.transformJpaToApi(it)
     },
     expectedArrivalDate = when (val application = assessment.application) {
-      is ApprovedPremisesApplicationEntity -> application.arrivalDate?.toLocalDate()
+      is ApprovedPremisesApplicationEntity -> application.expectedArrivalDate
       else -> null
     },
     apType = (assessment.application as ApprovedPremisesApplicationEntity).apType.asApiType(),

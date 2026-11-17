@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class ApprovedPremisesApplicationEntityTest {
@@ -18,7 +19,7 @@ class ApprovedPremisesApplicationEntityTest {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
       .withCreatedAt(createdAt)
-      .withArrivalDate(createdAt.plusDays(5))
+      .withExpectedArrivalDate(LocalDate.now().minusDays(23))
       .produce()
 
     assertThat(application.isShortNoticeApplication()).isTrue()
@@ -35,7 +36,7 @@ class ApprovedPremisesApplicationEntityTest {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
       .withCreatedAt(createdAt)
-      .withArrivalDate(createdAt.plusDays(29))
+      .withExpectedArrivalDate(LocalDate.now().minusDays(11))
       .produce()
 
     assertThat(application.isShortNoticeApplication()).isFalse()
@@ -49,7 +50,7 @@ class ApprovedPremisesApplicationEntityTest {
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
-      .withArrivalDate(null)
+      .withExpectedArrivalDate(null)
       .produce()
 
     assertThat(application.isShortNoticeApplication()).isNull()

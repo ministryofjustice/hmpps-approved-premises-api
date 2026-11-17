@@ -299,7 +299,7 @@ class Cas1ApplicationSeedService(
           desirableCriteria = emptyList(),
         ),
         placementDates = PlacementDates(
-          expectedArrival = application.arrivalDate!!.toLocalDate(),
+          expectedArrival = application.expectedArrivalDate!!,
           duration = 28,
         ),
         notes = null,

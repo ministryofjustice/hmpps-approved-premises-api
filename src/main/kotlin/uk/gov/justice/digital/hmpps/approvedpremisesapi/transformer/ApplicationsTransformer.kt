@@ -26,8 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
-import java.time.LocalDate
-import java.time.ZoneOffset
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity as DomainTemporaryAccommodationApplicationEntity
@@ -92,7 +90,7 @@ class ApplicationsTransformer(
       createdAt = applicationEntity.createdAt.toInstant(),
       submittedAt = applicationEntity.submittedAt?.toInstant(),
       isWomensApplication = applicationEntity.isWomensApplication,
-      arrivalDate = applicationEntity.arrivalDate?.toInstant(),
+      arrivalDate = applicationEntity.expectedArrivalDateAsDateTime()?.toInstant(),
       data = if (applicationEntity.data != null) jsonMapper.readTree(applicationEntity.data) else null,
       document = if (applicationEntity.document != null) jsonMapper.readTree(applicationEntity.document) else null,
       risks = if (applicationEntity.riskRatings != null) {
@@ -151,7 +149,7 @@ class ApplicationsTransformer(
       submittedAt = domain.getSubmittedAt(),
       isWomensApplication = domain.getIsWomensApplication(),
       isPipeApplication = domain.getIsPipeApplication(),
-      arrivalDate = domain.getArrivalDate()?.let { LocalDate.ofInstant(domain.getArrivalDate(), ZoneOffset.UTC) },
+      arrivalDate = domain.getExpectedArrivalDate(),
       risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
       status = getStatusFromSummary(domain),
       tier = domain.getTier(),
@@ -167,7 +165,7 @@ class ApplicationsTransformer(
     val latestAssessment = applicationEntity.getLatestAssessment()
 
     val requestedPlacementDuration = applicationEntity.requestedPlacementDuration
-    val arrivalDate = applicationEntity.arrivalDate
+    val arrivalDate = applicationEntity.expectedArrivalDate
 
     return Cas1Application(
       id = applicationEntity.id,
@@ -179,7 +177,7 @@ class ApplicationsTransformer(
       requestedPlacementDuration = requestedPlacementDuration,
       requestedPlacementPeriod = arrivalDate?.let {
         Cas1RequestedPlacementPeriod(
-          arrival = arrivalDate.toLocalDate(),
+          arrival = arrivalDate,
           arrivalFlexible = null,
           duration = requestedPlacementDuration,
         )

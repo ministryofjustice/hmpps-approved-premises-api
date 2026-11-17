@@ -24,12 +24,6 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplicationEntity> {
-  companion object {
-    val DEFAULT = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(UserEntityFactory.DEFAULT)
-      .produce()
-  }
-
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var createdByUser: Yielded<UserEntity>? = null
@@ -51,7 +45,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var releaseType: Yielded<Cas1ReleaseType?> = { null }
   private var sentenceType: Yielded<String?> = { null }
   private var situation: Yielded<String?> = { null }
-  private var arrivalDate: Yielded<OffsetDateTime?> = { null }
+  private var expectedArrivalDate: Yielded<LocalDate?> = { null }
   private var requestedPlacementDuration: Yielded<Int?> = { null }
   private var isInapplicable: Yielded<Boolean?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
@@ -152,8 +146,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.situation = { situation }
   }
 
-  fun withArrivalDate(arrivalDate: OffsetDateTime?) = apply {
-    this.arrivalDate = { arrivalDate }
+  fun withExpectedArrivalDate(expectedArrivalDate: LocalDate?) = apply {
+    this.expectedArrivalDate = { expectedArrivalDate }
   }
 
   fun withIsInapplicable(isInapplicable: Boolean?) = apply {
@@ -261,7 +255,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     placementRequests = this.placementRequests(),
     releaseType = this.releaseType(),
     sentenceType = this.sentenceType(),
-    arrivalDate = this.arrivalDate(),
+    expectedArrivalDate = this.expectedArrivalDate(),
     requestedPlacementDuration = this.requestedPlacementDuration(),
     calculatedPlacementDuration = null,
     isInapplicable = this.isInapplicable(),

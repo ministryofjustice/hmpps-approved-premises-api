@@ -227,7 +227,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
       withConvictionId(CONVICTION_ID)
       withRiskRatings(personRisks())
       withReleaseType(RELEASE_TYPE_CONDITIONAL)
-      withArrivalDate(OffsetDateTime.parse(ARRIVED_AT))
+      withExpectedArrivalDate(LocalDate.parse(ARRIVED_AT))
       withIsWithdrawn(false)
       withWithdrawalReason(WITHDRAWAL_REASON_NOT_WITHDRAWN)
       withOtherWithdrawalReason(OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE)
