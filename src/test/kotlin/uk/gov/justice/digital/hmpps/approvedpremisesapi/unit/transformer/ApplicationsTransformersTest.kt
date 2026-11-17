@@ -299,7 +299,7 @@ class ApplicationsTransformersTest {
       .withLicenseExpiredDate(LocalDate.of(2026, 5, 5))
       .withSentenceType(SentenceTypeOption.bailPlacement.name)
       .withReleaseType(Cas1ReleaseType.notApplicable)
-      .withArrivalDate(OffsetDateTime.parse("2004-12-11T10:15:30Z"))
+      .withExpectedArrivalDate(LocalDate.parse("2004-12-11"))
       .withRequestedPlacementDuration(52)
       .produce()
 
@@ -328,7 +328,7 @@ class ApplicationsTransformersTest {
   @Test
   fun `transformJpaToCas1Application with no arrival date`() {
     val application = approvedPremisesApplicationFactory
-      .withArrivalDate(null)
+      .withExpectedArrivalDate(null)
       .withRequestedPlacementDuration(52)
       .produce()
 
@@ -341,7 +341,7 @@ class ApplicationsTransformersTest {
   @Test
   fun `transformJpaToCas1Application with arrival date and null duration`() {
     val application = approvedPremisesApplicationFactory
-      .withArrivalDate(OffsetDateTime.parse("2004-12-11T10:15:30Z"))
+      .withExpectedArrivalDate(LocalDate.parse("2004-12-11"))
       .withRequestedPlacementDuration(null)
       .produce()
 
@@ -443,7 +443,7 @@ class ApplicationsTransformersTest {
       override fun getIsEmergencyApplication() = true
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
-      override fun getArrivalDate() = Instant.parse("2023-01-19T00:00:00+00:00")
+      override fun getExpectedArrivalDate() = LocalDate.parse("2023-01-19")
       override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
@@ -488,7 +488,7 @@ class ApplicationsTransformersTest {
       override fun getIsEmergencyApplication() = true
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
-      override fun getArrivalDate() = Instant.parse("2023-06-19T00:00:00+00:00")
+      override fun getExpectedArrivalDate() = LocalDate.parse("2023-06-19")
       override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
@@ -522,7 +522,7 @@ class ApplicationsTransformersTest {
       override fun getIsEmergencyApplication() = true
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
-      override fun getArrivalDate() = null
+      override fun getExpectedArrivalDate() = null
       override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
@@ -558,7 +558,7 @@ class ApplicationsTransformersTest {
       override fun getIsEmergencyApplication() = true
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
-      override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
+      override fun getExpectedArrivalDate() = LocalDate.parse("2023-04-19")
       override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)

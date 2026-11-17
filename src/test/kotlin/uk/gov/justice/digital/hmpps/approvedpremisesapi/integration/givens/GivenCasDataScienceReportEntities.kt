@@ -79,7 +79,7 @@ fun IntegrationTestBase.givenCas1DataScienceReportEntities(
     withSubmittedAt(submittedAt)
     withCreatedByUser(user)
     withApArea(apArea)
-    withArrivalDate(OffsetDateTime.parse("2026-03-01T10:00:00Z"))
+    withExpectedArrivalDate(LocalDate.parse("2026-03-01"))
     withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
   }
 

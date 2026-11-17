@@ -56,7 +56,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               withCrn(crn1)
               withCreatedByUser(userEntity)
               withCreatedAt(OffsetDateTime.now().minusDays(6))
-              withArrivalDate(OffsetDateTime.now().plusDays(12))
+              withExpectedArrivalDate(LocalDate.now().plusDays(12))
               withRiskRatings(
                 PersonRisksFactory().withTier(
                   RiskWithStatus(
@@ -69,7 +69,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               withCrn(crn2)
               withCreatedByUser(userEntity)
               withCreatedAt(OffsetDateTime.now().minusDays(3))
-              withArrivalDate(OffsetDateTime.now().plusDays(26))
+              withExpectedArrivalDate(LocalDate.now().plusDays(26))
               withRiskRatings(
                 PersonRisksFactory().withTier(
                   RiskWithStatus(
@@ -82,7 +82,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               withName(name)
               withCreatedByUser(userEntity)
               withCreatedAt(OffsetDateTime.now().minusDays(12))
-              withArrivalDate(OffsetDateTime.now().plusDays(9))
+              withExpectedArrivalDate(LocalDate.now().plusDays(9))
               withRiskRatings(
                 PersonRisksFactory().withTier(
                   RiskWithStatus(
@@ -95,7 +95,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               withApArea(apArea)
               withCreatedByUser(userEntity)
               withCreatedAt(OffsetDateTime.now().minusDays(9))
-              withArrivalDate(OffsetDateTime.now().plusDays(4))
+              withExpectedArrivalDate(LocalDate.now().plusDays(4))
               withRiskRatings(
                 PersonRisksFactory().withTier(
                   RiskWithStatus(
@@ -112,7 +112,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
                 withCreatedByUser(userEntity)
                 withStatus(status)
                 withCreatedAt(OffsetDateTime.now().minusDays(Random.nextLong(1, 25)))
-                withArrivalDate(OffsetDateTime.now().plusDays(Random.nextLong(1, 25)))
+                withExpectedArrivalDate(LocalDate.now().plusDays(Random.nextLong(1, 25)))
                 withRiskRatings(
                   PersonRisksFactory().withTier(
                     RiskWithStatus(
@@ -129,7 +129,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               approvedPremisesApplicationEntityFactory.produceAndPersist {
                 withCreatedByUser(userEntity)
                 withCreatedAt(OffsetDateTime.now().minusDays(Random.nextLong(1, 25)))
-                withArrivalDate(OffsetDateTime.now().plusDays(Random.nextLong(1, 25)))
+                withExpectedArrivalDate(LocalDate.now().plusDays(Random.nextLong(1, 25)))
                 withReleaseType(Cas1ReleaseType.fromApiType(it))
                 withRiskRatings(
                   PersonRisksFactory().withTier(
@@ -449,7 +449,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     val comparator = Comparator<ApprovedPremisesApplicationEntity> { a, b ->
       val ascendingCompare = when (sortField) {
         ApplicationSortField.createdAt -> compareValues(a.createdAt, b.createdAt)
-        ApplicationSortField.arrivalDate -> compareValues(a.arrivalDate, b.arrivalDate)
+        ApplicationSortField.arrivalDate -> compareValues(a.expectedArrivalDate, b.expectedArrivalDate)
         ApplicationSortField.tier -> compareValues(a.riskRatings?.tier?.status, b.riskRatings?.tier?.status)
         ApplicationSortField.personTier -> error("personTier uses dedicated integration tests")
         ApplicationSortField.releaseType -> compareValues(a.releaseType, b.releaseType)
@@ -468,7 +468,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.emergency)) &&
     (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
     (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
-    (this.getArrivalDate() == Instant.parse(applicationEntity.arrivalDate.toString())) &&
+    (this.getExpectedArrivalDate() == applicationEntity.expectedArrivalDate) &&
     (this.getRiskRatings() == jsonMapper.writeValueAsString(applicationEntity.riskRatings)) &&
     (this.getId() == applicationEntity.id) &&
     (this.getCrn() == applicationEntity.crn) &&

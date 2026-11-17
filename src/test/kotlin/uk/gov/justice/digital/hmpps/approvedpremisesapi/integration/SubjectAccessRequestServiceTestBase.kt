@@ -47,7 +47,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     const val CREATED_AT = "2021-09-18T16:00:00+00:00"
     const val SUBMITTED_AT = "2021-10-19T16:00:00+00:00"
     const val SUBMITTED_AT_NO_TZ = "2021-10-19T16:00:00"
-    const val ARRIVED_AT = "2021-09-20T16:00:00+00:00"
+    const val ARRIVED_AT = "2021-09-20"
     const val ALLOCATED_AT = "2021-09-21T16:00:00+00:00"
     const val ALLOCATED_AT_NO_TZ = "2021-09-21T16:00:00"
     const val REALLOCATED_AT = "2021-09-25T16:00:00+00:00"

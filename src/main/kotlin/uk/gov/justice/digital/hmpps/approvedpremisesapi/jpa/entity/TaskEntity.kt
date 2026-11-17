@@ -50,7 +50,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         u.name as allocated_to,
         assessment.submitted_at as completed_at,
         assessment.decision as decision,
-        apa.arrival_date AS sorting_date,
+        apa.expected_arrival_date AS sorting_date,
         apa.ap_type AS ap_type
       FROM
         assessments assessment

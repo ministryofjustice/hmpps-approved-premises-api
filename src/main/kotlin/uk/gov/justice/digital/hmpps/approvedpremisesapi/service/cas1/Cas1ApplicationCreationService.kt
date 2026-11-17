@@ -127,7 +127,7 @@ class Cas1ApplicationCreationService(
     teamCodes = mutableListOf(),
     placementRequests = mutableListOf(),
     releaseType = null,
-    arrivalDate = null,
+    expectedArrivalDate = null,
     requestedPlacementDuration = null,
     calculatedPlacementDuration = null,
     isInapplicable = null,
@@ -189,7 +189,6 @@ class Cas1ApplicationCreationService(
       document = serializedTranslatedDocument
       releaseType = Cas1ReleaseType.fromApiType(submitApplication.releaseType)
       targetLocation = submitApplication.targetLocation
-      arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival)
       expectedArrivalDate = submitApplication.requestedPlacementPeriod?.arrival
       requestedPlacementDuration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.requestedPlacementDuration
       calculatedPlacementDuration = submitApplication.calculatedPlacementDuration
@@ -225,13 +224,14 @@ class Cas1ApplicationCreationService(
 
     cas1ApplicationEmailService.applicationSubmitted(application)
 
-    if (application.arrivalDate != null) {
+    if (application.expectedArrivalDate != null) {
       placementApplicationPlaceholderRepository.save(
         PlacementApplicationPlaceholderEntity(
           id = UUID.randomUUID(),
           application = application,
           submittedAt = application.submittedAt!!,
-          expectedArrivalDate = application.arrivalDate!!,
+          // TODO: remove this from placeholder first, then don't need to propagate this bad pattern here
+          expectedArrivalDate = application.expectedArrivalDateAsDateTime()!!,
         ),
       )
     }
@@ -273,11 +273,6 @@ class Cas1ApplicationCreationService(
       this.isEmergencyApplication = updateFields.isEmergencyApplication
       this.apType = updateFields.apType?.asApprovedPremisesType() ?: ApprovedPremisesType.NORMAL
       this.releaseType = updateFields.releaseType?.let { Cas1ReleaseType.fromApiType(it) }
-      this.arrivalDate = if (updateFields.arrivalDate !== null) {
-        OffsetDateTime.of(updateFields.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
-      } else {
-        null
-      }
       this.expectedArrivalDate = updateFields.arrivalDate
       this.data = updateFields.data
       this.noticeType = getNoticeType(updateFields.noticeType, updateFields.isEmergencyApplication, this)

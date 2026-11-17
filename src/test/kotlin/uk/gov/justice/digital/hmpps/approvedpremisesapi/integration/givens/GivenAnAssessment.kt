@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @Suppress(
@@ -38,7 +39,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   createdFromAppeal: Boolean = false,
-  arrivalDate: OffsetDateTime? = null,
+  arrivalDate: LocalDate? = null,
   apType: ApprovedPremisesType? = null,
 ): Pair<ApprovedPremisesAssessmentEntity, ApprovedPremisesApplicationEntity> {
   val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -49,7 +50,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
     withIsWithdrawn(isWithdrawn)
     withApArea(apArea)
     withCruManagementArea(cruManagementArea)
-    withArrivalDate(arrivalDate)
+    withExpectedArrivalDate(arrivalDate)
     if (name !== null) {
       withName(name)
     }

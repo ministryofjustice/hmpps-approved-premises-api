@@ -541,7 +541,6 @@ class Cas1ApplicationCreationServiceTest {
         assertThat(it.apType).isEqualTo(apType.asApprovedPremisesType())
         assertThat(it.releaseType).isEqualTo(Cas1ReleaseType.rotl)
         assertThat(it.isInapplicable).isEqualTo(false)
-        assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
         assertThat(it.expectedArrivalDate).isEqualTo(LocalDate.parse("2023-04-17"))
         assertThat(it.applicantUserDetails).isNull()
         assertThat(it.caseManagerIsNotApplicant).isNull()
@@ -601,8 +600,6 @@ class Cas1ApplicationCreationServiceTest {
     @Test
     fun `clears both arrival dates when the arrival date is removed`() {
       setupMocksForSuccess()
-      application.arrivalDate = OffsetDateTime.parse("2023-04-17T00:00:00Z")
-      application.expectedArrivalDate = LocalDate.parse("2023-04-17")
 
       val result = applicationService.updateApplication(
         applicationId = applicationId,
@@ -621,7 +618,6 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it.arrivalDate).isNull()
         assertThat(it.expectedArrivalDate).isNull()
       }
     }
@@ -1116,7 +1112,6 @@ class Cas1ApplicationCreationServiceTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
-        .withArrivalDate(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
         .withExpectedArrivalDate(LocalDate.parse("2023-04-17"))
         .produce()
       setupMocksForSuccess(application, defaultSubmitApprovedPremisesApplication)
@@ -1130,7 +1125,6 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it.arrivalDate).isNull()
         assertThat(it.expectedArrivalDate).isNull()
       }
       verify(exactly = 0) { mockPlacementApplicationPlaceholderRepository.save(any()) }
@@ -1220,7 +1214,6 @@ class Cas1ApplicationCreationServiceTest {
         )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
         assertThat(it.expectedArrivalDate).isEqualTo(LocalDate.parse("2023-02-01"))
         assertThat(it.requestedPlacementDuration).isEqualTo(25)
 

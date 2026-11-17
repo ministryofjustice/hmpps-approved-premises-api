@@ -49,7 +49,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            cast(a.application_id as text) as applicationId,
            a.created_at as createdAt,
            CAST(apa.risk_ratings AS TEXT) as riskRatings,
-           apa.arrival_date as arrivalDate,
+           apa.expected_arrival_date as arrivalDate,
            a.decision is not null as completed,
            a.decision as decision,
            a.allocated_to_user_id is not null as allocated,
@@ -394,6 +394,8 @@ interface DomainAssessmentSummary {
   val applicationId: UUID
   val createdAt: Instant
   val riskRatings: String?
+
+  // TODO: if we can't remove this type, fix this to LocalDate
   val arrivalDate: Instant?
   val completed: Boolean
   val allocated: Boolean

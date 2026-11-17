@@ -59,7 +59,7 @@ class Cas1ApplicationStatusService(
   private fun applicationGetStatusFromArrivalDate(
     application: ApprovedPremisesApplicationEntity,
   ): ApprovedPremisesApplicationStatus {
-    val releaseDate = application.arrivalDate
+    val releaseDate = application.expectedArrivalDate
     if (releaseDate == null) {
       return ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
     }

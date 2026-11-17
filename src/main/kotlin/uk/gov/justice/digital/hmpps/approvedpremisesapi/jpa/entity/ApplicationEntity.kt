@@ -40,7 +40,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Request
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.toKotlinDuration
@@ -67,7 +69,7 @@ SELECT
     a.submitted_at as submittedAt,
     apa.is_womens_application as isWomensApplication,
     (apa.ap_type = 'PIPE') as isPipeApplication,
-    apa.arrival_date as arrivalDate,
+    apa.expected_arrival_date as expectedArrivalDate,
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
     apa.status as status,
     apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
@@ -163,7 +165,7 @@ SELECT
     a.submitted_at as submittedAt,
     apa.is_womens_application as isWomensApplication,
     (apa.ap_type = 'PIPE') as isPipeApplication,
-    apa.arrival_date as arrivalDate,
+    apa.expected_arrival_date as expectedArrivalDate,
     apa.status as status,
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
     apa.is_withdrawn as isWithdrawn,
@@ -382,14 +384,9 @@ class ApprovedPremisesApplicationEntity(
    */
   var situation: String?,
   /**
-   * If a request for placement was made in the original application, this value
-   * will provide the requested arrival date at midnight in UTC
-   * (See [Cas1ApplicationCreationService.getArrivalDate])
-   *
-   * Retained for existing consumers while expectedArrivalDate is backfilled.
+   * The requested arrival date if a placement was requested in the original application.
    */
-  @Deprecated("Use expectedArrivalDate instead")
-  var arrivalDate: OffsetDateTime?,
+  var expectedArrivalDate: LocalDate? = null,
   /**
    * The duration agreed by the applicant. This is typically the default duration
    * for the corresponding apType, but the applicant will have the option to
@@ -450,10 +447,6 @@ class ApprovedPremisesApplicationEntity(
    * added in 2026-08 and has not been backfilled
    */
   var isExceptional: Boolean?,
-  /**
-   * The requested arrival date if a placement was requested in the original application.
-   */
-  var expectedArrivalDate: LocalDate? = null,
 ) : ApplicationEntity(
   id,
   crn,
@@ -473,7 +466,7 @@ class ApprovedPremisesApplicationEntity(
 
   fun getLatestPlacementRequest(): PlacementRequestEntity? = this.placementRequests.maxByOrNull { it.createdAt }
   val hasArrivalWithin28Days: Boolean
-    get() = arrivalDate?.toLocalDate()?.let { arrival ->
+    get() = expectedArrivalDate?.let { arrival ->
       val today = LocalDate.now()
       !arrival.isAfter(today.plusDays(28))
     } ?: false
@@ -485,7 +478,12 @@ class ApprovedPremisesApplicationEntity(
     if short notice, and doesn't consider if the application is an emergency application
   """,
   )
-  fun isShortNoticeApplication() = this.arrivalDate?.let { Duration.between(this.createdAt, this.arrivalDate).toKotlinDuration() < 28.days }
+  fun isShortNoticeApplication() = this.expectedArrivalDate?.let { Duration.between(this.createdAt, this.expectedArrivalDate).toKotlinDuration() < 28.days }
+
+  @Deprecated("Use [expectedArrivalDate] as a LocalDate")
+  fun expectedArrivalDateAsDateTime() = expectedArrivalDate?.let {
+    OffsetDateTime.of(it, LocalTime.MIDNIGHT, ZoneOffset.UTC)
+  }
 }
 
 @Repository
@@ -607,7 +605,7 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getIsPipeApplication(): Boolean?
   fun getIsEmergencyApplication(): Boolean?
   fun getIsEsapApplication(): Boolean?
-  fun getArrivalDate(): Instant?
+  fun getExpectedArrivalDate(): LocalDate?
   fun getTier(): String?
   fun getStatus(): String
   fun getIsWithdrawn(): Boolean

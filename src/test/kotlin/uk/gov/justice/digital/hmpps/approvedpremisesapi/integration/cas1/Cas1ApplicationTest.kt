@@ -117,9 +117,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import java.util.concurrent.CyclicBarrier
@@ -558,26 +556,26 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
-          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
-          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
-          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val date1 = LocalDate.parse("2022-08-24")
+          val date2 = LocalDate.parse("2022-09-24")
+          val date3 = LocalDate.parse("2022-12-24")
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date1)
+            withExpectedArrivalDate(date1)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date2)
+            withExpectedArrivalDate(date2)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date3)
+            withExpectedArrivalDate(date3)
           }
 
           val responseBody = webTestClient.get()
@@ -606,26 +604,26 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
-          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
-          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
-          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val date1 = LocalDate.parse("2022-08-24")
+          val date2 = LocalDate.parse("2022-09-24")
+          val date3 = LocalDate.parse("2022-12-24")
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date1)
+            withExpectedArrivalDate(date1)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date2)
+            withExpectedArrivalDate(date2)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date3)
+            withExpectedArrivalDate(date3)
           }
 
           val responseBody = webTestClient.get()
@@ -654,9 +652,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
-          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
-          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
-          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val date1 = LocalDate.parse("2022-08-24")
+          val date2 = LocalDate.parse("2022-09-24")
+          val date3 = LocalDate.parse("2022-12-24")
 
           val risk1 = PersonRisksFactory()
             .withTier(
@@ -694,21 +692,21 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date1)
+            withExpectedArrivalDate(date1)
             withRiskRatings(risk1)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date2)
+            withExpectedArrivalDate(date2)
             withRiskRatings(risk2)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date3)
+            withExpectedArrivalDate(date3)
             withRiskRatings(risk3)
           }
 
@@ -738,9 +736,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
-          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
-          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
-          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val date1 = LocalDate.parse("2022-08-24")
+          val date2 = LocalDate.parse("2022-09-24")
+          val date3 = LocalDate.parse("2022-12-24")
 
           val risk1 = PersonRisksFactory()
             .withTier(
@@ -778,21 +776,21 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date1)
+            withExpectedArrivalDate(date1)
             withRiskRatings(risk1)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date2)
+            withExpectedArrivalDate(date2)
             withRiskRatings(risk2)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(crn)
             withCreatedByUser(userEntity)
-            withArrivalDate(date3)
+            withExpectedArrivalDate(date3)
             withRiskRatings(risk3)
           }
 
@@ -2378,7 +2376,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
       assertThat(persistedApplication.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 12, 1))
       assertThat(persistedApplication.releaseType).isEqualTo(Cas1ReleaseType.reReleasedFollowingFixedTermRecall)
-      assertThat(persistedApplication.arrivalDate).isEqualTo(OffsetDateTime.of(LocalDate.of(2031, 5, 6), LocalTime.of(0, 0), ZoneOffset.UTC))
+      assertThat(persistedApplication.expectedArrivalDate).isEqualTo(LocalDate.of(2031, 5, 6))
       assertThat(persistedApplication.requestedPlacementDuration).isEqualTo(52)
 
       val createdAssessment =

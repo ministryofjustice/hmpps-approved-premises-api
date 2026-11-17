@@ -344,35 +344,35 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             user,
             offenderDetails.asCaseSummary(),
             cas1InProgress,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(10)) },
+            applicationMutator = { withExpectedArrivalDate(LocalDate.now().minusDays(10)) },
           )
 
           val veryNew = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails.asCaseSummary(),
             cas1InProgress,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(2)) },
+            applicationMutator = { withExpectedArrivalDate(LocalDate.now().minusDays(2)) },
           )
 
           val old = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails.asCaseSummary(),
             cas1InProgress,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(5)) },
+            applicationMutator = { wwithExpectedArrivalDate(LocalDate.now().minusDays(5)) },
           )
 
           val new = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails.asCaseSummary(),
             cas1AwaitingResponse,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(3)) },
+            applicationMutator = { withExpectedArrivalDate(LocalDate.now().minusDays(3)) },
           )
 
           val ancient = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails.asCaseSummary(),
             cas1InProgress,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(99)) },
+            applicationMutator = { withExpectedArrivalDate(LocalDate.now().minusDays(99)) },
           )
 
           val mapper = assessmentSummaryMapper(offenderDetails.asCaseSummary())
@@ -597,34 +597,34 @@ class Cas1AssessmentTest : IntegrationTestBase() {
     @Test
     fun `Get all assessments for Approved Premises sorts correctly when sortBy is arrivalDate`() {
       givenAUser { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnOffender { offenderDetails, _ ->
 
           val veryOld = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails.asCaseSummary(),
             cas1InProgress,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(10)) },
+            applicationMutator = { withExpectedArrivalDate(LocalDate.now().minusDays(10)) },
           )
 
           val veryNew = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails.asCaseSummary(),
             cas1InProgress,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(2)) },
+            applicationMutator = { withExpectedArrivalDate(LocalDate.now().minusDays(2)) },
           )
 
           val old = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails.asCaseSummary(),
             cas1InProgress,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(5)) },
+            applicationMutator = { withExpectedArrivalDate(LocalDate.now().minusDays(5)) },
           )
 
           val new = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails.asCaseSummary(),
             cas1InProgress,
-            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(3)) },
+            applicationMutator = { withExpectedArrivalDate(LocalDate.now().minusDays(3)) },
           )
 
           assertAssessmentsReturnedGivenStatus(
@@ -721,7 +721,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
         createdAt = assessment.createdAt.toInstant(),
 
         riskRatings = (assessment.application as? ApprovedPremisesApplicationEntity)?.riskRatings?.let { jsonMapper.writeValueAsString(it) },
-        arrivalDate = (assessment.application as? ApprovedPremisesApplicationEntity)?.arrivalDate?.toInstant(),
+        arrivalDate = (assessment.application as? ApprovedPremisesApplicationEntity)?.expectedArrivalDateAsDateTime()?.toInstant(),
 
         completed = assessment.decision != null,
         decision = assessment.decision?.name,

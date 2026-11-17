@@ -92,7 +92,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
         assertThat(newApplication.releaseType).isEqualTo(sourceApplication.releaseType)
         assertThat(newApplication.sentenceType).isEqualTo(sourceApplication.sentenceType)
         assertThat(newApplication.situation).isEqualTo(sourceApplication.situation)
-        assertThat(newApplication.arrivalDate).isEqualTo(sourceApplication.arrivalDate)
+        assertThat(newApplication.expectedArrivalDate).isEqualTo(sourceApplication.expectedArrivalDate)
         assertThat(newApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
         assertThat(newApplication.targetLocation).isEqualTo(sourceApplication.targetLocation)
         assertThat(newApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)

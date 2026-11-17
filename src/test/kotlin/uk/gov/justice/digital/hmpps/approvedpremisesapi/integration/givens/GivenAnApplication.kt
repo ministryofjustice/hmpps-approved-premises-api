@@ -49,7 +49,7 @@ fun IntegrationTestBase.givenACas1Application(
   tier: String? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   applicant: Cas1ApplicationUserDetailsEntity? = null,
-  arrivalDate: OffsetDateTime? = null,
+  arrivalDate: LocalDate? = null,
   data: String? = "{}",
   apType: ApprovedPremisesType = ApprovedPremisesType.NORMAL,
   createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
@@ -90,7 +90,7 @@ fun IntegrationTestBase.givenAnApplication(
   tier: String? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   applicant: Cas1ApplicationUserDetailsEntity? = null,
-  arrivalDate: OffsetDateTime? = null,
+  arrivalDate: LocalDate? = null,
   data: String? = "{}",
   apType: ApprovedPremisesType = ApprovedPremisesType.NORMAL,
   createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
@@ -116,7 +116,7 @@ fun IntegrationTestBase.givenAnApplication(
     withCaseManagerUserDetails(caseManager)
     withCaseManagerIsNotApplicant(caseManager != null)
     withApplicantUserDetails(applicant)
-    withArrivalDate(arrivalDate)
+    withExpectedArrivalDate(arrivalDate)
     withRequestedPlacementDuration(duration)
     withData(data)
     withDocument(document)

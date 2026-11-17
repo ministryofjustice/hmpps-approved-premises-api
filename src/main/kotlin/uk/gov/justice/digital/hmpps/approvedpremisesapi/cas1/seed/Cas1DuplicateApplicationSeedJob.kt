@@ -97,7 +97,7 @@ class Cas1DuplicateApplicationSeedJob(
         isEmergencyApplication = sourceApplication.isEmergencyApplication,
         apType = sourceApplication.apType.asApiType(),
         releaseType = sourceApplication.releaseType?.apiType,
-        arrivalDate = sourceApplication.arrivalDate?.toLocalDate(),
+        arrivalDate = sourceApplication.expectedArrivalDate,
         data = sourceApplication.data!!,
         isInapplicable = sourceApplication.isInapplicable,
         noticeType = sourceApplication.noticeType,

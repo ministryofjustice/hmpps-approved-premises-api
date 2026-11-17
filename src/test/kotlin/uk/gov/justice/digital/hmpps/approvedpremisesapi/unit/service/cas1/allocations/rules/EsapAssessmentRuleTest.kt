@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRuleOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.rules.EsapAssessmentRule
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class EsapAssessmentRuleTest {
@@ -40,7 +41,7 @@ class EsapAssessmentRuleTest {
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
         .withApType(ApprovedPremisesType.ESAP)
-        .withArrivalDate(null)
+        .withExpectedArrivalDate(null)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -69,7 +70,7 @@ class EsapAssessmentRuleTest {
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
         .withApType(ApprovedPremisesType.ESAP)
-        .withArrivalDate(OffsetDateTime.now().plusDays(29))
+        .withExpectedArrivalDate(LocalDate.now().plusDays(29))
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -98,7 +99,7 @@ class EsapAssessmentRuleTest {
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
         .withApType(ApprovedPremisesType.ESAP)
-        .withArrivalDate(OffsetDateTime.now().plusDays(28))
+        .withExpectedArrivalDate(LocalDate.now().plusDays(28))
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -127,7 +128,7 @@ class EsapAssessmentRuleTest {
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
         .withApType(ApprovedPremisesType.ESAP)
-        .withArrivalDate(OffsetDateTime.now().plusDays(27))
+        .withExpectedArrivalDate(LocalDate.now().plusDays(27))
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()

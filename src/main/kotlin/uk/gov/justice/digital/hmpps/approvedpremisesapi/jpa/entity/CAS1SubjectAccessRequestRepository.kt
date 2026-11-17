@@ -33,7 +33,7 @@ from
 		apa.is_womens_application,
 		apa.risk_ratings,
 		apa.release_type,
-		apa.arrival_date,
+		apa.expected_arrival_date,
 		apa.is_withdrawn,
 		apa.withdrawal_reason,
 		apa.other_withdrawal_reason ,
