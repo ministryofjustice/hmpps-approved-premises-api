@@ -64,7 +64,6 @@ class Cas2ApplicationsTransformer(
 
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummary,
-    personName: String,
     personSummary: Cas2PersonSummary,
   ): Cas2ApplicationSummaryDto = Cas2ApplicationSummaryDto(
     id = jpaSummary.id,
@@ -78,7 +77,6 @@ class Cas2ApplicationsTransformer(
     hdcEligibilityDate = jpaSummary.hdcEligibilityDate,
     crn = jpaSummary.crn,
     nomsNumber = jpaSummary.nomsNumber,
-    personName = personName,
     prisonCode = jpaSummary.prisonCode,
     applicationOrigin = jpaSummary.applicationOrigin?.let { ApplicationOrigin.forValue(it) } ?: ApplicationOrigin.homeDetentionCurfew,
     cohort = jpaSummary.cohort?.apiType,

@@ -261,13 +261,11 @@ class Cas2ApplicationTransformerTest {
 
       val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
-        "firstName surname",
         personSummary,
       )
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
-      assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.personSummary).isEqualTo(personSummaryDto)
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
@@ -303,14 +301,12 @@ class Cas2ApplicationTransformerTest {
 
       val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
-        "firstName surname",
         personSummary,
       )
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
-      assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.personSummary).isEqualTo(personSummaryDto)
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
