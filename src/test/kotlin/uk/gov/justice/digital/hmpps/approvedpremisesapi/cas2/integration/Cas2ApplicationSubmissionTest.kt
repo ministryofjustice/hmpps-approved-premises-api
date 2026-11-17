@@ -255,6 +255,8 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
+            Assertions.assertThat(jsonMapper.readTree(rawResponseBody).get(0).has("personName")).isFalse()
+
             val responseBody =
               jsonMapper.readValue(
                 rawResponseBody,
@@ -300,9 +302,6 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
           expectedSubmittedApplication.createdByUser.id == it.createdByUserId &&
           expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
       }
-
-      Assertions.assertThat(response.personName)
-        .isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
 
       Assertions.assertThat(response.personSummary).isEqualTo(
         Cas2PersonSummaryDto.Found(
@@ -350,23 +349,19 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
             .associateBy { it.id }
 
           val fullName = "${fullOffender.firstName} ${fullOffender.surname}"
-          Assertions.assertThat(summariesById[fullApplication.id]!!.personName).isEqualTo(fullName)
           Assertions.assertThat(summariesById[fullApplication.id]!!.personSummary)
             .isEqualTo(Cas2PersonSummaryDto.Found(fullOffender.otherIds.crn, fullName))
 
           // CAS2 ignores exclusions
           val excludedName = "${excludedOffender.firstName} ${excludedOffender.surname}"
-          Assertions.assertThat(summariesById[excludedApplication.id]!!.personName).isEqualTo(excludedName)
           Assertions.assertThat(summariesById[excludedApplication.id]!!.personSummary)
             .isEqualTo(Cas2PersonSummaryDto.Found(excludedOffender.otherIds.crn, excludedName))
 
           // External users (assessors) are never restricted
           val restrictedName = "${restrictedOffender.firstName} ${restrictedOffender.surname}"
-          Assertions.assertThat(summariesById[restrictedApplication.id]!!.personName).isEqualTo(restrictedName)
           Assertions.assertThat(summariesById[restrictedApplication.id]!!.personSummary)
             .isEqualTo(Cas2PersonSummaryDto.Found(restrictedOffender.otherIds.crn, restrictedName))
 
-          Assertions.assertThat(summariesById[notFoundApplication.id]!!.personName).isEqualTo("Person Not Found")
           Assertions.assertThat(summariesById[notFoundApplication.id]!!.personSummary)
             .isEqualTo(Cas2PersonSummaryDto.NotFound(notFoundCrn))
 

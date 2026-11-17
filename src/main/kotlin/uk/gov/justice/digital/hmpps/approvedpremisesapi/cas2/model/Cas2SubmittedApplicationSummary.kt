@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import java.time.Instant
 import java.time.LocalDate
@@ -14,9 +13,6 @@ data class Cas2SubmittedApplicationSummary(
   @get:JsonProperty("createdByUserId", required = true) val createdByUserId: UUID,
 
   @get:JsonProperty("crn", required = true) val crn: String,
-
-  @Schema(deprecated = true, description = "Use personSummary instead")
-  @get:JsonProperty("personName", required = true) val personName: String,
 
   @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
 
