@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ArrivalDt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CurrentApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2MarkedAsArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
@@ -82,6 +83,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
             offerDeclinedReason = null,
             cancelledReason = null,
             markedAsArrivedDateTime = null,
+            markedAsArrived = null,
           ),
           createdAt = application.createdAt,
           cohort = application.cohort?.apiType,
@@ -146,6 +148,10 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
             offerDeclinedReason = null,
             cancelledReason = null,
             markedAsArrivedDateTime = Instant.parse("2025-12-04T12:53:10Z"),
+            markedAsArrived = Cas2MarkedAsArrived(
+              dateTime = Instant.parse("2025-12-04T12:53:10Z"),
+              arrivedByUsername = "testuser",
+            ),
           ),
           createdAt = application.createdAt,
           cohort = application.cohort?.apiType,
@@ -202,6 +208,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
             offerDeclinedReason = null,
             cancelledReason = null,
             markedAsArrivedDateTime = null,
+            markedAsArrived = null,
           ),
           createdAt = latestApplication.createdAt,
           cohort = latestApplication.cohort?.apiType,
@@ -260,6 +267,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
             offerDeclinedReason = null,
             cancelledReason = null,
             markedAsArrivedDateTime = null,
+            markedAsArrived = null,
           ),
           createdAt = olderApplicationLaterStatusUpdate.createdAt,
           cohort = olderApplicationLaterStatusUpdate.cohort?.apiType,
@@ -317,6 +325,7 @@ class Cas2ExternalApplicationsTest : IntegrationTestBase() {
             offerDeclinedReason = null,
             cancelledReason = null,
             markedAsArrivedDateTime = null,
+            markedAsArrived = null,
           ),
           createdAt = fallbackApplication.createdAt,
           cohort = fallbackApplication.cohort?.apiType,

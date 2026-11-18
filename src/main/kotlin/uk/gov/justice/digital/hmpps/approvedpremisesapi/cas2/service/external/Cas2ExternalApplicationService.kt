@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CurrentApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ExternalSubmittedApplicationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2MarkedAsArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -121,8 +122,13 @@ class Cas2ExternalApplicationService(
       null
     }
 
-    val markedAsArrivedDateTime = if (statusUpdate?.status == Cas2AssessmentStatus.AWAITING_ARRIVAL) {
-      cas2ExternalDomainEventService.getArrivalEventFromApplicationId(mostRecent.id)?.data?.eventDetails?.markedAsArrivedDateTime
+    val markedAsArrived = if (statusUpdate?.status == Cas2AssessmentStatus.AWAITING_ARRIVAL) {
+      cas2ExternalDomainEventService.getArrivalEventFromApplicationId(mostRecent.id)?.data?.eventDetails?.let { eventDetails ->
+        Cas2MarkedAsArrived(
+          dateTime = eventDetails.markedAsArrivedDateTime,
+          arrivedByUsername = eventDetails.arrivedByUsername,
+        )
+      }
     } else {
       null
     }
@@ -132,7 +138,8 @@ class Cas2ExternalApplicationService(
       submittedAt = mostRecent.submittedAt!!,
       offerDeclinedReason = offerDeclinedReason,
       cancelledReason = cancelledReason,
-      markedAsArrivedDateTime = markedAsArrivedDateTime,
+      markedAsArrived = markedAsArrived,
+      markedAsArrivedDateTime = markedAsArrived?.dateTime,
     )
   } else {
     null
