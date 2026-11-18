@@ -611,7 +611,7 @@ class Cas3ArchiveService(
 
   private fun canArchiveBedspace(bedspaceId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = null, filterByBedspaceId = bedspaceId, proposedArchiveDate = endDate)
 
-  private fun canArchivePremisesBedspaces(premisesId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = premisesId, filterByBedspaceId = null, proposedArchiveDate = endDate)
+  internal fun canArchivePremisesBedspaces(premisesId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = premisesId, filterByBedspaceId = null, proposedArchiveDate = endDate)
 
   @SuppressWarnings("CyclomaticComplexMethod")
   private fun canArchiveBedspace(filterByPremisesId: UUID?, filterByBedspaceId: UUID?, proposedArchiveDate: LocalDate): Cas3FieldValidationError<Cas3BedspacesEntity>? {

@@ -46,6 +46,7 @@ enum class SeedFileType(@get:JsonValue val value: String) {
   approvedPremisesCancelOutOfServiceBeds("approved_premises_cancel_out_of_service_beds"),
   approvedPremisesUpdateOutOfServiceBeds("approved_premises_update_out_of_service_beds"),
   approvedPremisesClosePremises("approved_premises_close_premises"),
+  cas3UpdatePremisesArchiveDate("cas3_update_premises_archive_date"),
   cas3UpdatePremisesPostcode("cas3_update_premises_postcode"),
   cas3UpdatePremisesSuppressArchiveLimits("cas3_update_premises_suppress_archive_limits"),
   cas2BackfillManualRoshAnswers("cas2_backfill_manual_rosh_answers"),

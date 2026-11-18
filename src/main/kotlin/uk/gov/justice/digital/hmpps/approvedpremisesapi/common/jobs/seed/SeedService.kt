@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2Hd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3AssignApplicationToPduSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3ReferralRejectionSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UpdatePremisesArchiveDateSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UpdatePremisesPostcodeSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UpdatePremisesSuppressArchiveLimitsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UsersSeedJob
@@ -118,6 +119,7 @@ class SeedService(
         SeedFileType.approvedPremisesCancelOutOfServiceBeds -> getBean(Cas1CancelOutOfServiceBedsByPremisesJob::class)
         SeedFileType.approvedPremisesUpdateOutOfServiceBeds -> getBean(Cas1UpdateOutOfServiceBedsByPremisesJob::class)
         SeedFileType.approvedPremisesClosePremises -> getBean(Cas1ClosePremisesSeedJob::class)
+        SeedFileType.cas3UpdatePremisesArchiveDate -> getBean(Cas3UpdatePremisesArchiveDateSeedJob::class)
         SeedFileType.cas3UpdatePremisesPostcode -> getBean(Cas3UpdatePremisesPostcodeSeedJob::class)
         SeedFileType.cas3UpdatePremisesSuppressArchiveLimits -> getBean(Cas3UpdatePremisesSuppressArchiveLimitsSeedJob::class)
         SeedFileType.updateInboxEventStatus -> getBean(UpdateInboxEventStatusSeedJob::class)
