@@ -369,6 +369,8 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   points: an entry in `api/model/SeedFileType.kt`, a branch in
   `common/jobs/seed/SeedService.kt`, and an integration test extending
   `SeedTestBase`.
+* Keep `doc/how-to/run_seed_job_remotely.md` focused on the general procedure.
+  Do not add job-specific instructions or CSV examples to that runbook.
 
 ---
 
@@ -609,4 +611,3 @@ remove stale baseline entries for code you delete).
   commands above before pushing.
 * `prek`/`pre-commit` hooks can run the baseline checks on every commit locally
   (`prek install` — see `README.md`).
-
