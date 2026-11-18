@@ -2,7 +2,7 @@
 
 invoke_admin_command() {
   # shellcheck disable=SC2034
-  JAVA_TOOL_OPTIONS="-Xmx50m -XX:-UseBASE64Intrinsics"
+  export JAVA_TOOL_OPTIONS="-Xmx50m -XX:-UseBASE64Intrinsics"
 
   echo "Invoke java with $*"
 
