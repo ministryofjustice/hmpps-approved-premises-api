@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Applic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
@@ -191,19 +190,10 @@ class Cas2ApplicationController(
     val crns = applicationSummaries.map { it.crn }
 
     val personSummaries = cas2OffenderService.getPersonSummaries(laoStrategy, crns)
-
-    val personNamesMap = personSummaries.associate {
-      it.crn to when (it) {
-        is Cas2PersonSummary.Summary -> it.name
-        is Cas2PersonSummary.LimitedAccess -> "Restricted Access"
-        is Cas2PersonSummary.NotFound -> "Person Not Found"
-      }
-    }
-
     val personSummariesMap = personSummaries.associateBy { it.crn }
 
     return applicationSummaries.map { application ->
-      cas2ApplicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!, personSummariesMap[application.crn]!!)
+      cas2ApplicationsTransformer.transformJpaSummaryToSummary(application, personSummariesMap[application.crn]!!)
     }
   }
 

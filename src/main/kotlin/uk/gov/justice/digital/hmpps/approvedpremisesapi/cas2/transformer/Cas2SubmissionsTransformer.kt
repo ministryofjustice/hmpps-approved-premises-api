@@ -40,11 +40,9 @@ class Cas2SubmissionsTransformer(
 
   fun transformJpaSummaryToApiRepresentation(
     jpaSummary: Cas2ApplicationSummary,
-    personName: String,
     personSummary: Cas2PersonSummary,
   ): Cas2SubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
     id = jpaSummary.id,
-    personName = personName,
     createdByUserId = UUID.fromString(jpaSummary.userId),
     createdAt = jpaSummary.createdAt.toInstant(),
     submittedAt = jpaSummary.submittedAt?.toInstant(),

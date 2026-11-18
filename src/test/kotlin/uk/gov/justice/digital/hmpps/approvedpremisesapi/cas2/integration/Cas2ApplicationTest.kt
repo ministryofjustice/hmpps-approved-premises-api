@@ -416,7 +416,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           firstApplicationEntity.id == it.id &&
             firstApplicationEntity.crn == it.crn &&
             firstApplicationEntity.nomsNumber == it.nomsNumber &&
-            "${offenderDetails.firstName} ${offenderDetails.surname}" == it.personName &&
+            it.personSummary == Cas2PersonSummaryDto.Found(
+              firstApplicationEntity.crn,
+              "${offenderDetails.firstName} ${offenderDetails.surname}",
+            ) &&
             firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
             firstApplicationEntity.createdByUser.id == it.createdByUserId &&
             firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
@@ -595,8 +598,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$[0].personName")
-          .isEqualTo("Person Not Found")
           .jsonPath("$[0].personSummary.personType")
           .isEqualTo("NotFound")
           .jsonPath("$[0].personSummary.crn")
@@ -633,22 +634,18 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .associateBy { it.id }
 
         val fullName = "${fullOffender.firstName} ${fullOffender.surname}"
-        assertThat(summariesById[fullApplication.id]!!.personName).isEqualTo(fullName)
         assertThat(summariesById[fullApplication.id]!!.personSummary)
           .isEqualTo(Cas2PersonSummaryDto.Found(fullOffender.otherIds.crn, fullName))
 
         // CAS2 ignores exclusions
         val excludedName = "${excludedOffender.firstName} ${excludedOffender.surname}"
-        assertThat(summariesById[excludedApplication.id]!!.personName).isEqualTo(excludedName)
         assertThat(summariesById[excludedApplication.id]!!.personSummary)
           .isEqualTo(Cas2PersonSummaryDto.Found(excludedOffender.otherIds.crn, excludedName))
 
         // CAS2 blocks restricted offenders regardless of user
-        assertThat(summariesById[restrictedApplication.id]!!.personName).isEqualTo("Restricted Access")
         assertThat(summariesById[restrictedApplication.id]!!.personSummary)
           .isEqualTo(Cas2PersonSummaryDto.LimitedAccess(restrictedOffender.otherIds.crn))
 
-        assertThat(summariesById[notFoundApplication.id]!!.personName).isEqualTo("Person Not Found")
         assertThat(summariesById[notFoundApplication.id]!!.personSummary)
           .isEqualTo(Cas2PersonSummaryDto.NotFound(notFoundCrn))
 
@@ -714,11 +711,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .single { it.id == application.id }
 
         if (restricted) {
-          assertThat(summary.personName).isEqualTo("Restricted Access")
           assertThat(summary.personSummary).isEqualTo(Cas2PersonSummaryDto.LimitedAccess(offender.otherIds.crn))
         } else {
           val name = "${offender.firstName} ${offender.surname}"
-          assertThat(summary.personName).isEqualTo(name)
           assertThat(summary.personSummary).isEqualTo(Cas2PersonSummaryDto.Found(offender.otherIds.crn, name))
         }
 
