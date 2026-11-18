@@ -1,30 +1,47 @@
-#!/bin/sh
+#!/bin/bash
 
-# script/run_migration_job: Run a migration job for given type on a remote pod.  e.g.
-#                           script/run_remote_migration_job update_all_users_from_community_api
+# script/run_remote_migration_job: Run a migration job for a given type on a remote pod. e.g.
+#                                  script/run_remote_migration_job preprod update_all_users_from_community_api
 
 set -e
 
-if [ -z "$1" ]; then
-  echo "You must specify an environment"
+usage() {
+  echo "Usage: $0 dev|test|preprod|prod migration_job_name"
+  echo ""
+  echo "For migration job names, see the values defined for the enumeration MigrationJobType"
   exit 1
+}
+
+if [ -z "$1" ]; then
+  echo "Error: You must specify an environment"
+  usage
 else
   environment=$1
 fi
 
 if [ -z "$2" ]; then
-  echo "You must specify a job name"
-  exit 1
+  echo "Error: You must specify a job name"
+  usage
 else
   job=$2
 fi
 
+if [ "$environment" = "prod" ]; then
+  echo "WARNING: You are about to run a migration job on the PRODUCTION environment!"
+  echo "Migration job: $job"
+  read -p "Are you sure you want to proceed? [y/N]: " -n 1 -r || REPLY=
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Cancelled."
+    exit 0
+  fi
+fi
 
 namespace="hmpps-community-accommodation-$environment"
 
 pod=$(kubectl -n "$namespace" get pods -l app=hmpps-approved-premises-api -o jsonpath='{.items[0].metadata.name}')
 
-kubectl -n "$namespace" exec -it "$pod" -- /app/run_migration_job $job
+kubectl -n "$namespace" exec -it "$pod" -- /app/run_migration_job "$job"
 
 queryUrl="https://portal.azure.com#@747381f4-e81f-4a43-bf68-ced6a1e14edf/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Fa5ddf257-3b21-4ba9-a28c-ab30f751b383%2FresourceGroups%2Fnomisapi-preprod-rg%2Fproviders%2FMicrosoft.Insights%2Fcomponents%2Fnomisapi-preprod/source/LogsBlade.AnalyticsShareLinkToQuery/query/traces%0A%7C%20where%20cloud_RoleInstance%20%3D%3D%20%22$pod%22%20and%20customDimensions.LoggerName%20%3D%3D%20%22uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApplicationStatusMigrationJob%22%0A%7C%20order%20by%20timestamp%20desc/timespan/P1D"
 

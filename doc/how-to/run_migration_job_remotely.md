@@ -3,6 +3,10 @@
 To run a migration job against a non-local environment:
 
 - Ensure nobody is deploying a change (or is going to deploy a change shortly.)
+- From the repository root, run `script/run_remote_migration_job <environment> <job type>` to run the job on the first API pod.
+
+Alternatively, run the job from inside the container:
+
 - Change into the 'script' directory in this project
 - Connect to an API POD
 
@@ -20,10 +24,9 @@ To run a migration job against a non-local environment:
   /app/run_migration_job update_all_users_from_community_api
   ```
 
-- Check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) to see how processing is progressing. The following query will provide traces and exceptions for migration jobs:
+After either method, check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) to see how processing is progressing. The following query will provide traces and exceptions for migration jobs:
   ```
   union traces, exceptions
   | where cloud_RoleName == 'hmpps-approved-premises-api' and customDimensions contains ("migration")
   | project timestamp, message, outerMessage, severityLevel, customDimensions, problemId, operation_Name, operation_Id
    ```
-
