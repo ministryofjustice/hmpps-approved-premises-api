@@ -74,6 +74,7 @@ class Cas2ExternalApplicationServiceTest {
         offerDeclinedReason = null,
         cancelledReason = null,
         markedAsArrivedDateTime = null,
+        markedAsArrived = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -103,6 +104,7 @@ class Cas2ExternalApplicationServiceTest {
         offerDeclinedReason = null,
         cancelledReason = null,
         markedAsArrivedDateTime = null,
+        markedAsArrived = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -139,6 +141,7 @@ class Cas2ExternalApplicationServiceTest {
         offerDeclinedReason = null,
         cancelledReason = null,
         markedAsArrivedDateTime = null,
+        markedAsArrived = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -168,6 +171,7 @@ class Cas2ExternalApplicationServiceTest {
         offerDeclinedReason = null,
         cancelledReason = Cas2AssessmentStatusDetail.CREATED_IN_ERROR.label,
         markedAsArrivedDateTime = null,
+        markedAsArrived = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -197,6 +201,7 @@ class Cas2ExternalApplicationServiceTest {
         offerDeclinedReason = Cas2AssessmentStatusDetail.AREA_UNSUITABLE.label,
         cancelledReason = null,
         markedAsArrivedDateTime = null,
+        markedAsArrived = null,
       )
 
       val expected = setUpExpectedApplication(
@@ -239,7 +244,7 @@ class Cas2ExternalApplicationServiceTest {
     }
 
     @Test
-    fun `Returns null markedAsArrivedDateTime when latestAssessmentStatus is AWAITING_ARRIVAL but no arrival event exists`() {
+    fun `Returns null markedAsArrived when latestAssessmentStatus is AWAITING_ARRIVAL but no arrival event exists`() {
       val awaitingArrivalStatusId = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")
 
       val cas2ApplicationEntity = Cas2ApplicationEntityFactory()
@@ -266,11 +271,11 @@ class Cas2ExternalApplicationServiceTest {
 
       val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
-      assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isNull()
+      assertThat(result!!.submittedApplication!!.markedAsArrived).isNull()
     }
 
     @Test
-    fun `Returns null markedAsArrivedDateTime when latestAssessmentStatus is not AWAITING_ARRIVAL and arrival event exists for the application`() {
+    fun `Returns null markedAsArrived when latestAssessmentStatus is not AWAITING_ARRIVAL and arrival event exists for the application`() {
       val placeOfferedStatusId = UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2")
 
       val cas2ApplicationEntity = Cas2ApplicationEntityFactory()
@@ -298,11 +303,11 @@ class Cas2ExternalApplicationServiceTest {
 
       val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
-      assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isNull()
+      assertThat(result!!.submittedApplication!!.markedAsArrived).isNull()
     }
 
     @Test
-    fun `Returns non null markedAsArrivedDateTime when latestAssessmentStatus status is AWAITING_ARRIVAL and arrival event exists`() {
+    fun `Returns non null markedAsArrived when latestAssessmentStatus status is AWAITING_ARRIVAL and arrival event exists`() {
       val awaitingArrivalStatusId = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")
       val expectedArrivedDateTime = Instant.parse("2025-12-03T10:15:30Z")
       val eventId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000")
@@ -357,7 +362,8 @@ class Cas2ExternalApplicationServiceTest {
 
       val result = cas2ExternalApplicationService.getCurrentApplication(crn)
 
-      assertThat(result!!.submittedApplication!!.markedAsArrivedDateTime).isEqualTo(expectedArrivedDateTime)
+      assertThat(result!!.submittedApplication!!.markedAsArrived!!.dateTime).isEqualTo(expectedArrivedDateTime)
+      assertThat(result.submittedApplication.markedAsArrived.arrivedByUsername).isEqualTo(cas2ArrivalEvent.eventDetails.arrivedByUsername)
     }
 
     @Test
@@ -391,6 +397,7 @@ class Cas2ExternalApplicationServiceTest {
           offerDeclinedReason = null,
           cancelledReason = null,
           markedAsArrivedDateTime = null,
+          markedAsArrived = null,
         ),
         uiUrl = "http://frontend/applications/${cas2ApplicationEntity.id}/overview",
       )
@@ -482,6 +489,7 @@ class Cas2ExternalApplicationServiceTest {
           offerDeclinedReason = null,
           cancelledReason = null,
           markedAsArrivedDateTime = null,
+          markedAsArrived = null,
         ),
         uiUrl = "http://frontend/applications/${fallbackApplication.id}/overview",
       )
@@ -516,6 +524,7 @@ class Cas2ExternalApplicationServiceTest {
           offerDeclinedReason = null,
           cancelledReason = null,
           markedAsArrivedDateTime = null,
+          markedAsArrived = null,
         ),
         uiUrl = "http://frontend/applications/${cas2ApplicationEntity.id}/overview",
       )
