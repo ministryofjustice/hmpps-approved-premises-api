@@ -48,8 +48,6 @@ class ApplicationsTransformer(
     val latestAssessment = applicationEntity.getLatestAssessment()
 
     return when (applicationEntity) {
-      is ApprovedPremisesApplicationEntity -> transformCas1JpaToApi(applicationEntity, personInfo)
-
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
         id = applicationEntity.id,
         person = personTransformer.personInfoResultToPerson(personInfo),
