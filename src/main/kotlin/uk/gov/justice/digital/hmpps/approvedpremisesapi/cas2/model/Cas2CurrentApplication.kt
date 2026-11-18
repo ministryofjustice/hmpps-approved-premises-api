@@ -19,7 +19,6 @@ data class Cas2ExternalSubmittedApplicationDto(
   val offerDeclinedReason: String?,
   val cancelledReason: String?,
   val submittedAt: OffsetDateTime,
-  @Deprecated("Use markedAsArrived instead") val markedAsArrivedDateTime: Instant?,
   val markedAsArrived: Cas2MarkedAsArrived?,
 ) {
   init {

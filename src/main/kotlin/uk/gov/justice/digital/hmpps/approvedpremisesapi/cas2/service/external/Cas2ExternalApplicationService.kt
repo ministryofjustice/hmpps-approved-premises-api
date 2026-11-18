@@ -139,7 +139,6 @@ class Cas2ExternalApplicationService(
       offerDeclinedReason = offerDeclinedReason,
       cancelledReason = cancelledReason,
       markedAsArrived = markedAsArrived,
-      markedAsArrivedDateTime = markedAsArrived?.dateTime,
     )
   } else {
     null
