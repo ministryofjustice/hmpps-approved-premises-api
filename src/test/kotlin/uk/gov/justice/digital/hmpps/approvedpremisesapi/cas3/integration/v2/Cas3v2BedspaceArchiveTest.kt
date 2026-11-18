@@ -1050,12 +1050,16 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
             premises.id,
             user.id,
             LocalDate.now(clock).minusDays(30),
+            occurredAt = OffsetDateTime.now().minusDays(5),
+            createdAt = OffsetDateTime.now(),
           )
           val lastBedspaceUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(
             scheduledBedspaceToUnarchived,
             premises.id,
             user.id,
             LocalDate.now(clock).plusDays(10),
+            occurredAt = OffsetDateTime.now().minusDays(4),
+            createdAt = OffsetDateTime.now().minusDays(3),
           )
 
           webTestClient.put()

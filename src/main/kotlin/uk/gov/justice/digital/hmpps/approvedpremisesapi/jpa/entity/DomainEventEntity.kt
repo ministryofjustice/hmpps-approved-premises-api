@@ -101,38 +101,11 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
   fun findByType(type: DomainEventType): List<DomainEventEntity>
 
   @Query(
-    value = """
-    SELECT *
-    FROM domain_events as d
-    WHERE (d.type = 'APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN' OR d.type = 'APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN')
-    AND (d.data -> 'eventDetails' ->> 'matchRequestId' = CAST(:placementRequestId AS text)
-    OR d.data -> 'eventDetails' ->> 'placementApplicationId' = CAST(:placementRequestId AS text))
-  ORDER BY d.created_at DESC
-  LIMIT 1
-  """,
-    nativeQuery = true,
-  )
-  fun findWithdrawnRequestForPlacement(placementRequestId: UUID): DomainEventEntity?
-
-  @Query(
-    value = """
-    SELECT *
-    FROM domain_events as d
-    WHERE d.type = 'APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED'
-    AND d.data -> 'eventDetails' ->> 'placementApplicationId' = CAST(:placementApplicationId AS text)
-  ORDER BY d.created_at DESC
-  LIMIT 1
-  """,
-    nativeQuery = true,
-  )
-  fun findAssessedRequestForPlacement(placementApplicationId: UUID): DomainEventEntity?
-
-  @Query(
     """
     SELECT d
     FROM DomainEventEntity d
     WHERE d.cas3BedspaceId in :cas3BedspaceId and d.type = :type and d.cas3CancelledAt is null
-    ORDER BY d.createdAt desc
+    ORDER BY d.occurredAt desc
     Limit 1
     """,
   )
@@ -146,7 +119,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     SELECT d
     FROM DomainEventEntity d
     WHERE d.cas3PremisesId in :cas3PremisesId and d.type = :type and d.cas3CancelledAt is null
-    ORDER BY d.createdAt desc
+    ORDER BY d.occurredAt desc
     Limit 1
     """,
   )
@@ -238,7 +211,14 @@ data class DomainEventEntity(
   val crn: String?,
   @Enumerated(value = EnumType.STRING)
   val type: DomainEventType,
+  /**
+   * When the event occurred (not necessarily when the record was created)
+   */
   val occurredAt: OffsetDateTime,
+  /**
+   * When the domain event record was created. Use [occurredAt] if you need
+   * to know when the event occurred
+   */
   val createdAt: OffsetDateTime,
   @Column(name = "cas3_cancelled_at")
   val cas3CancelledAt: OffsetDateTime?,
