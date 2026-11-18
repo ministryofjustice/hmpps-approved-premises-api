@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.toCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 import java.time.LocalDate
@@ -254,7 +255,7 @@ class Cas2ApplicationTransformerTest {
         allocatedPomName = null,
         currentPrisonCode = null,
         assignmentDate = null,
-      )
+      ).toCas2ApplicationSummary()
 
       every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
 
@@ -293,7 +294,7 @@ class Cas2ApplicationTransformerTest {
         allocatedPomName = null,
         currentPrisonCode = null,
         assignmentDate = null,
-      )
+      ).toCas2ApplicationSummary()
 
       every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
         statusId = UUID.fromString(application.latestStatusUpdateStatusId),

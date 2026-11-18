@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2Offen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
@@ -86,7 +86,7 @@ class Cas2SubmissionsController(
 
   private fun getPersonNamesAndTransformToSummaries(
     laoStrategy: LaoStrategy,
-    applicationSummaries: List<Cas2ApplicationSummaryEntity>,
+    applicationSummaries: List<Cas2ApplicationSummary>,
   ): List<Cas2SubmittedApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
