@@ -190,6 +190,7 @@ class Cas1ApplicationCreationService(
       releaseType = Cas1ReleaseType.fromApiType(submitApplication.releaseType)
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival)
+      expectedArrivalDate = submitApplication.requestedPlacementPeriod?.arrival
       requestedPlacementDuration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.requestedPlacementDuration
       calculatedPlacementDuration = submitApplication.calculatedPlacementDuration
       sentenceType = submitApplication.sentenceType.toString()
@@ -277,6 +278,7 @@ class Cas1ApplicationCreationService(
       } else {
         null
       }
+      this.expectedArrivalDate = updateFields.arrivalDate
       this.data = updateFields.data
       this.noticeType = getNoticeType(updateFields.noticeType, updateFields.isEmergencyApplication, this)
       this.document = updateFields.document

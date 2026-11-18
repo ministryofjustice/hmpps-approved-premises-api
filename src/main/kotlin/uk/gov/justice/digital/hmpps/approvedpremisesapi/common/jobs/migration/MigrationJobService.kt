@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillApplicationExpectedArrivalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillPlacementApplicationDecisionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillPlacementApplicationWithdrawalOccurredAt
@@ -61,6 +62,7 @@ class MigrationJobService(
         MigrationJobType.cas1BackfillPlacementApplicationDecisionSummary -> getBean(Cas1BackfillPlacementApplicationDecisionSummary::class)
         MigrationJobType.cas1BackfillPlacementApplicationWithdrawalOccurredAt -> getBean(Cas1BackfillPlacementApplicationWithdrawalOccurredAt::class)
         MigrationJobType.cas1BackfillPlacementRequestWithdrawalOccurredAt -> getBean(Cas1BackfillPlacementRequestWithdrawalOccurredAt::class)
+        MigrationJobType.cas1BackfillApplicationExpectedArrivalDate -> getBean(Cas1BackfillApplicationExpectedArrivalDate::class)
         MigrationJobType.cas1BackfillAutomaticPlacementApplications -> getBean(Cas1BackfillAutomaticPlacementApplicationsJob::class)
         MigrationJobType.cas1CapacityPerformanceTest -> getBean(Cas1CapacityPerformanceTestJob::class)
         MigrationJobType.updateCas3DomainEventArchiveUnarchiveTransaction -> getBean(Cas3UpdateArchiveUnarchiveDomainEventTransactionJob::class)
