@@ -180,6 +180,7 @@ class Cas3ApplicationServiceTest {
 
       val suitableApplication = Cas3ExternalCurrentApplicationDto(
         id = inProgressApplicationNewer.id,
+        createdAt = inProgressApplicationNewer.createdAt,
         applicationStatus = ApplicationStatus.inProgress,
         applicationSubmittedDate = null,
         applicationSubmittedBy = Cas3StaffDto(
@@ -267,6 +268,7 @@ class Cas3ApplicationServiceTest {
 
       val suitableApplication = Cas3ExternalCurrentApplicationDto(
         id = submittedApplication2.id,
+        createdAt = submittedApplication2.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication2.submittedAt!!.toLocalDate(),
         applicationSubmittedBy = Cas3StaffDto(
@@ -339,6 +341,7 @@ class Cas3ApplicationServiceTest {
 
       val suitableApplication = Cas3ExternalCurrentApplicationDto(
         id = submittedApplication2.id,
+        createdAt = submittedApplication2.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication2.submittedAt!!.toLocalDate(),
         applicationSubmittedBy = Cas3StaffDto(
@@ -398,6 +401,7 @@ class Cas3ApplicationServiceTest {
 
       val suitableApplication = Cas3ExternalCurrentApplicationDto(
         id = submittedApplication.id,
+        createdAt = submittedApplication.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
         applicationSubmittedBy = Cas3StaffDto(
@@ -465,6 +469,7 @@ class Cas3ApplicationServiceTest {
 
       val suitableApplication = Cas3ExternalCurrentApplicationDto(
         id = submittedApplication.id,
+        createdAt = submittedApplication.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
         applicationSubmittedBy = Cas3StaffDto(
@@ -542,6 +547,7 @@ class Cas3ApplicationServiceTest {
 
       val suitableApplication = Cas3ExternalCurrentApplicationDto(
         id = submittedApplication.id,
+        createdAt = submittedApplication.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
         applicationSubmittedBy = Cas3StaffDto(
@@ -664,6 +670,7 @@ class Cas3ApplicationServiceTest {
 
       val suitableApplication = Cas3ExternalCurrentApplicationDto(
         id = submittedApplication.id,
+        createdAt = submittedApplication.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
         applicationSubmittedBy = Cas3StaffDto(

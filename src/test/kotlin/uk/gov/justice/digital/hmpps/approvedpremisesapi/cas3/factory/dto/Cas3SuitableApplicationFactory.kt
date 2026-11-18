@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalCurrentApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalSubmittedApplicationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3SuitableApplicationFactory : Factory<Cas3ExternalCurrentApplicationDto> {
@@ -23,6 +24,7 @@ class Cas3SuitableApplicationFactory : Factory<Cas3ExternalCurrentApplicationDto
 
   override fun produce(): Cas3ExternalCurrentApplicationDto = Cas3ExternalCurrentApplicationDto(
     id = UUID.randomUUID(),
+    createdAt = OffsetDateTime.now(),
     applicationStatus = applicationStatus(),
     uiUrl = "localhost",
     submittedApplication = submittedApplication?.let { it() },

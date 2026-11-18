@@ -6,10 +6,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.requireXor
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 data class Cas3ExternalCurrentApplicationDto(
   val id: UUID,
+  val createdAt: OffsetDateTime,
   val applicationStatus: ApplicationStatus,
   val uiUrl: String,
   @Schema(description = "A submitted application will be defined when the applicationStatus has any value other than 'inProgress'")

@@ -63,6 +63,7 @@ class Cas3ApplicationTransformer(
 
     return Cas3ExternalCurrentApplicationDto(
       id = application.id,
+      createdAt = application.createdAt,
       applicationStatus = application.getStatus(),
       submittedApplication = submittedApplication,
       applicationSubmittedDate = submittedApplication?.submittedDate,
