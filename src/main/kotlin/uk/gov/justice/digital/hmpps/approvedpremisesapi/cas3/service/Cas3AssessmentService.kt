@@ -265,6 +265,11 @@ class Cas3AssessmentService(
     currentAssessment.allocatedAt = null
     currentAssessment.decision = null
     currentAssessment.submittedAt = null
+    // Note - we do not reset the rejection fields, despite changing the decision.
+    // Whilst this may not have been an intentional decision when the code was written
+    // we have decided to retain this information for now in case this is a 'hidden
+    // requirement' (e.g. this does want retaining). Ideally we'd store this information
+    // in an audit log (e.g. system note) and blank them in this scenario
 
     val savedAssessment = assessmentRepository.save(currentAssessment)
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.UNALLOCATED)
@@ -305,6 +310,11 @@ class Cas3AssessmentService(
     currentAssessment.allocatedToUser = requestUser
     currentAssessment.allocatedAt = OffsetDateTime.now()
     currentAssessment.decision = null
+    // Note - we do not reset the rejection fields, despite changing the decision.
+    // Whilst this may not have been an intentional decision when the code was written
+    // we have decided to retain this information for now in case this is a 'hidden
+    // requirement' (e.g. this does want retaining). Ideally we'd store this information
+    // in an audit log (e.g. system note) and blank them in this scenario
 
     val savedAssessment = assessmentRepository.save(currentAssessment)
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.IN_REVIEW)
