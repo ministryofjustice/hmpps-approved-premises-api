@@ -220,6 +220,18 @@ data class DomainEventEntity(
    * to know when the event occurred
    */
   val createdAt: OffsetDateTime,
+  /**
+   * CAS3 only. Set when a *scheduled* (future-dated) archive or unarchive of a
+   * premises/bedspace is cancelled (see `Cas3ArchiveService.cancelScheduled*`),
+   * meaning the change this event describes never took effect.
+   *
+   * This is NOT set when a premises/bedspace that has already been archived
+   * is unarchived. In that case the original archive event remains active
+   * and a separate unarchive event is recorded.
+   *
+   * Note - if this field becomes a problem review it's purpose and whether
+   * this aspect of scheduled archive jobs could be managed outside of domain events
+   */
   @Column(name = "cas3_cancelled_at")
   val cas3CancelledAt: OffsetDateTime?,
   @Column(name = "cas3_transaction_id")

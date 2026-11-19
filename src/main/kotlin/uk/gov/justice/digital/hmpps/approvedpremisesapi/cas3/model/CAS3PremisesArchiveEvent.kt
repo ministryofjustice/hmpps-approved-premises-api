@@ -6,7 +6,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-class CAS3PremisesArchiveEvent(
+data class CAS3PremisesArchiveEvent(
   val eventDetails: CAS3PremisesArchiveEventDetails,
   override val id: UUID,
   override val timestamp: Instant,
