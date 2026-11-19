@@ -73,7 +73,6 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = null,
-        markedAsArrivedDateTime = null,
         markedAsArrived = null,
       )
 
@@ -103,7 +102,6 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = null,
-        markedAsArrivedDateTime = null,
         markedAsArrived = null,
       )
 
@@ -140,7 +138,6 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = null,
-        markedAsArrivedDateTime = null,
         markedAsArrived = null,
       )
 
@@ -170,7 +167,6 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = null,
         cancelledReason = Cas2AssessmentStatusDetail.CREATED_IN_ERROR.label,
-        markedAsArrivedDateTime = null,
         markedAsArrived = null,
       )
 
@@ -200,7 +196,6 @@ class Cas2ExternalApplicationServiceTest {
         submittedAt = cas2applicationEntity.submittedAt!!,
         offerDeclinedReason = Cas2AssessmentStatusDetail.AREA_UNSUITABLE.label,
         cancelledReason = null,
-        markedAsArrivedDateTime = null,
         markedAsArrived = null,
       )
 
@@ -396,7 +391,6 @@ class Cas2ExternalApplicationServiceTest {
           submittedAt = cas2ApplicationEntity.submittedAt!!,
           offerDeclinedReason = null,
           cancelledReason = null,
-          markedAsArrivedDateTime = null,
           markedAsArrived = null,
         ),
         uiUrl = "http://frontend/applications/${cas2ApplicationEntity.id}/overview",
@@ -488,7 +482,6 @@ class Cas2ExternalApplicationServiceTest {
           submittedAt = fallbackApplication.submittedAt!!,
           offerDeclinedReason = null,
           cancelledReason = null,
-          markedAsArrivedDateTime = null,
           markedAsArrived = null,
         ),
         uiUrl = "http://frontend/applications/${fallbackApplication.id}/overview",
@@ -523,7 +516,6 @@ class Cas2ExternalApplicationServiceTest {
           submittedAt = cas2ApplicationEntity.submittedAt!!,
           offerDeclinedReason = null,
           cancelledReason = null,
-          markedAsArrivedDateTime = null,
           markedAsArrived = null,
         ),
         uiUrl = "http://frontend/applications/${cas2ApplicationEntity.id}/overview",

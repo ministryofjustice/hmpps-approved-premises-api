@@ -27,7 +27,6 @@ class Cas2ExternalDtoTest {
           offerDeclinedReason = null,
           cancelledReason = null,
           submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-          markedAsArrivedDateTime = null,
           markedAsArrived = null,
         )
       }
@@ -48,7 +47,6 @@ class Cas2ExternalDtoTest {
             cancelledReason = "a reason",
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
             markedAsArrived = null,
-            markedAsArrivedDateTime = null,
           )
         }
         assertThat(thrown).hasMessage("Cancelled reason must be provided if and only if status is `cancelled`")
@@ -62,7 +60,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = "a reason",
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = null,
           )
         }
@@ -77,7 +74,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = null,
           )
         }
@@ -98,7 +94,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = "a reason",
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = null,
           )
         }
@@ -114,7 +109,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = "a reason",
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = null,
           )
         }
@@ -129,7 +123,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = "a reason",
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = null,
           )
         }
@@ -144,7 +137,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = null,
           )
         }
@@ -165,7 +157,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = Cas2MarkedAsArrived(
               dateTime = Instant.parse("2023-02-01T00:00:00.000Z"),
               arrivedByUsername = "testuser",
@@ -186,7 +177,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = "a reason",
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = Cas2MarkedAsArrived(
               dateTime = Instant.parse("2023-02-01T00:00:00.000Z"),
               arrivedByUsername = "testuser",
@@ -207,7 +197,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = "a reason",
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = Cas2MarkedAsArrived(
               dateTime = Instant.parse("2023-02-01T00:00:00.000Z"),
               arrivedByUsername = "testuser",
@@ -225,7 +214,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = Instant.parse("2023-02-01T00:00:00.000Z"),
             markedAsArrived = Cas2MarkedAsArrived(
               dateTime = Instant.parse("2023-02-01T00:00:00.000Z"),
               arrivedByUsername = "testuser",
@@ -243,7 +231,6 @@ class Cas2ExternalDtoTest {
             offerDeclinedReason = null,
             cancelledReason = null,
             submittedAt = OffsetDateTime.parse("2023-02-01T00:00:00.000Z"),
-            markedAsArrivedDateTime = null,
             markedAsArrived = null,
           )
         }
