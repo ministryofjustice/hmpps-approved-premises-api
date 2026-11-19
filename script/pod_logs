@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ -z "$1" ] || ! [[ "$1" =~ ^(dev|test|preprod|prod)$ ]]; then
   echo "Usage:"

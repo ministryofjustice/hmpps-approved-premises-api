@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # script/generate_migration: Create an empty database migration, e.g.
 #                            script/generate_migration all "my migration" - creates a migration that applies to all profiles
@@ -9,9 +9,9 @@ set -e
 cd "$(dirname "$0")"
 script_dir="$(pwd)"
 
-if [ $1 == "dev+test" ]; then
+if [ "$1" = "dev+test" ]; then
     dir="dev+test"
-elif [ $1 == "all" ]; then
+elif [ "$1" = "all" ]; then
     dir="all"
 else
     echo "Unrecognised option: $1 - must be either 'all' or 'dev+test'"
