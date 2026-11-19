@@ -68,6 +68,8 @@ Tooling notes:
 * Make file changes with the `create`/`edit` tools, not shell heredocs or
   scripted rewrites.
 * macOS `sed -i` needs an extension argument; prefer `edit` instead.
+* Always edit files with `edit`/`create`, even for multi-site renames. Use
+  several `edit` calls rather than a Python or sed script.
 * Validate with
   `./gradlew ktlintFormat -q && ./gradlew test --tests '<pattern>' ktlintCheck detekt`
   and check the final `BUILD SUCCESSFUL` line (test output can be noisy).
@@ -371,6 +373,14 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   `SeedTestBase`.
 * Keep `doc/how-to/run_seed_job_remotely.md` focused on the general procedure.
   Do not add job-specific instructions or CSV examples to that runbook.
+* Validate fail-fast, before any write, and throw `SeedException` with the
+  entity id and the expected/actual values. Order checks from cheapest/most
+  fundamental to most involved. Rows run in one transaction, so a failure
+  rolls back earlier rows. Cover this in a test.
+* Use an injected `Clock` for "today" (`LocalDate.now(clock)`) in seed jobs.
+  `SeedTestBase` exposes a mutable `clock`.
+* Throws in `processRow` count toward detekt `ThrowsCount` (max 2 per
+  function). Put each check in its own `validate*` function.
 
 ---
 
@@ -532,6 +542,16 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   placement application, placement request and space booking), give each a
   distinct value so tests prove which source a field is mapped from.
 * Extract a private helper for repeated HTTP calls and response parsing.
+
+### Test organisation and helpers
+
+* Name test helpers that create or persist data with a `create` prefix
+  (`createPremisesArchiveDomainEvent`), with one helper per entity type
+  rather than one with many nullable flags.
+* In a test class, order validation-failure tests first, in the order the
+  checks run in the code, then success tests.
+* `Cas3DomainEventService` save methods need an authenticated request user.
+  In integration tests, build events with `domainEventFactory` instead.
 
 ### Keeping tests in sync
 
