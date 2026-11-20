@@ -22,6 +22,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
         events.data -> 'eventDetails' ->> 'preferredAreas' AS preferredAreas,
         CAST(events.data -> 'eventDetails' ->> 'hdcEligibilityDate' as DATE) AS hdcEligibilityDate,
         CAST(events.data -> 'eventDetails' ->> 'conditionalReleaseDate' as DATE) AS conditionalReleaseDate,
+        applications.accommodation_start_date as accommodationStartDate,
         TO_CHAR(events.occurred_at,'YYYY-MM-DD"T"HH24:MI:SS') AS submittedAt,
         TO_CHAR(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
         applications.application_origin as applicationOrigin,
@@ -41,7 +42,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
                        ON events.application_id = location_assignments.application_id and location_assignments.allocated_pom_cas_2_user_id is NULL
     WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
       AND events.occurred_at  > CURRENT_DATE - 365
-    GROUP BY events.id, events.application_id, events.data, events.occurred_at, applications.created_at, applications.application_origin, applications.cohort, applications.bail_hearing_date
+    GROUP BY events.id, events.application_id, events.data, events.occurred_at, applications.created_at, applications.application_origin, applications.cohort, applications.bail_hearing_date, applications.accommodation_start_date
     ORDER BY submittedAt DESC;
     """,
     nativeQuery = true,
@@ -64,6 +65,7 @@ interface Cas2SubmittedApplicationReportQueryRow {
   fun getPreferredAreas(): String?
   fun getHdcEligibilityDate(): LocalDate?
   fun getConditionalReleaseDate(): LocalDate?
+  fun getAccommodationStartDate(): LocalDate?
   fun getStartedAt(): String
   fun getNumberOfLocationTransfers(): String
   fun getNumberOfPomTransfers(): String
