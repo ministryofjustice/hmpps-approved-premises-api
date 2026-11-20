@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -115,7 +116,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         occurredAt = oldSubmitted,
       )
 
-      val application2 = givenASubmittedCas2Application(crn = "CRN_2", nomsNumber = "NOMS_2")
+      val application2 = givenASubmittedCas2Application(crn = "CRN_2", nomsNumber = "NOMS_2", accommodationStartDate = LocalDate.parse("2026-07-08"))
       val (event2, event2Data) = createApplicationSubmittedDomainEvent(
         application = application2,
         occurredAt = newerSubmitted,
@@ -144,6 +145,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           preferredAreas = event2Data.eventDetails.preferredAreas.toString(),
           hdcEligibilityDate = event2Data.eventDetails.hdcEligibilityDate,
           conditionalReleaseDate = event2Data.eventDetails.conditionalReleaseDate,
+          accommodationStartDate = application2.accommodationStartDate,
           submittedAt = event2.occurredAt.toString().split(".").first(),
           submittedBy = event2Data.eventDetails.submittedBy.staffMember.username.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
@@ -160,6 +162,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           preferredAreas = event1Data.eventDetails.preferredAreas.toString(),
           hdcEligibilityDate = event1Data.eventDetails.hdcEligibilityDate,
           conditionalReleaseDate = event1Data.eventDetails.conditionalReleaseDate,
+          accommodationStartDate = null,
           submittedAt = event1.occurredAt.toString().split(".").first(),
           submittedBy = event1Data.eventDetails.submittedBy.staffMember.username.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),

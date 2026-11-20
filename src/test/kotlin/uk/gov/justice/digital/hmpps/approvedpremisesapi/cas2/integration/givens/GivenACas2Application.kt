@@ -68,6 +68,7 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
   latestStatus: Cas2AssessmentStatus? = null,
   latestStatusSet: OffsetDateTime = OffsetDateTime.now(),
   conditionalReleaseDate: LocalDate? = null,
+  accommodationStartDate: LocalDate? = null,
 ): Cas2ApplicationEntity {
   val application = cas2ApplicationEntityFactory.produceAndPersist {
     withCreatedByUser(
@@ -84,6 +85,7 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
     withSubmittedAt(submittedAt)
     withServiceOrigin(Cas2ServiceOrigin.BAIL)
     withConditionalReleaseDate(conditionalReleaseDate)
+    withAccommodationStartDate(accommodationStartDate)
   }
 
   if (latestStatus != null) {
