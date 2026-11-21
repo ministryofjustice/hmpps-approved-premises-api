@@ -576,7 +576,6 @@ Table: `placement_applications_placeholder` | Entity: `PlacementApplicationPlace
 | `id` | uuid | UUID | no | PK |  |  |  |
 | `application_id` | uuid | UUID | no | FK |  | ManyToOne → applications |  |
 | `submitted_at` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
-| `expected_arrival_date` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `archived` | boolean | Boolean | no |  |  |  |  |
 
 ### placement_requests

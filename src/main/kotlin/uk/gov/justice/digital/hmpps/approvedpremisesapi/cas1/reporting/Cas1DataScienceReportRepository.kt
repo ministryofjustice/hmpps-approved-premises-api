@@ -56,12 +56,13 @@ class Cas1DataScienceReportRepository(
                 pap.application_id as app_id,
                 pap.id as placement_id,
                 pap.submitted_at :: date as placement_submitted_at,
-                pap.expected_arrival_date :: date as placement_expected_arrival_date,
+                apa.expected_arrival_date as placement_expected_arrival_date,
                 null :: boolean as placement_is_withdrawn,
                 null :: text as placement_decision,
                 'original_application' as placement_source
             from
                 placement_applications_placeholder pap
+                inner join approved_premises_applications apa on apa.id = pap.application_id
             where
                 pap.submitted_at is not null
                 and pap.archived is not true

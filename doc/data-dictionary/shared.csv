@@ -195,7 +195,6 @@ shared,assessment_referral_history_system_notes,AssessmentReferralHistorySystemN
 shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,id,uuid,UUID,no,PK,,,
 shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> applications,
 shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,submitted_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
-shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,expected_arrival_date,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
 shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,archived,boolean,Boolean,no,,,,
 shared,extensions,ExtensionEntity,id,uuid,UUID,no,PK,,,@Deprecated
 shared,extensions,ExtensionEntity,previous_departure_date,date,LocalDate,no,,,,@Deprecated

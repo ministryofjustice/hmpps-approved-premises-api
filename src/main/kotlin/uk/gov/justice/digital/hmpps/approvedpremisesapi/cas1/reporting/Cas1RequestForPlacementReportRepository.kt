@@ -31,7 +31,7 @@ class Cas1RequestForPlacementReportRepository(
     pr.id AS internal_placement_request_id,
     pap.id AS request_for_placement_id, 
     'STANDARD' AS request_for_placement_type,
-    to_char(pap.expected_arrival_date, 'YYYY-MM-DD') AS requested_arrival_date,
+    to_char(apa.expected_arrival_date, 'YYYY-MM-DD') AS requested_arrival_date,
     apa.requested_placement_duration AS requested_duration,
     to_char(CAST(a.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
     null AS parole_decision_date,
