@@ -3,9 +3,9 @@ import java.net.InetSocketAddress
 import java.net.Socket
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.15"
-  kotlin("plugin.spring") version "2.4.20"
-  kotlin("plugin.jpa") version "2.4.20"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.1.1"
+  kotlin("plugin.spring") version "2.4.21"
+  kotlin("plugin.jpa") version "2.4.21"
   id("dev.detekt") version "2.0.0-alpha.6"
 }
 
@@ -24,7 +24,7 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  val hmppsSpringBootStarterVersion = "3.0.3"
+  val hmppsSpringBootStarterVersion = "3.1.0"
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsSpringBootStarterVersion")
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
@@ -39,8 +39,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.7.2-jre")
-  implementation("org.javers:javers-core:7.11.9")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
+  implementation("org.javers:javers-core:7.12.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.1")
   constraints {
     implementation("org.webjars:swagger-ui:5.34.1") {
       because("swagger-ui 5.34.0 bundles DOMPurify 3.4.16 (CVE-2026-116802/3/4), fixed in 5.34.1")
@@ -53,7 +53,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-4:8.63.0")
+  implementation("io.sentry:sentry-spring-boot-4:8.65.0")
 
   runtimeOnly("org.postgresql:postgresql:42.7.14")
   runtimeOnly("org.ehcache:ehcache")
@@ -73,23 +73,23 @@ dependencies {
   implementation("io.arrow-kt:arrow-core:2.3.0")
 
   implementation("com.opencsv:opencsv:5.12.0")
-  implementation("software.amazon.awssdk:s3:2.57.2")
+  implementation("software.amazon.awssdk:s3:2.59.7")
 
-  val shedLockVersion = "7.10.1"
+  val shedLockVersion = "7.11.0"
   implementation("net.javacrumbs.shedlock:shedlock-spring:$shedLockVersion")
   implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:$shedLockVersion")
 
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
-  implementation("uk.gov.service.notify:notifications-java-client:6.2.0-RELEASE")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.6.0")
+  implementation("uk.gov.service.notify:notifications-java-client:6.2.1-RELEASE")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.12")
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.4.3")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.8.6")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.10.0")
   // Used directly in our tests for JSON response assertions.
   // Also aligned with the approach used in the SAR team's tests.
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:6.4.0")
