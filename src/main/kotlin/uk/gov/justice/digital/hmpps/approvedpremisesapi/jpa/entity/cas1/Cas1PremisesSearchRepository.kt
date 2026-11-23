@@ -73,7 +73,7 @@ FROM
     ap.allow_new_space_bookings = true AND
     (:gender = 'ANY' OR (ap.gender = :gender)) AND
     (:cruManagementAreaIdsCount = 0 OR (ap.cas1_cru_management_area_id IN (:cruManagementAreaIds)))
-  GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name, premises_chars.property_name_array, room_chars.property_name_array   
+  GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name, aa.identifier, premises_chars.property_name_array, room_chars.property_name_array   
 ) AS result
 WHERE
 (
