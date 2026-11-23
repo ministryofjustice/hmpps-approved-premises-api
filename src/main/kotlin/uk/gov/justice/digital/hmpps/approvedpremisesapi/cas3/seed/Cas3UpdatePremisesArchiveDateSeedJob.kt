@@ -51,12 +51,13 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
   private val seedLogger: SeedLogger,
   private val clock: Clock,
 ) : SeedJob<Cas3UpdatePremisesArchiveDateSeedJob.Row>(
-  requiredHeaders = setOf("premises_id", "current_archive_date", "required_archive_date"),
+  requiredHeaders = setOf("premises_id", "current_archive_date", "required_archive_date", "required_start_date"),
 ) {
   override fun deserializeRow(columns: Map<String, String>) = Row(
     premisesId = UUID.fromString(columns.getValue("premises_id").trim()),
     currentArchiveDate = LocalDate.parse(columns.getValue("current_archive_date").trim()),
     requiredArchiveDate = LocalDate.parse(columns.getValue("required_archive_date").trim()),
+    requiredStartDate = LocalDate.parse(columns.getValue("required_start_date").trim()),
   )
 
   override fun processRow(row: Row) {
@@ -65,7 +66,7 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
 
     validatePremisesIsArchived(premises)
     validateRequiredArchiveDateIsNotInFuture(row, premises)
-    validateDates(row, "CAS3 premises ${premises.id}", premises.startDate, premises.endDate)
+    validateDates(row, "CAS3 premises ${premises.id}", row.requiredStartDate, premises.endDate)
     validateCanArchivePremises(row)
 
     updatePremisesArchiveDate(row, premises)
@@ -105,6 +106,7 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
   }
 
   private fun updatePremisesArchiveDate(row: Row, premises: Cas3PremisesEntity) {
+    premises.startDate = row.requiredStartDate
     premises.endDate = row.requiredArchiveDate
     premisesRepository.save(premises)
     logArchiveDateUpdate(row, "CAS3 premises", premises.id)
@@ -200,5 +202,6 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
     val premisesId: UUID,
     val currentArchiveDate: LocalDate,
     val requiredArchiveDate: LocalDate,
+    val requiredStartDate: LocalDate,
   )
 }
