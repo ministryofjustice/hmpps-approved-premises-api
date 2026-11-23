@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2ApplicationsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2BackfillAccommodationStartDateSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2BackfillManualRoshAnswersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcApplicationsSeedJob
@@ -125,6 +126,7 @@ class SeedService(
         SeedFileType.updateInboxEventStatus -> getBean(UpdateInboxEventStatusSeedJob::class)
         SeedFileType.cas1cas3UserMerge -> getBean(Cas1Cas3UserMergeJob::class)
         SeedFileType.cas2BackfillManualRoshAnswers -> getBean(Cas2BackfillManualRoshAnswersSeedJob::class)
+        SeedFileType.cas2BackfillAccommodationStartDate -> getBean(Cas2BackfillAccommodationStartDateSeedJob::class)
       }
 
       val seedStarted = LocalDateTime.now()

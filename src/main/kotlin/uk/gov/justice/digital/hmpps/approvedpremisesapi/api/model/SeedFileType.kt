@@ -50,4 +50,5 @@ enum class SeedFileType(@get:JsonValue val value: String) {
   cas3UpdatePremisesPostcode("cas3_update_premises_postcode"),
   cas3UpdatePremisesSuppressArchiveLimits("cas3_update_premises_suppress_archive_limits"),
   cas2BackfillManualRoshAnswers("cas2_backfill_manual_rosh_answers"),
+  cas2BackfillAccommodationStartDate("cas2_backfill_accommodation_start_date"),
 }
