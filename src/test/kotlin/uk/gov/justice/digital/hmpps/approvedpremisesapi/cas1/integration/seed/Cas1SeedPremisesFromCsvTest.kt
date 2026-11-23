@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.ApprovedPremisesSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
@@ -76,16 +77,10 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
   }
 
   @Test
-  fun `Attempting to create an Approved Premises with an incorrectly service-scoped characteristic logs an error`() {
+  fun `Attempting to create an Approved Premises with a missing characteristic logs an error`() {
     val probationRegion = givenAProbationRegion()
 
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-
-    cas1CharacteristicEntityFactory.produceAndPersist {
-      withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
-      withPropertyName("isCatered")
-      withModelScope("premises")
-    }
 
     seed(
       SeedFileType.approvedPremises,
@@ -186,7 +181,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
       "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender, " +
-      "supportsSpaceBookings, managerDetails, fullAddress, isMHAPElliottHouse, isMHAPStJosephs]"
+      "supportsSpaceBookings, managerDetails, fullAddress, isMHAPElliottHouse, isMHAPStJosephs, cruManagementAreaName]"
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -274,6 +269,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       withId(UUID.randomUUID())
       withProbationRegion(originalProbationRegion)
       withLocalAuthorityArea(originalLocalAuthorityArea)
+      withCruManagementArea(givenACas1CruManagementArea())
       withQCode("OLD Q-CODE")
     }
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.ApprovedPremisesRoomsSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -24,17 +25,12 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
   }
 
   @Test
-  fun `Attempting to create an AP room with an incorrectly service-scoped characteristic logs an error`() {
+  fun `Attempting to create an AP room with a missing characteristic logs an error`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withApCode("NEABC")
       withProbationRegion(givenAProbationRegion())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
-    }
-
-    cas1CharacteristicEntityFactory.produceAndPersist {
-      withId(UUID.fromString("8e04628f-2cdd-4d9a-8ae7-27689d7daa73"))
-      withPropertyName("isArsonSuitable")
-      withModelScope("room")
+      withCruManagementArea(givenACas1CruManagementArea())
     }
 
     seed(
@@ -65,6 +61,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       withApCode("NEABC")
       withProbationRegion(givenAProbationRegion())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+      withCruManagementArea(givenACas1CruManagementArea())
     }
 
     cas1CharacteristicEntityFactory.produceAndPersist {
@@ -183,6 +180,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       withApCode("NEABC")
       withProbationRegion(givenAProbationRegion())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+      withCruManagementArea(givenACas1CruManagementArea())
     }
 
     val rowRoom4A = ApprovedPremisesRoomsSeedCsvRowFactory()
@@ -245,6 +243,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       withApCode("NEABC")
       withProbationRegion(givenAProbationRegion())
       withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+      withCruManagementArea(givenACas1CruManagementArea())
     }
 
     // create a room with one bed
