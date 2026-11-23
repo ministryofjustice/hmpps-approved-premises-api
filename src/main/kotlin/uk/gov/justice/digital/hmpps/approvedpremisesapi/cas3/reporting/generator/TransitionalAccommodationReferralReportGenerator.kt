@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.propertie
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.toYesNo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
@@ -63,10 +64,10 @@ class TransitionalAccommodationReferralReportGenerator :
           destinationRegion = referralData.previousReferralProbationRegionName?.let { referralData.probationRegionName },
           destinationPdu = referralData.previousReferralPduName?.let { referralData.pduName },
           referralSubmittedDate = referralData.referralSubmittedDate?.toLocalDate(),
-          referralRejected = (referralData.referralRejectionReason != null).toYesNo(),
-          rejectionReason = referralData.referralRejectionReason,
-          rejectionReasonExplained = referralData.referralRejectionReasonDetail,
-          rejectionDate = if (AssessmentDecision.REJECTED.name == referralData.assessmentDecision) referralData.assessmentSubmittedDate?.toLocalDate() else null,
+          referralRejected = referralData.isAssessmentRejected().toYesNo(),
+          rejectionReason = if (referralData.isAssessmentRejected()) referralData.referralRejectionReason else null,
+          rejectionReasonExplained = if (referralData.isAssessmentRejected()) referralData.referralRejectionReasonDetail else null,
+          rejectionDate = if (referralData.isAssessmentRejected()) referralData.assessmentSubmittedDate?.toLocalDate() else null,
           sourceOfReferral = referralData.referralEligibilityReason,
           prisonReleaseType = referralData.prisonReleaseTypes,
           prisonAtReferral = referralData.prisonNameOnCreation,
@@ -79,6 +80,8 @@ class TransitionalAccommodationReferralReportGenerator :
         ),
       )
     }
+
+  private fun TransitionalAccommodationReferralReportData.isAssessmentRejected() = AssessmentDecision.REJECTED.name == this.assessmentDecision
 
   override fun filter(properties: TransitionalAccommodationReferralReportProperties): (TransitionalAccommodationReferralReportDataAndPersonInfo) -> Boolean = {
     true
