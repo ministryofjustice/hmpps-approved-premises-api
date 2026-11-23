@@ -15,13 +15,17 @@ class Cas2BackfillAccommodationStartDateSeedJobTest : SeedTestBase() {
   @Test
   fun `backfills only submitted other applications with an answer and no existing date`() {
     val user = cas2UserEntityFactory.produceAndPersist()
-    val eligible = givenApplication(user)
+    val eligible = givenApplication(
+      user,
+      data = """{"cohort-selection":{"accommodation-start-date":{"accommodationStartDate":"2026-10-01","accommodationStartDate-day":"01","accommodationStartDate-month":"10","accommodationStartDate-year":"2026"}}}""",
+    )
     val anotherEligible = givenApplication(user, data = dataWithDate("2026-12-15"))
     val existing = givenApplication(user, date = LocalDate.parse("2026-11-20"))
     val draft = givenApplication(user, submitted = false)
     val differentOrigin = givenApplication(user, origin = ApplicationOrigin.prisonBail)
-    val missingAnswer = givenApplication(user, data = """{"cohorts":{}}""")
-    val nullAnswer = givenApplication(user, data = """{"cohorts":{"accommodation-start-date":{"accommodationStartDate":null}}}""")
+    val missingAnswer = givenApplication(user, data = """{"cohort-selection":{}}""")
+    val nullAnswer = givenApplication(user, data = """{"cohort-selection":{"accommodation-start-date":{"accommodationStartDate":null}}}""")
+    val wrongSection = givenApplication(user, data = """{"cohorts":{"accommodation-start-date":{"accommodationStartDate":"2026-10-01"}}}""")
     val noData = givenApplication(user, data = null)
 
     seed(SeedFileType.cas2BackfillAccommodationStartDate, "run\ntrue\n")
@@ -34,6 +38,7 @@ class Cas2BackfillAccommodationStartDateSeedJobTest : SeedTestBase() {
     assertThat(dateFor(differentOrigin)).isNull()
     assertThat(dateFor(missingAnswer)).isNull()
     assertThat(dateFor(nullAnswer)).isNull()
+    assertThat(dateFor(wrongSection)).isNull()
     assertThat(dateFor(noData)).isNull()
     assertThat(logEntries).noneMatch { it.level == "error" }
     assertThat(logEntries).anyMatch { it.message == "Backfilled accommodation start dates for 2 applications" }
@@ -56,7 +61,7 @@ class Cas2BackfillAccommodationStartDateSeedJobTest : SeedTestBase() {
   @Test
   fun `a non-string answer fails with the application id`() {
     val user = cas2UserEntityFactory.produceAndPersist()
-    val invalid = givenApplication(user, data = """{"cohorts":{"accommodation-start-date":{"accommodationStartDate":123}}}""")
+    val invalid = givenApplication(user, data = """{"cohort-selection":{"accommodation-start-date":{"accommodationStartDate":123}}}""")
 
     seed(SeedFileType.cas2BackfillAccommodationStartDate, "run\ntrue\n")
 
@@ -92,5 +97,5 @@ class Cas2BackfillAccommodationStartDateSeedJobTest : SeedTestBase() {
 
   private fun dateFor(application: Cas2ApplicationEntity) = cas2ApplicationRepository.findById(application.id).orElseThrow().accommodationStartDate
 
-  private fun dataWithDate(date: String) = """{"cohorts":{"accommodation-start-date":{"accommodationStartDate":"$date"}}}"""
+  private fun dataWithDate(date: String) = """{"cohort-selection":{"accommodation-start-date":{"accommodationStartDate":"$date"}}}"""
 }

@@ -36,7 +36,7 @@ class Cas2BackfillAccommodationStartDateSeedJob(
   private fun accommodationStartDate(application: Cas2ApplicationEntity): LocalDate? {
     val data = application.data ?: return null
     val answer = jsonMapper.readTree(data)
-      .path("cohorts")
+      .path("cohort-selection")
       .path("accommodation-start-date")
       .path("accommodationStartDate")
     if (answer.isMissingNode || answer.isNull) return null
