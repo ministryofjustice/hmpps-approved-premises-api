@@ -99,6 +99,9 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   )
   fun findAllSubmittedWithManualRoshInformation(createdAfter: OffsetDateTime): List<Cas2ApplicationEntity>
 
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun findAllByApplicationOriginAndSubmittedAtIsNotNullAndAccommodationStartDateIsNull(applicationOrigin: ApplicationOrigin): List<Cas2ApplicationEntity>
+
   @Query(
     """
     SELECT a
