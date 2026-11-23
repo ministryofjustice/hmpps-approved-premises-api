@@ -77,14 +77,61 @@ jobs:
       artifact-name: 'unit-test-results'
     secrets: inherit
 
-  integration_test:
-    name: Integration Test
+  integration_test_sharding_tests:
+    name: Integration test sharding code tests
     runs-on: ubuntu-latest
-    needs: gradle_build
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: 'false'
+
+      - name: Test integration test sharding code
+        run: python3 -m unittest discover -s script -p test_integration_test_shards.py
+
+  determine_integration_test_shards:
+    name: Determine integration test shards
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      matrix: ${{ steps.split-tests.outputs.matrix }}
+      shards: ${{ steps.split-tests.outputs.shards }}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: 'false'
+
+      - name: Download latest main-branch integration timings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p integration-timings
+          run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=integration-test-timings&per_page=100" \
+            --jq '[.artifacts[] | select(.expired == false and .workflow_run.head_branch == "main" and .workflow_run.head_repository_id == .workflow_run.repository_id)] | sort_by(.created_at) | last | .workflow_run.id // empty')
+          if [ -n "$run_id" ]; then
+            echo "Using integration timings from run $run_id"
+            gh run download "$run_id" --name integration-test-timings --dir integration-timings
+          else
+            echo "No previous main-branch integration timings found; using round-robin allocation"
+          fi
+
+      - name: Determine tests splitting
+        id: split-tests
+        run: python3 script/integration_test_shards.py split --shards 12 --timings-dir integration-timings
+
+  integration_test:
+    name: Integration Test (${{ matrix.shard.number }})
+    runs-on: ubuntu-latest
+    needs: [gradle_build, determine_integration_test_shards]
     strategy:
       fail-fast: false
       matrix:
-        shard: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+        shard: ${{ fromJSON(needs.determine_integration_test_shards.outputs.matrix) }}
     env:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
@@ -145,22 +192,36 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
 
-      - name: Determine tests splitting
-        id: split-tests
-        run: ./script/split_tests ${{ strategy.job-index }} ${{ strategy.job-total }}
-
       - name: Run integration test
+        env:
+          TEST_SUITE: ${{ toJSON(fromJSON(needs.determine_integration_test_shards.outputs.shards)[matrix.shard.index]) }}
         run: |
-          # Format the arguments to "./gradlew integrationTest"
-          SPECS_LIST=$(echo  ${{ steps.split-tests.outputs.test-suite }} | sed 's/src\/test\/kotlin\///g;s/\//./g;s/\.kt/ /g;s/,/ /g' | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
-          echo "Prepared arguments for Gradle: $SPECS_LIST"
-          ./gradlew integrationTest $SPECS_LIST
+          specs=$(jq -er 'if type == "array" and length > 0 and all(.[]; type == "string" and length > 0) then .[] else error("Invalid integration test shard") end' <<< "$TEST_SUITE")
+          args=()
+          while IFS= read -r spec; do
+            args+=(--tests "$spec")
+          done <<< "$specs"
+          ./gradlew integrationTest "${args[@]}"
+
+      - name: Collect integration test timings
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: python3 script/integration_test_shards.py collect build/test-results/integrationTest integration-timings-${{ matrix.shard.number }}.json
+
+      - name: Upload integration test timings
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: integration-test-timing-part-${{ matrix.shard.number }}
+          path: integration-timings-${{ matrix.shard.number }}.json
+          retention-days: 7
+          if-no-files-found: error
+          overwrite: true
 
       - name: Upload raw test reports on failure
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: integration-test-results-${{ matrix.shard }}-of-${{ strategy.job-total }}
+          name: integration-test-results-${{ matrix.shard.number }}-of-${{ strategy.job-total }}
           path: |
             build/test-results
             build/reports/tests
@@ -176,3 +237,27 @@ jobs:
           fail-on-error: false
           list-suites: 'failed'
           list-tests: 'failed'
+
+  publish_integration_timings:
+    name: Publish integration test timings
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: integration_test
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Download integration test timings
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: integration-test-timing-part-*
+          path: integration-timings
+          merge-multiple: true
+
+      - name: Publish integration test timings
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: integration-test-timings
+          path: integration-timings/*.json
+          retention-days: 90
+          if-no-files-found: error
+          overwrite: true

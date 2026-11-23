@@ -9,6 +9,7 @@ on:
 jobs:
   verify:
     permissions:
+      actions: read
       contents: read
     name: Verify
     uses: ./.github/workflows/verify.yml
