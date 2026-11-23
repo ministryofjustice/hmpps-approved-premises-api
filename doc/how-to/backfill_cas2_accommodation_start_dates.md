@@ -1,7 +1,7 @@
 # Backfill CAS2 accommodation start dates
 
 The `cas2_backfill_accommodation_start_date` seed job copies the answer at
-`data.cohorts["accommodation-start-date"].accommodationStartDate` into
+`data["cohort-selection"]["accommodation-start-date"].accommodationStartDate` into
 `cas_2_applications.accommodation_start_date` for submitted applications with
 origin `other` and a null column. Existing dates are not overwritten and
 applications without an answer are unchanged.
