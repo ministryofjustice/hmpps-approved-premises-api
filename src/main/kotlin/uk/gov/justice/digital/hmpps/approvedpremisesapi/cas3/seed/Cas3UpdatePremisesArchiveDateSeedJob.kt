@@ -12,7 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Beds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ArchiveService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedException
@@ -21,7 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLog
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
 import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
@@ -29,17 +33,32 @@ import java.util.UUID
 /**
  * This seed job can be used to modify the most recent archive date for a premises
  *
- * This date will propagate to any bedspaces archived at the same point in time
+ * Because a premises start date is also modified when unarchiving (set to the
+ * current date), the seed job also allows this date to be modified too
  *
- * The required archive date must be today or in the past.
+ * These date changes will propagate to bedspaces
  *
  * The same validation applied when archiving via the UI will be applied (e.g.
  * if there is a booking that ends after the archive date, this will fail)
  *
- * This seed job should be used as an option of last resort. If possible the user
- * should unarchive and rearchive the premises on the correct date. A limit to this
- * approach is that after unarchiving the user cannot re-archive to an earlier date
- * in time.
+ * This seed job should be used as an option of last resort and with care, reviewing
+ * the changes made. Note that this can leave some domain event fields in an
+ * inconsistent state (e.g. unarchive event currentEndDate)
+ *
+ * If possible the user should unarchive and rearchive the premises on the correct date.
+ * A limit to this approach is that after unarchiving the user cannot re-archive to an earlier
+ * date in time because unarchiving changes the start date to today's date
+ *
+ * If this seed job is used regularly, consider revising the UI/API logic to NOT
+ * set the start date to today's date on unarchive and leave it as-is OR if that's
+ * not possible, set it to the original start date (found via domain events).
+ *
+ * Users would then be able to 'self-service' fixing archive dates, making use of
+ * Cas3UpdatePremisesSuppressArchiveLimitsSeedJob when necessary.
+ *
+ * This is assuming there is a reason that it is set to the current date on unarchive.
+ *
+ * For more on this, see the documentation on Cas3ArchiveService.unarchivePremises
  */
 @Component
 class Cas3UpdatePremisesArchiveDateSeedJob(
@@ -69,10 +88,11 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
     validateDates(row, "CAS3 premises ${premises.id}", row.requiredStartDate, premises.endDate)
     validateCanArchivePremises(row)
 
+    val premisesUnarchiveTransactionId = updatePremisesUnarchiveDomainEvent(row, premises)
     updatePremisesArchiveDate(row, premises)
     val transactionId = updatePremisesArchiveDomainEvent(row, premises)
 
-    updateBedspaceArchiveDates(row, transactionId)
+    updateBedspaceArchiveDates(row, transactionId, premisesUnarchiveTransactionId)
   }
 
   private fun validatePremisesIsArchived(premises: Cas3PremisesEntity) {
@@ -106,16 +126,41 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
   }
 
   private fun updatePremisesArchiveDate(row: Row, premises: Cas3PremisesEntity) {
+    val currentStartDate = premises.startDate
     premises.startDate = row.requiredStartDate
     premises.endDate = row.requiredArchiveDate
     premisesRepository.save(premises)
+    if (currentStartDate != row.requiredStartDate) {
+      logDateUpdate("CAS3 premises", premises.id, "start date", currentStartDate, row.requiredStartDate)
+    }
     logArchiveDateUpdate(row, "CAS3 premises", premises.id)
+  }
+
+  private fun updatePremisesUnarchiveDomainEvent(row: Row, premises: Cas3PremisesEntity): UUID? {
+    if (premises.startDate == row.requiredStartDate) return null
+
+    val premisesUnarchiveDomainEvent = domainEventRepository.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(
+      premises.id,
+      CAS3_PREMISES_UNARCHIVED,
+    ) ?: return null
+    val premisesUnarchiveEventPayload = readDomainEventPayload(premisesUnarchiveDomainEvent, CAS3PremisesUnarchiveEvent::class.java)
+    val currentStartDate = premises.startDate
+    validateDomainEventStartDateIsMostRecent(premisesUnarchiveDomainEvent, premisesUnarchiveEventPayload.eventDetails.newStartDate, currentStartDate)
+
+    val updatedPremisesUnarchiveEventPayload = premisesUnarchiveEventPayload.copy(
+      eventDetails = premisesUnarchiveEventPayload.eventDetails.copy(newStartDate = row.requiredStartDate),
+    )
+    domainEventRepository.save(premisesUnarchiveDomainEvent.copy(data = jsonMapper.writeValueAsString(updatedPremisesUnarchiveEventPayload)))
+    logDateUpdate("CAS3 premises unarchive domain event", premisesUnarchiveDomainEvent.id, "start date", currentStartDate, row.requiredStartDate)
+
+    return premisesUnarchiveDomainEvent.cas3TransactionId
+      ?: throw SeedException("Unarchive event ${premisesUnarchiveDomainEvent.id} has no transaction ID")
   }
 
   private fun updatePremisesArchiveDomainEvent(row: Row, premises: Cas3PremisesEntity): UUID {
     val premisesDomainEvent = domainEventRepository.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_ARCHIVED)
       ?: throw SeedException("No active archive event found for CAS3 premises ${premises.id}")
-    val premisesDomainEventPayload = readArchiveDomainEvent(premisesDomainEvent, CAS3PremisesArchiveEvent::class.java)
+    val premisesDomainEventPayload = readDomainEventPayload(premisesDomainEvent, CAS3PremisesArchiveEvent::class.java)
     validateDomainEventEndDateIsMostRecent(premisesDomainEvent, premisesDomainEventPayload.eventDetails.endDate, row.currentArchiveDate)
 
     val updatedPremisesDomainEventPayload = premisesDomainEventPayload.copy(
@@ -130,28 +175,76 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
 
   private fun updateBedspaceArchiveDates(
     row: Row,
-    transactionId: UUID,
+    premisesArchiveTransactionId: UUID,
+    premisesUnarchiveTransactionId: UUID?,
   ) {
-    domainEventRepository.findByCas3TransactionIdAndType(transactionId, CAS3_BEDSPACE_ARCHIVED)
+    val bedspaceUnarchiveEvents = premisesUnarchiveTransactionId?.let {
+      domainEventRepository.findByCas3TransactionIdAndType(it, CAS3_BEDSPACE_UNARCHIVED)
+        .filter { event -> event.cas3CancelledAt == null }
+    }.orEmpty()
+
+    domainEventRepository.findByCas3TransactionIdAndType(premisesArchiveTransactionId, CAS3_BEDSPACE_ARCHIVED)
       .filter { bedspaceDomainEvent -> bedspaceDomainEvent.cas3CancelledAt == null }
       .forEach { bedspaceDomainEvent ->
         val bedspace = findArchivedBedspace(row.premisesId, bedspaceDomainEvent)
         validateLatestBedspaceArchiveDomainEvent(bedspaceDomainEvent, bedspace.id)
-        validateDates(row, "CAS3 bedspace ${bedspace.id}", bedspace.startDate, bedspace.endDate)
+        val matchingUnarchiveEvents = bedspaceUnarchiveEvents.filter { it.cas3BedspaceId == bedspace.id }
+        if (matchingUnarchiveEvents.size > 1) {
+          throw SeedException("Multiple matching active unarchive events found for CAS3 bedspace ${bedspace.id}")
+        }
+        val bedspaceUnarchiveDomainEvent = matchingUnarchiveEvents.singleOrNull()
+        val isBedspaceStartDateBeingCorrected = bedspaceUnarchiveDomainEvent != null
+        val correctedStartDate = if (isBedspaceStartDateBeingCorrected) row.requiredStartDate else bedspace.startDate
+        validateDates(row, "CAS3 bedspace ${bedspace.id}", correctedStartDate, bedspace.endDate)
 
-        bedspace.endDate = row.requiredArchiveDate
-        bedspacesRepository.save(bedspace)
+        if (bedspaceUnarchiveDomainEvent != null) {
+          updateBedspaceUnarchiveDomainEvent(row, bedspace, bedspaceUnarchiveDomainEvent)
+        }
+
+        bedspacesRepository.save(
+          bedspace.copy(
+            startDate = correctedStartDate,
+            endDate = row.requiredArchiveDate,
+          ),
+        )
+        if (isBedspaceStartDateBeingCorrected) {
+          logDateUpdate("CAS3 bedspace", bedspace.id, "start date", bedspace.startDate, row.requiredStartDate)
+        }
         logArchiveDateUpdate(row, "CAS3 bedspace", bedspace.id)
 
         updateBedspaceArchiveDomainEvent(row, bedspaceDomainEvent)
       }
   }
 
+  private fun updateBedspaceUnarchiveDomainEvent(
+    row: Row,
+    bedspace: Cas3BedspacesEntity,
+    bedspaceUnarchiveDomainEvent: DomainEventEntity,
+  ) {
+    val bedspaceUnarchiveEventPayload = readDomainEventPayload(bedspaceUnarchiveDomainEvent, CAS3BedspaceUnarchiveEvent::class.java)
+
+    val latestUnarchiveDomainEvent = domainEventRepository.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(
+      bedspace.id,
+      CAS3_BEDSPACE_UNARCHIVED,
+    )
+    if (latestUnarchiveDomainEvent?.id != bedspaceUnarchiveDomainEvent.id) {
+      throw SeedException("Unarchive event ${bedspaceUnarchiveDomainEvent.id} is no longer the latest active unarchive for CAS3 bedspace ${bedspace.id}")
+    }
+
+    validateDomainEventStartDateIsMostRecent(bedspaceUnarchiveDomainEvent, bedspaceUnarchiveEventPayload.eventDetails.newStartDate, bedspace.startDate)
+
+    val updatedBedspaceUnarchiveEventPayload = bedspaceUnarchiveEventPayload.copy(
+      eventDetails = bedspaceUnarchiveEventPayload.eventDetails.copy(newStartDate = row.requiredStartDate),
+    )
+    domainEventRepository.save(bedspaceUnarchiveDomainEvent.copy(data = jsonMapper.writeValueAsString(updatedBedspaceUnarchiveEventPayload)))
+    logDateUpdate("CAS3 bedspace unarchive domain event", bedspaceUnarchiveDomainEvent.id, "start date", bedspace.startDate, row.requiredStartDate)
+  }
+
   private fun updateBedspaceArchiveDomainEvent(
     row: Row,
     bedspaceDomainEvent: DomainEventEntity,
   ) {
-    val bedspaceDomainEventPayload = readArchiveDomainEvent(bedspaceDomainEvent, CAS3BedspaceArchiveEvent::class.java)
+    val bedspaceDomainEventPayload = readDomainEventPayload(bedspaceDomainEvent, CAS3BedspaceArchiveEvent::class.java)
     validateDomainEventEndDateIsMostRecent(bedspaceDomainEvent, bedspaceDomainEventPayload.eventDetails.endDate, row.currentArchiveDate)
     val updatedBedspaceDomainEventPayload = bedspaceDomainEventPayload.copy(
       eventDetails = bedspaceDomainEventPayload.eventDetails.copy(endDate = row.requiredArchiveDate),
@@ -162,6 +255,15 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
 
   private fun logArchiveDateUpdate(row: Row, entityType: String, entityId: UUID) {
     val message = "Updated archive date for $entityType $entityId from ${row.currentArchiveDate} to ${row.requiredArchiveDate}"
+    logAfterCommit(message)
+  }
+
+  private fun logDateUpdate(entityType: String, entityId: UUID, dateType: String, currentDate: LocalDate, requiredDate: LocalDate) {
+    val message = "Updated $dateType for $entityType $entityId from $currentDate to $requiredDate"
+    logAfterCommit(message)
+  }
+
+  private fun logAfterCommit(message: String) {
     TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
       override fun afterCommit() {
         seedLogger.info(message)
@@ -183,18 +285,24 @@ class Cas3UpdatePremisesArchiveDateSeedJob(
     }
   }
 
-  private fun <T> readArchiveDomainEvent(domainEvent: DomainEventEntity, type: Class<T>): T = try {
+  private fun <T> readDomainEventPayload(domainEvent: DomainEventEntity, type: Class<T>): T = try {
     jsonMapper.readerFor(type)
       // Do not silently drop fields we cannot write back.
       .with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .readValue(domainEvent.data)
   } catch (exception: JsonProcessingException) {
-    throw SeedException("Archive event ${domainEvent.id} does not match the ${type.simpleName} payload", exception)
+    throw SeedException("Domain event ${domainEvent.id} does not match the ${type.simpleName} payload", exception)
   }
 
   private fun validateDomainEventEndDateIsMostRecent(domainEvent: DomainEventEntity, endDate: LocalDate, expectedEndDate: LocalDate) {
     if (endDate != expectedEndDate) {
       throw SeedException("Most recent premises archive event ${domainEvent.id} does not have the expected end date $expectedEndDate")
+    }
+  }
+
+  private fun validateDomainEventStartDateIsMostRecent(domainEvent: DomainEventEntity, startDate: LocalDate, expectedStartDate: LocalDate) {
+    if (startDate != expectedStartDate) {
+      throw SeedException("Most recent unarchive event ${domainEvent.id} does not have the expected start date $expectedStartDate")
     }
   }
 
