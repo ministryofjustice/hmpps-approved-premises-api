@@ -33,5 +33,4 @@ data class BookingCancelled(
 
   @get:JsonProperty("cancellationRecordedAt", required = true) val cancellationRecordedAt: java.time.Instant,
 
-  val appealChangeRequestId: UUID? = null,
 ) : Cas1DomainEventPayload
