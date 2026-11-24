@@ -20,8 +20,8 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
@@ -346,7 +346,7 @@ class Cas3AssessmentServiceTest {
   }
 
   @Nested
-  inner class Cas3UpdateAssessment {
+  inner class UpdateAssessment {
     @Test
     fun `an invalid assessment id returns a validation error`() {
       val assessmentId = UUID.randomUUID()
@@ -509,10 +509,9 @@ class Cas3AssessmentServiceTest {
     private fun updateAssessmentEntity(
       releaseDate: LocalDate?,
       accommodationRequiredFromDate: LocalDate?,
-    ): UpdateAssessment = UpdateAssessment(
+    ): Cas3UpdateAssessment = Cas3UpdateAssessment(
       releaseDate = releaseDate,
       accommodationRequiredFromDate = accommodationRequiredFromDate,
-      data = emptyMap(),
     )
 
     private fun assessmentEntity(user: UserEntity): TemporaryAccommodationAssessmentEntity = TemporaryAccommodationAssessmentEntityFactory()
