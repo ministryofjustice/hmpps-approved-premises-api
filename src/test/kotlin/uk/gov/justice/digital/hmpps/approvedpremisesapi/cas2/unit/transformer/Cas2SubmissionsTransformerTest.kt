@@ -144,6 +144,7 @@ class Cas2SubmissionsTransformerTest {
         currentPrisonCode = null,
         assignmentDate = null,
         cohort = Cas2Cohort.COURT_BAIL,
+        nacroReferralId = "NACRO123",
       )
 
       val personSummary = Cas2PersonSummary.Summary(crn = "CRN123", name = "Example Offender")
@@ -158,6 +159,7 @@ class Cas2SubmissionsTransformerTest {
         createdByUserId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
         createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
+        nacroReferralId = "NACRO123",
         cohort = Cas2CohortDto.COURT_BAIL,
         personSummary = personSummaryDto,
       )

@@ -281,7 +281,7 @@ class Cas2ApplicationServiceTest {
         )
       } returns page
 
-      val (applicationSummaries, metadata) = cas2ApplicationService.getAllSubmittedCas2ApplicationsForAssessor(pageCriteria)
+      val (applicationSummaries, metadata) = cas2ApplicationService.getAllSubmittedCas2ApplicationsForAssessor(pageCriteria, null)
 
       assertThat(applicationSummaries).isEqualTo(listOf(cas2v2ApplicationSummary))
       assertThat(metadata?.currentPage).isEqualTo(3)

@@ -44,13 +44,14 @@ class Cas2SubmissionsController(
   @GetMapping("/submissions")
   fun submissionsGet(
     @RequestParam page: Int?,
+    @RequestParam crnNomisOrNacroRef: String?,
   ): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
     userService.ensureUserPersisted()
 
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
 
-    val (applications, metadata) = cas2ApplicationService.getAllSubmittedCas2ApplicationsForAssessor(PageCriteria(sortBy, sortDirection, page))
+    val (applications, metadata) = cas2ApplicationService.getAllSubmittedCas2ApplicationsForAssessor(PageCriteria(sortBy, sortDirection, page), crnNomisOrNacroRef)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),

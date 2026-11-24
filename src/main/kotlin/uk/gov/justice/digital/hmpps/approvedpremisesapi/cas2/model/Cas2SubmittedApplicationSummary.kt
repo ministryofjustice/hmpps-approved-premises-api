@@ -18,6 +18,8 @@ data class Cas2SubmittedApplicationSummary(
 
   @get:JsonProperty("nomsNumber") val nomsNumber: String? = null,
 
+  @get:JsonProperty("nacroReferralId") val nacroReferralId: String? = null,
+
   @get:JsonProperty("submittedAt") val submittedAt: Instant? = null,
 
   @get:JsonProperty("applicationOrigin") val applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,

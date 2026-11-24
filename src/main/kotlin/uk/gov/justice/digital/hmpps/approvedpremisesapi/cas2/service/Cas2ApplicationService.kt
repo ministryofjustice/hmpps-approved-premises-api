@@ -131,10 +131,21 @@ class Cas2ApplicationService(
     return Pair(response.content.map { it.toCas2ApplicationSummary() }, metadata)
   }
 
-  fun getAllSubmittedCas2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
+  fun getAllSubmittedCas2ApplicationsForAssessor(pageCriteria: PageCriteria<String>, crnNomisOrNacroRef: String?): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
-    val response = cas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(Cas2ServiceOrigin.BAIL.toString(), pageable)
+    val response = if (crnNomisOrNacroRef == null) {
+      cas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(
+        Cas2ServiceOrigin.BAIL.toString(),
+        pageable,
+      )
+    } else {
+      cas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNullAndCrnOrNomsNumberOrNacroReferralId(
+        Cas2ServiceOrigin.BAIL.toString(),
+        "%$crnNomisOrNacroRef%",
+        pageable,
+      )
+    }
 
     val metadata = getMetadata(response, pageCriteria)
 

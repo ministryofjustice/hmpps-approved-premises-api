@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
@@ -166,7 +168,7 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetToIndex {
+  inner class GetSubmissions {
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API `() {
       cas2UserRepository.deleteAll()
@@ -210,6 +212,11 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
                 withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
+            val submittedCas2AssessmentEntitySecond = cas2AssessmentEntityFactory.produceAndPersist {
+              withApplication(submittedCas2ApplicationEntitySecond)
+              withNacroReferralId("NACRO-SECOND")
+            }
+
             val submittedCas2ApplicationEntityFirst = cas2ApplicationEntityFactory
               .produceAndPersist {
                 withCreatedByUser(user)
@@ -220,6 +227,10 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
                 withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
+            val submittedCas2AssessmentEntityFirst = cas2AssessmentEntityFactory.produceAndPersist {
+              withApplication(submittedCas2ApplicationEntityFirst)
+            }
+
             val submittedCas2ApplicationEntityThird = cas2ApplicationEntityFactory
               .produceAndPersist {
                 withCreatedByUser(user)
@@ -229,6 +240,11 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
                 withData("{}")
                 withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
+
+            val submittedCas2AssessmentEntityThird = cas2AssessmentEntityFactory.produceAndPersist {
+              withApplication(submittedCas2ApplicationEntityThird)
+              withNacroReferralId("NACRO-THIRD")
+            }
 
             val inProgressCas2ApplicationEntity = cas2ApplicationEntityFactory
               .produceAndPersist {
@@ -266,18 +282,21 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
             assertApplicationResponseMatchesExpected(
               responseBody[0],
               submittedCas2ApplicationEntityFirst,
+              submittedCas2AssessmentEntityFirst.nacroReferralId,
               offenderDetails,
             )
 
             assertApplicationResponseMatchesExpected(
               responseBody[1],
               submittedCas2ApplicationEntitySecond,
+              submittedCas2AssessmentEntitySecond.nacroReferralId,
               offenderDetails,
             )
 
             assertApplicationResponseMatchesExpected(
               responseBody[2],
               submittedCas2ApplicationEntityThird,
+              submittedCas2AssessmentEntityThird.nacroReferralId,
               offenderDetails,
             )
 
@@ -292,6 +311,7 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
     private fun assertApplicationResponseMatchesExpected(
       response: Cas2SubmittedApplicationSummary,
       expectedSubmittedApplication: Cas2ApplicationEntity,
+      expectedNacroReferralId: String?,
       offenderDetails: OffenderDetailSummary,
     ) {
       Assertions.assertThat(response).matches {
@@ -300,7 +320,8 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
           expectedSubmittedApplication.createdAt.toInstant() == it.createdAt &&
           expectedSubmittedApplication.createdByUser.id == it.createdByUserId &&
-          expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
+          expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt &&
+          expectedNacroReferralId == it.nacroReferralId
       }
 
       Assertions.assertThat(response.personSummary).isEqualTo(
@@ -368,6 +389,161 @@ class Cas2ApplicationSubmissionTest : IntegrationTestBase() {
           apDeliusContextVerifyUserAccessCalls(times = 0)
         }
       }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "CRN-SEARCH-ONE, crn",
+      "SEARCH-ONE, crn",
+      "NOMS-SEARCH-TWO, noms",
+      "SEARCH-TWO, noms",
+      "NACRO-SEARCH-THREE, nacro",
+      "SEARCH-THREE, nacro",
+    )
+    fun `returns submitted applications matching CRN NOMIS or Nacro reference`(search: String, matchedField: String) {
+      givenACas2v2Assessor { _, jwt ->
+        givenACas2v2PomUser { user, _ ->
+          val crnOffender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCrn("CRN-SEARCH-ONE")
+              withNomsNumber("NOMS-OTHER-ONE")
+            },
+          ).first
+
+          val nomsOffender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCrn("CRN-OTHER-TWO")
+              withNomsNumber("NOMS-SEARCH-TWO")
+            },
+          ).first
+
+          val crnApplication = createSubmittedApplication(
+            crn = crnOffender.otherIds.crn,
+            nomsNumber = crnOffender.otherIds.nomsNumber!!,
+            nacroReferralId = "NACRO-OTHER-ONE",
+            user = user,
+          )
+
+          val nomsApplication = createSubmittedApplication(
+            crn = nomsOffender.otherIds.crn,
+            nomsNumber = nomsOffender.otherIds.nomsNumber!!,
+            nacroReferralId = "NACRO-OTHER-TWO",
+            user = user,
+          )
+
+          val nacroApplication = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCrn("CRN-OTHER-THREE")
+              withNomsNumber("NOMS-OTHER-THREE")
+            },
+          ).first.let { offender ->
+            createSubmittedApplication(
+              crn = offender.otherIds.crn,
+              nomsNumber = offender.otherIds.nomsNumber!!,
+              nacroReferralId = "NACRO-SEARCH-THREE",
+              user = user,
+            )
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2/submissions?page=1&crnNomisOrNacroRef=$search")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 1)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = jsonMapper.readValue(
+            rawResponseBody,
+            object : TypeReference<List<Cas2SubmittedApplicationSummary>>() {},
+          )
+
+          val expectedApplication = when (matchedField) {
+            "crn" -> crnApplication
+            "noms" -> nomsApplication
+            "nacro" -> nacroApplication
+            else -> throw IllegalArgumentException("Unexpected matched field: $matchedField")
+          }
+
+          Assertions.assertThat(responseBody).extracting<UUID> { it.id }
+            .containsExactly(expectedApplication.id)
+        }
+      }
+    }
+
+    @Test
+    fun `returns an empty list when no submitted application matches the search parameter`() {
+      givenACas2v2Assessor { _, jwt ->
+        givenACas2v2PomUser { user, _ ->
+          val offender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCrn("CRN-NO-MATCH")
+              withNomsNumber("NOMS-NO-MATCH")
+            },
+          ).first
+
+          createSubmittedApplication(
+            crn = offender.otherIds.crn,
+            nomsNumber = offender.otherIds.nomsNumber!!,
+            nacroReferralId = "NACRO-NO-MATCH",
+            user = user,
+          )
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2/submissions?page=1&crnNomisOrNacroRef=DOES-NOT-EXIST")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 0)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 0)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = jsonMapper.readValue(
+            rawResponseBody,
+            object : TypeReference<List<Cas2SubmittedApplicationSummary>>() {},
+          )
+
+          Assertions.assertThat(responseBody).isEmpty()
+        }
+      }
+    }
+
+    private fun createSubmittedApplication(
+      crn: String,
+      nomsNumber: String,
+      nacroReferralId: String,
+      user: Cas2UserEntity,
+    ): Cas2ApplicationEntity {
+      val application = cas2ApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(user)
+        withCrn(crn)
+        withNomsNumber(nomsNumber)
+        withSubmittedAt(OffsetDateTime.now())
+        withData("{}")
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      }
+
+      cas2AssessmentEntityFactory.produceAndPersist {
+        withApplication(application)
+        withNacroReferralId(nacroReferralId)
+        withAssessorName("Assessor name")
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      }
+
+      return application
     }
   }
 
