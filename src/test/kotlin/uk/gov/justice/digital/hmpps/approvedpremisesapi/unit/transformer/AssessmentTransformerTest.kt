@@ -9,26 +9,19 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferralHistorySystemNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferralHistoryUserNoteEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
@@ -40,13 +33,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentCl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
-import java.time.OffsetDateTime
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -70,7 +59,6 @@ class AssessmentTransformerTest {
   @MockK
   lateinit var userService: UserService
 
-  private val risksTransformer = RisksTransformer()
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
 
   @InjectMockKs
@@ -93,80 +81,6 @@ class AssessmentTransformerTest {
     every { mockUserTransformer.transformJpaToApi(any(), ServiceName.temporaryAccommodation) } returns temporaryAccommodationUser
     every { mockUserTransformer.transformCas1JpaToApi(any()) } returns approvedPremisesUser
     every { mockApplicationsTransformer.transformJpaToCas1Application(any(), any()) } returns mockk<Cas1Application>()
-  }
-
-  @Nested
-  inner class TransformDomainToApiCas3 {
-
-    @Test
-    fun `transform domain to api summary - temporary application`() {
-      val domainSummary = DomainAssessmentSummaryImpl(
-        type = "temporary-accommodation",
-        id = UUID.randomUUID(),
-        applicationId = UUID.randomUUID(),
-        createdAt = Instant.now(),
-        riskRatings = null,
-        arrivalDate = null,
-        completed = false,
-        decision = null,
-        crn = randomStringMultiCaseWithNumbers(6),
-        allocated = true,
-        status = null,
-        dueAt = null,
-        probationDeliveryUnitName = "test pdu name",
-      )
-
-      every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
-      val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
-
-      assertThat(apiSummary).isInstanceOf(TemporaryAccommodationAssessmentSummary::class.java)
-      apiSummary as TemporaryAccommodationAssessmentSummary
-      assertThat(apiSummary.id).isEqualTo(domainSummary.id)
-      assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
-      assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
-      assertThat(apiSummary.status).isEqualTo(TemporaryAccommodationAssessmentStatus.inReview)
-      assertThat(apiSummary.decision).isNull()
-      assertThat(apiSummary.risks).isNull()
-      assertThat(apiSummary.person).isNotNull
-      assertThat(apiSummary.probationDeliveryUnitName).isEqualTo("test pdu name")
-    }
-  }
-
-  @Nested
-  inner class TransformDomainToApiCas1 {
-
-    @Test
-    fun `transform domain to api summary - approved premises`() {
-      val personRisks = PersonRisksFactory().produce()
-      val domainSummary = DomainAssessmentSummaryImpl(
-        type = "approved-premises",
-        id = UUID.randomUUID(),
-        applicationId = UUID.randomUUID(),
-        createdAt = Instant.now(),
-        riskRatings = jsonMapper.writeValueAsString(personRisks),
-        arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toInstant(),
-        completed = false,
-        decision = "ACCEPTED",
-        crn = randomStringMultiCaseWithNumbers(6),
-        allocated = true,
-        status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE,
-        dueAt = Instant.now(),
-        probationDeliveryUnitName = null,
-      )
-
-      every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
-      val apiSummary = assessmentTransformer.transformDomainToApiSummary(domainSummary, mockk())
-
-      assertThat(apiSummary).isInstanceOf(ApprovedPremisesAssessmentSummary::class.java)
-      apiSummary as ApprovedPremisesAssessmentSummary
-      assertThat(apiSummary.id).isEqualTo(domainSummary.id)
-      assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
-      assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
-      assertThat(apiSummary.arrivalDate).isEqualTo(domainSummary.arrivalDate)
-      assertThat(apiSummary.status).isEqualTo(ApprovedPremisesAssessmentStatus.awaitingResponse)
-      assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
-      assertThat(apiSummary.person).isNotNull
-    }
   }
 
   @Nested
