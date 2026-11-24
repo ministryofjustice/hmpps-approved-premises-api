@@ -13,6 +13,7 @@ interface FeatureFlagService {
   companion object {
     const val FEATURE_FLAG_USE_TIER_V3: String = "use-tier-v3"
     const val FEATURE_FLAG_DATA_SCIENCE_REPORTS_SCHEDULED_JOB_ENABLED: String = "data-science-reports-scheduled-job-enabled"
+    const val FEATURE_FLAG_CAS1_EXCLUDE_ARCHIVED_TIMELINE_EVENTS: String = "cas1-exclude-archived-timeline-events"
   }
 }
 

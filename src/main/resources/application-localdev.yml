@@ -12,6 +12,7 @@ domain-events:
 
 feature-flags:
   cas1-disable-overbooking-summary: true
+  cas1-exclude-archived-timeline-events: true
 
 hmpps.sqs:
   provider: localstack

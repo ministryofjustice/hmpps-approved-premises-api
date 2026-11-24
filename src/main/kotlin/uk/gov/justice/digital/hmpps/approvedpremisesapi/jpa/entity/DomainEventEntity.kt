@@ -533,6 +533,12 @@ enum class DomainEventType(
       Cas1TimelineEventType.matchRequestWithdrawn,
       payloadType = MatchRequestWithdrawn::class,
       apiType = Cas1EventType.matchRequestWithdrawn,
+      /**
+       * This type has been superseded by APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN
+       * This was backfilled, so a APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN will
+       * exist for every corresponding APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN
+       */
+      archived = true,
     ),
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED(
@@ -699,4 +705,9 @@ data class Cas1DomainEventTypeInfo(
   val emittable: Boolean = true,
   val payloadType: KClass<out Cas1DomainEventPayload>,
   val apiType: Cas1EventType,
+  /**
+   * If true, events of this type are excluded from timelines
+   * (when the exclude archived timeline events feature flag is enabled).
+   */
+  val archived: Boolean = false,
 )
