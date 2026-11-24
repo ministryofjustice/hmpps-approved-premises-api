@@ -284,6 +284,7 @@ refresh-inmate-details-cache:
 
 feature-flags:
   cas1-disable-overbooking-summary: false
+  cas1-exclude-archived-timeline-events: true
 
 s3:
   bucket-name: "test-bucket"

@@ -420,6 +420,17 @@ See also `doc/how-to/best-practice-jpa-entities.md`.
   `application*.yml`, overridden per-environment via env vars), not Flipt for new
   work. See `doc/how-to/add-a-feature-flag.md`. First decide whether a flag is
   actually warranted; provide a safe default (usually `false`) and a test default.
+* Checklist for a new flag (kebab-case key):
+  * Add a `FEATURE_FLAG_*` constant to the `FeatureFlagService` companion and
+    inject `FeatureFlagService` wherever it is used (services are fine, not just
+    controllers — the how-to doc only mentions controllers).
+  * Default in `application.yml`; override in `application-localdev.yml` and
+    `src/test/resources/application-test.yml` where needed.
+  * Set it explicitly in **every** `helm_deploy/values-{development,test,preprod,prod}.yaml`
+    as `FEATURE-FLAGS_<KEY-IN-UPPER-KEBAB>: true|false` (include prod even when
+    it is `false`, so the intent is visible).
+  * Unit tests: mock `FeatureFlagService`. Integration tests: toggle with
+    `mockFeatureFlagService.setFlag(...)` (reset automatically per test).
 
 ---
 

@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_CAS1_EXCLUDE_ARCHIVED_TIMELINE_EVENTS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
@@ -16,6 +18,7 @@ class Cas1TimelineService(
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val domainEventService: Cas1DomainEventService,
   private val cas1applicationTimelineTransformer: Cas1ApplicationTimelineTransformer,
+  private val featureFlagService: FeatureFlagService,
 ) {
   fun getSpaceBookingTimeline(bookingId: UUID): List<Cas1TimelineEvent> = toTimelineEvents(domainEventService.getAllDomainEventsForSpaceBooking(bookingId))
 
@@ -35,7 +38,10 @@ class Cas1TimelineService(
     }
   }
 
-  private fun toTimelineEvents(domainEvents: List<DomainEventSummary>) = domainEvents.map {
-    cas1applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
+  private fun toTimelineEvents(domainEvents: List<DomainEventSummary>): List<Cas1TimelineEvent> {
+    val excludeArchived = featureFlagService.getBooleanFlag(FEATURE_FLAG_CAS1_EXCLUDE_ARCHIVED_TIMELINE_EVENTS)
+    return domainEvents
+      .filterNot { excludeArchived && it.type.cas1Info?.archived == true }
+      .map { cas1applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it) }
   }
 }
