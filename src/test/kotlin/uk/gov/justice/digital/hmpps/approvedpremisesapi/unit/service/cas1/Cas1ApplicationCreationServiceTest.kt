@@ -647,13 +647,13 @@ class Cas1ApplicationCreationServiceTest {
     private var defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
       translatedDocument = {},
       isWomensApplication = false,
-      isEmergencyApplication = false,
       targetLocation = "SW1A 1AA",
       releaseType = ReleaseTypeOption.licence,
       type = "CAS1",
       sentenceType = SentenceTypeOption.nonStatutory,
       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
       caseManagerIsNotApplicant = false,
+      noticeType = Cas1ApplicationTimelinessCategory.standard,
       apType = ApType.normal,
       requestedPlacementDuration = 10,
       requestedPlacementPeriod = null,
@@ -729,7 +729,6 @@ class Cas1ApplicationCreationServiceTest {
         translatedDocument = {},
         apType = ApType.pipe,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -819,7 +818,6 @@ class Cas1ApplicationCreationServiceTest {
         translatedDocument = {},
         apType = ApType.pipe,
         isWomensApplication = false,
-        isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -827,14 +825,10 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        noticeType = null,
+        noticeType = noticeType,
         requestedPlacementDuration = 10,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
-          arrival = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
-            LocalDate.now().plusDays(10)
-          } else {
-            LocalDate.now().plusMonths(7)
-          },
+          arrival = LocalDate.now().plusDays(10),
           arrivalFlexible = null,
           duration = 10,
         ),
@@ -904,7 +898,6 @@ class Cas1ApplicationCreationServiceTest {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isWomensApplication = false,
-        isEmergencyApplication = false,
         apType = apType,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
@@ -913,7 +906,7 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        noticeType = null,
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         requestedPlacementDuration = 10,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
           arrival = LocalDate.now().plusMonths(7),
@@ -987,7 +980,6 @@ class Cas1ApplicationCreationServiceTest {
         translatedDocument = {},
         apType = ApType.pipe,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -996,6 +988,7 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         requestedPlacementDuration = 10,
       )
 
@@ -1068,7 +1061,6 @@ class Cas1ApplicationCreationServiceTest {
         translatedDocument = {},
         apType = ApType.pipe,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -1077,6 +1069,7 @@ class Cas1ApplicationCreationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = false,
         caseManagerUserDetails = null,
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         requestedPlacementDuration = 10,
       )
 
@@ -1176,7 +1169,6 @@ class Cas1ApplicationCreationServiceTest {
         translatedDocument = {},
         apType = ApType.pipe,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",

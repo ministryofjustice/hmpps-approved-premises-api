@@ -686,7 +686,6 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "targetLocation",
         releaseType = ReleaseTypeOption.notApplicable,
         type = "CAS1",

@@ -12,9 +12,6 @@ data class SubmitApprovedPremisesApplication(
   val sentenceType: SentenceTypeOption,
   override val type: String,
   val isWomensApplication: Boolean? = null,
-  @Schema(description = "noticeType should be used to indicate if this an emergency application")
-  @Deprecated(message = "noticeType should be used to indicate if this an emergency application")
-  val isEmergencyApplication: Boolean? = null,
   val situation: SituationOption? = null,
   @Schema(description = "The placement duration requested by the applicant, which may be the default duration if not overridden, which itself maybe null. This will be provided even if requestedPlacementPeriod is null")
   val requestedPlacementDuration: Int? = null,
@@ -22,7 +19,7 @@ data class SubmitApprovedPremisesApplication(
   val applicantUserDetails: Cas1ApplicationUserDetails? = null,
   val caseManagerIsNotApplicant: Boolean? = null,
   val caseManagerUserDetails: Cas1ApplicationUserDetails? = null,
-  val noticeType: Cas1ApplicationTimelinessCategory? = null,
+  val noticeType: Cas1ApplicationTimelinessCategory,
   val reasonForShortNotice: String? = null,
   val reasonForShortNoticeOther: String? = null,
   val licenseExpiryDate: java.time.LocalDate? = null,

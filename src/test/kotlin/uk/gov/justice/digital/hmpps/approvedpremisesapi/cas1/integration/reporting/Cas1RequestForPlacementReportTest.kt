@@ -668,7 +668,6 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         },
         translatedDocument = {},
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "targetLocation",
         releaseType = ReleaseTypeOption.notApplicable,
         type = "CAS1",
