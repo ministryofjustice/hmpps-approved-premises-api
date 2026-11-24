@@ -4,28 +4,41 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
+  @Autowired
+  private lateinit var cas3PremisesService: Cas3PremisesService
+
   private val currentDate = LocalDate.of(2026, 11, 15)
   private val requiredDate = currentDate.minusDays(7)
   private val startDate = requiredDate.minusMonths(1)
@@ -35,7 +48,14 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     val premises = givenACas3Premises(id = UUID.randomUUID(), status = Cas3PremisesStatus.archived, startDate = startDate, endDate = null)
     val premisesDomainEvent = createPremisesArchiveDomainEvent(premises.id, UUID.randomUUID())
 
-    seedCorrection("${premises.id},${LocalDate.now()},$requiredDate")
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = LocalDate.now(),
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = startDate,
+      ),
+    )
 
     assertError(1, "CAS3 premises ${premises.id} is not currently archived")
     assertThat(cas3PremisesRepository.findById(premises.id).get().endDate).isNull()
@@ -48,7 +68,14 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     val premises = givenACas3Premises(id = UUID.randomUUID(), status = Cas3PremisesStatus.archived, startDate = startDate, endDate = futureArchiveDate)
     val premisesDomainEvent = createPremisesArchiveDomainEvent(premises.id, UUID.randomUUID())
 
-    seedCorrection("${premises.id},$futureArchiveDate,$requiredDate")
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = futureArchiveDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = startDate,
+      ),
+    )
 
     assertError(1, "CAS3 premises ${premises.id} is not currently archived")
     assertThat(cas3PremisesRepository.findById(premises.id).get().endDate).isEqualTo(futureArchiveDate)
@@ -60,7 +87,14 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     val premises = givenACas3Premises(id = UUID.randomUUID(), status = Cas3PremisesStatus.online, startDate = startDate, endDate = currentDate)
     val premisesDomainEvent = createPremisesArchiveDomainEvent(premises.id, UUID.randomUUID())
 
-    seedCorrection("${premises.id},$currentDate,$requiredDate")
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = startDate,
+      ),
+    )
 
     assertError(1, "CAS3 premises ${premises.id} has status online, expected archived")
     assertThat(cas3PremisesRepository.findById(premises.id).get().endDate).isEqualTo(currentDate)
@@ -73,11 +107,222 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     val premisesDomainEvent = createPremisesArchiveDomainEvent(premises.id, UUID.randomUUID())
     val futureDate = LocalDate.now(clock).plusDays(1)
 
-    seedCorrection("${premises.id},$currentDate,$futureDate")
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = futureDate,
+        requiredStartDate = startDate,
+      ),
+    )
 
     assertError(1, "CAS3 premises ${premises.id} cannot have an archive date in the future ($futureDate)")
     assertThat(cas3PremisesRepository.findById(premises.id).get().endDate).isEqualTo(currentDate)
     assertDomainEventEndDate(premisesDomainEvent, currentDate)
+  }
+
+  @Test
+  fun `rejects a correction with a required archive date before the required start date`() {
+    val requiredStartDate = requiredDate.plusDays(1)
+    val premises = givenACas3Premises(id = UUID.randomUUID(), status = Cas3PremisesStatus.archived, startDate = startDate, endDate = currentDate)
+    val premisesDomainEvent = createPremisesArchiveDomainEvent(premises.id, UUID.randomUUID())
+
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = requiredStartDate,
+      ),
+    )
+
+    assertError(1, "CAS3 premises ${premises.id} cannot have an archive date before its start date $requiredStartDate")
+    val unchangedPremises = cas3PremisesRepository.findById(premises.id).get()
+    assertThat(unchangedPremises.startDate).isEqualTo(startDate)
+    assertThat(unchangedPremises.endDate).isEqualTo(currentDate)
+    assertDomainEventEndDate(premisesDomainEvent, currentDate)
+  }
+
+  @Test
+  fun `updates premises start date and validates archive date against the required start date`() {
+    val requiredStartDate = requiredDate.minusDays(2)
+    val premises = givenACas3Premises(id = UUID.randomUUID(), status = Cas3PremisesStatus.archived, startDate = requiredDate.plusDays(1), endDate = currentDate)
+    createPremisesArchiveDomainEvent(premises.id, UUID.randomUUID())
+
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = requiredStartDate,
+      ),
+    )
+
+    val updatedPremises = cas3PremisesRepository.findById(premises.id).get()
+    assertThat(updatedPremises.startDate).isEqualTo(requiredStartDate)
+    assertThat(updatedPremises.endDate).isEqualTo(requiredDate)
+  }
+
+  @Test
+  fun `updates reopened premises and linked bedspaces and reconciles unarchive history when re-archiving`() {
+    val requiredStartDate = requiredDate.minusDays(5)
+    val reopenedStartDate = requiredDate.plusDays(2)
+    val currentArchiveDate = requiredDate.plusDays(7)
+    val originalStartDate = requiredStartDate.minusMonths(2)
+    val premises = givenACas3Premises(
+      id = UUID.randomUUID(),
+      status = Cas3PremisesStatus.archived,
+      startDate = reopenedStartDate,
+      endDate = currentArchiveDate,
+    )
+    val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withStartDate(reopenedStartDate)
+      withEndDate(currentArchiveDate)
+    }
+    val unarchiveTransactionId = UUID.randomUUID()
+    val archiveTransactionId = UUID.randomUUID()
+    val premisesUnarchiveEvent = createPremisesUnarchiveDomainEvent(
+      premisesId = premises.id,
+      currentStartDate = originalStartDate,
+      newStartDate = reopenedStartDate,
+      currentEndDate = requiredStartDate.minusDays(1),
+      transactionId = unarchiveTransactionId,
+    )
+    val bedspaceUnarchiveEvent = createBedspaceUnarchiveDomainEvent(
+      premisesId = premises.id,
+      bedspaceId = bedspace.id,
+      currentStartDate = originalStartDate,
+      currentEndDate = requiredStartDate.minusDays(1),
+      newStartDate = reopenedStartDate,
+      transactionId = unarchiveTransactionId,
+    )
+    val premisesArchiveEvent = createPremisesArchiveDomainEvent(premises.id, archiveTransactionId, currentArchiveDate)
+    val bedspaceArchiveEvent = createBedspaceArchiveDomainEvent(premises.id, bedspace.id, archiveTransactionId, archiveDate = currentArchiveDate)
+
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentArchiveDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = requiredStartDate,
+      ),
+    )
+
+    val updatedPremises = cas3PremisesRepository.findById(premises.id).get()
+    val updatedBedspace = cas3BedspacesRepository.findById(bedspace.id).get()
+    assertThat(updatedPremises.startDate).isEqualTo(requiredStartDate)
+    assertThat(updatedPremises.endDate).isEqualTo(requiredDate)
+    assertThat(updatedBedspace.startDate).isEqualTo(requiredStartDate)
+    assertThat(updatedBedspace.endDate).isEqualTo(requiredDate)
+    assertThat(jsonMapper.readTree(domainEventRepository.findById(premisesUnarchiveEvent.id).get().data)["eventDetails"]["newStartDate"].asText())
+      .isEqualTo(requiredStartDate.toString())
+    assertThat(jsonMapper.readTree(domainEventRepository.findById(bedspaceUnarchiveEvent.id).get().data)["eventDetails"]["newStartDate"].asText())
+      .isEqualTo(requiredStartDate.toString())
+    assertDomainEventEndDate(premisesArchiveEvent, requiredDate)
+    assertDomainEventEndDate(bedspaceArchiveEvent, requiredDate)
+    assertThat(extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises.id)))
+      .containsExactlyInAnyOrder(
+        Cas3PremisesArchiveAction(Cas3PremisesStatus.online, requiredStartDate),
+        Cas3PremisesArchiveAction(Cas3PremisesStatus.archived, requiredDate),
+      )
+  }
+
+  @Test
+  fun `rejects a start date correction when the active premises unarchive event does not match the current start date`() {
+    val requiredStartDate = requiredDate.minusDays(5)
+    val currentStartDate = requiredDate.plusDays(2)
+    val premises = givenACas3Premises(
+      id = UUID.randomUUID(),
+      status = Cas3PremisesStatus.archived,
+      startDate = currentStartDate,
+      endDate = currentDate,
+    )
+    val staleUnarchiveEvent = createPremisesUnarchiveDomainEvent(
+      premisesId = premises.id,
+      currentStartDate = startDate,
+      newStartDate = currentStartDate.minusDays(1),
+      currentEndDate = requiredDate.minusDays(2),
+      transactionId = UUID.randomUUID(),
+    )
+    createPremisesArchiveDomainEvent(premises.id, UUID.randomUUID())
+
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = requiredStartDate,
+      ),
+    )
+
+    assertError(
+      1,
+      "Most recent unarchive event ${staleUnarchiveEvent.id} does not have the expected start date $currentStartDate",
+    )
+    val unchangedPremises = cas3PremisesRepository.findById(premises.id).get()
+    assertThat(unchangedPremises.startDate).isEqualTo(currentStartDate)
+    assertThat(unchangedPremises.endDate).isEqualTo(currentDate)
+    assertThat(jsonMapper.readTree(domainEventRepository.findById(staleUnarchiveEvent.id).get().data)["eventDetails"]["newStartDate"].asText())
+      .isEqualTo(currentStartDate.minusDays(1).toString())
+  }
+
+  @Test
+  fun `rejects a start date correction when a linked bedspace unarchive event does not match its current start date`() {
+    val requiredStartDate = requiredDate.minusDays(5)
+    val reopenedStartDate = requiredDate.plusDays(2)
+    val currentArchiveDate = requiredDate.plusDays(7)
+    val premises = givenACas3Premises(
+      id = UUID.randomUUID(),
+      status = Cas3PremisesStatus.archived,
+      startDate = reopenedStartDate,
+      endDate = currentArchiveDate,
+    )
+    val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withStartDate(reopenedStartDate)
+      withEndDate(currentArchiveDate)
+    }
+    val unarchiveTransactionId = UUID.randomUUID()
+    val archiveTransactionId = UUID.randomUUID()
+    val premisesUnarchiveEvent = createPremisesUnarchiveDomainEvent(
+      premisesId = premises.id,
+      currentStartDate = startDate,
+      newStartDate = reopenedStartDate,
+      currentEndDate = requiredDate.minusDays(1),
+      transactionId = unarchiveTransactionId,
+    )
+    val staleBedspaceUnarchiveEvent = createBedspaceUnarchiveDomainEvent(
+      premisesId = premises.id,
+      bedspaceId = bedspace.id,
+      currentStartDate = startDate,
+      currentEndDate = requiredDate.minusDays(1),
+      newStartDate = reopenedStartDate.minusDays(1),
+      transactionId = unarchiveTransactionId,
+    )
+    createPremisesArchiveDomainEvent(premises.id, archiveTransactionId, currentArchiveDate)
+    createBedspaceArchiveDomainEvent(premises.id, bedspace.id, archiveTransactionId, archiveDate = currentArchiveDate)
+
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentArchiveDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = requiredStartDate,
+      ),
+    )
+
+    assertError(
+      1,
+      "Most recent unarchive event ${staleBedspaceUnarchiveEvent.id} does not have the expected start date $reopenedStartDate",
+    )
+    assertThat(cas3PremisesRepository.findById(premises.id).get().startDate).isEqualTo(reopenedStartDate)
+    assertThat(cas3BedspacesRepository.findById(bedspace.id).get().startDate).isEqualTo(reopenedStartDate)
+    assertThat(jsonMapper.readTree(domainEventRepository.findById(premisesUnarchiveEvent.id).get().data)["eventDetails"]["newStartDate"].asText())
+      .isEqualTo(reopenedStartDate.toString())
+    assertThat(
+      jsonMapper.readTree(domainEventRepository.findById(staleBedspaceUnarchiveEvent.id).get().data)["eventDetails"]["newStartDate"].asText(),
+    ).isEqualTo(reopenedStartDate.minusDays(1).toString())
   }
 
   @Test
@@ -87,7 +332,20 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     val firstDomainEvent = createPremisesArchiveDomainEvent(first.id, UUID.randomUUID())
     val staleDate = currentDate.minusDays(1)
 
-    seedCorrection("${first.id},$currentDate,$requiredDate", "${second.id},$staleDate,$requiredDate")
+    seedCorrection(
+      correctionRow(
+        premisesId = first.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = startDate,
+      ),
+      correctionRow(
+        premisesId = second.id,
+        currentArchiveDate = staleDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = startDate,
+      ),
+    )
 
     assertError(2, "CAS3 premises ${second.id} has end date $currentDate, expected $staleDate")
     assertThat(cas3PremisesRepository.findById(first.id).get().endDate).isEqualTo(currentDate)
@@ -133,7 +391,14 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
       }
     }
 
-    seedCorrection("${premises.id},$currentDate,$requiredDate")
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = startDate,
+      ),
+    )
 
     val earliestArchiveDate = requiredDate.plusDays(earliestArchiveDaysAfterRequiredDate)
     assertError(1, "CAS3 premises ${premises.id} cannot be archived on $requiredDate: $conflict (bedspace ${bedspace.id}, earliest archive date $earliestArchiveDate)")
@@ -156,7 +421,14 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     val premisesDomainEvent = createPremisesArchiveDomainEvent(premises.id, transactionId)
     val bedspaceDomainEvent = createBedspaceArchiveDomainEvent(premises.id, bedspace.id, transactionId)
 
-    seedCorrection("${premises.id},$currentDate,$requiredDate")
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = startDate,
+      ),
+    )
 
     assertError(1, "CAS3 bedspace ${bedspace.id} cannot have an archive date before its start date $bedspaceStart")
     assertThat(cas3PremisesRepository.findById(premises.id).get().endDate).isEqualTo(currentDate)
@@ -179,7 +451,14 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     val unrelatedDomainEvent = createBedspaceArchiveDomainEvent(premises.id, bedspaces[2].id, UUID.randomUUID())
     val cancelledDomainEvent = createBedspaceArchiveDomainEvent(premises.id, bedspaces[3].id, transactionId, OffsetDateTime.parse("2026-11-14T12:00:00Z"))
 
-    seedCorrection("${premises.id},$currentDate,$requiredDate")
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = requiredDate,
+        requiredStartDate = startDate,
+      ),
+    )
 
     val updatedPremises = cas3PremisesRepository.findById(premises.id).get()
     assertThat(updatedPremises.endDate).isEqualTo(requiredDate)
@@ -206,7 +485,14 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     val premises = givenACas3Premises(id = UUID.randomUUID(), status = Cas3PremisesStatus.archived, startDate = startDate, endDate = currentDate)
     createPremisesArchiveDomainEvent(premises.id, UUID.randomUUID())
 
-    seedCorrection("${premises.id},$currentDate,$today")
+    seedCorrection(
+      correctionRow(
+        premisesId = premises.id,
+        currentArchiveDate = currentDate,
+        requiredArchiveDate = today,
+        requiredStartDate = startDate,
+      ),
+    )
 
     assertThat(cas3PremisesRepository.findById(premises.id).get().endDate).isEqualTo(today)
   }
@@ -217,13 +503,21 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
 
   private fun seedCorrection(vararg rows: String) = seed(
     SeedFileType.cas3UpdatePremisesArchiveDate,
-    rows.joinToString("\n", prefix = "premises_id,current_archive_date,required_archive_date\n"),
+    rows.joinToString("\n", prefix = "premises_id,current_archive_date,required_archive_date,required_start_date\n"),
   )
+
+  private fun correctionRow(
+    premisesId: UUID,
+    currentArchiveDate: LocalDate,
+    requiredArchiveDate: LocalDate,
+    requiredStartDate: LocalDate,
+  ) = "$premisesId,$currentArchiveDate,$requiredArchiveDate,$requiredStartDate"
 
   private fun createPremisesArchiveDomainEvent(
     premisesId: UUID,
     transactionId: UUID,
-  ): DomainEventEntity = persistArchiveDomainEvent(
+    archiveDate: LocalDate = currentDate,
+  ): DomainEventEntity = persistDomainEvent(
     type = CAS3_PREMISES_ARCHIVED,
     premisesId = premisesId,
     bedspaceId = null,
@@ -231,7 +525,7 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     cancelledAt = null,
   ) { domainEventId, timestamp, userId ->
     CAS3PremisesArchiveEvent(
-      eventDetails = CAS3PremisesArchiveEventDetails(premisesId, currentDate, userId, transactionId),
+      eventDetails = CAS3PremisesArchiveEventDetails(premisesId, archiveDate, userId, transactionId),
       id = domainEventId,
       timestamp = timestamp,
       eventType = EventType.premisesArchived,
@@ -243,7 +537,8 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     bedspaceId: UUID,
     transactionId: UUID,
     cancelledAt: OffsetDateTime? = null,
-  ): DomainEventEntity = persistArchiveDomainEvent(
+    archiveDate: LocalDate = currentDate,
+  ): DomainEventEntity = persistDomainEvent(
     type = CAS3_BEDSPACE_ARCHIVED,
     premisesId = premisesId,
     bedspaceId = bedspaceId,
@@ -251,14 +546,57 @@ class Cas3UpdatePremisesArchiveDateSeedJobTest : SeedTestBase() {
     cancelledAt = cancelledAt,
   ) { domainEventId, timestamp, userId ->
     CAS3BedspaceArchiveEvent(
-      eventDetails = CAS3BedspaceArchiveEventDetails(bedspaceId, premisesId, currentDate, currentDate.plusDays(1), userId, transactionId),
+      eventDetails = CAS3BedspaceArchiveEventDetails(bedspaceId, premisesId, archiveDate, archiveDate.plusDays(1), userId, transactionId),
       id = domainEventId,
       timestamp = timestamp,
       eventType = EventType.bedspaceArchived,
     )
   }
 
-  private fun persistArchiveDomainEvent(
+  private fun createPremisesUnarchiveDomainEvent(
+    premisesId: UUID,
+    currentStartDate: LocalDate,
+    newStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    transactionId: UUID,
+  ): DomainEventEntity = persistDomainEvent(
+    type = CAS3_PREMISES_UNARCHIVED,
+    premisesId = premisesId,
+    bedspaceId = null,
+    transactionId = transactionId,
+    cancelledAt = null,
+  ) { domainEventId, timestamp, userId ->
+    CAS3PremisesUnarchiveEvent(
+      eventDetails = CAS3PremisesUnarchiveEventDetails(premisesId, currentStartDate, newStartDate, currentEndDate, userId, transactionId),
+      id = domainEventId,
+      timestamp = timestamp,
+      eventType = EventType.premisesUnarchived,
+    )
+  }
+
+  private fun createBedspaceUnarchiveDomainEvent(
+    premisesId: UUID,
+    bedspaceId: UUID,
+    currentStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    newStartDate: LocalDate,
+    transactionId: UUID,
+  ): DomainEventEntity = persistDomainEvent(
+    type = CAS3_BEDSPACE_UNARCHIVED,
+    premisesId = premisesId,
+    bedspaceId = bedspaceId,
+    transactionId = transactionId,
+    cancelledAt = null,
+  ) { domainEventId, timestamp, userId ->
+    CAS3BedspaceUnarchiveEvent(
+      eventDetails = CAS3BedspaceUnarchiveEventDetails(bedspaceId, premisesId, currentStartDate, currentEndDate, newStartDate, userId, transactionId),
+      id = domainEventId,
+      timestamp = timestamp,
+      eventType = EventType.bedspaceUnarchived,
+    )
+  }
+
+  private fun persistDomainEvent(
     type: DomainEventType,
     premisesId: UUID,
     bedspaceId: UUID?,

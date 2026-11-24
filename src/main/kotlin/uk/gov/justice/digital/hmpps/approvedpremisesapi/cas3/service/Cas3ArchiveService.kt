@@ -296,6 +296,15 @@ class Cas3ArchiveService(
     return success(archivedPremises)
   }
 
+  /**
+   * When a premises is unarchived, its start date is set to today's date
+   *
+   * This is logically inconsistent with the validation applied when archiving
+   * the premises, which only allows the archive date to be set to a date after
+   * all bookings, turnaround and voids have ended. In the case of unarchive,
+   * the start date can set to _any_ date, regardless of whether bookings, turnarounds
+   * or voids existed before that date
+   */
   fun unarchivePremises(
     premises: Cas3PremisesEntity,
     restartDate: LocalDate,
