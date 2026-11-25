@@ -26,6 +26,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeserializationV
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isTypeInThrowableChain
 
+/**
+ * Exceptions are returned as Problem+Json
+ *
+ * Whilst we use the Spring [ProblemDetail] type to manage returning problem details,
+ * because we wrap them in a ResponseEntity, the 'instance' (url) is not automatically
+ * added to the response. This is managed by interceptor registered in
+ * [uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ProblemDetailConfig]
+ *
+ * Ideally we'd look at returning the problem types directly, removing the need
+ * to manage populating `instance` ourselves
+ */
 @ControllerAdvice
 @Suppress("TooManyFunctions")
 class ExceptionHandling(
