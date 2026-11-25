@@ -44,6 +44,15 @@ interface Cas2ApplicationSummaryRepository :
   fun findAllByServiceOriginAndIdIn(serviceOrigin: String, id: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummary>
 
   fun findByServiceOriginAndSubmittedAtIsNotNull(serviceOrigin: String, pageable: Pageable): Page<Cas2ApplicationSummary>
+
+  @Query(
+    "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
+      "and ase.serviceOrigin = :serviceOrigin " +
+      "and (lower(ase.crn) like lower(:crnNomisOrNacroRef) " +
+      "or lower(ase.nomsNumber) like lower(:crnNomisOrNacroRef) " +
+      "or lower(ase.nacroReferralId) like lower(:crnNomisOrNacroRef))",
+  )
+  fun findByServiceOriginAndSubmittedAtIsNotNullAndCrnOrNomsNumberOrNacroReferralId(serviceOrigin: String, crnNomisOrNacroRef: String, pageable: Pageable): Page<Cas2ApplicationSummary>
 }
 
 /**
@@ -99,6 +108,8 @@ data class Cas2ApplicationSummaryEntity(
   @Column(name = "cohort")
   @Enumerated(EnumType.STRING)
   var cohort: Cas2Cohort? = null,
+  @Column(name = "nacro_referral_id")
+  var nacroReferralId: String? = null,
 )
 
 fun Cas2ApplicationSummaryEntity.toCas2ApplicationSummary(): Cas2ApplicationSummary = Cas2ApplicationSummaryImpl(this)
@@ -124,4 +135,5 @@ private data class Cas2ApplicationSummaryImpl(private val entity: Cas2Applicatio
   override val applicationOrigin get() = entity.applicationOrigin
   override val serviceOrigin get() = entity.serviceOrigin
   override val cohort get() = entity.cohort
+  override val nacroReferralId get() = entity.nacroReferralId
 }

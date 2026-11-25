@@ -48,6 +48,7 @@ class Cas2SubmissionsTransformer(
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     crn = jpaSummary.crn,
     nomsNumber = jpaSummary.nomsNumber,
+    nacroReferralId = jpaSummary.nacroReferralId,
     cohort = jpaSummary.cohort?.apiType,
     personSummary = personTransformer.transformCas2PersonSummaryToDto(personSummary),
   )

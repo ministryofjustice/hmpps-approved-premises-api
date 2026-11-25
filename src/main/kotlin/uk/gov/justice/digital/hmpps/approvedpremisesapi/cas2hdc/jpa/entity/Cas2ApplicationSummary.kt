@@ -25,4 +25,5 @@ interface Cas2ApplicationSummary {
   val applicationOrigin: String?
   val serviceOrigin: String?
   val cohort: Cas2Cohort?
+  val nacroReferralId: String?
 }
