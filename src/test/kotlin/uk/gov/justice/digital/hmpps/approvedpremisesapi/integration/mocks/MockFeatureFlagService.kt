@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import org.springframework.test.context.event.annotation.BeforeTestClass
 import org.springframework.test.context.event.annotation.BeforeTestMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
@@ -26,6 +27,15 @@ class MockFeatureFlagService(
   }
 
   @BeforeTestMethod
+  fun resetBeforeTestMethod() {
+    reset()
+  }
+
+  @BeforeTestClass
+  fun resetBeforeTestClass() {
+    reset()
+  }
+
   fun reset() {
     testOverrides.clear()
   }
