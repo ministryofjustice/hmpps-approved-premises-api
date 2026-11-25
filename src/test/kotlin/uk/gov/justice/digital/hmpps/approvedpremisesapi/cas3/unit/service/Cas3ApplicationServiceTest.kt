@@ -183,7 +183,7 @@ class Cas3ApplicationServiceTest {
         createdAt = inProgressApplicationNewer.createdAt,
         applicationStatus = ApplicationStatus.inProgress,
         applicationSubmittedDate = null,
-        applicationSubmittedBy = Cas3StaffDto(
+        createdBy = Cas3StaffDto(
           inProgressApplicationNewer.createdByUser.name,
           inProgressApplicationNewer.createdByUser.deliusUsername,
           inProgressApplicationNewer.createdByUser.deliusStaffCode,
@@ -271,7 +271,7 @@ class Cas3ApplicationServiceTest {
         createdAt = submittedApplication2.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication2.submittedAt!!.toLocalDate(),
-        applicationSubmittedBy = Cas3StaffDto(
+        createdBy = Cas3StaffDto(
           submittedApplication2.createdByUser.name,
           submittedApplication2.createdByUser.deliusUsername,
           submittedApplication2.createdByUser.deliusStaffCode,
@@ -344,7 +344,7 @@ class Cas3ApplicationServiceTest {
         createdAt = submittedApplication2.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication2.submittedAt!!.toLocalDate(),
-        applicationSubmittedBy = Cas3StaffDto(
+        createdBy = Cas3StaffDto(
           submittedApplication2.createdByUser.name,
           submittedApplication2.createdByUser.deliusUsername,
           submittedApplication2.createdByUser.deliusStaffCode,
@@ -404,7 +404,7 @@ class Cas3ApplicationServiceTest {
         createdAt = submittedApplication.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
-        applicationSubmittedBy = Cas3StaffDto(
+        createdBy = Cas3StaffDto(
           submittedApplication.createdByUser.name,
           submittedApplication.createdByUser.deliusUsername,
           submittedApplication.createdByUser.deliusStaffCode,
@@ -472,7 +472,7 @@ class Cas3ApplicationServiceTest {
         createdAt = submittedApplication.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
-        applicationSubmittedBy = Cas3StaffDto(
+        createdBy = Cas3StaffDto(
           submittedApplication.createdByUser.name,
           submittedApplication.createdByUser.deliusUsername,
           submittedApplication.createdByUser.deliusStaffCode,
@@ -550,7 +550,7 @@ class Cas3ApplicationServiceTest {
         createdAt = submittedApplication.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
-        applicationSubmittedBy = Cas3StaffDto(
+        createdBy = Cas3StaffDto(
           submittedApplication.createdByUser.name,
           submittedApplication.createdByUser.deliusUsername,
           submittedApplication.createdByUser.deliusStaffCode,
@@ -673,7 +673,7 @@ class Cas3ApplicationServiceTest {
         createdAt = submittedApplication.createdAt,
         applicationStatus = ApplicationStatus.submitted,
         applicationSubmittedDate = submittedApplication.submittedAt!!.toLocalDate(),
-        applicationSubmittedBy = Cas3StaffDto(
+        createdBy = Cas3StaffDto(
           submittedApplication.createdByUser.name,
           submittedApplication.createdByUser.deliusUsername,
           submittedApplication.createdByUser.deliusStaffCode,

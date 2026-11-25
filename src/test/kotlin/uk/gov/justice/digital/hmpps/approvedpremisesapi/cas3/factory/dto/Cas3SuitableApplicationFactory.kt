@@ -29,7 +29,7 @@ class Cas3SuitableApplicationFactory : Factory<Cas3ExternalCurrentApplicationDto
     uiUrl = "localhost",
     submittedApplication = submittedApplication?.let { it() },
     applicationSubmittedDate = null,
-    applicationSubmittedBy = Cas3StaffDto(name = "name", username = "username", staffCode = "code"),
+    createdBy = Cas3StaffDto(name = "name", username = "username", staffCode = "code"),
     applicationRejectedReason = null,
     assessmentStatus = null,
     bookingStatus = null,

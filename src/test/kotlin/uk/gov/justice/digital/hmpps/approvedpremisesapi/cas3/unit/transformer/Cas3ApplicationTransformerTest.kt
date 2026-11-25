@@ -142,7 +142,7 @@ class Cas3ApplicationTransformerTest {
       createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedBy = Cas3StaffDto(
+      createdBy = Cas3StaffDto(
         application.createdByUser.name,
         application.createdByUser.deliusUsername,
         application.createdByUser.deliusStaffCode,
@@ -205,7 +205,7 @@ class Cas3ApplicationTransformerTest {
       createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedBy = Cas3StaffDto(
+      createdBy = Cas3StaffDto(
         application.createdByUser.name,
         application.createdByUser.deliusUsername,
         application.createdByUser.deliusStaffCode,
@@ -269,7 +269,7 @@ class Cas3ApplicationTransformerTest {
       createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedBy = Cas3StaffDto(
+      createdBy = Cas3StaffDto(
         application.createdByUser.name,
         application.createdByUser.deliusUsername,
         application.createdByUser.deliusStaffCode,
@@ -366,7 +366,7 @@ class Cas3ApplicationTransformerTest {
       createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedBy = Cas3StaffDto(
+      createdBy = Cas3StaffDto(
         application.createdByUser.name,
         application.createdByUser.deliusUsername,
         application.createdByUser.deliusStaffCode,
@@ -454,7 +454,7 @@ class Cas3ApplicationTransformerTest {
       createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedBy = Cas3StaffDto(
+      createdBy = Cas3StaffDto(
         application.createdByUser.name,
         application.createdByUser.deliusUsername,
         application.createdByUser.deliusStaffCode,
@@ -548,7 +548,7 @@ class Cas3ApplicationTransformerTest {
       createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedBy = Cas3StaffDto(
+      createdBy = Cas3StaffDto(
         application.createdByUser.name,
         application.createdByUser.deliusUsername,
         application.createdByUser.deliusStaffCode,
@@ -658,7 +658,7 @@ class Cas3ApplicationTransformerTest {
       createdAt = application.createdAt,
       applicationStatus = ApplicationStatus.submitted,
       applicationSubmittedDate = application.submittedAt!!.toLocalDate(),
-      applicationSubmittedBy = Cas3StaffDto(
+      createdBy = Cas3StaffDto(
         application.createdByUser.name,
         application.createdByUser.deliusUsername,
         application.createdByUser.deliusStaffCode,

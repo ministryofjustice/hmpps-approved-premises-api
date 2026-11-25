@@ -19,7 +19,7 @@ data class Cas3ExternalCurrentApplicationDto(
   @Schema(deprecated = true)
   val applicationSubmittedDate: LocalDate?,
   @Schema(deprecated = true)
-  val applicationSubmittedBy: Cas3StaffDto,
+  val createdBy: Cas3StaffDto,
   @Schema(deprecated = true)
   val applicationRejectedReason: String?,
   @Schema(deprecated = true)
