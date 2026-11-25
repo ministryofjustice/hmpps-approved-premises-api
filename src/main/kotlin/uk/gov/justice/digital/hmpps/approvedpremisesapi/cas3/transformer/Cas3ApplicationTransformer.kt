@@ -67,7 +67,7 @@ class Cas3ApplicationTransformer(
       applicationStatus = application.getStatus(),
       submittedApplication = submittedApplication,
       applicationSubmittedDate = submittedApplication?.submittedDate,
-      applicationSubmittedBy = transformToStaffDto(application.createdByUser),
+      createdBy = transformToStaffDto(application.createdByUser),
       applicationRejectedReason = submittedApplication?.assessmentRejectionReason,
       assessmentStatus = submittedApplication?.assessmentStatus,
       bookingStatus = submittedApplication?.latestBooking?.status,
