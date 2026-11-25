@@ -344,7 +344,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.noms).isEqualTo("noms1")
       assertThat(row.age_in_years).isEqualTo("25")
       assertThat(row.gender).isEqualTo("Male")
-      assertThat(row.tier).isEqualTo("C")
+      assertThat(row.application_tier_on_creation).isEqualTo("C")
       assertThat(row.mappa).isEqualTo("CAT cat1/LEVEL level1")
       assertThat(row.offence_id).isEqualTo("offenceId1")
       assertThat(row.premises_type).isEqualTo("NORMAL")
@@ -517,7 +517,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.has_physical_disability).isEqualTo("not yet provided")
       assertThat(row.has_learning_social_communication_difficulty).isEqualTo("not yet provided")
       assertThat(row.has_mental_health_condition).isEqualTo("not yet provided")
-      assertThat(row.tier).isEqualTo("X")
+      assertThat(row.application_tier_on_creation).isEqualTo("X")
       assertThat(row.mappa).isEqualTo("CAT cat3/LEVEL level3")
       assertThat(row.offence_id).isEqualTo("offenceId3")
       assertThat(row.premises_type).isEqualTo("PIPE")
@@ -626,7 +626,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.has_physical_disability).isEqualTo("not yet provided")
       assertThat(row.has_learning_social_communication_difficulty).isEqualTo("not yet provided")
       assertThat(row.has_mental_health_condition).isEqualTo("not yet provided")
-      assertThat(row.tier).isEqualTo("B")
+      assertThat(row.application_tier_on_creation).isEqualTo("B")
       assertThat(row.mappa).isEqualTo("CAT cat2/LEVEL level2")
       assertThat(row.offence_id).isEqualTo("offenceId2")
       assertThat(row.premises_type).isEqualTo("ESAP")
@@ -790,7 +790,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     val has_physical_disability: String?,
     val has_learning_social_communication_difficulty: String?,
     val has_mental_health_condition: String?,
-    val tier: String?,
+    val application_tier_on_creation: String?,
     val mappa: String?,
     val offence_id: String?,
     val premises_type: String?,

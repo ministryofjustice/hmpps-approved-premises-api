@@ -27,7 +27,7 @@ SELECT $selectAdditions
   'not yet provided' AS has_physical_disability,
   'not yet provided' AS has_learning_social_communication_difficulty,
   'not yet provided' AS has_mental_health_condition,
-  apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tier,
+  apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS application_tier_on_creation,
   submission_event.data -> 'eventDetails' ->> 'mappa' AS mappa,
   submission_event.data -> 'eventDetails' ->> 'offenceId' AS offence_id,
   submission_ap_type_metadata.value AS premises_type,
