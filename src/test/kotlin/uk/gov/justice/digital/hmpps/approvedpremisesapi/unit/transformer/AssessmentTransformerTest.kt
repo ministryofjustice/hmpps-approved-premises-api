@@ -128,5 +128,6 @@ class AssessmentTransformerTest {
     override val status: DomainAssessmentSummaryStatus?,
     override val dueAt: Instant?,
     override val probationDeliveryUnitName: String?,
+    override val tier: String? = null,
   ) : DomainAssessmentSummary
 }
