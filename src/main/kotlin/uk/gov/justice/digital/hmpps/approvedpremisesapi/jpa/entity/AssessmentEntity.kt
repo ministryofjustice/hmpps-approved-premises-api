@@ -129,12 +129,14 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
                   WHEN a.decision is null AND a.allocated_to_user_id is not null THEN 'IN_REVIEW'
                   WHEN a.decision is null AND a.allocated_to_user_id is null THEN 'UNALLOCATED'
              END  as status,
-             pdu.name as probationDeliveryUnitName
+             pdu.name as probationDeliveryUnitName,
+             (c.tier_v3->>'tierScore')::text AS tier
         from temporary_accommodation_assessments aa
              join assessments a on aa.assessment_id = a.id
              join applications ap on a.application_id = ap.id
              left outer join temporary_accommodation_applications taa on ap.id = taa.id
              left outer join probation_delivery_units pdu on taa.probation_delivery_unit_id = pdu.id
+             left outer join cases c on ap.crn = c.crn
        where taa.probation_region_id = :probationRegionId
              and (:crnOrName is null OR lower(ap.crn) = lower(:crnOrName) OR lower(taa.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
              and a.reallocated_at is null
@@ -156,6 +158,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
                join assessments a on aa.assessment_id = a.id
                join applications ap on a.application_id = ap.id
                left outer join temporary_accommodation_applications taa on ap.id = taa.id
+               left outer join cases c on ap.crn = c.crn
          where taa.probation_region_id = :probationRegionId
                and (:crnOrName is null OR lower(ap.crn) = lower(:crnOrName))
                and a.reallocated_at is null
@@ -402,6 +405,7 @@ interface DomainAssessmentSummary {
   val status: DomainAssessmentSummaryStatus?
   val dueAt: Instant?
   val probationDeliveryUnitName: String?
+  val tier: String?
 }
 
 enum class DomainAssessmentSummaryStatus {

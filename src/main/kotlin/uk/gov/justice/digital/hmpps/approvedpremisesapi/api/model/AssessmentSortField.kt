@@ -13,6 +13,7 @@ enum class AssessmentSortField(@get:JsonValue val value: String) {
   assessmentCreatedAt("createdAt"),
   assessmentDueAt("dueAt"),
   applicationProbationDeliveryUnitName("probationDeliveryUnitName"),
+  personTier("tier"),
   ;
 
   companion object {

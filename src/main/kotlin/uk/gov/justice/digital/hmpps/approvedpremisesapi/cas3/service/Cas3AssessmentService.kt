@@ -67,6 +67,7 @@ class Cas3AssessmentService(
       AssessmentSortField.assessmentCreatedAt -> "createdAt"
       AssessmentSortField.personCrn -> "crn"
       AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnitName"
+      AssessmentSortField.personTier -> "tier"
       else -> "arrivalDate"
     }
     val response = assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(

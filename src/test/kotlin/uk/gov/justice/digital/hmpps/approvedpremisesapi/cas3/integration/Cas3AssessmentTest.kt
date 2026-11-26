@@ -29,9 +29,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Ass
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -345,13 +348,26 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             val assessment: TemporaryAccommodationAssessmentEntity,
             val offenderDetails: OffenderDetailSummary,
             val inmateDetails: InmateDetail,
+            val tierScore: String,
           )
 
           val probationDeliveryUnits =
             probationDeliveryUnitRepository.findAll().take(4) as MutableList<ProbationDeliveryUnitEntity?>
           probationDeliveryUnits.addLast(null)
 
+          val liveTierScores = listOf("A", "B", "C", "D", "E")
+
           val assessments = offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
+            val tierScore = liveTierScores[i]
+            givenACase(
+              crn = offenderDetails.otherIds.crn,
+              tierV2 = null,
+              tierV3 = TierFactory()
+                .withVersion(TierVersion.V3)
+                .withTierScore(tierScore)
+                .produce(),
+            )
+
             val application = produceAndPersistApplication(offenderDetails.otherIds.crn, user) {
               withArrivalDate(LocalDate.now().randomDateAfter(512))
               withProbationDeliveryUnit(
@@ -361,7 +377,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
             val assessment = produceAndPersistAssessmentEntity(user, application)
 
-            AssessmentParams(assessment, offenderDetails, inmateDetails)
+            AssessmentParams(assessment, offenderDetails, inmateDetails, tierScore)
           }
 
           val toSummary = { assessmentParams: AssessmentParams ->
@@ -425,6 +441,14 @@ class Cas3AssessmentTest : IntegrationTestBase() {
                         ).probationDeliveryUnit?.name?.lowercase()
                     },
                   )
+                  .map(toSummary),
+              )
+            }
+
+            AssessmentSortField.personTier -> {
+              ExpectedResponse.OK(
+                assessments
+                  .sortedByDescending { it.tierScore }
                   .map(toSummary),
               )
             }
@@ -1537,6 +1561,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
         status = status,
         dueAt = assessment.dueAt?.toInstant(),
         probationDeliveryUnitName = application?.probationDeliveryUnit?.name,
+        tier = null,
       )
     }
   }
@@ -1556,5 +1581,6 @@ class Cas3AssessmentTest : IntegrationTestBase() {
     override val status: DomainAssessmentSummaryStatus?,
     override val dueAt: Instant?,
     override val probationDeliveryUnitName: String?,
+    override val tier: String? = null,
   ) : DomainAssessmentSummary
 }

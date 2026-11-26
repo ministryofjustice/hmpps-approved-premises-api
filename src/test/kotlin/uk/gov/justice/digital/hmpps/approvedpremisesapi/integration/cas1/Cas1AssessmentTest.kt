@@ -730,6 +730,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
         status = status,
         dueAt = assessment.dueAt?.toInstant(),
         probationDeliveryUnitName = null,
+        tier = null,
       )
     }
 
@@ -1857,6 +1858,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
     override val status: DomainAssessmentSummaryStatus?,
     override val dueAt: Instant?,
     override val probationDeliveryUnitName: String?,
+    override val tier: String? = null,
   ) : DomainAssessmentSummary {
     override val type: String = "not needed"
   }
