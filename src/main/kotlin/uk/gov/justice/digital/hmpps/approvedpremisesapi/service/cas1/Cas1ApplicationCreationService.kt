@@ -213,7 +213,7 @@ class Cas1ApplicationCreationService(
           null
         },
       )
-      this.noticeType = getNoticeType(submitApplication.noticeType, submitApplication.isEmergencyApplication, this)
+      this.noticeType = submitApplication.noticeType
       this.licenceExpiryDate = submitApplication.licenseExpiryDate
       isExceptional = submitApplication.isExceptional
     }

@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -55,13 +56,13 @@ class Cas1ApplicationValidationServiceTest {
     private var defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
       translatedDocument = {},
       isWomensApplication = false,
-      isEmergencyApplication = false,
       targetLocation = "SW1A 1AA",
       releaseType = ReleaseTypeOption.licence,
       type = "CAS1",
       sentenceType = SentenceTypeOption.nonStatutory,
       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
       caseManagerIsNotApplicant = false,
+      noticeType = Cas1ApplicationTimelinessCategory.standard,
       apType = ApType.normal,
       requestedPlacementDuration = 10,
       requestedPlacementPeriod = null,
@@ -247,12 +248,12 @@ class Cas1ApplicationValidationServiceTest {
         translatedDocument = {},
         apType = ApType.normal,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         caseManagerIsNotApplicant = true,
         requestedPlacementDuration = 10,
       )
@@ -284,12 +285,12 @@ class Cas1ApplicationValidationServiceTest {
         translatedDocument = {},
         apType = ApType.normal,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         caseManagerIsNotApplicant = false,
         requestedPlacementDuration = 10,
       )
@@ -323,13 +324,13 @@ class Cas1ApplicationValidationServiceTest {
         translatedDocument = {},
         apType = ApType.normal,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = false,
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         requestedPlacementDuration = 10,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
           arrival = LocalDate.now(),
@@ -367,12 +368,12 @@ class Cas1ApplicationValidationServiceTest {
         translatedDocument = {},
         apType = ApType.normal,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         caseManagerIsNotApplicant = false,
         requestedPlacementDuration = null,
         requestedPlacementPeriod = Cas1RequestedPlacementPeriod(

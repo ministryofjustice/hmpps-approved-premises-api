@@ -931,7 +931,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = targetLocation,
         releaseType = releaseType,
         type = "CAS1",

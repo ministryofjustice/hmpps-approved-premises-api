@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -158,7 +159,6 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         translatedDocument = {},
         apType = ApType.pipe,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -166,6 +166,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         situation = SituationOption.bailSentence,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
         caseManagerIsNotApplicant = false,
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         reasonForShortNotice = "reason for short notice",
         reasonForShortNoticeOther = "reason for short notice other",
         requestedPlacementDuration = 10,
@@ -230,7 +231,6 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         translatedDocument = {},
         apType = ApType.pipe,
         isWomensApplication = false,
-        isEmergencyApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -238,6 +238,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         situation = SituationOption.bailSentence,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
         caseManagerIsNotApplicant = false,
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
         reasonForShortNotice = null,
         reasonForShortNoticeOther = null,
         requestedPlacementDuration = 10,
