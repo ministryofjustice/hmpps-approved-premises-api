@@ -398,7 +398,6 @@ class Cas1ApplicationCreationServiceTest {
           applicationId = applicationId,
           Cas1ApplicationUpdateFields(
             isWomensApplication = false,
-            isEmergencyApplication = false,
             apType = null,
             releaseType = null,
             arrivalDate = null,
@@ -429,7 +428,6 @@ class Cas1ApplicationCreationServiceTest {
           applicationId = applicationId,
           Cas1ApplicationUpdateFields(
             isWomensApplication = false,
-            isEmergencyApplication = false,
             apType = null,
             releaseType = null,
             arrivalDate = null,
@@ -453,7 +451,6 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isEmergencyApplication = false,
           apType = null,
           releaseType = null,
           arrivalDate = null,
@@ -483,7 +480,6 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isEmergencyApplication = false,
           apType = null,
           releaseType = null,
           arrivalDate = null,
@@ -521,7 +517,6 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isEmergencyApplication = false,
           apType = apType,
           releaseType = ReleaseTypeOption.rotl,
           arrivalDate = LocalDate.parse("2023-04-17"),
@@ -554,7 +549,7 @@ class Cas1ApplicationCreationServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = Cas1ApplicationTimelinessCategory::class)
-    fun `sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
+    fun `sets the supplied noticeType`(noticeType: Cas1ApplicationTimelinessCategory) {
       setupMocksForSuccess()
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
@@ -575,17 +570,12 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
           apType = ApType.pipe,
           releaseType = ReleaseTypeOption.rotl,
-          arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
-            LocalDate.now().plusDays(10)
-          } else {
-            LocalDate.now().plusMonths(7)
-          },
+          arrivalDate = LocalDate.now(),
           data = updatedData,
           isInapplicable = false,
-          noticeType = null,
+          noticeType = noticeType,
           document = null,
         ),
         userForRequest = user,
@@ -608,7 +598,6 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         updateFields = Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isEmergencyApplication = false,
           apType = ApType.normal,
           releaseType = ReleaseTypeOption.rotl,
           arrivalDate = null,

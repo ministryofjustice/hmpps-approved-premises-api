@@ -2285,6 +2285,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
                   apType = ApType.pipe,
                   type = UpdateApplicationType.CAS1,
                   document = mapOf("basic-information" to "basic-information-value"),
+                  noticeType = Cas1ApplicationTimelinessCategory.standard,
                 ),
               )
               .exchange()

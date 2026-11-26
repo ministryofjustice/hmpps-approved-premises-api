@@ -241,7 +241,6 @@ class Cas1ApplicationsController(
       applicationId = applicationId,
       Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
         isWomensApplication = body.isWomensApplication,
-        isEmergencyApplication = body.isEmergencyApplication,
         apType = body.apType,
         releaseType = body.releaseType,
         arrivalDate = body.arrivalDate,

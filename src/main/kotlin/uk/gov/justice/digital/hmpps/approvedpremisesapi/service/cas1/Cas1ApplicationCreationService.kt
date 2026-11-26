@@ -270,7 +270,6 @@ class Cas1ApplicationCreationService(
     application.apply {
       this.isInapplicable = updateFields.isInapplicable
       this.isWomensApplication = updateFields.isWomensApplication
-      this.isEmergencyApplication = updateFields.isEmergencyApplication
       this.apType = updateFields.apType?.asApprovedPremisesType() ?: ApprovedPremisesType.NORMAL
       this.releaseType = updateFields.releaseType?.let { Cas1ReleaseType.fromApiType(it) }
       this.arrivalDate = if (updateFields.arrivalDate !== null) {
@@ -280,7 +279,7 @@ class Cas1ApplicationCreationService(
       }
       this.expectedArrivalDate = updateFields.arrivalDate
       this.data = updateFields.data
-      this.noticeType = getNoticeType(updateFields.noticeType, updateFields.isEmergencyApplication, this)
+      this.noticeType = updateFields.noticeType
       this.document = updateFields.document
     }
 
@@ -319,19 +318,8 @@ class Cas1ApplicationCreationService(
     )
   }
 
-  private fun getNoticeType(noticeType: Cas1ApplicationTimelinessCategory?, isEmergencyApplication: Boolean?, application: ApprovedPremisesApplicationEntity) = noticeType
-    ?: if (isEmergencyApplication == true) {
-      Cas1ApplicationTimelinessCategory.emergency
-    } else if (application.isShortNoticeApplication() == true) {
-      Cas1ApplicationTimelinessCategory.shortNotice
-    } else {
-      Cas1ApplicationTimelinessCategory.standard
-    }
-
   data class Cas1ApplicationUpdateFields(
     val isWomensApplication: Boolean?,
-    @Deprecated("use noticeType")
-    val isEmergencyApplication: Boolean?,
     val apType: ApType?,
     val releaseType: ReleaseTypeOption?,
     val arrivalDate: LocalDate?,
