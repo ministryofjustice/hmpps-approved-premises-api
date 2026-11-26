@@ -17,6 +17,10 @@ database migrations, domain events, feature flags, testing, and the lint/build
 gates. Follow these patterns when adding or changing code so new work stays
 consistent with what already exists.
 
+Make only the changes requested. Before making tangential changes, ask the user
+to confirm they are required. If a separate issue blocks the requested work,
+explain the blocker and ask for confirmation rather than fixing it unprompted.
+
 **Trust these instructions.** Prefer this guide over re-deriving conventions by
 searching. Only fall back to exploring the codebase when the information here is
 incomplete, ambiguous, or demonstrably out of date — and when you find it wrong,
