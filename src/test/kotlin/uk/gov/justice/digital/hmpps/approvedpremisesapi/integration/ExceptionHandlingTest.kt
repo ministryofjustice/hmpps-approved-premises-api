@@ -1,12 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import io.mockk.every
-import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.JDBCConnectionException
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.core.MethodParameter
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
@@ -18,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
@@ -373,17 +369,18 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
       val validationResult = webTestClient.get()
-        .uri("/method-argument-type-mismatch-exception")
+        .uri("/deserialization-test/query-params?requiredProperty=notanint")
         .header("Authorization", "Bearer $jwt")
         .exchange()
+        .expectStatus().isBadRequest
         .returnResult<String>()
 
       assertJsonEquals(
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
-              "detail": "Invalid type for query parameter id expected int",
-              "instance": "/method-argument-type-mismatch-exception",
+              "detail": "Invalid type for query parameter requiredProperty expected int",
+              "instance": "/deserialization-test/query-params",
               "status": 400,
               "title": "Bad Request"
           }
@@ -760,14 +757,6 @@ class ExceptionHandlingTestController {
 
   @GetMapping(path = ["missing-servlet-request-parameter-exception"])
   fun missingServletRequestParameterException(): ResponseEntity<Unit> = throw MissingServletRequestParameterException("requiredProperty", "int")
-
-  @GetMapping(path = ["method-argument-type-mismatch-exception"])
-  fun methodArgumentTypeMismatchException(): ResponseEntity<Unit> {
-    val methodParameter = mockk<MethodParameter>()
-    every { methodParameter.parameterName } returns "id"
-    every { methodParameter.parameterType } returns Int::class.java
-    throw MethodArgumentTypeMismatchException("notanint", Int::class.java, "requiredProperty", methodParameter, null)
-  }
 
   @GetMapping(path = ["illegal-argument-exception"])
   fun illegalArgumentException(): ResponseEntity<Unit> = throw IllegalArgumentException()
