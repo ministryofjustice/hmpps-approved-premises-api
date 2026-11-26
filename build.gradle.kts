@@ -40,15 +40,7 @@ dependencies {
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.7.2-jre")
   implementation("org.javers:javers-core:7.13.0")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
-  constraints {
-    implementation("org.webjars:swagger-ui:5.34.1") {
-      because("swagger-ui 5.34.0 bundles DOMPurify 3.4.16 (CVE-2026-116802/3/4), fixed in 5.34.1")
-    }
-    implementation("org.json:json:20260814") {
-      because("org.json versions before 20260719 are vulnerable to CVE-2026-59171")
-    }
-  }
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.1")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -84,6 +76,13 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.6.0")
   implementation("uk.gov.service.notify:notifications-java-client:6.2.1-RELEASE")
 
+  // constraints are used to force transitive dependencies to certain versions
+  constraints {
+    implementation("org.json:json:20260814") {
+      because("org.json versions before 20260719 are vulnerable to CVE-2026-59171. this is included by uk.gov.service.notify:notifications-java-client")
+    }
+  }
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.12")
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.4.3")
@@ -98,7 +97,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
   testImplementation("org.zalando:logbook-spring-boot-starter:4.2.0")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.49") {
     exclude(group = "io.swagger.core.v3")
   }
 
