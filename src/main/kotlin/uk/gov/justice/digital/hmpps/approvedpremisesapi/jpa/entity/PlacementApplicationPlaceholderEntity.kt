@@ -52,6 +52,7 @@ data class PlacementApplicationPlaceholderEntity(
   val application: ApplicationEntity,
 
   val submittedAt: OffsetDateTime,
+  @Deprecated("Use [application.expectedArrivalDate]")
   val expectedArrivalDate: OffsetDateTime,
   /**
    * placeholders are archived once an actual corresponding placement_applications entry has been
