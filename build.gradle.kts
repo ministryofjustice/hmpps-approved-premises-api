@@ -102,7 +102,7 @@ dependencies {
     exclude(group = "io.swagger.core.v3")
   }
 
-  testImplementation("org.awaitility:awaitility:4.3.0")
+  testImplementation("org.awaitility:awaitility:4.4.0")
 }
 
 springBoot {
