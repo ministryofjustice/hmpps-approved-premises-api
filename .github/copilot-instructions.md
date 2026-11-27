@@ -135,6 +135,29 @@ Tooling notes:
 * Every new endpoint must require an appropriate role/permission and have auth
   tests.
 
+### Limited Access Offenders
+
+* A Limited Access Offender (LAO) is a Delius case with a current restriction
+  and/or exclusion. Restrictions and exclusions determine access using
+  user-specific allow/deny lists; the rules differ by CAS and user type.
+* When retrieving offender details for a request or embedding them in results,
+  pass the appropriate user-specific `LaoStrategy` to `OffenderService` (for
+  example, `user.cas1LaoStrategy()` or `user.cas3LaoStrategy()`). Follow the
+  corresponding strategy for the CAS and user type being handled.
+* If access is restricted, `OffenderService` returns a
+  `PersonSummaryInfoResult.Success.Restricted` rather than the full case
+  summary. This contains the CRN, optional NOMIS number, and optional tier;
+  do not expose or derive other offender details from a restricted result.
+* `LaoStrategy.Ignore` deliberately bypasses LAO checks. Use it only where the
+  domain policy explicitly permits bypassing access checks, not as a fallback
+  when the appropriate user strategy is unavailable.
+* LAO checks are not automatically applied to every API call. Existing CAS UI
+  flows generally check access to a CRN before requesting further information;
+  follow the established behavior of the relevant endpoint, and apply the
+  `LaoStrategy` pattern when the endpoint retrieves or returns offender details.
+* For the strategy and CAS-specific behavior, see
+  `uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy`.
+
 ### Current user and result handling
 
 * Get the request user with `userService.getUserForRequest()`.
