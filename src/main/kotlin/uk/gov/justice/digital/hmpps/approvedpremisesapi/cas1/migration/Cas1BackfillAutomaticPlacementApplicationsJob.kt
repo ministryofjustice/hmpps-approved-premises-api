@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import java.util.UUID
@@ -38,7 +37,6 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
   private val placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
-  private val environmentService: EnvironmentService,
   private val cas1DomainEventService: Cas1DomainEventService,
 ) : MigrationJob() {
 
@@ -47,10 +45,6 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
   override val shouldRunInTransaction = false
 
   override fun process(pageSize: Int) {
-    if (environmentService.isProd()) {
-      error("backfill placement apps is disabled in prod")
-    }
-
     val applicationIds = cas1BackfillAutomaticPlacementApplicationsRepository.applicationIdsWithStandardPlacementRequestsWithoutAPlacementApp()
 
     log.info("There are ${applicationIds.size} applications with 'initial' placement requests to update")
