@@ -39,6 +39,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
           withApArea(givenAnApArea())
           withIsEmergencyApplication(true)
           withReleaseType(Cas1ReleaseType.licence)
+          withNoticeType(Cas1ApplicationTimelinessCategory.emergency)
         }
 
         val tier = Tier(
@@ -77,7 +78,6 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
         assertThat(newApplication.createdAt).isWithinTheLastMinute()
         assertThat(newApplication.submittedAt).isNull()
         assertThat(newApplication.isWomensApplication).isEqualTo(sourceApplication.isWomensApplication)
-        assertThat(newApplication.isEmergencyApplication).isEqualTo(sourceApplication.isEmergencyApplication)
         assertThat(newApplication.apType).isEqualTo(sourceApplication.apType)
         assertThat(newApplication.isInapplicable).isNull()
         assertThat(newApplication.isWithdrawn).isEqualTo(false)

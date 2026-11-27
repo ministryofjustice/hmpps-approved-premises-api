@@ -94,7 +94,6 @@ class Cas1DuplicateApplicationSeedJob(
       applicationId = newApplication.applicationId,
       updateFields = Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
         isWomensApplication = sourceApplication.isWomensApplication,
-        isEmergencyApplication = sourceApplication.isEmergencyApplication,
         apType = sourceApplication.apType.asApiType(),
         releaseType = sourceApplication.releaseType?.apiType,
         arrivalDate = sourceApplication.arrivalDate?.toLocalDate(),

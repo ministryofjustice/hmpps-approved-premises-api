@@ -439,6 +439,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
           apType = ApType.pipe,
           type = UpdateApplicationType.CAS1,
           isInapplicable = true,
+          noticeType = Cas1ApplicationTimelinessCategory.standard,
         ),
       )
       .exchange()

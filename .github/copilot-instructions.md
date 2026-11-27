@@ -153,7 +153,9 @@ Tooling notes:
   references that describe editing a spec and regenerating.
 * Legacy shared API models are hand-written `data class`es under `api/model` (many
   still carry generator-style `@get:JsonProperty(..., required = true)` /
-  `@Schema(example = ...)` annotations — keep that style when editing them). A few
+  `@Schema(example = ...)` annotations. Do not add `required = true` to
+  `@JsonProperty`: nullability in the Kotlin type already determines whether a
+  property is required. A few
   legacy `*Delegate`/`*Api` interfaces under `api/**` also remain and are
   implemented by controllers; new controllers use the meta-annotation style instead.
 * For **new** models, follow `doc/how-to/define_an_api.md`:
