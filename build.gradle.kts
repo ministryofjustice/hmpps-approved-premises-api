@@ -53,7 +53,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-4:8.65.1")
+  implementation("io.sentry:sentry-spring-boot-4:8.66.0")
 
   runtimeOnly("org.postgresql:postgresql:42.7.15")
   runtimeOnly("org.ehcache:ehcache")
@@ -73,7 +73,7 @@ dependencies {
   implementation("io.arrow-kt:arrow-core:2.3.0.1")
 
   implementation("com.opencsv:opencsv:5.12.0")
-  implementation("software.amazon.awssdk:s3:2.59.9")
+  implementation("software.amazon.awssdk:s3:2.59.10")
 
   val shedLockVersion = "7.12.0"
   implementation("net.javacrumbs.shedlock:shedlock-spring:$shedLockVersion")
