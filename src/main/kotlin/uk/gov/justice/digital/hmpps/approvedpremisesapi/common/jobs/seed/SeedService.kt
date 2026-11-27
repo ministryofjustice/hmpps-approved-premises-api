@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -54,7 +51,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.Semaphore
 import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
 
@@ -131,10 +127,6 @@ class SeedService(
 
       val seedStarted = LocalDateTime.now()
 
-      if (job.runInTransaction && job.processRowsConcurrently) {
-        error("Can't run a job in a transaction and process rows in parallel")
-      }
-
       val rowsProcessed = if (job.runInTransaction) {
         transactionTemplate.execute { processJob(job, resolveCsvPath) }
       } else {
@@ -182,34 +174,9 @@ class SeedService(
 
     try {
       csvReader().open(job.resolveCsvPath()) {
-        if (!job.processRowsConcurrently) {
-          readAllWithHeaderAsSequence().forEach { row ->
-            rowNumber += 1
-            processRow(context, row, rowNumber)
-          }
-        } else {
-          runBlocking(Dispatchers.IO) {
-            /*
-            We use a semaphore to ensure there are only 5 processing or pending co-routines at
-            any moment in time when processing the CSV. We found that if a coroutine was created
-            for every row in a large CSV file we encountered out of memory exceptions.
-
-            If we were to use a CSV reader that allowed us to stream the CSV rows instead of loading
-            them all in to memory, this restriction may not be required.
-             */
-            val coroutineCreationSemaphore = Semaphore(5)
-            readAllWithHeaderAsSequence().forEach { row ->
-              rowNumber += 1
-              coroutineCreationSemaphore.acquire()
-              launch {
-                try {
-                  processRow(context, row, rowNumber)
-                } finally {
-                  coroutineCreationSemaphore.release()
-                }
-              }
-            }
-          }
+        readAllWithHeaderAsSequence().forEach { row ->
+          rowNumber += 1
+          processRow(context, row, rowNumber)
         }
       }
     } catch (exception: Exception) {
