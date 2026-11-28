@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Overstay
 import java.time.Instant
@@ -40,7 +40,7 @@ data class Cas3Booking(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  @get:JsonProperty("person", required = true) val person: PersonSummary,
 
   @get:JsonProperty("arrivalDate", required = true) val arrivalDate: LocalDate,
 
