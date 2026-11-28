@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.nonRepeatingRandomDateAfter
@@ -1531,7 +1532,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
       status: DomainAssessmentSummaryStatus? = null,
     ): Cas3AssessmentSummary = cas3AssessmentTransformer.transformDomainToApiSummary(
       toAssessmentSummaryEntity(assessment, status),
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
+      PersonSummaryInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails.asCaseSummary(), tier = null),
     )
 
     fun toRestricted(
@@ -1539,7 +1540,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
       status: DomainAssessmentSummaryStatus? = null,
     ): Cas3AssessmentSummary = cas3AssessmentTransformer.transformDomainToApiSummary(
       toAssessmentSummaryEntity(assessment, status),
-      PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, tier = null),
+      PersonSummaryInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, tier = null),
     )
 
     private fun toAssessmentSummaryEntity(
